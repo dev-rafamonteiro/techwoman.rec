@@ -1,0 +1,164 @@
+/* Tech Woman — tokens, reset e componentes compartilhados */
+
+:root {
+  /* Paleta */
+  --roxo-950: #3D0A45;
+  --roxo-800: #5B1466;
+  --roxo-700: #6E1A78;
+  --roxo-600: #8A1F96;
+  --roxo-550: #8A2A94;
+  --roxo-400: #B85BC4;
+  --lilas: #D98CE6;
+  --rosa: #F3B3D9;
+  --menta: #C9F4EE;
+  --laranja: #F26430;
+  --branco: #FFFFFF;
+
+  --fundo: #FBF3FC;
+  --fundo-lilas: #F3DDF6;
+  --chip: #F6E4F8;
+  --borda: #EBCFF0;
+  --texto: var(--roxo-950);
+  --texto-suave: #5E3A66;
+  --texto-claro: #F1D9F5;
+  --texto-claro-2: #FBEAFD;
+
+  /* Cor de destaque (prop "accent" do Claude Design) */
+  --accent: var(--laranja);
+
+  /* Tipografia */
+  --fonte-texto: 'Manrope', system-ui, sans-serif;
+  --fonte-display: 'Unbounded', sans-serif;
+
+  /* Layout */
+  --largura-max: 1200px;
+  --raio-card: 22px;
+  --raio-pill: 999px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte-texto);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+a { color: var(--roxo-600); }
+a:hover { color: var(--roxo-800); }
+
+h1, h2, p { margin: 0; }
+button, input { font-family: inherit; }
+
+/* Cabeçalho do site (compartilhado entre as páginas) */
+.topo-site { background: var(--roxo-950); }
+
+.nav {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  line-height: 0.95;
+  font-family: var(--fonte-display);
+}
+.logo__tech {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--lilas);
+}
+.logo__woman {
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--branco);
+}
+
+/* Container central das seções */
+.container {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: 88px 24px;
+}
+
+/* Botões */
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 16px 28px;
+  border-radius: var(--raio-pill);
+}
+.btn--accent { color: var(--roxo-950); background: var(--accent); }
+.btn--accent:hover { color: var(--roxo-950); }
+.btn--outline { color: var(--menta); border: 2px solid var(--menta); padding: 14px 26px; }
+.btn--outline:hover { color: var(--menta); }
+.btn--roxo { color: var(--branco); background: var(--roxo-800); }
+.btn--roxo:hover { color: var(--branco); }
+.btn--escuro { color: var(--branco); background: var(--roxo-950); padding: 18px 32px; }
+.btn--escuro:hover { color: var(--branco); }
+.btn--sm { padding: 12px 20px; }
+
+/* Cabeçalho de seção (eyebrow + título + texto) */
+.secao-cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.eyebrow {
+  font-family: var(--fonte-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--roxo-600);
+}
+.eyebrow--accent { color: var(--accent); }
+.titulo-secao {
+  font-family: var(--fonte-display);
+  font-weight: 800;
+  font-size: clamp(28px, 3.2vw, 42px);
+  line-height: 1.12;
+}
+.texto-suave { color: var(--texto-suave); }
+
+/* Grade responsiva de cards */
+.grade-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* Chips / tags */
+.chip {
+  background: var(--chip);
+  color: var(--roxo-600);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: var(--raio-pill);
+}
+.chip--trilha {
+  background: var(--branco);
+  color: var(--roxo-950);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 10px 18px;
+  border: 1px solid var(--borda);
+}
+.lista-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
