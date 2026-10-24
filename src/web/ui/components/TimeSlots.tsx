@@ -45,15 +45,21 @@ export function SlotToggleGrid({ legend, slots, selected, onToggle, disabled, ca
   );
 }
 
-/** Seletor de horário de ESCOLHA ÚNICA (M5, A4): lista radio com "Preferência dela" destacada. */
-export function SlotSingleChoice({ legend, slots, value, onChange }: {
+/** Seletor de horário de ESCOLHA ÚNICA (M5, A4, P6): lista radio com "Preferência dela" destacada. */
+export function SlotSingleChoice({ legend, slots, value, onChange, preferredLabel = 'Preferência dela', disabled, testId, itemTestId }: {
   legend: string;
   slots: readonly SlotOption[];
   value: string | null;
   onChange: (id: string) => void;
+  /** Texto sob o horário destacado (P6, a própria participante: "Seu período preferido"). */
+  preferredLabel?: string;
+  disabled?: boolean;
+  /** data-testid da lista e de cada horário (E2E). */
+  testId?: string;
+  itemTestId?: string;
 }) {
   return (
-    <div className="tw-slotlist" role="radiogroup" aria-label={legend}>
+    <div className="tw-slotlist" role="radiogroup" aria-label={legend} data-testid={testId}>
       {slots.map((s) => (
         <button
           key={s.id}
@@ -61,10 +67,12 @@ export function SlotSingleChoice({ legend, slots, value, onChange }: {
           role="radio"
           aria-checked={value === s.id}
           className={`tw-slot${s.preferred ? ' tw-slot--preferred' : ''}`}
+          disabled={disabled}
           onClick={() => onChange(s.id)}
+          data-testid={itemTestId}
         >
           <span>{s.label}</span>
-          <small>{s.preferred ? 'Preferência dela' : s.caption ?? ''}</small>
+          <small>{s.preferred ? preferredLabel : s.caption ?? ''}</small>
         </button>
       ))}
     </div>

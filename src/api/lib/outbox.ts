@@ -5,15 +5,18 @@ import { ObjectId as Oid } from 'mongodb';
 import type { AppContext } from '../ctx.js';
 import { DEFAULT_REMINDERS } from '@tw/shared';
 import { reminderSchedule } from '../domain/reminder.js';
+import { presenceReminderMinutes } from '../domain/presence.js';
 import { sealSecret } from './secret-box.js';
 
 /**
  * Canais por tipo (PLAN, "Notificações"): e-mail é o canal obrigatório; WhatsApp só se ligado e houver telefone.
- * Lembrete: WhatsApp (e-mail se não houver). Expirado: só e-mail.
+ * Lembrete: WhatsApp (e-mail se não houver). Expirado: só e-mail. Respostas da presença (RN18): só WhatsApp, e nada
+ * sem WhatsApp disponível.
  */
 export function channelsFor(ctx: AppContext, type: OutboxType, mentee: Pick<MenteeDoc, 'phone'> | null, wanted?: readonly OutboxChannel[]): OutboxChannel[] {
   const wa = ctx.config.whatsappEnabled && !!mentee?.phone;
   if (type === 'expired' || type === 'staff_password') return ['email'];
+  if (isPresenceReply(type)) return wa ? ['whatsapp'] : [];
   if (type === 'reminder') {
     // canais da regra de A7; WhatsApp indisponível cai para e-mail para o lembrete nunca se perder
     const ok = (wanted ?? ['whatsapp']).filter((c) => c === 'email' || wa);
@@ -32,10 +35,17 @@ export interface EnqueueInput {
   payload?: Record<string, unknown>;
   /** Lembrete: canais escolhidos na regra de A7. */
   channels?: readonly OutboxChannel[];
+  /** Campos extras do `payload` só no item daquele canal (RN18: `presenceCheck` só no item `whatsapp`). */
+  channelPayload?: Partial<Record<OutboxChannel, Record<string, unknown>>>;
 }
+
+export type PresenceReplyType = 'presence_confirmed' | 'presence_cancelled' | 'presence_unclear';
+const isPresenceReply = (t: OutboxType): t is PresenceReplyType => t === 'presence_confirmed' || t === 'presence_cancelled' || t === 'presence_unclear';
 
 function dedupeBase(i: EnqueueInput): string {
   if (i.type === 'registered') return `registered:${i.mentee._id}:${i.dedupeSuffix ?? 0}`;
+  // uma resposta por mensagem recebida: `presence:<id da mensagem recebida>`
+  if (isPresenceReply(i.type)) return `presence:${i.dedupeSuffix}`;
   return `${i.type}:${i.appointmentId ?? i.mentee._id}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;
 }
 
@@ -51,7 +61,7 @@ export async function enqueueMenteeNotifications(ctx: AppContext, session: Clien
     menteeId: i.mentee._id,
     userId: null,
     appointmentId: i.appointmentId ?? null,
-    payload: i.payload ?? {},
+    payload: { ...i.payload, ...i.channelPayload?.[channel] },
     status: 'pending',
     attempts: 0,
     nextAttemptAt: i.sendAt ?? now,
@@ -104,7 +114,10 @@ export async function enqueueStaffPassword(
   );
 }
 
-/** Lembretes da mentoria conforme as regras do evento (A7, até 10); sem regras configuradas, o padrão de RN15. */
+/**
+ * Lembretes da mentoria conforme as regras do evento (A7, até 10); sem regras configuradas, o padrão de RN15.
+ * RN18: o primeiro que sai pelo WhatsApp leva `payload.presenceCheck: true` só no item `whatsapp` (List Message).
+ */
 export async function enqueueReminders(
   ctx: AppContext,
   session: ClientSession | undefined,
@@ -113,10 +126,22 @@ export async function enqueueReminders(
 ): Promise<void> {
   const ev = await ctx.c.events.findOne({ _id: ctx.config.eventId }, { session, projection: { reminders: 1 } });
   const rules = ev?.reminders?.length ? ev.reminders : DEFAULT_REMINDERS;
-  for (const r of reminderSchedule(appointment.startAt, ctx.now(), rules)) {
+  const schedule = reminderSchedule(appointment.startAt, ctx.now(), rules);
+  const presenceAt = presenceReminderMinutes(schedule, ctx.config.whatsappEnabled && !!mentee.phone);
+  for (const r of schedule) {
     await enqueueMenteeNotifications(ctx, session, {
       type: 'reminder', mentee, appointmentId: appointment._id, sendAt: r.sendAt,
       channels: r.channels, dedupeSuffix: r.minutesBefore, payload: { minutesBefore: r.minutesBefore },
+      ...(r.minutesBefore === presenceAt ? { channelPayload: { whatsapp: { presenceCheck: true } } } : {}),
     });
   }
+}
+
+/** RN18 · Resposta fixa à confirmação de presença (só WhatsApp; sem WhatsApp disponível, não sai nada). */
+export async function enqueuePresenceReply(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { type: PresenceReplyType; mentee: Pick<MenteeDoc, '_id' | 'email' | 'phone'>; appointmentId: ObjectId; inboundId: string },
+): Promise<void> {
+  await enqueueMenteeNotifications(ctx, session, { type: i.type, mentee: i.mentee, appointmentId: i.appointmentId, dedupeSuffix: i.inboundId });
 }

@@ -90,8 +90,8 @@ export function route<E extends EndpointDef>(
       } else if (e.auth === 'mentee') {
         const raw = req.headers[HEADERS.menteeToken.toLowerCase()];
         mentee = await findMenteeByToken(ctx, Array.isArray(raw) ? raw[0] : raw);
-      } else if (isWrite && e.code !== 'E02' && e.code !== 'E05') {
-        // E10 (login) é público mas usa cookie: exige o header anti-CSRF
+      } else if (isWrite && e.code !== 'E02' && e.code !== 'E05' && e.csrf !== false) {
+        // E10 (login) é público mas usa cookie: exige o header anti-CSRF (o webhook E47 marca `csrf: false`)
         checkCsrf(req, ctx.config);
       }
 

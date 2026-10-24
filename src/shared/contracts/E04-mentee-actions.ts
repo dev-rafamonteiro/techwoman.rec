@@ -2,11 +2,12 @@ import { z } from 'zod';
 import { DeclineReasonSchema, defineEndpoint, PreferredPeriodSchema } from './common.js';
 import { E03ResponseSchema } from './E03-public-me.js';
 
-/** E04 · POST /public/me/actions · P6 · RN06, RN14 · aceita Idempotency-Key */
+/** E04 · POST /public/me/actions · P6 · RN06, RN14, RN19 (`reschedule` só de `confirmed`) · aceita Idempotency-Key */
 export const E04BodySchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('accept') }).strict(),
   z.object({ action: z.literal('decline'), reason: DeclineReasonSchema }).strict(),
   z.object({ action: z.literal('cancel') }).strict(),
+  z.object({ action: z.literal('reschedule') }).strict(),
   z.object({ action: z.literal('update_preference'), preferredPeriod: PreferredPeriodSchema }).strict(),
 ]);
 export type E04Body = z.infer<typeof E04BodySchema>;

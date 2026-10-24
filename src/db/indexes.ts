@@ -75,6 +75,10 @@ const INDEXES: Record<string, IndexDescription[]> = {
   ],
   // chaves de idempotência: TTL de 10 min (PLAN)
   [COLLECTIONS.idempotencyKeys]: [{ key: { createdAt: 1 }, name: 'idem_ttl', expireAfterSeconds: 600 }],
+  // RN18: resposta digitada procura o `pending` mais recente do telefone
+  [COLLECTIONS.presenceChecks]: [{ key: { phone: 1, status: 1, sentAt: -1 }, name: 'presence_phone_status_sent' }],
+  // mensagens recebidas do WAHA: some em `expireAt` (7 dias)
+  [COLLECTIONS.whatsappInbound]: [{ key: { expireAt: 1 }, name: 'wa_inbound_ttl', expireAfterSeconds: 0 }],
 };
 
 /**

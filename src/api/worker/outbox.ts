@@ -3,7 +3,7 @@ import type { OutboxDoc } from '@tw/db';
 import type { Config } from '../config.js';
 import type { AppContext } from '../ctx.js';
 import { shouldSendReminder } from '../domain/index.js';
-import { NotifierError, type Notifier, type NotifierMessage } from './notifier.js';
+import { NotifierError, type Notifier, type NotifierMessage, type NotifierResult } from './notifier.js';
 import { render } from './render.js';
 import { openSecret } from '../lib/secret-box.js';
 import { icsIdentity } from '../notifications/ics.js';
@@ -79,7 +79,10 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     appt ? c.tables.findOne({ _id: appt.tableId }) : null,
     item.userId ? c.users.findOne({ _id: item.userId }) : null,
   ]);
-  let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments'>;
+  // RN18: o lembrete marcado em `enqueueReminders` vai como List Message de presença (só o WAHA tem lista e resposta)
+  const presence = item.type === 'reminder' && item.channel === 'whatsapp' && item.payload['presenceCheck'] === true
+    && ctx.config.whatsappTransport === 'waha' && !!appt && !!item.menteeId;
+  let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments' | 'list'>;
   try {
     if (item.channel === 'email') {
       let provisionalPassword: string | null = null;
@@ -100,16 +103,15 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       });
       message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
     } else {
-      message = render({ item, event, mentee, appointment: appt, mentor, table, baseUrl: ctx.config.publicBaseUrl, menteeTokenSecret: ctx.config.menteeTokenSecret });
+      message = render({ item, event, mentee, appointment: appt, mentor, table, baseUrl: ctx.config.publicBaseUrl, menteeTokenSecret: ctx.config.menteeTokenSecret, now: ctx.now(), presenceList: presence });
     }
   } catch (err) {
     if (err instanceof RenderError) return await fail(`render: ${err.message}`);
     throw err;
   }
+  let sent: NotifierResult | void;
   try {
-    await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
-    await done({ status: 'sent', sentAt: ctx.now(), lastError: null, lockedAt: null, lockedBy: null, payload: {} });
-    res.sent++;
+    sent = await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
   } catch (err) {
     const text = (err instanceof Error ? err.message : String(err)).slice(0, 300);
     const permanent = err instanceof NotifierError && err.permanent;
@@ -125,7 +127,22 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       await done({ status: 'pending', lastError: text, nextAttemptAt: new Date(ctx.now().getTime() + wait), lockedAt: null, lockedBy: null }, false);
       res.retried++;
     }
+    return;
   }
+  if (presence && message.list) {
+    // a mensagem já saiu: falha ao gravar não pode devolver o item para a fila (sairia de novo)
+    try {
+      await c.presenceChecks.replaceOne(
+        { _id: appt!._id },
+        { menteeId: item.menteeId!, phone: item.to.replace(/\D/g, ''), messageId: sent?.providerMessageId ?? '', status: 'pending', sentAt: ctx.now(), answeredAt: null, answer: null },
+        { upsert: true },
+      );
+    } catch (err) {
+      ctx.log.error({ outboxId: String(item._id), err: (err as Error).message }, 'presence_checks não gravado');
+    }
+  }
+  await done({ status: 'sent', sentAt: ctx.now(), lastError: null, lockedAt: null, lockedBy: null, payload: {} });
+  res.sent++;
 }
 
 /**

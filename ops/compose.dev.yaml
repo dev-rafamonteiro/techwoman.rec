@@ -20,7 +20,12 @@ x-dev-env: &dev-env
   TURNSTILE_SECRET: 1x0000000000000000000000000000000AA
   TURNSTILE_SITE_KEY: 1x00000000000000000000AA
   # EMAIL_PROVIDER, EMAIL_API_KEY e EMAIL_FROM vêm do .env da raiz (Resend); sem eles, o worker só registra em log.
-  WHATSAPP_ENABLED: "false"
+  # WhatsApp: WHATSAPP_ENABLED vem só do .env da raiz (env_file); ausente = false (tudo por e-mail). Não fica aqui
+  # porque `environment` vence o env_file e a interpolação ${...} lê ops/.env, não o .env da raiz.
+  # WAHA_API_KEY e WAHA_WEBHOOK_HMAC_KEY também vêm do .env da raiz; nunca entram aqui.
+  WHATSAPP_TRANSPORT: ${WHATSAPP_TRANSPORT:-waha}
+  WAHA_URL: ${WAHA_URL:-http://host.containers.internal:3000}
+  WAHA_SESSION: ${WAHA_SESSION:-default}
   # Mailpit (perfil dev, rede egress): SMTP sem auth/TLS. `environment` vence o .env da raiz (nunca usa o Resend em dev).
   EMAIL_TRANSPORT: smtp
   SMTP_HOST: mailpit

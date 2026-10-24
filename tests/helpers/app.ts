@@ -26,9 +26,10 @@ export async function loadApi(): Promise<ApiModules | null> {
     const app = await import(/* @vite-ignore */ appPath);
     const { loadConfig } = await import(/* @vite-ignore */ configPath);
     const mods: ApiModules = {
-      // adapta { db, client, now, streams? } para a assinatura real: buildApp({ config, client, db, logger, streams, now }) -> { app, ctx }
+      // adapta { db, client, now, streams?, env? } para a assinatura real: buildApp({ config, client, db, logger, streams, now }) -> { app, ctx }
+      // `env`: variáveis extras para o loadConfig (ex.: WHATSAPP_ENABLED, WAHA_WEBHOOK_HMAC_KEY nos testes de RN18)
       buildApp: async (o: Record<string, any>) => {
-        const config = loadConfig({ NODE_ENV: "test", JWT_SECRET: "t".repeat(40), TURNSTILE_MODE: "test", EVENT_ID: o.eventId ?? "techwoman-2026" } as NodeJS.ProcessEnv);
+        const config = loadConfig({ NODE_ENV: "test", JWT_SECRET: "t".repeat(40), TURNSTILE_MODE: "test", EVENT_ID: o.eventId ?? "techwoman-2026", ...o.env } as NodeJS.ProcessEnv);
         const { app: fastify } = await app.buildApp({ config, client: o.client, db: o.db, logger: false, streams: o.streams ?? false, ...(o.searchOverrides ? { searchOverrides: o.searchOverrides } : {}), ...(o.now ? { now: o.now } : {}) });
         return fastify;
       },

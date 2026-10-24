@@ -12,6 +12,8 @@ export const HEADERS = {
   idempotencyKey: 'Idempotency-Key',
   requestedWith: 'X-Requested-With',
   turnstile: 'X-Turnstile-Token',
+  /** E47: HMAC-SHA512 em hex do corpo bruto, assinado pelo WAHA (chave WAHA_WEBHOOK_HMAC_KEY). */
+  wahaHmac: 'X-Webhook-Hmac',
 } as const;
 
 /** Valor exigido no header X-Requested-With nas rotas que escrevem (proteção CSRF). */
@@ -78,6 +80,10 @@ export const OUTBOX_TYPES = [
   'cancelled',
   'moved',
   'staff_password',
+  // respostas à confirmação de presença pelo WhatsApp (RN18)
+  'presence_confirmed',
+  'presence_cancelled',
+  'presence_unclear',
 ] as const;
 export const OutboxTypeSchema = z.enum(OUTBOX_TYPES);
 export type OutboxType = z.infer<typeof OutboxTypeSchema>;
@@ -255,6 +261,8 @@ export interface EndpointDef<
   readonly idempotent?: boolean;
   /** Exige Turnstile (header X-Turnstile-Token ou campo do corpo). */
   readonly turnstile?: boolean;
+  /** `false`: rota pública que escreve sem a checagem anti-CSRF (webhook de servidor, E47). */
+  readonly csrf?: false;
   readonly params?: Params;
   readonly query?: Query;
   readonly body?: Body;

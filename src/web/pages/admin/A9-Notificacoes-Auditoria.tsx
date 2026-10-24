@@ -17,7 +17,7 @@ function actionTone(a: string): string {
   return '';
 }
 const ROLE_PT: Record<string, string> = { super_admin: 'Super admin', admin: 'Admin', mentor: 'Mentora', mentee: 'Participante', system: 'Sistema' };
-const TYPE_PT = { registered: 'Inscrição recebida', invite: 'Convite', confirmed: 'Confirmação', reminder: 'Lembrete', expired: 'Convite expirado', cancelled: 'Cancelamento', moved: 'Mudança de horário', staff_password: 'Senha provisória' } as const;
+const TYPE_PT = { registered: 'Inscrição recebida', invite: 'Convite', confirmed: 'Confirmação', reminder: 'Lembrete', expired: 'Convite expirado', cancelled: 'Cancelamento', moved: 'Mudança de horário', staff_password: 'Senha provisória', presence_confirmed: 'Presença confirmada', presence_cancelled: 'Presença: não poderá ir', presence_unclear: 'Presença: resposta não entendida' } as const;
 
 /** A9 · Notificações (E44) e Auditoria (E45). */
 export default function A9NotificacoesAuditoria() {

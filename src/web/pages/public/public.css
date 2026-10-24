@@ -163,6 +163,11 @@
 .tw-dialog { background: var(--tw-red-100); color: var(--tw-red-900); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
 .tw-dialog p { margin: 0; font-size: 14px; }
 .tw-dialog strong { font-weight: 800; font-size: 16px; }
+/* P6 (RN19): escolha com explicação (Trocar de horário / Não tenho mais interesse) e bloco "Escolha um novo horário". */
+.tw-choice small { display: block; margin-top: 2px; font-weight: 600; font-size: 13px; color: var(--color-ink-muted); }
+.tw-choice:disabled { opacity: .6; cursor: default; }
+.tw-p6-choose h2 { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.15; margin: 0; }
+.tw-slotmsg { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--tw-red-100); color: var(--tw-red-900); font-size: 14px; font-weight: 600; }
 
 /* P2 intro: três cartões coloridos (arte). */
 .tw-p2i { display: grid; gap: 12px; grid-template-columns: 1fr; }

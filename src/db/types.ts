@@ -208,3 +208,31 @@ export interface IdempotencyDoc {
   response: { status: number; body: unknown } | null;
   createdAt: Date;
 }
+
+export type PresenceCheckStatus = 'pending' | 'confirmed' | 'cancelled' | 'closed';
+export type PresenceInterpretation = 'confirm' | 'cancel';
+
+/** Pedido de confirmação de presença pelo WhatsApp (RN18), um por mentoria. Sem validador. */
+export interface PresenceCheckDoc {
+  /** = appointmentId */
+  _id: ObjectId;
+  menteeId: ObjectId;
+  /** Só dígitos, ex.: `5511996604159`. */
+  phone: string;
+  /** Hash final do id da mensagem enviada pelo WAHA (`true_<chatId>_<hash>`). */
+  messageId: string;
+  status: PresenceCheckStatus;
+  sentAt: Date;
+  answeredAt: Date | null;
+  answer: { kind: 'list' | 'text'; text: string | null; interpretation: PresenceInterpretation | null } | null;
+}
+
+/** Mensagem recebida do WAHA já processada (deduplicação do webhook E47). Sem validador; TTL em `expireAt`. */
+export interface WhatsappInboundDoc {
+  /** Hash final do id da mensagem recebida. */
+  _id: string;
+  receivedAt: Date;
+  expireAt: Date;
+  phone: string;
+  result: PresenceInterpretation | 'unclear' | 'ignored';
+}

@@ -47,7 +47,9 @@ docker compose -f ops/compose.dev.yaml down
 
 E-mail: `api` e `worker` leem `EMAIL_PROVIDER`, `EMAIL_API_KEY` e `EMAIL_FROM` do `.env` da raiz. Com
 `EMAIL_PROVIDER=resend` e a chave preenchida, as notificações saem pelo Resend (domínio `techwoman.dev` verificado);
-sem isso, o worker só registra em log. WhatsApp fica desligado (`WHATSAPP_ENABLED=false`). Os testes E2E forçam
+sem isso, o worker só registra em log. WhatsApp fica desligado até `WHATSAPP_ENABLED=true` no `.env` da raiz; em dev o
+compose usa `WHATSAPP_TRANSPORT=waha` com o WAHA local (`WAHA_URL=http://host.containers.internal:3000`,
+`WAHA_SESSION=default`) e lê `WAHA_API_KEY` (worker) e `WAHA_WEBHOOK_HMAC_KEY` (api, E47) do `.env` da raiz. Os testes E2E forçam
 `EMAIL_PROVIDER=console` e não enviam nada.
 
 ### Massa de demonstração
@@ -81,11 +83,14 @@ Para receber de verdade, use `DEMO_EMAIL_TEMPLATE='voce+{slug}@seu-dominio'`. Os
   (só de dev). No host, exporte `OUTBOX_KEY` (ou `OUTBOX_KEY_FILE=ops/secrets/outbox_key`).
 - **Variáveis novas** (`.env.example`, sem valores): `EMAIL_TRANSPORT`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`/`SMTP_PASS_FILE`, `SMTP_SECURE`, `AWS_REGION`,
   `EMAIL_FROM`, `EMAIL_REPLY_TO`, `OUTBOX_KEY`/`OUTBOX_KEY_FILE`, `PUBLIC_BASE_URL`.
+  WhatsApp (RN18): `WHATSAPP_TRANSPORT` (`waha` | `cloud`, padrão `cloud`), `WAHA_URL`, `WAHA_SESSION`, `WAHA_API_KEY`/`WAHA_API_KEY_FILE`
+  (só o worker), `WAHA_WEBHOOK_HMAC_KEY`/`WAHA_WEBHOOK_HMAC_KEY_FILE` (só a API).
 - Nota histórica: `autoEmbed` (voyage-4) não funciona no `mongodb-atlas-local` (8.3.4 e 8.3.13: `voyage-4 not registered yet`); a busca é só full text (`$search`).
 
 Produção (`ops/compose.yaml`): `cloudflared`, `web`, `api`, `worker`; redes `edge`, `app` (`internal: true`) e `egress`;
 nenhuma porta publicada. Segredos em arquivos `ops/secrets/<nome>` (gitignored): `mongo_uri`, `jwt_secret`,
-`turnstile_secret`, `email_api_key`, `outbox_key`, `whatsapp_token`, `cf_tunnel_token`. A aplicação lê `VAR` ou `VAR_FILE`.
+`turnstile_secret`, `email_api_key`, `outbox_key`, `whatsapp_token`, `waha_api_key`, `waha_webhook_hmac_key`, `cf_tunnel_token`
+(todos precisam existir, mesmo vazios, para o `up`). A aplicação lê `VAR` ou `VAR_FILE`.
 
 ```sh
 EVENT_ID=... PUBLIC_BASE_URL=https://techwoman.dev docker compose -f ops/compose.yaml up -d --build --scale api=4

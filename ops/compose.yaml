@@ -19,6 +19,9 @@ x-app-env: &app-env
   COOKIE_SECURE: "true"
   LOG_LEVEL: ${LOG_LEVEL:-info}
   MONGODB_URI_FILE: /run/secrets/mongo_uri
+  # a API decide os canais ao enfileirar e o worker envia: os dois precisam ler o mesmo valor
+  WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
+  WHATSAPP_TRANSPORT: ${WHATSAPP_TRANSPORT:-cloud}
 
 services:
   cloudflared:
@@ -71,7 +74,9 @@ services:
       TURNSTILE_SECRET_FILE: /run/secrets/turnstile_secret
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
       OUTBOX_KEY_FILE: /run/secrets/outbox_key
-    secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret, outbox_key]
+      # E47: só a API lê a chave do HMAC do webhook do WAHA
+      WAHA_WEBHOOK_HMAC_KEY_FILE: /run/secrets/waha_webhook_hmac_key
+    secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret, outbox_key, waha_webhook_hmac_key]
     networks: [app, egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js"]
@@ -92,11 +97,13 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_API_KEY_FILE: /run/secrets/email_api_key
       MENTEE_TOKEN_SECRET_FILE: /run/secrets/mentee_token_secret
-      WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
       WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
       WHATSAPP_TOKEN_FILE: /run/secrets/whatsapp_token
       OUTBOX_KEY_FILE: /run/secrets/outbox_key
-    secrets: [mongo_uri, mentee_token_secret, email_api_key, whatsapp_token, outbox_key]
+      WAHA_URL: ${WAHA_URL:-}
+      WAHA_SESSION: ${WAHA_SESSION:-default}
+      WAHA_API_KEY_FILE: /run/secrets/waha_api_key
+    secrets: [mongo_uri, mentee_token_secret, email_api_key, whatsapp_token, outbox_key, waha_api_key]
     networks: [egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js", "worker"]
@@ -119,4 +126,6 @@ secrets:
   email_api_key: { file: ./secrets/email_api_key }
   outbox_key: { file: ./secrets/outbox_key }
   whatsapp_token: { file: ./secrets/whatsapp_token }
+  waha_api_key: { file: ./secrets/waha_api_key }
+  waha_webhook_hmac_key: { file: ./secrets/waha_webhook_hmac_key }
   cf_tunnel_token: { file: ./secrets/cf_tunnel_token }
