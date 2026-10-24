@@ -10,7 +10,7 @@ import { processOutboxCtx, releaseStuck } from './worker/outbox.js';
 export const HEARTBEAT_FILE = '/tmp/worker-alive';
 
 const log = pino({ level: process.env['LOG_LEVEL'] ?? 'info' });
-const config = loadConfig();
+const config = loadConfig(process.env, 'worker');
 const { client, db } = await connect({ ...(config.mongoUri ? { uri: config.mongoUri } : {}), ...(config.mongoDb ? { dbName: config.mongoDb } : {}) });
 await createIndexes(db);
 const ctx = makeContext({ client, db, config, log: log as never });

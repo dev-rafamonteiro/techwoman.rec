@@ -33,20 +33,22 @@ export interface Config {
   sessionHours: number;
 }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+/** `role: 'worker'` não exige JWT_SECRET nem TURNSTILE_SECRET (o worker não autentica nem valida Turnstile). */
+export function loadConfig(env: NodeJS.ProcessEnv = process.env, role: 'api' | 'worker' = 'api'): Config {
   const nodeEnv = (env['NODE_ENV'] === 'production' ? 'production' : env['NODE_ENV'] === 'test' ? 'test' : 'development') as Config['env'];
   const isProd = nodeEnv === 'production';
   const devSecret = (n: string) => `dev-only-${n}-secret-change-me-dev-only`;
-  const jwtSecret = readEnv('JWT_SECRET', env) ?? (isProd ? '' : devSecret('jwt'));
+  const jwtSecret = readEnv('JWT_SECRET', env) ?? (isProd && role === 'api' ? '' : devSecret('jwt'));
   const menteeTokenSecret = readEnv('MENTEE_TOKEN_SECRET', env) ?? (isProd ? '' : devSecret('mentee'));
-  for (const [name, v] of [['JWT_SECRET', jwtSecret], ['MENTEE_TOKEN_SECRET', menteeTokenSecret]] as const) {
+  const required = role === 'worker' ? ([['MENTEE_TOKEN_SECRET', menteeTokenSecret]] as const) : ([['JWT_SECRET', jwtSecret], ['MENTEE_TOKEN_SECRET', menteeTokenSecret]] as const);
+  for (const [name, v] of required) {
     if (!v || v.length < 32) throw new Error(`${name} (ou ${name}_FILE) ausente ou curto demais (mínimo 32 caracteres)`);
   }
   const turnstileMode = env['TURNSTILE_MODE'] === 'test' ? 'test' : 'live';
   if (isProd && turnstileMode === 'test') throw new Error('TURNSTILE_MODE=test não é permitido em produção');
   const publicBaseUrl = (env['PUBLIC_BASE_URL'] || (isProd ? 'https://techwoman.dev' : 'http://localhost:5173')).replace(/\/$/, '');
   const turnstileSecret = readEnv('TURNSTILE_SECRET', env) ?? null;
-  if (isProd && !turnstileSecret) throw new Error('TURNSTILE_SECRET (ou TURNSTILE_SECRET_FILE) é obrigatório em produção');
+  if (isProd && role === 'api' && !turnstileSecret) throw new Error('TURNSTILE_SECRET (ou TURNSTILE_SECRET_FILE) é obrigatório em produção');
   return {
     env: nodeEnv,
     isProd,
