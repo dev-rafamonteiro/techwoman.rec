@@ -44,17 +44,17 @@ export default function A5MapaMesas() {
   const currentIdx = slots.findIndex((s) => new Date(s.startAt).getTime() <= now && now < new Date(s.endAt).getTime());
   const nextIdx = slots.findIndex((s) => new Date(s.startAt).getTime() > now);
   const focusIdx = currentIdx >= 0 ? currentIdx : nextIdx;
-  const visibleSlots = view === 'all' || focusIdx < 0 ? slots : slots.slice(Math.max(0, focusIdx), focusIdx + 3);
+  const visibleSlots = view === 'all' || focusIdx < 0 ? slots : slots.slice(Math.max(0, focusIdx - 1), focusIdx + 3);
   const cell = (slotId: string, tableId: string) => appts.find((a) => a.slotId === slotId && a.table.id === tableId);
   const sel = appts.find((a) => a.id === selected) ?? null;
 
   return (
     <div className="tw-page tw-stack">
       <PageHead title="Mapa de mesas">
-        <SelectField label="Mostrar" value={view} onChange={(e) => setView(e.target.value as 'now' | 'all')}>
-          <option value="now">Agora</option><option value="all">Dia inteiro</option>
-        </SelectField>
+        <Button size="sm" variant={view === 'now' ? 'primary' : 'secondary'} aria-pressed={view === 'now'} onClick={() => setView('now')}>Agora</Button>
+        <Button size="sm" variant={view === 'all' ? 'primary' : 'secondary'} aria-pressed={view === 'all'} onClick={() => setView('all')}>Dia inteiro</Button>
       </PageHead>
+      <p style={{ margin: 0 }}>{activeTables.length} mesas × {slots.length} horários.</p>
       <ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} />
       {activeTables.length === 0 || slots.length === 0 ? (
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />

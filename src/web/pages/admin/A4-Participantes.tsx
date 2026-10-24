@@ -3,9 +3,11 @@ import { M5ScheduleDrawer } from '../mentora/M5ScheduleDrawer';
 import { ENDPOINTS, type E23Response, MENTEE_STATUSES, PREFERRED_PERIODS, type E35Query, type E36Body, type MenteeAdminView, type MenteeStatus } from '@tw/shared';
 import {
   AreaBadge, Button, CheckboxField, DataTable, ErrorState, Overlay, PriorityBadge, SelectField, SkeletonList, SlotSingleChoice, StatusBadge,
-  TablePicker, TextField, call, callBlob, formatDateTime, formatTime, saveBlob, useQuery, useToast, PERIOD_LABELS, type Column,
+  TablePicker, TextField, call, callBlob, formatDateTime, formatTime, saveBlob, useQuery, useToast, PERIOD_LABELS, maskPhone, type Column,
 } from '../../ui';
 import { PageHead, errMsg, useAreas, useDebounced, useTitle } from './lib/common';
+
+const phoneFmt = (p: string | null) => (p ? maskPhone(p.replace(/^\+55/, '')) : '—');
 
 const STATUS_BADGE: Record<MenteeStatus, Parameters<typeof StatusBadge>[0]['status']> = {
   waiting: 'waiting', invited: 'invited', confirmed: 'confirmed', done: 'done', no_show: 'no_show', cancelled: 'cancelled',
@@ -56,7 +58,7 @@ export default function A4Participantes() {
   const columns: Column<MenteeAdminView>[] = [
     { key: 'name', header: 'Nome', render: (m) => <strong>{m.name}</strong>, text: (m) => m.name },
     { key: 'email', header: 'E-mail', render: (m) => m.email, text: (m) => m.email },
-    { key: 'phone', header: 'WhatsApp', render: (m) => m.phone ?? '—', text: (m) => m.phone ?? '' },
+    { key: 'phone', header: 'WhatsApp', render: (m) => phoneFmt(m.phone), text: (m) => phoneFmt(m.phone) },
     { key: 'area', header: 'Área', render: (m) => <AreaBadge label={areaLabel(m.area)} />, text: (m) => areaLabel(m.area) },
     { key: 'period', header: 'Período', render: (m) => PERIOD_LABELS[m.preferredPeriod], text: (m) => PERIOD_LABELS[m.preferredPeriod] },
     { key: 'status', header: 'Status', render: (m) => <StatusBadge status={STATUS_BADGE[m.status]} />, text: (m) => m.status },
@@ -129,7 +131,7 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string | null; onCl
             <div className="tw-row"><StatusBadge status={STATUS_BADGE[m.status]} />{m.priority && <PriorityBadge />}</div>
             <dl className="adm-dl">
               <dt>E-mail</dt><dd>{m.email}</dd>
-              <dt>WhatsApp</dt><dd>{m.phone ?? '—'}</dd>
+              <dt>WhatsApp</dt><dd>{phoneFmt(m.phone)}</dd>
               <dt>LinkedIn</dt><dd>{m.linkedin ?? '—'}</dd>
               <dt>Área</dt><dd>{areaLabel(m.area)}</dd>
               <dt>Período</dt><dd>{PERIOD_LABELS[m.preferredPeriod]}</dd>

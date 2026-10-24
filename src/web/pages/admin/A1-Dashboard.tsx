@@ -5,9 +5,9 @@ import { Countdown, ConnectionBar, ErrorState, SkeletonList, EmptyState, call, f
 import { BarChart, LineChart, PageHead, useTitle } from './lib/common';
 
 const KIND_LABEL = {
-  invite_expiring: 'Convite prestes a expirar',
-  table_late: 'Mesa com mentoria atrasada',
-  priority_waiting: 'Prioridade esperando há mais de 30 min',
+  invite_expiring: { text: 'Convite prestes a expirar', tone: 'invited' },
+  table_late: { text: 'Mesa atrasada', tone: 'negative' },
+  priority_waiting: { text: 'Prioridade', tone: 'priority' },
 } as const;
 
 /** A1 · Dashboard (E30, atualização a cada 15 s; SSE de E38 antecipa a atualização). */
@@ -35,13 +35,13 @@ export default function A1Dashboard() {
     ['done', 'Concluídas', d.counts.done],
     ['noshow', 'Não compareceu', d.counts.noShow],
     ['tables', 'Mesas ocupadas agora', `${d.tables.occupiedNow}/${d.tables.total}`],
-    ['capacity', 'Sessões livres no dia', d.remainingCapacity],
+    ['capacity', 'Sessões livres hoje', d.remainingCapacity],
     ['mentors', 'Mentoras com login', `${d.mentors.loggedIn}/${d.mentors.total}`],
   ];
   const hours = d.registeredByHour.map((h) => ({ label: formatTime(h.hour).replace(/h00$/, 'h'), value: h.count }));
   return (
     <div className="tw-page tw-stack">
-      <PageHead title="Dashboard"><ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} /></PageHead>
+      <PageHead title="Dashboard"><ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} idleText="a cada 15 s" /></PageHead>
       <div className="adm-kpis" data-testid="a1-kpis">
         {kpis.map(([k, label, v]) => (
           <div className="adm-kpi" key={k} data-testid={`kpi-${k}`}><strong>{v}</strong><span>{label}</span></div>
@@ -60,7 +60,10 @@ export default function A1Dashboard() {
           <ul className="adm-list">
             {d.attention.map((a, i) => (
               <li key={`${a.kind}-${a.appointmentId ?? a.menteeId ?? i}`}>
-                <span><strong>{KIND_LABEL[a.kind]}</strong> · {a.menteeName}{a.mentorName ? ` com ${a.mentorName}` : ''}{a.tableNumber ? ` · mesa ${a.tableNumber}` : ''}</span>
+                <span>
+                  <span className={`tw-badge tw-badge--${KIND_LABEL[a.kind].tone}`}><span className="tw-badge__dot" aria-hidden="true" />{KIND_LABEL[a.kind].text}</span>{' '}
+                  {a.menteeName}{a.mentorName ? ` com ${a.mentorName}` : ''}{a.tableNumber ? ` · mesa ${a.tableNumber}` : ''}{a.kind === 'priority_waiting' ? ' · na fila há mais de 30 min' : ''}
+                </span>
                 <span>{a.kind === 'invite_expiring' ? <Countdown expiresAt={a.at} serverNow={d.serverNow} label="Expira em" /> : `desde ${formatTime(a.at)}`}</span>
               </li>
             ))}
