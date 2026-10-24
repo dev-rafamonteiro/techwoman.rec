@@ -206,7 +206,7 @@ export const SlotSchema = z.object({
 });
 export type Slot = z.infer<typeof SlotSchema>;
 
-export const AreaSchema = z.object({ key: AreaKeySchema, label: z.string().min(1).max(80) });
+export const AreaSchema = z.object({ key: AreaKeySchema, label: z.string().min(1).max(80) }).strict();
 export type Area = z.infer<typeof AreaSchema>;
 
 /** Paginação por cursor (E22, E35, E44, E45). */

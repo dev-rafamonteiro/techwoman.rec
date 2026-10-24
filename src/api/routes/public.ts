@@ -217,7 +217,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
         }
       }
       const after = await ctx.c.mentees.findOne({ _id: fresh._id }, { session });
-      const state = await buildMenteeState(ctx, after!);
+      const state = await buildMenteeState(ctx, after!, session);
       await idem?.markDone(session, { status: 200, body: state });
       return state;
     });

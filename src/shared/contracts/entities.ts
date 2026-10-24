@@ -202,14 +202,16 @@ export const EventConfigSchema = z.object({
   minLeadMinutes: z.number().int().min(0).max(120),
   registrationOpen: z.boolean(),
   areas: z.array(AreaSchema),
-  templates: z.object({
-    registered: z.string().max(1000),
-    invite: z.string().max(1000),
-    confirmed: z.string().max(1000),
-    reminder: z.string().max(1000),
-    expired: z.string().max(1000),
-    cancelled: z.string().max(1000),
-  }),
+  templates: z
+    .object({
+      registered: z.string().max(1000),
+      invite: z.string().max(1000),
+      confirmed: z.string().max(1000),
+      reminder: z.string().max(1000),
+      expired: z.string().max(1000),
+      cancelled: z.string().max(1000),
+    })
+    .strict(),
   version: z.number().int(),
 });
 export type EventConfig = z.infer<typeof EventConfigSchema>;

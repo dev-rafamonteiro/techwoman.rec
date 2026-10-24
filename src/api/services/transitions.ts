@@ -100,7 +100,7 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
   );
   if (!mentee) throw new AppError('INTERNAL', 'Participante da mentoria não encontrada.');
 
-  if (plan.notify) {
+  if (plan.notify && input.action !== 'move_cancel') {
     await enqueueMenteeNotifications(ctx, session, { type: plan.notify, mentee, appointmentId: appt._id });
   }
   if (plan.scheduleReminder) {
