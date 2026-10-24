@@ -10,6 +10,10 @@ x-dev-env: &dev-env
   PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
   MONGODB_DB: ${MONGODB_DB:-techwoman}
   MONGODB_URI: mongodb://mongo-local:27017/?directConnection=true
+  LOG_LEVEL: info
+  TRUST_PROXY: "true"
+  COOKIE_SECURE: "false"
+  MENTEE_TOKEN_SECRET: dev-only-mentee-token-secret-0123456789abcdef
   JWT_SECRET: dev-only-jwt-secret-troque-em-producao-0123456789
   # chaves de teste públicas da Cloudflare (sempre aprovam)
   TURNSTILE_SECRET: 1x0000000000000000000000000000000AA
@@ -22,11 +26,11 @@ services:
     image: mongodb/mongodb-atlas-local:8
     ports:
       - "27017:27017"
-    volumes:
-      - mongo-local-data:/data/db
+    # sem volume de propósito: atlas-local não reinicia limpo sobre dados de um container anterior (RSGhost);
+    # `stop`/`start` preserva os dados, `down` zera o banco de dev.
     networks: [dev]
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1})"]
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'quit(db.hello().isWritablePrimary ? 0 : 1)'"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -88,6 +92,3 @@ services:
 
 networks:
   dev: {}
-
-volumes:
-  mongo-local-data:

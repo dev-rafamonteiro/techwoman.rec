@@ -14,6 +14,10 @@ x-app-env: &app-env
   EVENT_ID: ${EVENT_ID:?defina EVENT_ID}
   PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?defina PUBLIC_BASE_URL}
   MONGODB_DB: ${MONGODB_DB:-techwoman}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+  TRUST_PROXY: "true"
+  COOKIE_SECURE: "true"
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   MONGODB_URI_FILE: /run/secrets/mongo_uri
 
 services:
@@ -62,9 +66,10 @@ services:
     environment:
       <<: *app-env
       JWT_SECRET_FILE: /run/secrets/jwt_secret
+      MENTEE_TOKEN_SECRET_FILE: /run/secrets/mentee_token_secret
       TURNSTILE_SECRET_FILE: /run/secrets/turnstile_secret
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
-    secrets: [mongo_uri, jwt_secret, turnstile_secret]
+    secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret]
     networks: [app, egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js"]
@@ -104,6 +109,7 @@ networks:
 secrets:
   mongo_uri: { file: ./secrets/mongo_uri }
   jwt_secret: { file: ./secrets/jwt_secret }
+  mentee_token_secret: { file: ./secrets/mentee_token_secret }
   turnstile_secret: { file: ./secrets/turnstile_secret }
   email_api_key: { file: ./secrets/email_api_key }
   whatsapp_token: { file: ./secrets/whatsapp_token }
