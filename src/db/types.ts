@@ -115,6 +115,8 @@ export interface MenteeDoc {
   /** Último desfecho (P6): declined_schedule | expired | cancelled_by_staff. */
   lastOutcome: 'declined_schedule' | 'expired' | 'cancelled_by_staff' | null;
   tokenHash: string;
+  /** Versão do token derivado (HMAC); incrementar invalida o link antigo. */
+  tokenVersion: number;
   /** Contador de envios do link pessoal (dedupeKey `registered:<menteeId>:<n>`). */
   linkSendCount: number;
   anonymizedAt: Date | null;

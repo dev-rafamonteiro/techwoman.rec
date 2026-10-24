@@ -158,7 +158,8 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
     case 'move_cancel': {
       // E39 mover: só mentoria confirmada (a nova nasce `confirmed`, mantendo a confirmação da participante).
       if (from !== 'confirmed') return invalid(from, 'mover');
-      return plan(from, 'cancelled', 'confirmed', 'appointment.move', { notify: 'moved', reason: 'moved' });
+      // A mensagem `moved` é enfileirada por quem cria a nova mentoria (referencia o novo horário/mesa).
+      return plan(from, 'cancelled', 'confirmed', 'appointment.move', { reason: 'moved' });
     }
   }
 }

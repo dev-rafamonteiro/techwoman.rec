@@ -266,8 +266,9 @@ export function defineEndpoint<
   return def;
 }
 
-type InferOrNever<T> = T extends z.ZodType ? z.infer<T> : undefined;
-type InferInOrNever<T> = T extends z.ZodType ? z.input<T> : undefined;
+type Present<T> = Exclude<T, undefined>;
+type InferOrNever<T> = [Present<T>] extends [never] ? undefined : Present<T> extends z.ZodType ? z.infer<Present<T>> : undefined;
+type InferInOrNever<T> = [Present<T>] extends [never] ? undefined : Present<T> extends z.ZodType ? z.input<Present<T>> : undefined;
 
 /** Tipos auxiliares para o cliente HTTP. */
 export type ParamsOf<E extends EndpointDef> = InferOrNever<E['params']>;

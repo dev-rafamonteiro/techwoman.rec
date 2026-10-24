@@ -82,6 +82,7 @@ export const menteesSchema: Schema = strictObject(
     currentAppointmentId: oidN,
     lastOutcome: { bsonType: ['string', 'null'], enum: ['declined_schedule', 'expired', 'cancelled_by_staff', null] },
     tokenHash: str,
+    tokenVersion: int,
     linkSendCount: int,
     anonymizedAt: dateN,
     version: int,
