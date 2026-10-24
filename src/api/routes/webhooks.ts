@@ -23,7 +23,7 @@ export function registerWebhookRoutes(app: FastifyInstance, ctx: AppContext): vo
       done(null, {});
     });
 
-    // E47 · POST /webhooks/waha · RN18 · sem login e sem CSRF; assinatura antes de tudo
+    // E47 · POST /webhooks/waha · RN18, RN20 · sem login e sem CSRF; assinatura antes de tudo
     route(
       sub,
       ctx,
@@ -45,7 +45,7 @@ export function registerWebhookRoutes(app: FastifyInstance, ctx: AppContext): vo
         const msg = WahaMessagePayloadSchema.safeParse(ev.data.payload);
         if (!msg.success || !isInboundContactMessage(ev.data.event, msg.data)) return { ok: true as const };
         const result = await handlePresenceReply(ctx, msg.data, req.ip);
-        if (result !== 'ignored' && result !== 'duplicate') ctx.log.info({ code: 'E47', result }, 'resposta de presença');
+        if (result !== 'ignored' && result !== 'duplicate') ctx.log.info({ code: 'E47', result }, 'resposta pelo WhatsApp');
         return { ok: true as const };
       },
     );

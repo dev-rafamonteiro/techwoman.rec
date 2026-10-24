@@ -84,6 +84,10 @@ export const OUTBOX_TYPES = [
   'presence_confirmed',
   'presence_cancelled',
   'presence_unclear',
+  // respostas ao convite pelo WhatsApp (RN20)
+  'invite_closed',
+  'invite_decline_link',
+  'invite_unclear',
 ] as const;
 export const OutboxTypeSchema = z.enum(OUTBOX_TYPES);
 export type OutboxType = z.infer<typeof OutboxTypeSchema>;

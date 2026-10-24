@@ -79,8 +79,9 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     }
     throw new AppError('INVALID_STATE', 'A mentoria mudou de situação. Atualize a tela.');
   }
-  // RN18: saiu de `confirmed` por qualquer caminho, o pedido de presença pendente deixa de valer
-  if (plan.from === 'confirmed' && plan.appointmentTo !== 'confirmed') {
+  // RN18/RN20: saiu de `invited` ou de `confirmed` por qualquer caminho, o convite ou o pedido de presença pendente
+  // deixa de valer (senão um texto qualquer dela cairia nele em E47)
+  if ((plan.from === 'invited' || plan.from === 'confirmed') && plan.appointmentTo !== plan.from) {
     await c.presenceChecks.updateOne({ _id: appt._id, status: 'pending' }, { $set: { status: 'closed' } }, { session });
   }
 

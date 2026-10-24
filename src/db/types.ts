@@ -211,11 +211,18 @@ export interface IdempotencyDoc {
 
 export type PresenceCheckStatus = 'pending' | 'confirmed' | 'cancelled' | 'closed';
 export type PresenceInterpretation = 'confirm' | 'cancel';
+/** `invite` = convite (RN20); `presence` = confirmação de presença (RN18). */
+export type PresenceCheckKind = 'invite' | 'presence';
 
-/** Pedido de confirmação de presença pelo WhatsApp (RN18), um por mentoria. Sem validador. */
+/**
+ * Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença
+ * (RN18; o lembrete substitui o registro do convite). Sem validador.
+ */
 export interface PresenceCheckDoc {
   /** = appointmentId */
   _id: ObjectId;
+  /** Ausente (registros antigos) = `presence`. */
+  kind?: PresenceCheckKind;
   menteeId: ObjectId;
   /** Só dígitos, ex.: `5511996604159`. */
   phone: string;

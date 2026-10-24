@@ -6,7 +6,9 @@ import {
   canSelfBook,
   chooseMentorForSelfBook,
   interpretPresenceText,
+  inviteRowId,
   isRuleError,
+  parseAnswerRowId,
   parsePresenceRowId,
   phoneFromWahaJid,
   planTransition,
@@ -42,8 +44,23 @@ describe("RN18 opções da lista (rowId)", () => {
     expect(parsePresenceRowId(`confirmar:${APPT}`)).toEqual({ answer: "confirm", appointmentId: APPT });
     expect(parsePresenceRowId(` cancelar:${APPT} `)).toEqual({ answer: "cancel", appointmentId: APPT });
   });
-  it.each([null, undefined, "", "confirmar", `confirmar:${APPT.slice(1)}`, `confirmar:${APPT}0`, `remarcar:${APPT}`, `confirmar:${"z".repeat(24)}`])("%j -> null", (r) =>
+  it.each([null, undefined, "", "confirmar", `confirmar:${APPT.slice(1)}`, `confirmar:${APPT}0`, `remarcar:${APPT}`, `confirmar:${"z".repeat(24)}`, `aceitar:${APPT}`, `recusar:${APPT}`])("%j -> null", (r) =>
     expect(parsePresenceRowId(r)).toBeNull());
+});
+
+describe("RN20 opções do convite (rowId) e texto", () => {
+  it("inviteRowId e parseAnswerRowId fazem ida e volta, com a pergunta (kind) de cada família", () => {
+    expect(inviteRowId("confirm", APPT)).toBe(`aceitar:${APPT}`);
+    expect(inviteRowId("cancel", APPT)).toBe(`recusar:${APPT}`);
+    expect(parseAnswerRowId(`aceitar:${APPT}`)).toEqual({ kind: "invite", answer: "confirm", appointmentId: APPT });
+    expect(parseAnswerRowId(` recusar:${APPT} `)).toEqual({ kind: "invite", answer: "cancel", appointmentId: APPT });
+    expect(parseAnswerRowId(`confirmar:${APPT}`)).toEqual({ kind: "presence", answer: "confirm", appointmentId: APPT });
+    expect(parseAnswerRowId(`cancelar:${APPT}`)).toEqual({ kind: "presence", answer: "cancel", appointmentId: APPT });
+    expect(parseAnswerRowId(`aceitar:${APPT}0`)).toBeNull();
+    expect(parseAnswerRowId(null)).toBeNull();
+  });
+  it.each(["Aceito", "aceito!", "aceitar", "Aceito sim, obrigada"])("%j -> confirm", (t) => expect(interpretPresenceText(t)).toBe("confirm"));
+  it.each(["Recuso", "não aceito", "vou recusar"])("%j -> cancel", (t) => expect(interpretPresenceText(t)).toBe("cancel"));
 });
 
 describe("RN18 evento do WAHA", () => {

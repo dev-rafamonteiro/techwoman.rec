@@ -79,9 +79,13 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     appt ? c.tables.findOne({ _id: appt.tableId }) : null,
     item.userId ? c.users.findOne({ _id: item.userId }) : null,
   ]);
-  // RN18: o lembrete marcado em `enqueueReminders` vai como List Message de presença (só o WAHA tem lista e resposta)
-  const presence = item.type === 'reminder' && item.channel === 'whatsapp' && item.payload['presenceCheck'] === true
-    && ctx.config.whatsappTransport === 'waha' && !!appt && !!item.menteeId;
+  // RN18: o lembrete marcado em `enqueueReminders` vai como List Message de presença; RN20: o convite também vai como
+  // List Message (só o WAHA tem lista e resposta)
+  const listable = item.channel === 'whatsapp' && ctx.config.whatsappTransport === 'waha' && !!appt && !!item.menteeId;
+  const listKind: 'presence' | 'invite' | null = !listable ? null
+    : item.type === 'reminder' && item.payload['presenceCheck'] === true ? 'presence'
+    : item.type === 'invite' ? 'invite'
+    : null;
   let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments' | 'list'>;
   try {
     if (item.channel === 'email') {
@@ -103,7 +107,7 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       });
       message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
     } else {
-      message = render({ item, event, mentee, appointment: appt, mentor, table, baseUrl: ctx.config.publicBaseUrl, menteeTokenSecret: ctx.config.menteeTokenSecret, now: ctx.now(), presenceList: presence });
+      message = render({ item, event, mentee, appointment: appt, mentor, table, baseUrl: ctx.config.publicBaseUrl, menteeTokenSecret: ctx.config.menteeTokenSecret, now: ctx.now(), ...(listKind ? { list: listKind } : {}) });
     }
   } catch (err) {
     if (err instanceof RenderError) return await fail(`render: ${err.message}`);
@@ -129,12 +133,13 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     }
     return;
   }
-  if (presence && message.list) {
-    // a mensagem já saiu: falha ao gravar não pode devolver o item para a fila (sairia de novo)
+  if (listKind && message.list) {
+    // a mensagem já saiu: falha ao gravar não pode devolver o item para a fila (sairia de novo). O lembrete de
+    // presença substitui o registro do convite da mesma mentoria (RN20).
     try {
       await c.presenceChecks.replaceOne(
         { _id: appt!._id },
-        { menteeId: item.menteeId!, phone: item.to.replace(/\D/g, ''), messageId: sent?.providerMessageId ?? '', status: 'pending', sentAt: ctx.now(), answeredAt: null, answer: null },
+        { kind: listKind, menteeId: item.menteeId!, phone: item.to.replace(/\D/g, ''), messageId: sent?.providerMessageId ?? '', status: 'pending', sentAt: ctx.now(), answeredAt: null, answer: null },
         { upsert: true },
       );
     } catch (err) {

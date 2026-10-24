@@ -291,7 +291,12 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Momento | Canal | Texto base |
 | --- | --- | --- |
 | Inscrição recebida | E-mail + WhatsApp | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
-| Convite de horário | E-mail + WhatsApp | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
+| Convite de horário | E-mail | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
+| Convite de horário (RN20, texto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Aceito" e "Não posso" (descrição "Você conta o motivo na sua página") |
+| Resposta ao convite: aceitou | WhatsApp | A mensagem de Confirmação normal |
+| Resposta ao convite: não pode (texto fixo) | WhatsApp | "Tudo bem, {nome}! Para recusar, conte o motivo na sua página: {link}. Se for o horário, você continua na fila com prioridade." |
+| Resposta ao convite: não está mais disponível (texto fixo) | WhatsApp | "Este convite não está mais disponível. Veja como está sua inscrição: {link}" |
+| Resposta ao convite: não entendida (texto fixo) | WhatsApp | "Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO." |
 | Confirmação | E-mail + WhatsApp | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
 | Lembrete (antes da mentoria, tempos e canais configurados em A7; padrão 15 min) | WhatsApp e/ou e-mail | "Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!" |
 | Primeiro lembrete pelo WhatsApp: confirmação de presença (RN18, texto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Sim, confirmo" e "Não poderei ir" (descrição "Você poderá escolher outro horário") |

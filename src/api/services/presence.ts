@@ -7,7 +7,7 @@ import { enqueuePresenceReply } from '../lib/outbox.js';
 import { applyTransition } from './transitions.js';
 import {
   interpretPresenceText,
-  parsePresenceRowId,
+  parseAnswerRowId,
   wahaListReplyRowId,
   wahaMessageHash,
   wahaSenderPhone,
@@ -29,9 +29,10 @@ function phoneVariants(phone: string): string[] {
 }
 
 /**
- * RN18 · Resposta à confirmação de presença recebida pelo WhatsApp (E47), já autenticada e filtrada (`message`,
- * nem `fromMe` nem grupo). Tudo numa transação: o registro em `whatsapp_inbound` é a primeira escrita, então o mesmo
- * evento reenviado pelo WAHA cai no índice de `_id` e é descartado; erro de banco desfaz tudo e o WAHA tenta de novo.
+ * RN18/RN20 · Resposta à confirmação de presença ou ao convite recebida pelo WhatsApp (E47), já autenticada e
+ * filtrada (`message`, nem `fromMe` nem grupo). Tudo numa transação: o registro em `whatsapp_inbound` é a primeira
+ * escrita, então o mesmo evento reenviado pelo WAHA cai no índice de `_id` e é descartado; erro de banco desfaz tudo
+ * e o WAHA tenta de novo. O `kind` do `presence_checks` decide o tratamento: uma resposta nunca vale pela outra pergunta.
  */
 export async function handlePresenceReply(ctx: AppContext, p: WahaMessageLike, ip: string | null): Promise<InboundResult | 'duplicate'> {
   const inboundId = wahaMessageHash(p.id);
@@ -51,15 +52,24 @@ export async function handlePresenceReply(ctx: AppContext, p: WahaMessageLike, i
       };
       if (!phone) return finish('ignored');
 
-      // toque na lista: o rowId diz a mentoria; texto (ou opção que não é nossa): o pedido pendente mais recente
+      // toque na lista: o rowId diz a mentoria e a pergunta; texto (ou opção que não é nossa): o pedido pendente mais
+      // recente do telefone, de qualquer `kind`
       const rowId = wahaListReplyRowId(p);
-      const row = parsePresenceRowId(rowId);
+      const row = parseAnswerRowId(rowId);
       const phones = { $in: phoneVariants(phone) };
       let check: PresenceCheckDoc | null;
       let answer: PresenceAnswer | null;
       if (row) {
-        // opção de uma lista já respondida ou de outra mentoria: ignora (não responde por outra)
-        check = await c.presenceChecks.findOne({ _id: new ObjectId(row.appointmentId), phone: phones, status: 'pending' }, { session });
+        // opção de uma lista já respondida, de outra mentoria ou de outra pergunta: ignora (não responde por outra).
+        // Convite que saiu de `invited` por outro caminho (applyTransition fechou, sem resposta): o toque ainda tem
+        // resposta; o texto digitado não cai nele.
+        const base = { _id: new ObjectId(row.appointmentId), phone: phones };
+        check = await c.presenceChecks.findOne(
+          row.kind === 'invite'
+            ? { ...base, kind: 'invite', $or: [{ status: 'pending' }, { status: 'closed', answeredAt: null }] }
+            : { ...base, status: 'pending', kind: { $ne: 'invite' } },
+          { session },
+        );
         answer = row.answer;
       } else {
         check = await c.presenceChecks.findOne({ phone: phones, status: 'pending' }, { session, sort: { sentAt: -1 } });
@@ -73,9 +83,45 @@ export async function handlePresenceReply(ctx: AppContext, p: WahaMessageLike, i
       ]);
       const answerDoc: PresenceCheckDoc['answer'] = { kind: rowId ? 'list' : 'text', text: p.body ?? null, interpretation: answer };
       const close = async () => {
-        await c.presenceChecks.updateOne({ _id: check._id, status: 'pending' }, { $set: { status: 'closed', answeredAt: now, answer: answerDoc } }, { session });
+        await c.presenceChecks.updateOne({ _id: check._id, answeredAt: null }, { $set: { status: 'closed', answeredAt: now, answer: answerDoc } }, { session });
         return finish('ignored');
       };
+
+      if ((check.kind ?? 'presence') === 'invite') {
+        // RN20 · convite: vencido ou já sem `invited` (recusou, expirou, foi cancelado...): fecha e avisa
+        const inviteClosed = async () => {
+          await close();
+          if (mentee) await enqueuePresenceReply(ctx, session, { type: 'invite_closed', mentee, appointmentId: check._id, inboundId });
+          return finish('ignored');
+        };
+        // já aceito pela página ou pelo e-mail: registra o toque, sem dizer que o convite acabou
+        if (check.status === 'closed' && appt?.status === 'confirmed') return close();
+        if (!appt || !mentee || appt.status !== 'invited' || (appt.expiresAt && appt.expiresAt.getTime() <= now.getTime())) return inviteClosed();
+
+        if (answer === null) {
+          await enqueuePresenceReply(ctx, session, { type: 'invite_unclear', mentee, appointmentId: appt._id, inboundId });
+          return finish('unclear');
+        }
+        // "Não posso": nada muda; ela recusa com o motivo pela página (RN06) e ainda pode tocar "Aceito"
+        if (answer === 'cancel') {
+          await enqueuePresenceReply(ctx, session, { type: 'invite_decline_link', mentee, appointmentId: appt._id, inboundId });
+          return finish('cancel');
+        }
+        // "Aceito": como E04 `accept` (a `confirmed` normal é a resposta; lembretes e auditoria vêm de applyTransition)
+        let res;
+        try {
+          res = await applyTransition(ctx, session, { appointmentId: appt._id, action: 'accept', actor, scope: { menteeId: mentee._id }, ip });
+        } catch (err) {
+          // corrida com expiração ou outra resposta: trata como "não está mais disponível"
+          if (err instanceof AppError && (err.code === 'INVITE_EXPIRED' || err.code === 'INVALID_STATE')) return inviteClosed();
+          throw err;
+        }
+        if (!res) return inviteClosed();
+        // applyTransition fechou o convite (`closed`); aqui ele vira `confirmed`
+        await c.presenceChecks.updateOne({ _id: check._id }, { $set: { status: 'confirmed', answeredAt: now, answer: answerDoc } }, { session });
+        return finish('confirm');
+      }
+
       // a mentoria já não está confirmada (cancelada, movida, começou...): fecha sem responder
       if (!appt || !mentee || appt.status !== 'confirmed') return close();
 

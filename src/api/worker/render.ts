@@ -1,7 +1,7 @@
 import { formatTimeBR } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, UserDoc, TableDoc } from '@tw/db';
 import { menteeToken, personalLink } from '../lib/tokens.js';
-import { presenceMinutes, presenceRowId } from '../domain/index.js';
+import { inviteRowId, presenceMinutes, presenceRowId } from '../domain/index.js';
 import type { NotifierList } from './notifier.js';
 
 const SUBJECTS: Record<string, string> = {
@@ -15,21 +15,35 @@ const SUBJECTS: Record<string, string> = {
   presence_confirmed: 'Presença confirmada',
   presence_cancelled: 'Sua mentoria foi cancelada',
   presence_unclear: 'Confirme sua presença',
+  invite_closed: 'Convite não está mais disponível',
+  invite_decline_link: 'Recuse o convite na sua página',
+  invite_unclear: 'Responda ao convite',
 };
 
 const MOVED_DEFAULT = 'Sua mentoria foi remarcada: {horario} na {mesa} com {mentora}. Sua confirmação continua valendo.';
 
-/** Respostas à confirmação de presença (RN18): texto fixo no código (UI-SPEC, Mensagens enviadas), não editável em A7. */
+/** Respostas à presença (RN18) e ao convite (RN20): texto fixo no código (UI-SPEC, Mensagens enviadas), não editável em A7. */
 const FIXED: Record<string, string> = {
   presence_confirmed: 'Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}.',
   presence_cancelled: 'Tudo bem, {nome}. Sua mentoria das {horario} foi cancelada e você continua na fila com prioridade. Se quiser, escolha um novo horário aqui: {link}',
   presence_unclear: 'Não entendi. Responda SIM para confirmar ou NÃO para cancelar sua mentoria das {horario}.',
+  invite_decline_link: 'Tudo bem, {nome}! Para recusar, conte o motivo na sua página: {link}. Se for o horário, você continua na fila com prioridade.',
+  invite_closed: 'Este convite não está mais disponível. Veja como está sua inscrição: {link}',
+  invite_unclear: 'Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO.',
 };
 
 /** List Message de presença (RN18, texto fixo): primeiro lembrete pelo WhatsApp. */
 const PRESENCE_LIST = {
   title: 'Oi, {nome}!',
   description: 'Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?',
+  footer: 'Se preferir, responda SIM ou NÃO',
+  button: 'Responder',
+};
+
+/** List Message do convite (RN20, texto fixo): item `whatsapp` do `invite`. */
+const INVITE_LIST = {
+  title: 'Oi, {nome}!',
+  description: '{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}',
   footer: 'Se preferir, responda SIM ou NÃO',
   button: 'Responder',
 };
@@ -45,8 +59,11 @@ export interface RenderInput {
   menteeTokenSecret: string;
   /** Hora do envio: `{minutos}` do lembrete é calculado agora (RN18). */
   now: Date;
-  /** Lembrete marcado com `payload.presenceCheck` e WhatsApp pelo WAHA: vai como List Message. */
-  presenceList?: boolean;
+  /**
+   * WhatsApp pelo WAHA como List Message: `presence` = lembrete marcado com `payload.presenceCheck` (RN18);
+   * `invite` = convite (RN20).
+   */
+  list?: 'presence' | 'invite';
 }
 
 export function render(i: RenderInput): { subject: string; text: string; list?: NotifierList } {
@@ -64,7 +81,23 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
     link: i.mentee ? personalLink(i.baseUrl, menteeToken(i.menteeTokenSecret, i.mentee._id, i.mentee.tokenVersion)) : '',
   };
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
-  if (i.presenceList && a) {
+  if (i.list === 'invite' && a) {
+    const list: NotifierList = {
+      title: fill(INVITE_LIST.title),
+      description: fill(INVITE_LIST.description),
+      footer: INVITE_LIST.footer,
+      button: INVITE_LIST.button,
+      sections: [{
+        title: 'Convite',
+        rows: [
+          { title: 'Aceito', rowId: inviteRowId('confirm', a._id.toHexString()), description: null },
+          { title: 'Não posso', rowId: inviteRowId('cancel', a._id.toHexString()), description: 'Você conta o motivo na sua página' },
+        ],
+      }],
+    };
+    return { subject, text: `${list.title} ${list.description}`, list };
+  }
+  if (i.list === 'presence' && a) {
     const list: NotifierList = {
       title: fill(PRESENCE_LIST.title),
       description: fill(PRESENCE_LIST.description),

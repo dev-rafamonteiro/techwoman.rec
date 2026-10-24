@@ -1,11 +1,13 @@
 import type { ReminderRuleInput } from './reminder.js';
 
 /**
- * RN18 · Confirmação de presença pelo WhatsApp (WAHA). Funções puras usadas pelo worker (envio da List Message) e
- * pelo webhook E47 (leitura da resposta).
+ * RN18 · Confirmação de presença e RN20 · convite pelo WhatsApp (WAHA). Funções puras usadas pelo worker (envio da
+ * List Message) e pelo webhook E47 (leitura da resposta).
  */
 
 export type PresenceAnswer = 'confirm' | 'cancel';
+/** Qual pergunta: convite (RN20) ou confirmação de presença (RN18). Igual a `presence_checks.kind`. */
+export type AnswerKind = 'invite' | 'presence';
 
 /** `whatsapp_inbound` guarda cada mensagem recebida por 7 dias (só para descartar o webhook repetido). */
 export const WHATSAPP_INBOUND_TTL_DAYS = 7;
@@ -37,29 +39,43 @@ export function presenceReminderMinutes(
 // ---------------------------------------------------------------------------
 
 const ROW_ACTION = { confirm: 'confirmar', cancel: 'cancelar' } as const;
-const ROW_RE = /^(confirmar|cancelar):([0-9a-f]{24})$/;
+const INVITE_ROW_ACTION = { confirm: 'aceitar', cancel: 'recusar' } as const;
+const ROW_RE = /^(confirmar|cancelar|aceitar|recusar):([0-9a-f]{24})$/;
 
-/** `rowId` das opções da List Message: `confirmar:<appointmentId>` e `cancelar:<appointmentId>`. */
+/** `rowId` das opções da List Message de presença: `confirmar:<appointmentId>` e `cancelar:<appointmentId>`. */
 export function presenceRowId(answer: PresenceAnswer, appointmentId: string): string {
   return `${ROW_ACTION[answer]}:${appointmentId}`;
 }
 
-/** Lê o `rowId` escolhido na lista; null se não for uma opção nossa. */
-export function parsePresenceRowId(rowId: string | null | undefined): { answer: PresenceAnswer; appointmentId: string } | null {
+/** RN20 · `rowId` das opções do convite: `aceitar:<appointmentId>` ("Aceito") e `recusar:<appointmentId>` ("Não posso"). */
+export function inviteRowId(answer: PresenceAnswer, appointmentId: string): string {
+  return `${INVITE_ROW_ACTION[answer]}:${appointmentId}`;
+}
+
+/** Lê o `rowId` escolhido em qualquer das listas (convite ou presença); null se não for uma opção nossa. */
+export function parseAnswerRowId(rowId: string | null | undefined): { kind: AnswerKind; answer: PresenceAnswer; appointmentId: string } | null {
   const m = ROW_RE.exec((rowId ?? '').trim());
   if (!m) return null;
-  return { answer: m[1] === 'confirmar' ? 'confirm' : 'cancel', appointmentId: m[2]! };
+  const kind: AnswerKind = m[1] === 'aceitar' || m[1] === 'recusar' ? 'invite' : 'presence';
+  return { kind, answer: m[1] === 'confirmar' || m[1] === 'aceitar' ? 'confirm' : 'cancel', appointmentId: m[2]! };
+}
+
+/** Lê o `rowId` da lista de presença (RN18); null se não for uma opção dela. */
+export function parsePresenceRowId(rowId: string | null | undefined): { answer: PresenceAnswer; appointmentId: string } | null {
+  const r = parseAnswerRowId(rowId);
+  return r && r.kind === 'presence' ? { answer: r.answer, appointmentId: r.appointmentId } : null;
 }
 
 // ---------------------------------------------------------------------------
 // Resposta digitada
 // ---------------------------------------------------------------------------
 
-const SIM = new Set(['sim', 's', 'confirmo', 'confirmar', 'ok', '1']);
-const NAO = new Set(['nao', 'n', 'cancelar', 'cancela', 'nao posso', '2']);
+// "aceito"/"recuso" vêm do convite (RN20); valem para as duas perguntas
+const SIM = new Set(['sim', 's', 'confirmo', 'confirmar', 'aceito', 'aceitar', 'ok', '1']);
+const NAO = new Set(['nao', 'n', 'cancelar', 'cancela', 'nao posso', 'nao aceito', 'recuso', 'recusar', '2']);
 // Frase livre: sinais de sim/não no começo de alguma palavra (texto já sem acento).
-const SINAIS_SIM = ['sim', 'confirm', 'estarei', 'vou sim', 'vou ir', 'pode contar', 'ok', 'beleza', 'claro', 'com certeza'];
-const SINAIS_NAO = ['nao', 'cancel', 'desmarc', 'nem vou', 'impossivel', 'nao consigo'];
+const SINAIS_SIM = ['sim', 'confirm', 'aceit', 'estarei', 'vou sim', 'vou ir', 'pode contar', 'ok', 'beleza', 'claro', 'com certeza'];
+const SINAIS_NAO = ['nao', 'cancel', 'recus', 'desmarc', 'nem vou', 'impossivel', 'nao consigo'];
 // Dúvida ou condição: não decide, pede SIM ou NÃO de novo.
 const SINAIS_DUVIDA = ['nao sei', 'talvez', 'depende', 'acho que', 'mas ', 'atras', '?'];
 

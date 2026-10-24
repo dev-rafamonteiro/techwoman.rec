@@ -148,7 +148,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 | `appointments` | Convites e mentorias (mesa × horário × mentora × participante) | M5, M6, A5, P6 |
 | `outbox` | Notificações a enviar e lembretes agendados | A9 |
 | `audit_logs` | Trilha de auditoria | A9 |
-| `presence_checks` | Pedido de confirmação de presença pelo WhatsApp (RN18), um por mentoria | P6, A9 |
+| `presence_checks` | Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença (RN18) | P6, A9 |
 | `whatsapp_inbound` | Mensagens recebidas do WAHA já processadas (deduplicação, TTL de 7 dias) | — |
 
 ### events
@@ -193,7 +193,7 @@ As duas travas são campos booleanos mantidos junto com o status:
 
 - `outbox`: `type`, `channel` (`email` | `whatsapp`), `to`, `menteeId`, `appointmentId`, `payload`, `status` (`pending` | `sending` | `sent` | `failed` | `skipped`), `attempts`, `nextAttemptAt`, `lastError`, `dedupeKey`.
 - `audit_logs`: `at`, `actorId`, `actorRole`, `action`, `entity`, `entityId`, `before`, `after`, `ip`.
-- `presence_checks` (sem validador; `_id` = `appointmentId`): `menteeId`, `phone` (só dígitos, ex.: `5511996604159`), `messageId` (hash final do id da mensagem no WAHA), `status` (`pending` | `confirmed` | `cancelled` | `closed`), `sentAt`, `answeredAt`, `answer{kind: "list" | "text", text, interpretation: "confirm" | "cancel" | null}`. Índice `{ phone: 1, status: 1, sentAt: -1 }`.
+- `presence_checks` (sem validador; `_id` = `appointmentId`): `kind` (`invite` | `presence`; ausente = `presence`), `menteeId`, `phone` (só dígitos, ex.: `5511996604159`), `messageId` (hash final do id da mensagem no WAHA), `status` (`pending` | `confirmed` | `cancelled` | `closed`), `sentAt`, `answeredAt`, `answer{kind: "list" | "text", text, interpretation: "confirm" | "cancel" | null}`. Índice `{ phone: 1, status: 1, sentAt: -1 }`.
 - `whatsapp_inbound` (sem validador; `_id` = hash final do id da mensagem recebida): `receivedAt`, `expireAt` (TTL), `phone`, `result` (`confirm` | `cancel` | `unclear` | `ignored`). Serve só para descartar o mesmo evento reenviado pelo WAHA.
 
 ### Índices
@@ -266,6 +266,10 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
     - Não entendido: mantém `pending` e envia `presence_unclear`.
     - Mesma mensagem recebida de novo (o WAHA repete o webhook): descartada por `whatsapp_inbound`.
 19. **RN19 · Trocar de horário pela participante.** A transição `mentee_reschedule` (de `confirmed`, antes do início) cancela a mentoria (mesa e horário livres na hora) e devolve a participante à fila com `priority = true`, `priorityReason = "declined_schedule"`, `lastOutcome = "declined_schedule"` e o `queuedAt` original. Vem do "Não poderei ir" do WhatsApp (RN18) ou do "Trocar de horário" em P6 (E04 `reschedule`). Uma participante `waiting` com `lastOutcome = "declined_schedule"` pode escolher sozinha um horário livre pelo link pessoal: E07 lista os horários futuros (respeitando `minLeadMinutes`) em que existe mentora ativa da área dela, com o horário na disponibilidade, sem mentoria ativa nele, e uma mesa ativa livre; `matchesPeriod` marca os do período preferido (RN14). E08 reconfere tudo na transação, escolhe a mentora com menos mentorias ativas no evento (empate: nome), a mesa pela RN13, e cria a mentoria já `confirmed` (`createdBy` = a mentora escolhida, `confirmedBy` e `history` com ator participante, auditoria `appointment.self_book`); a participante vira `confirmed` sem prioridade, e saem `confirmed` e os lembretes (RN15, RN18). Mentoras e admins continuam podendo convidá-la pela fila enquanto ela não escolhe.
+20. **RN20 · Convite pelo WhatsApp com resposta direta.** O item `whatsapp` do `invite` sai como List Message (texto fixo, UI-SPEC) com as opções "Aceito" (`rowId` `aceitar:<appointmentId>`) e "Não posso" (`recusar:<appointmentId>`). Ao enviar, o worker grava `presence_checks` com `kind = invite`, `pending` (o lembrete de presença da mesma mentoria, depois, substitui o registro com `kind = presence`). Resposta recebida em E47, com a mesma correlação da RN18 (`rowId`, ou texto pelo `pending` mais recente do telefone, de qualquer `kind`):
+    - Aceito (ou texto de confirmação): se o convite ainda está `invited` e não venceu, aplica `accept` com ator participante, como E04 (sai a `confirmed` normal, que é a resposta, e os lembretes); `presence_checks.status = confirmed`. Se não está mais `invited` ou venceu: `closed` e envia `invite_closed`.
+    - Não posso (ou texto de recusa): não muda nada no sistema; envia `invite_decline_link` com o link pessoal, onde ela recusa com o motivo (RN06). O registro continua `pending`: ela ainda pode tocar "Aceito" enquanto o convite valer.
+    - Não entendido: mantém `pending` e envia `invite_unclear`.
 
 ## API REST ligada às telas
 
@@ -451,13 +455,14 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
 | Gatilho | Tipo | Canais | `dedupeKey` |
 | --- | --- | --- | --- |
 | Inscrição criada ou link reenviado | `registered` | E-mail, WhatsApp | `registered:<menteeId>:<n>` |
-| Convite criado | `invite` | E-mail, WhatsApp | `invite:<appointmentId>` |
+| Convite criado (no WhatsApp, List Message com resposta direta, RN20) | `invite` | E-mail, WhatsApp | `invite:<appointmentId>` |
 | Confirmada | `confirmed` | E-mail, WhatsApp | `confirmed:<appointmentId>` |
 | Lembretes antes da mentoria (A7, até 10; padrão 15 min); o primeiro pelo WhatsApp é a List Message de presença (RN18) | `reminder` | Canais da regra (WhatsApp sem telefone ou desligado vira e-mail) | `reminder:<appointmentId>:<minutos>` |
 | Convite expirado | `expired` | E-mail | `expired:<appointmentId>` |
 | Cancelada pela mentora/admin ou movida | `cancelled` / `moved` | E-mail, WhatsApp | `cancelled:<appointmentId>` |
 | Senha provisória enviada pelo admin | `staff_password` | E-mail | `pwd:<userId>:<n>` |
 | Resposta à confirmação de presença (RN18) | `presence_confirmed` / `presence_cancelled` / `presence_unclear` | WhatsApp | `presence:<id da mensagem recebida>` |
+| Resposta ao convite pelo WhatsApp (RN20) | `invite_closed` / `invite_decline_link` / `invite_unclear` | WhatsApp | `presence:<id da mensagem recebida>` |
 
 **Worker:**
 
@@ -474,7 +479,7 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
   - `waha`: WAHA (WhatsApp HTTP API, engine GOWS), envio direto. Texto por `POST {WAHA_URL}/api/sendText` e a List Message de presença por `POST {WAHA_URL}/api/sendList` (`sendButtons` não existe no GOWS), com `X-Api-Key` = `WAHA_API_KEY`/`WAHA_API_KEY_FILE` e `session` = `WAHA_SESSION` (padrão `default`); `chatId` = telefone só com dígitos + `@c.us`. O envio devolve o id da mensagem (`true_<chatId>_<hash>`); o worker guarda o `<hash>`. Respostas chegam por E47: a sessão do WAHA precisa ter, em `config.webhooks`, a URL pública de E47 com `events: ["message"]` e `hmac.key` = `WAHA_WEBHOOK_HMAC_KEY`/`WAHA_WEBHOOK_HMAC_KEY_FILE` (só a API lê essa chave). Em dev, WAHA local em `http://host.containers.internal:3000`. Erros: 400/401/404 e 501 são permanentes; rede, 5xx, 408 e 429 tentam de novo.
   - `cloud`: WhatsApp Business Cloud API (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`), só texto; exige modelos aprovados.
   - `WHATSAPP_ENABLED=true` liga o canal; desligado, tudo vai por e-mail.
-- Os textos vêm dos modelos de A7 (o lembrete aceita também `{minutos}`); as variáveis são substituídas no worker. A List Message de presença e as três respostas (`presence_*`) têm texto fixo no código (UI-SPEC, Mensagens enviadas). Todo link de mensagem aponta para P6 com o token da participante.
+- Os textos vêm dos modelos de A7 (o lembrete aceita também `{minutos}`); as variáveis são substituídas no worker. As List Messages (convite e presença) e as respostas (`presence_*`, `invite_*`) têm texto fixo no código (UI-SPEC, Mensagens enviadas). Todo link de mensagem aponta para P6 com o token da participante.
 
 **Arquivo .ics:** gerado pelo endpoint E06 e também anexado ao e-mail de confirmação (detalhes em Layouts de e-mail, abaixo).
 

@@ -10,8 +10,8 @@ import { sealSecret } from './secret-box.js';
 
 /**
  * Canais por tipo (PLAN, "Notificações"): e-mail é o canal obrigatório; WhatsApp só se ligado e houver telefone.
- * Lembrete: WhatsApp (e-mail se não houver). Expirado: só e-mail. Respostas da presença (RN18): só WhatsApp, e nada
- * sem WhatsApp disponível.
+ * Lembrete: WhatsApp (e-mail se não houver). Expirado: só e-mail. Respostas da presença (RN18) e do convite (RN20):
+ * só WhatsApp, e nada sem WhatsApp disponível.
  */
 export function channelsFor(ctx: AppContext, type: OutboxType, mentee: Pick<MenteeDoc, 'phone'> | null, wanted?: readonly OutboxChannel[]): OutboxChannel[] {
   const wa = ctx.config.whatsappEnabled && !!mentee?.phone;
@@ -39,8 +39,14 @@ export interface EnqueueInput {
   channelPayload?: Partial<Record<OutboxChannel, Record<string, unknown>>>;
 }
 
-export type PresenceReplyType = 'presence_confirmed' | 'presence_cancelled' | 'presence_unclear';
-const isPresenceReply = (t: OutboxType): t is PresenceReplyType => t === 'presence_confirmed' || t === 'presence_cancelled' || t === 'presence_unclear';
+/** Respostas fixas pelo WhatsApp à presença (RN18) e ao convite (RN20). */
+export type PresenceReplyType =
+  | 'presence_confirmed' | 'presence_cancelled' | 'presence_unclear'
+  | 'invite_closed' | 'invite_decline_link' | 'invite_unclear';
+const PRESENCE_REPLIES: ReadonlySet<OutboxType> = new Set<PresenceReplyType>([
+  'presence_confirmed', 'presence_cancelled', 'presence_unclear', 'invite_closed', 'invite_decline_link', 'invite_unclear',
+]);
+const isPresenceReply = (t: OutboxType): t is PresenceReplyType => PRESENCE_REPLIES.has(t);
 
 function dedupeBase(i: EnqueueInput): string {
   if (i.type === 'registered') return `registered:${i.mentee._id}:${i.dedupeSuffix ?? 0}`;
@@ -137,7 +143,7 @@ export async function enqueueReminders(
   }
 }
 
-/** RN18 · Resposta fixa à confirmação de presença (só WhatsApp; sem WhatsApp disponível, não sai nada). */
+/** RN18/RN20 · Resposta fixa à presença ou ao convite (só WhatsApp; sem WhatsApp disponível, não sai nada). */
 export async function enqueuePresenceReply(
   ctx: AppContext,
   session: ClientSession | undefined,
