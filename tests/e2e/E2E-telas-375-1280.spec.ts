@@ -48,18 +48,22 @@ async function check(page: import("@playwright/test").Page, code: string, url: s
 }
 
 const REF_CODE = (code: string) => code.split("-")[0]!; // P6-invalido -> P6
+/** A3-importar não tem arte própria (A3.html é o formulário). */
+const NO_REF = new Set(["A3-importar"]);
 
 /** Textos de títulos/botões/rótulos do 1º estado da arte (design/screens/<P>.html) na largura pedida. */
 async function referenceTexts(browser: import("@playwright/test").Browser, code: string, width: number): Promise<string[] | null> {
   const file = resolve(DESIGN, `${REF_CODE(code)}.html`);
-  if (!existsSync(file)) return null;
+  if (NO_REF.has(code) || !existsSync(file)) return null;
   const html = readFileSync(file, "utf8");
   const frames = [...html.matchAll(/<template data-frame data-w="(\d+)"[^>]*>([\s\S]*?)<\/template>/g)];
   const pick = frames.find((f) => Number(f[1]) === width) ?? frames[0];
   if (!pick) return null;
   const page = await browser.newPage({ viewport: { width, height: 900 } });
   await page.setContent(pick[2]!);
-  const texts = await page.locator("h1, h2, h3, button, label, a").allInnerTexts();
+  // P: títulos, botões, rótulos e links; M/A: só títulos e rótulos (botões e linhas da arte são dados de exemplo)
+  const sel = code.startsWith("P") ? "h1, h2, h3, button, label, a" : "h1, h2, label";
+  const texts = await page.locator(sel).allInnerTexts();
   await page.screenshot({ path: resolve(SHOTS, `ref-${REF_CODE(code)}-${width}.png`), fullPage: true });
   await page.close();
   return texts.map((t) => t.replace(/\s+/g, " ").trim()).filter((t) => t.length > 2 && !t.startsWith("["));
