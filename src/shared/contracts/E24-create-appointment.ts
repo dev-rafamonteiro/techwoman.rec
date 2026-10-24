@@ -4,7 +4,7 @@ import { MentorAppointmentViewSchema } from './entities.js';
 
 /**
  * E24 · POST /mentor/appointments · M5 · RN04, RN05 · aceita Idempotency-Key
- * 409: MENTEE_TAKEN, TABLE_TAKEN, MENTOR_BUSY, SLOT_UNAVAILABLE (+ MENTOR_NOT_AVAILABLE, LEAD_TIME_TOO_SHORT, TABLE_INACTIVE).
+ * 409: MENTEE_TAKEN, TABLE_TAKEN, MENTOR_BUSY, SLOT_UNAVAILABLE.
  */
 export const E24BodySchema = z.object({ menteeId: IdSchema, slotId: SlotIdSchema, tableId: IdSchema }).strict();
 export type E24Body = z.infer<typeof E24BodySchema>;

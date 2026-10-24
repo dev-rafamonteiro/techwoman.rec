@@ -99,16 +99,10 @@ export const ERROR_CODES = [
   'SLOT_UNAVAILABLE',
   // convite / inscrição
   'INVITE_EXPIRED',
-  'INVITE_NOT_ACTIVE',
   'ALREADY_REGISTERED',
   'REGISTRATION_CLOSED',
   'INVALID_STATE',
   'TOO_EARLY',
-  'MENTOR_NOT_AVAILABLE',
-  'TABLE_INACTIVE',
-  'MENTOR_INACTIVE',
-  'MENTEE_NOT_WAITING',
-  'LEAD_TIME_TOO_SHORT',
   // regras de configuração
   'SLOT_IN_USE',
   'GRID_LOCKED',
@@ -153,16 +147,10 @@ export const ERROR_HTTP_STATUS: Record<ErrorCode, number> = {
   MENTOR_BUSY: 409,
   SLOT_UNAVAILABLE: 409,
   INVITE_EXPIRED: 409,
-  INVITE_NOT_ACTIVE: 409,
   ALREADY_REGISTERED: 200,
   REGISTRATION_CLOSED: 403,
   INVALID_STATE: 409,
   TOO_EARLY: 409,
-  MENTOR_NOT_AVAILABLE: 409,
-  TABLE_INACTIVE: 409,
-  MENTOR_INACTIVE: 409,
-  MENTEE_NOT_WAITING: 409,
-  LEAD_TIME_TOO_SHORT: 409,
   SLOT_IN_USE: 409,
   GRID_LOCKED: 409,
   TABLE_IN_USE: 409,
@@ -303,3 +291,7 @@ export function fullPath(path: string, params?: Record<string, string | number>)
 
 export const IdParamsSchema = z.object({ id: IdSchema });
 export type IdParams = z.infer<typeof IdParamsSchema>;
+
+/** `details.reason` de SLOT_UNAVAILABLE (RN04). */
+export const SLOT_UNAVAILABLE_REASONS = ['not_in_event', 'not_available', 'lead_time', 'mentor_inactive', 'table_inactive'] as const;
+export type SlotUnavailableReason = (typeof SLOT_UNAVAILABLE_REASONS)[number];

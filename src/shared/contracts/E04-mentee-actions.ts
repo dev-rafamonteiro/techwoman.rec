@@ -11,7 +11,7 @@ export const E04BodySchema = z.discriminatedUnion('action', [
 ]);
 export type E04Body = z.infer<typeof E04BodySchema>;
 
-/** Devolve o estado atualizado (mesmo formato de E03). Erros: INVITE_EXPIRED, INVITE_NOT_ACTIVE, INVALID_STATE. */
+/** Devolve o estado atualizado (mesmo formato de E03). Erros: INVITE_EXPIRED, INVALID_STATE. */
 export const E04ResponseSchema = E03ResponseSchema;
 export type E04Response = z.infer<typeof E04ResponseSchema>;
 
