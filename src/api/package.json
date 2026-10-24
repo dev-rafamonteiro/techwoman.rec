@@ -16,6 +16,18 @@
     "./config": {
       "types": "./dist/config.d.ts",
       "default": "./dist/config.js"
+    },
+    "./worker/expire": {
+      "types": "./dist/worker/expire.d.ts",
+      "default": "./dist/worker/expire.js"
+    },
+    "./worker/outbox": {
+      "types": "./dist/worker/outbox.d.ts",
+      "default": "./dist/worker/outbox.js"
+    },
+    "./worker/notifier": {
+      "types": "./dist/worker/notifier.d.ts",
+      "default": "./dist/worker/notifier.js"
     }
   },
   "files": [
