@@ -166,15 +166,14 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string | null; onCl
   );
 }
 
-/** Agendar manualmente (E39): escolhe a mentora e reutiliza o M5ScheduleDrawer do web-app (loadOptions/submit próprios). */
+/** Agendar manualmente (E39): M5ScheduleDrawer do web-app com mentorPicker, loadOptions (E38 + disponibilidade) e onSubmit (E39Create). */
 function ManualSchedule({ open, mentee, areaLabel, onClose, onDone }: { areaLabel: (k: string) => string; open: boolean; mentee: MenteeAdminView; onClose: () => void; onDone: () => Promise<void> }) {
   const mentors = useQuery((s) => call(ENDPOINTS.E31List, { query: { status: 'active' }, signal: s }), []);
   const [mentorId, setMentorId] = useState('');
-  const [confirmed, setConfirmed] = useState(false);
-  useEffect(() => { if (!open) { setMentorId(''); setConfirmed(false); } }, [open]);
+  useEffect(() => { if (!open) setMentorId(''); }, [open]);
   const mentor = mentors.status === 'success' ? mentors.data.items.find((m) => m.id === mentorId) : undefined;
 
-  const loadOptions = async (_menteeId: string, slotId?: string): Promise<E23Response> => {
+  const loadOptions = async (slotId?: string): Promise<E23Response> => {
     const sched = await call(ENDPOINTS.E38);
     const active = sched.appointments.filter((a) => ['invited', 'confirmed', 'in_progress'].includes(a.status));
     const slots = sched.slots
@@ -184,28 +183,24 @@ function ManualSchedule({ open, mentee, areaLabel, onClose, onDone }: { areaLabe
     const tables = sched.tables.filter((t) => t.active).map((t) => ({ ...t, free: !active.some((a) => a.slotId === selectedSlotId && a.table.id === t.id) }));
     return { slots, selectedSlotId, tables, suggestedTableId: tables.find((t) => t.free)?.id ?? null, previousTableId: null };
   };
-  const submit = (b: { menteeId: string; slotId: string; tableId: string }) => call(ENDPOINTS.E39Create, { body: { ...b, mentorId } });
+  const onSubmit = (b: { menteeId: string; slotId: string; tableId: string; mentorId?: string }) =>
+    call(ENDPOINTS.E39Create, { body: { menteeId: b.menteeId, slotId: b.slotId, tableId: b.tableId, mentorId: b.mentorId ?? mentorId } });
 
-  if (!confirmed) {
-    return (
-      <Overlay title={`Agendar ${mentee.name}`} open={open} onClose={onClose}>
-        {mentors.status === 'loading' && <SkeletonList rows={1} height={60} />}
-        {mentors.status === 'error' && <ErrorState error={mentors.error} onRetry={mentors.reload} />}
-        {mentors.status === 'success' && (
-          <div className="tw-stack" data-testid="manual-schedule">
-            <SelectField label="Mentora" value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
-              <option value="">Escolha…</option>
-              {mentors.data.items.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </SelectField>
-            <Button disabled={!mentorId} onClick={() => setConfirmed(true)}>Continuar</Button>
-          </div>
-        )}
-      </Overlay>
-    );
-  }
+  const picker = (
+    <div data-testid="manual-schedule">
+      {mentors.status === 'loading' && <SkeletonList rows={1} height={56} />}
+      {mentors.status === 'error' && <ErrorState error={mentors.error} onRetry={mentors.reload} />}
+      {mentors.status === 'success' && (
+        <SelectField label="Mentora" value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
+          <option value="">Escolha…</option>
+          {mentors.data.items.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </SelectField>
+      )}
+    </div>
+  );
   return (
-    <M5ScheduleDrawer open={open} onClose={onClose} mentee={mentee} areaLabel={areaLabel} loadOptions={loadOptions} submit={submit}
-      header={<p><strong>Mentora:</strong> {mentor?.name}</p>} submitLabel="Agendar" helpText="O admin agenda em nome da mentora; a participante recebe o convite."
+    <M5ScheduleDrawer open={open} onClose={onClose} mentee={mentee} areaLabel={areaLabel} mentorId={mentorId} mentorPicker={picker}
+      loadOptions={loadOptions} onSubmit={onSubmit} submitLabel="Agendar" helpText="O admin agenda em nome da mentora; a participante recebe o convite."
       onDone={() => void onDone()} />
   );
 }
