@@ -17,11 +17,22 @@ interface AuthValue {
 
 const Ctx = createContext<AuthValue | null>(null);
 
-export const loginUrl = (next?: string) => (next && next !== '/' ? `/entrar?next=${encodeURIComponent(next)}` : '/entrar');
+export const loginUrl = (next?: string) => {
+  const n = safeNext(next);
+  return n && n !== '/' ? `/entrar?next=${encodeURIComponent(n)}` : '/entrar';
+};
 
-/** Só aceita rota de retorno interna (evita open redirect). */
+/** Só aceita rota de retorno interna: começa com "/", sem "//", sem "\\", sem caracteres de controle nem esquema. */
 export function safeNext(next: string | null | undefined): string | null {
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+  if (!next || !next.startsWith('/') || next.startsWith('//')) return null;
+  // eslint-disable-next-line no-control-regex
+  if (/[\\\u0000-\u001f\u007f]/.test(next) || /^\/[a-z][a-z0-9+.-]*:/i.test(next)) return null;
+  try {
+    if (/[\\\u0000-\u001f]/.test(decodeURIComponent(next))) return null;
+  } catch {
+    return null;
+  }
+  return next;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

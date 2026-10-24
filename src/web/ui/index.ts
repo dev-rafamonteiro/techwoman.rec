@@ -18,3 +18,4 @@ export * from '../net/useQuery';
 export * from '../net/useEventStream';
 export * from '../net/usePolling';
 export { useAuth, RequireRole, AuthProvider } from '../shell/auth';
+export { safeNext, loginUrl } from '../shell/auth';
