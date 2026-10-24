@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ENDPOINTS, MENTEE_STATUSES, PREFERRED_PERIODS, type E35Query, type E36Body, type MenteeAdminView, type MenteeStatus } from '@tw/shared';
+import { M5ScheduleDrawer } from '../mentora/M5ScheduleDrawer';
+import { ENDPOINTS, type E23Response, MENTEE_STATUSES, PREFERRED_PERIODS, type E35Query, type E36Body, type MenteeAdminView, type MenteeStatus } from '@tw/shared';
 import {
   AreaBadge, Button, CheckboxField, DataTable, ErrorState, Overlay, PriorityBadge, SelectField, SkeletonList, SlotSingleChoice, StatusBadge,
   TablePicker, TextField, call, callBlob, formatDateTime, formatTime, saveBlob, useQuery, useToast, PERIOD_LABELS, type Column,
@@ -158,59 +159,51 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string | null; onCl
           </div>
         )}
       </Overlay>
-      {m && <ManualSchedule open={scheduling} mentee={m} onClose={() => setScheduling(false)} onDone={async () => { setScheduling(false); await Promise.all([onChanged(), d.refetch()]); }} />}
+      {m && <ManualSchedule areaLabel={areaLabel} open={scheduling} mentee={m} onClose={() => setScheduling(false)} onDone={async () => { setScheduling(false); await Promise.all([onChanged(), d.refetch()]); }} />}
     </>
   );
 }
 
-/** Agendar manualmente (E39): mesmo fluxo de M5, com escolha da mentora. */
-function ManualSchedule({ open, mentee, onClose, onDone }: { open: boolean; mentee: MenteeAdminView; onClose: () => void; onDone: () => Promise<void> }) {
-  const toast = useToast();
+/** Agendar manualmente (E39): escolhe a mentora e reutiliza o M5ScheduleDrawer do web-app (loadOptions/submit próprios). */
+function ManualSchedule({ open, mentee, areaLabel, onClose, onDone }: { areaLabel: (k: string) => string; open: boolean; mentee: MenteeAdminView; onClose: () => void; onDone: () => Promise<void> }) {
   const mentors = useQuery((s) => call(ENDPOINTS.E31List, { query: { status: 'active' }, signal: s }), []);
-  const sched = useQuery((s) => call(ENDPOINTS.E38, { signal: s }), [open]);
   const [mentorId, setMentorId] = useState('');
-  const [slotId, setSlotId] = useState<string | null>(null);
-  const [tableId, setTableId] = useState<string | null>(null);
-  const [ignore, setIgnore] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const busyIds = (sid: string | null) => new Set(sched.status === 'success' ? sched.data.appointments.filter((a) => a.slotId === sid && ['invited', 'confirmed', 'in_progress'].includes(a.status)).map((a) => a.table.id) : []);
-  const mentorBusy = (sid: string) => sched.status === 'success' && sched.data.appointments.some((a) => a.slotId === sid && a.mentor.id === mentorId && ['invited', 'confirmed', 'in_progress'].includes(a.status));
+  const [confirmed, setConfirmed] = useState(false);
+  useEffect(() => { if (!open) { setMentorId(''); setConfirmed(false); } }, [open]);
   const mentor = mentors.status === 'success' ? mentors.data.items.find((m) => m.id === mentorId) : undefined;
 
-  const submit = async () => {
-    if (!slotId || !tableId || !mentorId) return;
-    setSaving(true);
-    try {
-      const r = await call(ENDPOINTS.E39Create, { body: { menteeId: mentee.id, mentorId, slotId, tableId, ignoreAvailability: ignore, ignoreLeadTime: ignore } });
-      toast.success(r.warnings.length ? 'Agendada, com avisos de disponibilidade ou antecedência.' : 'Mentoria agendada.');
-      await onDone();
-    } catch (e) { toast.error(errMsg(e)); await sched.refetch(); } finally { setSaving(false); }
+  const loadOptions = async (_menteeId: string, slotId?: string): Promise<E23Response> => {
+    const sched = await call(ENDPOINTS.E38);
+    const active = sched.appointments.filter((a) => ['invited', 'confirmed', 'in_progress'].includes(a.status));
+    const slots = sched.slots
+      .filter((s) => mentor?.availability.includes(s.id) && !active.some((a) => a.slotId === s.id && a.mentor.id === mentorId))
+      .map((s) => ({ ...s, preferred: false }));
+    const selectedSlotId = slots.find((s) => s.id === slotId)?.id ?? slots[0]?.id ?? null;
+    const tables = sched.tables.filter((t) => t.active).map((t) => ({ ...t, free: !active.some((a) => a.slotId === selectedSlotId && a.table.id === t.id) }));
+    return { slots, selectedSlotId, tables, suggestedTableId: tables.find((t) => t.free)?.id ?? null, previousTableId: null };
   };
+  const submit = (b: { menteeId: string; slotId: string; tableId: string }) => call(ENDPOINTS.E39Create, { body: { ...b, mentorId } });
 
+  if (!confirmed) {
+    return (
+      <Overlay title={`Agendar ${mentee.name}`} open={open} onClose={onClose}>
+        {mentors.status === 'loading' && <SkeletonList rows={1} height={60} />}
+        {mentors.status === 'error' && <ErrorState error={mentors.error} onRetry={mentors.reload} />}
+        {mentors.status === 'success' && (
+          <div className="tw-stack" data-testid="manual-schedule">
+            <SelectField label="Mentora" value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
+              <option value="">Escolha…</option>
+              {mentors.data.items.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </SelectField>
+            <Button disabled={!mentorId} onClick={() => setConfirmed(true)}>Continuar</Button>
+          </div>
+        )}
+      </Overlay>
+    );
+  }
   return (
-    <Overlay title={`Agendar ${mentee.name}`} open={open} onClose={onClose}>
-      {(mentors.status === 'loading' || sched.status === 'loading') && <SkeletonList rows={2} height={60} />}
-      {mentors.status === 'error' && <ErrorState error={mentors.error} onRetry={mentors.reload} />}
-      {sched.status === 'error' && <ErrorState error={sched.error} onRetry={sched.reload} />}
-      {mentors.status === 'success' && sched.status === 'success' && (
-        <div className="tw-stack" data-testid="manual-schedule">
-          <SelectField label="Mentora" value={mentorId} onChange={(e) => { setMentorId(e.target.value); setSlotId(null); setTableId(null); }}>
-            <option value="">Escolha…</option>
-            {mentors.data.items.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </SelectField>
-          {mentorId && (
-            <SlotSingleChoice legend="Horário" value={slotId} onChange={(s) => { setSlotId(s); setTableId(null); }}
-              slots={sched.data.slots.filter((s) => !mentorBusy(s.id)).map((s) => ({ id: s.id, label: formatTime(s.startAt), caption: mentor?.availability.includes(s.id) ? 'Disponível' : 'Fora da disponibilidade' }))} />
-          )}
-          {slotId && (
-            <TablePicker value={tableId} onChange={setTableId}
-              tables={sched.data.tables.filter((t) => t.active).map((t) => ({ id: t.id, number: t.number, name: t.name, location: t.location, busy: busyIds(slotId).has(t.id) }))} />
-          )}
-          <CheckboxField label="Ignorar disponibilidade e antecedência mínima" checked={ignore} onChange={(e) => setIgnore(e.target.checked)} />
-          <Button disabled={!mentorId || !slotId || !tableId} loading={saving} onClick={() => void submit()}>Agendar</Button>
-        </div>
-      )}
-    </Overlay>
+    <M5ScheduleDrawer open={open} onClose={onClose} mentee={mentee} areaLabel={areaLabel} loadOptions={loadOptions} submit={submit}
+      header={<p><strong>Mentora:</strong> {mentor?.name}</p>} submitLabel="Agendar" helpText="O admin agenda em nome da mentora; a participante recebe o convite."
+      onDone={() => void onDone()} />
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ENDPOINTS, MentorHasAppointmentsDetailsSchema, type MentorHasAppointmentsDetails, type MentorListItem } from '@tw/shared';
-import { ApiError, Button, DataTable, ErrorState, LinkButton, Overlay, SecretReveal, SelectField, SkeletonList, TextField, call, formatDateTime, formatTime, useQuery, useToast, type Column } from '../../ui';
+import { ApiError, Button, CheckboxField, DataTable, ErrorState, LinkButton, Overlay, SecretReveal, SelectField, SkeletonList, TextField, call, formatDateTime, formatTime, useQuery, useToast, type Column } from '../../ui';
 import { PageHead, errMsg, useAreas, useDebounced, useTitle } from './lib/common';
 
 type StatusFilter = '' | 'active' | 'disabled' | 'never_logged_in';
@@ -44,23 +44,18 @@ export default function A2Mentoras() {
     } finally { setBusy(null); }
   };
 
-  const reset = async (m: MentorListItem) => {
-    if (!window.confirm(`Redefinir a senha de ${m.name}? A senha atual deixa de valer e as sessões são encerradas.`)) return;
+  const [resetFor, setResetFor] = useState<MentorListItem | null>(null);
+  const [sendByEmail, setSendByEmail] = useState(false);
+  const reset = async () => {
+    const m = resetFor;
+    if (!m) return;
     setBusy(m.id);
     try {
-      const r = await call(ENDPOINTS.E34, { params: { id: m.id }, body: { sendByEmail: false } });
+      const r = await call(ENDPOINTS.E34, { params: { id: m.id }, body: { sendByEmail } });
+      setResetFor(null);
+      if (sendByEmail) toast.success('Senha provisória enviada por e-mail.');
       setSecret({ name: m.name, id: m.id, password: r.provisionalPassword });
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
-  };
-
-  const sendEmail = async () => {
-    if (!secret) return;
-    try {
-      // E34 gera nova senha; reenvio por e-mail troca o valor mostrado.
-      const r = await call(ENDPOINTS.E34, { params: { id: secret.id }, body: { sendByEmail: true } });
-      setSecret({ ...secret, password: r.provisionalPassword });
-      toast.success('Nova senha provisória enviada por e-mail.');
-    } catch (e) { toast.error(errMsg(e)); }
   };
 
   const columns: Column<MentorListItem>[] = [
@@ -77,7 +72,7 @@ export default function A2Mentoras() {
       render: (m) => (
         <div className="tw-row" onClick={(e) => e.stopPropagation()}>
           <LinkButton to={`/admin/mentoras/${m.id}`} variant="secondary" size="sm">Editar</LinkButton>
-          <Button variant="secondary" size="sm" disabled={busy === m.id} onClick={() => void reset(m)}>Redefinir senha</Button>
+          <Button variant="secondary" size="sm" disabled={busy === m.id} onClick={() => { setSendByEmail(false); setResetFor(m); }}>Redefinir senha</Button>
           <Button variant={m.status === 'active' ? 'danger' : 'mint'} size="sm" disabled={busy === m.id} onClick={() => void toggle(m)}>{m.status === 'active' ? 'Desativar' : 'Ativar'}</Button>
           <Link to={`/admin/mapa?mentora=${m.id}`} className="tw-btn tw-btn--ghost tw-btn--sm">Ver agenda</Link>
         </div>
@@ -112,8 +107,15 @@ export default function A2Mentoras() {
           exportName="mentoras.csv" emptyTitle="Nenhuma mentora encontrada" emptyText="Cadastre uma mentora ou importe a lista em CSV."
         />
       )}
+      <Overlay title="Redefinir senha" open={!!resetFor} onClose={() => setResetFor(null)}>
+        <div className="tw-stack">
+          <p>Redefinir a senha de {resetFor?.name}? A senha atual deixa de valer e as sessões são encerradas.</p>
+          <CheckboxField label="Enviar a nova senha por e-mail" checked={sendByEmail} onChange={(e) => setSendByEmail(e.target.checked)} />
+          <div className="tw-row"><Button loading={busy === resetFor?.id} onClick={() => void reset()}>Redefinir</Button><Button variant="ghost" onClick={() => setResetFor(null)}>Cancelar</Button></div>
+        </div>
+      </Overlay>
       <Overlay title={`Senha de ${secret?.name ?? ''}`} open={!!secret} onClose={() => setSecret(null)}>
-        {secret && <SecretReveal secret={secret.password} onSendEmail={sendEmail} onDone={() => setSecret(null)} />}
+        {secret && <SecretReveal secret={secret.password} onDone={() => setSecret(null)} />}
       </Overlay>
       <Overlay title="Realocar mentorias antes de desativar" open={!!realocar} onClose={() => setRealocar(null)}>
         {realocar && (
