@@ -1,0 +1,142 @@
+/*
+ * Tokens do design system Tech Woman.
+ * Extraídos de design/source/techwoman.html (P1–P6, cartaz QR). Mobile first (375 px).
+ * Breakpoints (custom properties não funcionam em @media; use os valores):
+ *   --bp-sm 480px · --bp-md 768px (tablet / balcão de apoio) · --bp-lg 1024px · --bp-xl 1280px (admin desktop)
+ */
+:root {
+  /* Marca */
+  --tw-plum-950: #3d0a45;  /* header, texto principal, cards escuros */
+  --tw-plum-900: #4a1f52;
+  --tw-plum-800: #5b1466;
+  --tw-plum-700: #6e1a78;  /* início do gradiente hero */
+  --tw-plum-600: #8a2a94;
+  --tw-purple-600: #8a1f96; /* links, ações secundárias */
+  --tw-purple-400: #b85bc4; /* fim do gradiente hero */
+  --tw-lilac-400: #d98ce6;  /* destaque sobre roxo escuro, avatar */
+  --tw-lilac-300: #ebc2f1;
+  --tw-lilac-200: #ebcff0;  /* bordas de cards/campos */
+  --tw-lilac-150: #f1d9f5;
+  --tw-lilac-100: #f6e4f8;  /* seleção suave */
+  --tw-lilac-75: #fbeafd;
+  --tw-lilac-50: #fbf3fc;   /* fundo de página */
+  --tw-orange-500: #f26430; /* CTA principal */
+  --tw-orange-600: #e8552a;
+  --tw-orange-100: #ffe1d3;
+  --tw-orange-900: #8a3210;
+  --tw-mint-200: #c9f4ee;
+  --tw-mint-900: #1f4a44;
+  --tw-green-500: #2e9c84;  /* ponto "atualizado" */
+  --tw-red-100: #fbdada;
+  --tw-red-500: #c0392b;
+  --tw-red-700: #a3262a;
+  --tw-red-900: #8a1c1c;
+  --tw-gray-100: #efe8f0;
+  --tw-gray-150: #e6e3e7;
+  --tw-gray-400: #8c7391;
+  --tw-gray-500: #8a8590;
+  --tw-gray-800: #4a4550;
+  --tw-white: #ffffff;
+  --tw-muted: #5e3a66;      /* texto secundário (AA sobre branco e lilac-50) */
+
+  /* Semânticos */
+  --color-bg: var(--tw-lilac-50);
+  --color-surface: var(--tw-white);
+  --color-ink: var(--tw-plum-950);
+  --color-ink-muted: var(--tw-muted);
+  --color-border: var(--tw-lilac-200);
+  --color-link: var(--tw-purple-600);
+  --color-cta: var(--tw-orange-500);
+  --color-cta-ink: var(--tw-plum-950);
+  --color-danger: var(--tw-red-700);
+  --color-focus: var(--tw-purple-600);
+  --gradient-hero: linear-gradient(180deg, var(--tw-plum-700) 0%, var(--tw-purple-400) 100%);
+
+  /* Status (sempre cor + texto): fundo, texto, ponto */
+  --status-aguardando-bg: var(--tw-gray-100);   --status-aguardando-fg: var(--tw-plum-950);  --status-aguardando-dot: var(--tw-gray-400);
+  --status-proposto-bg: var(--tw-orange-100);   --status-proposto-fg: var(--tw-orange-900);  --status-proposto-dot: var(--tw-orange-500);
+  --status-confirmada-bg: var(--tw-mint-200);   --status-confirmada-fg: var(--tw-mint-900);  --status-confirmada-dot: var(--tw-green-500);
+  --status-concluida-bg: var(--tw-gray-150);    --status-concluida-fg: var(--tw-gray-800);   --status-concluida-dot: var(--tw-gray-500);
+  --status-negativo-bg: var(--tw-red-100);      --status-negativo-fg: var(--tw-red-900);     --status-negativo-dot: var(--tw-red-500); /* Não compareceu, Cancelada, Expirada */
+  --status-prioridade-bg: var(--tw-plum-950);   --status-prioridade-fg: var(--tw-white);     --status-prioridade-dot: var(--tw-lilac-400);
+
+  /* Tipografia */
+  --font-display: 'Unbounded', system-ui, sans-serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base-sm: 14px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+  --text-4xl: 28px;
+  --text-hero: clamp(34px, 4.8vw, 58px);
+  --leading-body: 1.5;
+  --leading-display: 1.15;
+
+  /* Espaçamento (escala 4) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --page-gutter: 16px;
+  --content-max: 1040px;
+
+  /* Raios */
+  --radius-sm: 12px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  /* Sombras (o design é plano; só overlays usam sombra) */
+  --shadow-overlay: 0 12px 32px rgba(61, 10, 69, 0.28);
+  --shadow-toast: 0 6px 18px rgba(61, 10, 69, 0.24);
+
+  /* Interação / acessibilidade */
+  --touch-target: 44px;
+  --touch-target-cta: 52px;
+  --focus-ring: 3px solid var(--color-focus);
+  --focus-offset: 2px;
+
+  /* Layout */
+  --header-h: 56px;
+  --tabbar-h: 64px;
+  --sidebar-w: 240px;
+  --z-header: 10;
+  --z-overlay: 100;
+  --z-toast: 200;
+}
+
+@media (min-width: 768px) {
+  :root { --page-gutter: 24px; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--color-bg); }
+
+body {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
