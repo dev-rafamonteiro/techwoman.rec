@@ -27,6 +27,8 @@ O sistema é uma API Node.js com MongoDB Atlas, em containers Docker atrás do C
 
 **Portabilidade:** há discussão interna sobre internalizar o site depois. Tudo fica em containers, configurável por variáveis de ambiente e sem dependência do Cloudflare no código (Turnstile e Tunnel são plugáveis).
 
+**Busca:** a busca livre roda no MongoDB Atlas com Atlas Search (`$search`, por palavra, com acentos e erros de digitação). Não há busca por significado (vetores/embeddings): decisão de 24/10. Detalhes na seção "Busca no Atlas".
+
 ## Arquitetura e segregação com Docker
 
 São quatro containers em três redes Docker: só o `cloudflared` fala com a internet de entrada, só `api` e `worker` falam com o Atlas, e o `web` nunca enxerga o banco.
@@ -267,6 +269,7 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E03 | `GET /public/me` (header `X-Mentee-Token`) | P6 | Status, convite ativo (mentora, mesa, horário, prazo) |
 | E04 | `POST /public/me/actions` | P6 | `{ action: "accept" \| "decline" \| "cancel" \| "update_preference", reason?, preferredPeriod? }`; RN06, RN14 |
 | E05 | `POST /public/resend-link` | P6 | Sempre 202, exista ou não o e-mail (sem enumeração) |
+| E06 | `GET /public/calendar.ics?t=<token>` | P6, e-mail 3 | Só para mentoria confirmada; `text/calendar`; `UID` = id da mentoria raiz da cadeia de moves (estável); 404 em qualquer outro status |
 
 ### Autenticação
 
@@ -283,7 +286,7 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | --- | --- | --- | --- |
 | E20 | `GET /mentor/availability` | M3 | Horários do dia + quais estão travados por mentoria |
 | E21 | `PUT /mentor/availability` | M3 | `{ slotIds: [] }`; RN11 |
-| E22 | `GET /mentor/queue?area=&period=&priority=&q=&cursor=` | M4 | Fila (RN03) sem contato; paginação por cursor, 30 itens |
+| E22 | `GET /mentor/queue?area=&period=&priority=&q=&cursor=` | M4 | Fila (RN03) sem contato; paginação por cursor, 30 itens. Com q, usa o Atlas Search (seção Busca no Atlas), até 50 itens sem cursor |
 | E23 | `GET /mentor/options?menteeId=&slotId=` | M5 | Horários livres da mentora e mesas livres no horário, com mesa sugerida (RN13) |
 | E24 | `POST /mentor/appointments` | M5 | `{ menteeId, slotId, tableId }`; RN04, RN05; conflitos 409: `MENTEE_TAKEN`, `TABLE_TAKEN`, `MENTOR_BUSY`, `SLOT_UNAVAILABLE` |
 | E25 | `GET /mentor/appointments` | M6 | Agenda do dia da mentora |
@@ -311,6 +314,7 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E43 | `GET/POST/PATCH /admin/users` | A8 | Super admin; mantém ao menos um super admin ativo |
 | E44 | `GET /admin/notifications`, `POST /admin/notifications/:id/retry` | A9 | Admin |
 | E45 | `GET /admin/audit` | A9 | Admin |
+| E46 | `GET /admin/email-preview/:tipo` | A7 | Admin; renderiza um dos 6 layouts de e-mail com dados de exemplo |
 
 **Mover mentoria (E39 com `action: "move"`)** é feito na mesma transação: o registro antigo vira `cancelled` (sem prioridade, motivo `moved`) e um novo nasce `confirmed`, mantendo a confirmação da participante, que recebe aviso com o novo horário/mesa.
 
@@ -349,6 +353,76 @@ await session.withTransaction(async () => {
 
 **Tempo real:** cada réplica da API abre um Change Stream em `mentees` e `appointments` filtrado por `eventId` (com `fullDocument: "updateLookup"`) e repassa por SSE só o que cada conexão pode ver (projeção sem contato para mentoras). Reconexão do navegador usa `Last-Event-ID` = resume token. Se o Change Stream cair, o front faz polling de E22/E25 a cada 10 s até voltar.
 
+## Busca no Atlas
+
+A busca livre roda no Atlas Search (`$search`): acha por palavra, ignora acentos e tolera erros de digitação. Não há busca por significado nem embeddings (decisão de 24/10: só full text).
+
+| Onde | Tela | Endpoint | Como |
+| --- | --- | --- | --- |
+| Fila da mentora, busca livre | M4 | E22 com `q` | `$search` em `mentees_text` (nome, comentário) |
+| Participantes no admin | A4 | E35 com `q` | `$search` em `mentees_text` (nome, e-mail, telefone, comentário) |
+| Mentoras no admin | A2 | E31 com `q` | `$search` em `staff_text` (nome, e-mail, áreas, bio) |
+| Fila sem busca | M4, A4 | E22, E35 sem `q` | Consulta comum com índice B-tree (RN03); não passa pelo Atlas Search |
+
+### Índices do Atlas Search
+
+Criados pelo script `create-indexes` (`src/db/search-indexes.ts`) com `createSearchIndex`, junto com os índices B-tree, de forma idempotente (cria se falta, atualiza se a definição mudou, não faz nada se igual). `npm run db:indexes -- --wait` espera ficarem consultáveis.
+
+```js
+// participantes
+db.mentees.createSearchIndex("mentees_text", "search", {
+  mappings: { dynamic: false, fields: {
+    eventId: { type: "token" }, status: { type: "token" }, area: { type: "token" }, priority: { type: "boolean" },
+    name:  [ { type: "string", analyzer: "lucene.portuguese" }, { type: "autocomplete", foldDiacritics: true } ],
+    note:  { type: "string", analyzer: "lucene.portuguese" },
+    email: { type: "string", analyzer: "lucene.keyword" },
+    phone: { type: "string", analyzer: "lucene.keyword" }
+  } }
+})
+
+// mentoras: staff_text -> name (string + autocomplete), email (keyword), areas (token), bio (lucene.portuguese), status, roles (token)
+```
+
+### Consulta (E22 com `q`)
+
+```js
+[
+  { $search: { index: "mentees_text", compound: {
+      should: [   // erro de digitação: o fuzzy é da consulta (o índice não muda); o acerto exato pesa mais
+        { text: { query: q, path: ["name", "note"], score: { boost: { value: 3 } } } },
+        { text: { query: q, path: ["name", "note"], fuzzy: { maxEdits: 2, maxExpansions: 50 } } },  // 2 se há palavra com 7+ letras, senão 1
+        { autocomplete: { query: q, path: "name", score: { boost: { value: 2 } } } },
+        { autocomplete: { query: q, path: "name", fuzzy: { maxEdits: 1, maxExpansions: 50 } } }
+      ],
+      filter: [
+        { equals: { path: "eventId", value: eventId } },
+        { equals: { path: "status", value: "waiting" } }
+        // + area (in) e priority, quando filtrados
+      ],
+      minimumShouldMatch: 1 } } },
+  { $limit: 100 },                                        // 200 quando há filtro de período
+  { $match: { eventId: eventId, status: "waiting" } },   // lê o documento atual, não o índice; + area, priority, preferredPeriod
+  { $limit: 50 },
+  { $project: { /* projeção positiva de MenteeStaffView: nunca email, phone, consent, tokenHash */ } }
+]
+```
+
+### Regras
+
+- **Consistência:** os índices de busca são atualizados de forma assíncrona, com segundos de atraso. Por isso o `$match` de status vem depois da busca e usa o documento atual. Área e prioridade entram no filtro do `$search` e de novo no `$match`; o período (fora do índice) só no `$match`, por isso a busca pega 200 candidatos quando ele é filtrado. A SSE continua removendo cards, e o convite segue protegido pelo índice único (seção Concorrência).
+- **Erros de digitação:** "filipe", "felpe", "fleipe", "phelipe" e "fil" encontram "Felipe"; sem acento encontra com acento (`lucene.portuguese` e `foldDiacritics`). Teste em `busca-api-e22.test.ts`.
+- **Contato fora da busca:** a projeção sem `email` e `phone` vale também nos resultados de busca da mentora. Só E35 (admin) devolve contato.
+- **Falha da busca:** se o `$search` falhar (ex.: índice em construção), E22, E31 e E35 respondem 503 (`code: INTERNAL`, `Retry-After: 5`) e a tela mostra o estado de erro com "tentar de novo". A busca nunca causa erro 500.
+- **Limites do `q`:** de 2 a 200 caracteres; resultado de busca traz no máximo 50 itens, sem cursor. O CSV de E37 com `q` continua com o filtro por expressão regular, para não truncar em 50 linhas.
+- **Ambientes:** o banco da aplicação é sempre o Atlas (`MONGODB_URI`); o usuário do banco só tem `readWrite`, então a API não roda `collMod` quando o validador não mudou. Os testes de integração usam o `mongodb-atlas-local` (`MONGODB_URI_TEST`), que executa `$search`.
+
+### Testes da busca
+
+- [x] `$search` com filtros e acentos no `mongodb-atlas-local` ("transicao" encontra "transição").
+- [x] Participante já convidada nunca aparece no resultado, mesmo com o índice de busca atrasado.
+- [x] Nenhuma resposta de E22 contém `email` ou `phone`.
+- [x] Falha simulada do `$search` responde 503 em E22, E31 e E35; sem `q`, 200.
+
 ## Notificações
 
 E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os modelos de mensagem forem aprovados a tempo; a página pessoal (P6) funciona mesmo que nenhuma mensagem chegue.
@@ -379,7 +453,42 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
 - WhatsApp: WhatsApp Business Cloud API, que exige conta comercial verificada e modelos de mensagem aprovados antes do envio. Iniciar o cadastro e a aprovação esta semana; se não sair até 10/11, o canal fica desligado por configuração.
 - Os textos vêm dos modelos de A7; as variáveis são substituídas no worker. Todo link de mensagem aponta para P6 com o token da participante.
 
-**Arquivo .ics:** P6 gera o arquivo de calendário no navegador a partir de E03; não precisa de endpoint.
+**Arquivo .ics:** gerado pelo endpoint E06 e também anexado ao e-mail de confirmação (detalhes em Layouts de e-mail, abaixo).
+
+### Layouts de e-mail
+
+Os 6 layouts HTML do design substituem o e-mail em texto simples enviado hoje. O worker preenche as variáveis e envia HTML com versão em texto; o WhatsApp continua usando os textos de A7.
+
+| # | Layout | Tipo na `outbox` | Disparado por | Assunto | Variáveis próprias |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Inscrição recebida | `registered` | E02 cria a inscrição ou reenvia o link (RN01) | Recebemos sua inscrição na mentoria do Tech Woman | `nome`, `link_minha_mentoria` |
+| 2 | Convite de horário | `invite` | E24, E39 | {{mentora\_nome}} quer te mentorar às {{horario}} | `nome`, `mentora_nome`, `mentora_linkedin`, `mesa`, `horario`, `prazo`, `link_minha_mentoria` |
+| 3 | Confirmação | `confirmed`, `moved`, `reminder` (só o fallback do WhatsApp) | E04 aceitar, E26 confirmar presencial, E39 mover, lembrete RN15 | Combinado: {{horario}} na {{mesa}} (movida: "Sua mentoria mudou"; lembrete: "Sua mentoria começa às {{horario}}") | `nome`, `mentora_nome`, `mesa`, `horario`, `link_minha_mentoria`, `link_agenda` + anexo `.ics` |
+| 4 | Convite expirado | `expired` | Worker (RN07) | O prazo para confirmar sua mentoria terminou | `nome`, `link_minha_mentoria` |
+| 5 | Cancelamento pela mentora | `cancelled` | E26 ou E39 com cancelamento (RN10) | Sua mentoria das {{horario}} foi cancelada | `nome`, `horario`, `link_minha_mentoria` |
+| 6 | Acesso da mentora | `staff_password` | A3 "Enviar por e-mail" (E31, E34) e importação (E33) | Seu acesso ao painel de mentoras do Tech Woman | `mentora_nome`, `email_login`, `senha_provisoria`, `link_login`, `validade_senha` |
+
+Variáveis comuns a todos: `evento_nome`, `evento_data`, `evento_local`, `link_privacidade`, `ano`.
+
+**Regras de implementação**
+
+- **Arquivos:** originais do design em `design/email/source/` (somente leitura). Templates de produção em `src/api/notifications/templates/email/` como `01-inscricao-recebida.html` + `.txt`, e assim por diante até `06-acesso-mentora`; assuntos em `subjects.ts`.
+- **Placeholders:** `{{variavel}}`, sempre com escape de HTML. Todo dado de exemplo fixo no layout (nome, horário, mesa) vira placeholder. Variável faltando é erro de renderização: o item vai para `failed` e nunca sai com `{{...}}` cru.
+- **Compatibilidade com clientes de e-mail:** CSS embutido nos elementos no build (juice), layout em tabela com largura máxima de 600 px, imagens com URL absoluta em `https://techwoman.dev/email/` e texto `alt`, sem JavaScript, com texto de pré-visualização (preheader).
+- **Links nunca executam ação:** botões levam a P6 (`/mentoria/minha?t=<token>`), onde a participante aceita ou recusa. Filtros antispam abrem links automaticamente, então um link que aceita o convite por GET aceitaria sozinho.
+- **Adicionar à agenda (layout 3):** o botão aponta para E06, que devolve `text/calendar` da mentoria confirmada: título, mesa, horário em America/Recife, 40 min, local do evento. O mesmo `.ics` vai anexado (`METHOD:PUBLISH`, `UID` = id da mentoria raiz da cadeia `movedFromId`, que não muda quando a mentoria é movida, e `SEQUENCE` = número de moves, para a agenda atualizar o evento em vez de duplicar).
+- **Senha provisória (layout 6):** nunca fica em texto puro no banco. Na `outbox`, a senha vai cifrada (AES-256-GCM, chave no Docker secret `outbox_key`); o worker decifra só no envio e remove o campo (`$unset`) ao marcar `sent` ou `failed`. Logs e A9 mostram "senha oculta". A senha provisória vale 72 h (`users.tempPasswordExpiresAt`); depois disso o login orienta a pedir nova senha ao admin.
+- **Remetente:** `Tech Woman <mentoria@techwoman.dev>`, com Reply-To configurável. Nenhuma menção ao Bradesco.
+- **Prévia:** E46 renderiza qualquer layout com dados de exemplo; A7 usa isso no botão "Prévia dos e-mails". O HTML é fixo no código; em A7 só se editam os assuntos (`events.emailSubjects`, por id de layout, validados contra as variáveis do layout em E41) e os textos do WhatsApp.
+- **Transporte:** `EMAIL_TRANSPORT=smtp | ses | resend` (`EMAIL_PROVIDER` aceito como nome antigo). SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`/`SMTP_PASS_FILE`, `SMTP_SECURE`; SES: `AWS_REGION`; `EMAIL_REPLY_TO` opcional. Em dev, o container Mailpit (perfil `dev`, rede `egress`) recebe todos os e-mails via SMTP e mostra numa interface web; nada sai para fora.
+
+**Testes dos e-mails**
+
+- [x] Os 6 layouts renderizam com dados de exemplo sem nenhum `{{` sobrando; snapshot do HTML e do texto.
+- [x] Todos os links são absolutos e nenhum executa ação.
+- [x] O `.ics` de E06 e o anexo passam num parser de iCalendar, com horário certo em America/Recife.
+- [x] Depois do envio do layout 6, a senha não aparece na `outbox`, nos logs nem em A9.
+- [x] No E2E, os e-mails 1, 2 e 3 chegam ao Mailpit no fluxo inscrição → convite → aceite.
 
 ## Segurança e LGPD
 
@@ -409,7 +518,7 @@ O sistema guarda nome, e-mail, telefone e LinkedIn de cerca de 2.500 pessoas, en
 
 - Consentimento explícito em P4, com versão do texto e data gravadas.
 - Finalidade única: organizar a mentoria do evento. Dados não são usados para outro fim nem compartilhados com patrocinadores.
-- Mentoras não veem e-mail nem telefone (projeção por papel).
+- Mentoras não veem e-mail nem telefone (projeção por papel), nem nos resultados de busca.
 - Exportação CSV (E37) registrada na auditoria.
 - Retenção: 30 dias após o evento, um job anonimiza `mentees` (mantém área e status para estatística) e apaga `outbox`. Prazo a validar com a organização.
 - Pedido de exclusão: admin cancela e anonimiza a participante em A4.

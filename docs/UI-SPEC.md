@@ -134,7 +134,7 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | --- | --- | --- |
 | Aguardando mentora | Área, período preferido, posição neutra ("Sua inscrição está ativa") | Editar período preferido; Cancelar inscrição (**E04**) |
 | Horário proposto | Card com mentora (nome, foto opcional, LinkedIn), mesa, horário, duração 40 min e contador "Responda até 14h05" | Aceitar; Recusar com motivo: Horário não serve / Não tenho mais interesse (**E04**) |
-| Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics); Cancelar (**E04**) |
+| Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**) |
 | Recusada por horário | "Tudo bem! Sua inscrição continua ativa e com prioridade." | Editar período preferido |
 | Proposta expirada | "O prazo para responder terminou e o horário foi liberado. Você continua na fila." | — |
 | Concluída | Agradecimento e link de avaliação (se houver) | — |
@@ -169,9 +169,9 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 Tela principal da mentora no dia.
 
 - **Cabeçalho:** contador "Seus horários livres hoje: 6" e próximo atendimento ("14h20 · Mesa 7 · Joana").
-- **Filtros:** área (multi), período preferido, "Só prioridade", busca por nome. Padrão: filtrar pelas áreas da mentora, com opção "Ver todas".
+- **Filtros:** área (multi), período preferido, "Só prioridade" e busca livre por nome ou assunto do comentário (ex.: "transição de carreira"), que ignora acentos e tolera pequenos erros de digitação. Padrão: filtrar pelas áreas da mentora, com opção "Ver todas".
 - **Card da participante:** nome, área (selo), período preferido, LinkedIn (abre em nova aba), comentário, tempo de espera ("inscrita há 25 min") e selo "Prioridade" quando recusou um horário antes. E-mail e telefone **não** aparecem para a mentora.
-- **Ordenação:** prioridade primeiro, depois inscrição mais antiga.
+- **Ordenação:** prioridade primeiro, depois inscrição mais antiga. Com busca livre, a lista vem ordenada pela relevância da busca (até 50 itens) e o selo "Prioridade" continua visível. Se a busca falhar, mostrar o estado de erro com "tentar de novo".
 - **Ação:** botão "Mentorar" abre M5.
 - **Tempo real:** cards entram e saem sozinhos (**E27**). Se a participante for escolhida por outra mentora enquanto esta olha, o card some com aviso "Joana acabou de ser escolhida por outra mentora".
 - Dados: **E22**. Estados: carregando (esqueleto), lista vazia ("Ninguém aguardando agora"), sem conexão (faixa "Reconectando…").
@@ -214,7 +214,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 ### A2 · Mentoras (lista)
 
 - Tabela: nome, e-mail, organização (uso interno, nunca exibido à participante), áreas, horários disponíveis, mentorias (confirmadas/concluídas), último acesso, status (Ativa / Desativada / Nunca acessou).
-- Busca, filtro por status e área. Ações em linha: Editar, Redefinir senha, Ativar/Desativar, Ver agenda.
+- Busca livre por nome, e-mail, área ou tema da bio; filtro por status e área. Ações em linha: Editar, Redefinir senha, Ativar/Desativar, Ver agenda.
 - Botões "Nova mentora" e "Importar lista (CSV)".
 - Dados: **E31**.
 
@@ -222,7 +222,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 **Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
 
-- Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail". A mentora troca no primeiro acesso (M2).
+- Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail" (layout de e-mail "Acesso da mentora", senha válida por 72 h). A mentora troca no primeiro acesso (M2).
 - **Redefinir senha (E34):** confirma e mostra a nova senha provisória uma única vez.
 
 **Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
@@ -230,7 +230,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 ### A4 · Participantes
 
 - Tabela: nome, e-mail, WhatsApp, área, período preferido, status, prioridade, mentora, mesa, horário, inscrita em.
-- Filtros por status, área, prioridade e período; busca por nome/e-mail.
+- Filtros por status, área, prioridade e período; busca livre por nome, e-mail, telefone ou assunto do comentário.
 - Detalhe em painel lateral: dados completos, linha do tempo de eventos (inscrição, convite, recusa, confirmação…) e notificações enviadas.
 - **Ações (E36):** marcar/desmarcar prioridade, cancelar inscrição, reenviar link pessoal, agendar manualmente (abre o mesmo componente de M5 escolhendo também a mentora).
 - Exportar CSV (**E37**) com os filtros aplicados.
@@ -252,7 +252,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Nome, data, local, fuso (America/Recife), hora de início e de fim, duração da sessão (40 min), intervalo entre sessões (5 min). Prévia ao vivo da grade de horários gerada.
 - Prazo para a participante responder ao convite (15 min) e antecedência mínima para convite (10 min antes do horário).
-- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos das mensagens (convite, confirmação, lembrete, expiração) com variáveis {nome}, {mentora}, {mesa}, {horario}.
+- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario}; botão "Prévia dos e-mails" que abre cada um dos 6 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
 - Alterar a grade com mentorias já marcadas é bloqueado. Dados: **E41**, QR Code: **E42**.
 
@@ -285,7 +285,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 **Estados obrigatórios em toda tela com dados:** carregando (esqueleto), vazio (texto + próxima ação), erro (mensagem + tentar de novo), sem permissão ("Você não tem acesso a esta área"), sessão expirada (volta para M1 mantendo a rota de retorno).
 
-**Mensagens enviadas (modelos editáveis em A7):**
+**Mensagens enviadas: o e-mail usa os 6 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7:**
 
 | Momento | Canal | Texto base |
 | --- | --- | --- |
