@@ -250,7 +250,8 @@ export default function P6MinhaMentoria() {
         {event.registrationOpen && <LinkButton to="/mentoria/inscricao" block data-testid="p6-new">Fazer nova inscrição</LinkButton>}
       </>
     );
-  } else if (mentee.status === 'waiting' && lastOutcome === 'expired') {
+  } else if ((mentee.status === 'waiting' && lastOutcome === 'expired') || (mentee.status === 'invited' && ap?.status === 'expired')) {
+    // Convite vencido ainda não varrido pelo worker (RN07): o backend já devolve appointment.status = expired.
     testid = 'p6-expirada';
     badge = <StatusBadge status="expired" />;
     title = 'O prazo para responder terminou';
