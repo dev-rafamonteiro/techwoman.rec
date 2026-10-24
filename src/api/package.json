@@ -1,0 +1,39 @@
+{
+  "name": "@tw/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "exports": {
+    "./domain": {
+      "types": "./dist/domain/index.d.ts",
+      "default": "./dist/domain/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput & node --watch --env-file-if-exists=../../.env dist/server.js",
+    "dev:worker": "node --watch --env-file-if-exists=../../.env dist/worker.js",
+    "start": "node dist/server.js",
+    "start:worker": "node dist/worker.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.0",
+    "@fastify/multipart": "^9.0.0",
+    "@fastify/rate-limit": "^10.0.0",
+    "@tw/db": "*",
+    "@tw/shared": "*",
+    "fastify": "^5.4.0",
+    "jose": "^6.0.0",
+    "mongodb": "^6.20.0",
+    "pino": "^9.7.0",
+    "qrcode": "^1.5.4",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/qrcode": "^1.5.5"
+  }
+}
