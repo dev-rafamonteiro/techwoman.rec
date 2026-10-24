@@ -201,5 +201,5 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
   route(app, ctx, E38Stream, async ({ req, reply, user }) => {
     openSse(ctx, req, reply, 'admin', user._id.toHexString());
     return RAW;
-  }, { rateLimit: { max: 60, timeWindow: '1 minute' } });
+  }, { rateLimit: { max: 120, timeWindow: '1 minute' } });
 }

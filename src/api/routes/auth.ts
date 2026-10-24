@@ -81,7 +81,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: AppContext): void 
       await writeAudit(ctx, undefined, { actor: { userId: u._id.toHexString(), role: u.roles.includes('super_admin') ? 'super_admin' : u.roles.includes('admin') ? 'admin' : 'mentor' }, action: 'auth.login', entity: 'user', entityId: u._id, ip: req.ip });
       return { user: toSessionUser(u) };
     },
-    { rateLimit: { max: 30, timeWindow: '1 minute' } },
+    { rateLimit: { max: 300, timeWindow: '10 minutes' } },
   );
 
   // E11 · POST /auth/logout

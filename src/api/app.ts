@@ -28,7 +28,7 @@ export interface BuildAppOptions {
 const stripQuery = (url: string) => url.split('?')[0] ?? url;
 
 /** Chave de rate limit por sessão (cookie) ou, sem sessão, por IP. */
-function rateKey(req: { ip: string; cookies?: Record<string, string | undefined> }): string {
+function rateKey(req: { ip: string; cookies?: Record<string, string | undefined>; headers?: Record<string, unknown> }): string {
   const jwt = req.cookies?.[SESSION_COOKIE];
   if (jwt) {
     try {
@@ -38,6 +38,8 @@ function rateKey(req: { ip: string; cookies?: Record<string, string | undefined>
       /* cai para o IP */
     }
   }
+  const t = req.headers?.['x-mentee-token'];
+  if (typeof t === 'string' && t) return `m:${t.slice(0, 16)}`;
   return `ip:${req.ip}`;
 }
 
@@ -74,7 +76,8 @@ export async function buildApp(opts: BuildAppOptions): Promise<{ app: FastifyIns
   await app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024, files: 1, fields: 5 } });
   await app.register(rateLimit, {
     global: config.rateLimitEnabled,
-    max: 600,
+    // por sessão/token: 600/min; por IP (Wi-Fi do evento sai por poucos IPs): alto, a defesa é Turnstile e o bloqueio por conta
+    max: (_req, key) => (key.startsWith('ip:') ? 6000 : 600),
     timeWindow: '1 minute',
     keyGenerator: (req) => rateKey(req as never),
     errorResponseBuilder: (_req, ctx) => new AppError('RATE_LIMITED', 'Muitas requisições. Aguarde um instante.', { headers: { 'Retry-After': String(Math.ceil(ctx.ttl / 1000)) } }),

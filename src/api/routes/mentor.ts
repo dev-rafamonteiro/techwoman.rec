@@ -194,7 +194,7 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
       openSse(ctx, req, reply, 'mentor', user._id.toHexString());
       return RAW;
     },
-    { rateLimit: { max: 60, timeWindow: '1 minute' } },
+    { rateLimit: { max: 120, timeWindow: '1 minute' } },
   );
 
   // E28 · PATCH /mentor/profile

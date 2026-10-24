@@ -244,6 +244,6 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       }
       return respond(202, { ok: true as const });
     },
-    { rateLimit: { max: 60, timeWindow: '10 minutes' } },
+    { rateLimit: { max: 300, timeWindow: '10 minutes' } },
   );
 }
