@@ -6,7 +6,7 @@
   "scripts": {
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test -c ../playwright.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

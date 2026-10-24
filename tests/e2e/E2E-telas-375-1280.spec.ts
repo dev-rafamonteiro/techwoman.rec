@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, loginMentor, newPage, resetWorld, TEST_PASSWORD, type E2EWorld } from "./support.js";
 
@@ -10,7 +10,7 @@ import { expect, loginMentor, newPage, resetWorld, TEST_PASSWORD, type E2EWorld 
  */
 const SHOTS = resolve(import.meta.dirname, "__shots__");
 const DESIGN = resolve(import.meta.dirname, "../../design/screens");
-const WIDTHS = [375, 1280] as const;
+mkdirSync(SHOTS, { recursive: true });
 
 const PUBLIC: [string, string][] = [
   ["P1", "/"], ["P2", "/jornada"], ["P3", "/jornada/resultado"], ["P4", "/mentoria/inscricao"], ["P5", "/mentoria/inscricao/ok"],
@@ -47,31 +47,57 @@ async function check(page: import("@playwright/test").Page, code: string, url: s
   test.info().annotations.push({ type: "design", description: existsSync(ref) ? ref : "sem referência em design/screens" });
 }
 
-for (const width of WIDTHS) {
-  test.describe(`${width}px`, () => {
-    for (const [code, url] of PUBLIC) {
-      test(`${code} ${url}`, async ({ browser }) => {
-        const page = await newPage(browser, { width, height: 800 });
-        await check(page, code, url, width);
-      });
-    }
-    for (const [code, url] of MENTOR) {
-      test(`${code} ${url}`, async ({ browser }) => {
-        const page = await newPage(browser, { width, height: 800 });
-        await loginMentor(page, world.mentorEmail(0));
-        await check(page, code, url, width);
-      });
-    }
-    for (const [code, url] of ADMIN) {
-      test(`${code} ${url}`, async ({ browser }) => {
-        const page = await newPage(browser, { width, height: 800 });
-        await page.goto("/entrar");
-        await page.getByTestId("m1-email").fill("super@techwoman.test");
-        await page.getByTestId("m1-password").fill(TEST_PASSWORD);
-        await page.getByTestId("m1-submit").click();
-        await page.waitForURL(/\/admin/);
-        await check(page, code, url, width);
-      });
-    }
-  });
+const REF_CODE = (code: string) => code.split("-")[0]!; // P6-invalido -> P6
+
+/** Textos de títulos/botões/rótulos do 1º estado da arte (design/screens/<P>.html) na largura pedida. */
+async function referenceTexts(browser: import("@playwright/test").Browser, code: string, width: number): Promise<string[] | null> {
+  const file = resolve(DESIGN, `${REF_CODE(code)}.html`);
+  if (!existsSync(file)) return null;
+  const html = readFileSync(file, "utf8");
+  const frames = [...html.matchAll(/<template data-frame data-w="(\d+)"[^>]*>([\s\S]*?)<\/template>/g)];
+  const pick = frames.find((f) => Number(f[1]) === width) ?? frames[0];
+  if (!pick) return null;
+  const page = await browser.newPage({ viewport: { width, height: 900 } });
+  await page.setContent(pick[2]!);
+  const texts = await page.locator("h1, h2, h3, button, label, a").allInnerTexts();
+  await page.screenshot({ path: resolve(SHOTS, `ref-${REF_CODE(code)}-${width}.png`), fullPage: true });
+  await page.close();
+  return texts.map((t) => t.replace(/\s+/g, " ").trim()).filter((t) => t.length > 2 && !t.startsWith("["));
 }
+
+const norm = (t: string) => t.toLowerCase().replace(/\s+/g, " ");
+
+test.describe("telas", () => {
+  for (const [group, list, login] of [
+    ["público", PUBLIC, null],
+    ["mentora", MENTOR, "mentor"],
+    ["admin", ADMIN, "super"],
+  ] as const) {
+    for (const [code, url] of list) {
+      test(`${group} ${code} ${url}`, async ({ browser }, testInfo) => {
+        const width = testInfo.project.use.viewport!.width;
+        const page = await newPage(browser, { width, height: testInfo.project.use.viewport!.height });
+        if (login === "mentor") await loginMentor(page, world.mentorEmail(0));
+        if (login === "super") {
+          await page.goto("/entrar");
+          await page.getByTestId("m1-email").fill("super@techwoman.test");
+          await page.getByTestId("m1-password").fill(TEST_PASSWORD);
+          await page.getByTestId("m1-submit").click();
+          await page.waitForURL(/\/admin/);
+        }
+        await check(page, code, url, width);
+        // fidelidade ao design (só P1-P6, onde há arte): ao menos 60% dos títulos/botões da arte existem na tela
+        const ref = await referenceTexts(browser, code, width);
+        if (ref && ref.length) {
+          const body = norm(await page.locator("body").innerText());
+          const found = ref.filter((t) => body.includes(norm(t)));
+          const ratio = found.length / ref.length;
+          testInfo.annotations.push({ type: "fidelidade", description: `${(ratio * 100).toFixed(0)}% (${found.length}/${ref.length}); faltando: ${ref.filter((t) => !found.includes(t)).slice(0, 8).join(" | ")}` });
+          const stateful = ["P3", "P5", "P6-invalido"].includes(code) || (code === "P4" && !(await page.getByTestId("p4-form").isVisible()));
+          // P3/P5 dependem de estado (resultado da jornada, inscrição feita); P4 depende de E01; ficam só como anotação
+          if (!stateful) expect(ratio, `${code} @${width}: textos da arte ausentes: ${ref.filter((t) => !found.includes(t)).join(" | ")}`).toBeGreaterThanOrEqual(0.6);
+        }
+      });
+    }
+  }
+});
