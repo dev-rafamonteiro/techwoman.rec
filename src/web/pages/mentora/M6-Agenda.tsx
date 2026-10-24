@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E25Response, type E26Body, type MentorAppointmentView, type MentorStreamEvent } from '@tw/shared';
 import {
   ApiError, Button, Card, ConnectionBar, Countdown, EmptyState, ErrorState, Hero, MenteeCard, Overlay, SkeletonList, StatusBadge, TextArea,
-  call, formatRange, formatTime, useEventStream, useQuery, useToast,
+  call, formatDayShort, formatRange, formatTime, LinkButton, useEventStream, useQuery, useToast,
 } from '../../ui';
 import { FALLBACK_AREAS } from '../public/lib/areas';
 import { noShowAllowed, startsSoon } from './lib/format';
@@ -76,7 +76,7 @@ export default function M6Agenda() {
 
   if (error && !data) return <div className="tw-page"><ErrorState error={error} onRetry={() => void load()} /></div>;
   if (!data) return <div className="tw-page"><SkeletonList rows={5} height={100} /></div>;
-  if (data.slots.length === 0) return <div className="tw-page"><EmptyState title="Sua agenda está vazia" text="Marque seus horários disponíveis para receber convites." /></div>;
+  if (data.slots.length === 0) return <div className="tw-page"><EmptyState title="Você ainda não marcou horários" text="Marque sua disponibilidade para aparecer aqui." action={<LinkButton to="/mentora/disponibilidade">Ir para Disponibilidade</LinkButton>} /></div>;
 
   const serverOffset = new Date(data.serverNow).getTime() - Date.now();
   const now = nowMs + serverOffset;
@@ -121,7 +121,7 @@ export default function M6Agenda() {
                   <Button loading={busy === `${ap.id}:finish`} onClick={() => void act(ap, { action: 'finish' }, 'Mentoria concluída.')} data-testid="m6-finish">Concluir</Button>
                 )}
               </div>
-              {ap.status === 'confirmed' && !noShowAllowed(ap.startAt, now) && <p className="tw-field__hint">“Não compareceu” fica disponível 10 min após o início.</p>}
+              {ap.status === 'confirmed' && !noShowAllowed(ap.startAt, now) && <p className="tw-field__hint">"Não compareceu" é liberado 10 min após o início.</p>}
             </div>
           ) : (
             <p className="tw-field__hint">Horário livre</p>
@@ -133,17 +133,17 @@ export default function M6Agenda() {
 
   return (
     <div className="tw-page tw-stack" data-testid="m6">
-      <Hero title="Minha agenda"><p>Horário de Recife.</p></Hero>
+      <Hero title="Minha agenda"><p>{formatDayShort(data.slots[0]!.slot.startAt).replace(/^./, (c) => c.toUpperCase())} · horário de Recife</p></Hero>
       <ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} />
       <ol className="tw-stack" style={{ listStyle: 'none', padding: 0, margin: 0 }}>{data.slots.map(renderRow)}</ol>
 
       <Overlay title="Cancelar mentoria" open={!!cancelFor} onClose={() => setCancelFor(null)}>
         <div className="tw-stack">
-          <p>{cancelFor ? `Cancelar a mentoria das ${formatTime(cancelFor.startAt)} com ${cancelFor.mentee.name}? Ela volta para a fila com prioridade.` : ''}</p>
+          <p>{cancelFor ? `${cancelFor.mentee.name.split(' ')[0]} volta para a fila com prioridade e será avisada.` : ''}</p>
           <TextArea label="Motivo" optional rows={3} maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)} data-testid="m6-cancel-reason" />
           <Button variant="danger" block loading={!!cancelFor && busy === `${cancelFor.id}:cancel`}
             onClick={() => cancelFor && void act(cancelFor, { action: 'cancel', ...(reason.trim() ? { reason: reason.trim() } : {}) }, 'Mentoria cancelada.')} data-testid="m6-cancel-confirm">Cancelar mentoria</Button>
-          <Button variant="ghost" block onClick={() => setCancelFor(null)}>Voltar</Button>
+          <Button variant="ghost" block onClick={() => setCancelFor(null)}>Manter</Button>
         </div>
       </Overlay>
     </div>

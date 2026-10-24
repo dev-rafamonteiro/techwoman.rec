@@ -143,13 +143,13 @@ export default function M4Aguardando() {
     <div className="tw-page tw-stack" data-testid="m4">
       <Hero title="Participantes aguardando">
         <p data-testid="m4-free">Seus horários livres hoje: {meta?.freeSlots ?? '–'}</p>
-        {next && <p data-testid="m4-next">{formatTime(next.startAt)} · Mesa {next.table.number} · {next.mentee.name.split(' ')[0]}</p>}
+        {next && <p data-testid="m4-next">Próximo atendimento: {formatTime(next.startAt)} · Mesa {next.table.number} · {next.mentee.name.split(' ')[0]}</p>}
       </Hero>
       <ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} />
 
       {meta && !meta.hasAvailability && (
         <div className="tw-card" role="status" data-testid="m4-no-availability">
-          Você ainda não marcou nenhum horário disponível. <Link className="tw-link" to="/mentora/disponibilidade">Definir disponibilidade</Link>
+          Você ainda não marcou nenhum horário. Marque ao menos um para poder mentorar. <Link className="tw-link" to="/mentora/disponibilidade">Ir para Disponibilidade</Link>
         </div>
       )}
       <div aria-live="polite" className="tw-stack">
@@ -159,11 +159,11 @@ export default function M4Aguardando() {
       <details className="tw-card" open={filtered || undefined}>
         <summary>Filtros{filtered ? ' (ativos)' : ''}</summary>
         <div className="tw-stack">
-          <TextField label="Buscar por nome" type="search" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="m4-search" />
+          <TextField label="Buscar por nome" placeholder="Nome da participante" type="search" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="m4-search" />
           <fieldset className="tw-stack" style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend className="tw-field__label">Área</legend>
+            <legend className="tw-field__label">Minhas áreas</legend>
             {areas.map((a) => <CheckboxField key={a.key} label={a.label} checked={areaFilter.has(a.key)} onChange={() => toggleArea(a.key)} />)}
-            {areaFilter.size > 0 && <Button variant="ghost" size="sm" onClick={() => setAreaFilter(new Set())} data-testid="m4-all-areas">Ver todas</Button>}
+            {areaFilter.size > 0 && <Button variant="ghost" size="sm" onClick={() => setAreaFilter(new Set())} data-testid="m4-all-areas">Ver todas as áreas</Button>}
           </fieldset>
           <SelectField label="Período preferido" value={period} onChange={(e) => setPeriod(e.target.value as PreferredPeriod | '')} data-testid="m4-period">
             <option value="">Todos</option>
@@ -178,7 +178,7 @@ export default function M4Aguardando() {
       ) : !loaded ? (
         <SkeletonList rows={4} height={120} />
       ) : items.length === 0 ? (
-        <EmptyState title="Ninguém aguardando agora" text={filtered ? 'Nenhuma participante com esses filtros.' : 'Quando alguém se inscrever, ela aparece aqui sozinha.'}
+        <EmptyState title="Ninguém aguardando agora" text={filtered ? 'Nenhuma participante com esses filtros.' : 'Novas inscrições aparecem aqui sozinhas.'}
           action={filtered ? <Button variant="secondary" onClick={() => { setAreaFilter(new Set()); setPeriod(''); setOnlyPriority(false); setSearch(''); }}>Limpar filtros</Button> : undefined} />
       ) : (
         <ul className="tw-stack" style={{ listStyle: 'none', padding: 0, margin: 0 }} data-testid="m4-list">

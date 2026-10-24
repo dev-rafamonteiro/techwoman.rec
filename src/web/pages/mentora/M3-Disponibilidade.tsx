@@ -60,7 +60,7 @@ export default function M3Disponibilidade() {
 
   return (
     <div className="tw-page tw-stack" data-testid="m3">
-      <Hero title="Minha disponibilidade"><p>Toque nos horários em que você pode mentorar. Horário de Recife.</p></Hero>
+      <Hero title="Minha disponibilidade"><p>Marque os horários em que você pode mentorar. Horário de Recife.</p></Hero>
       <div className="tw-row">
         <Button variant="secondary" size="sm" onClick={() => shortcut('morning')} data-testid="m3-morning">Manhã inteira</Button>
         <Button variant="secondary" size="sm" onClick={() => shortcut('afternoon')} data-testid="m3-afternoon">Tarde inteira</Button>
@@ -68,7 +68,8 @@ export default function M3Disponibilidade() {
       </div>
       <SlotToggleGrid legend="Horários disponíveis" slots={options} selected={selected}
         onToggle={(id) => setSelected((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; })} />
-      <p className="tw-field__hint">{selected.size} {selected.size === 1 ? 'horário disponível' : 'horários disponíveis'}</p>
+      {selected.size === 0 && <p role="status" data-testid="m3-empty-warning">Você ainda não marcou nenhum horário. Marque ao menos um para poder mentorar.</p>}
+      {lockedIds.size > 0 && <p className="tw-field__hint">Horário com mentoria marcada fica travado. Para liberar, cancele a mentoria em Minha agenda.</p>}
       <Button size="lg" block loading={saving} disabled={!dirty} onClick={() => void save()} data-testid="m3-save">Salvar disponibilidade</Button>
     </div>
   );

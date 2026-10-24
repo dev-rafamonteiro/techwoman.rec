@@ -4,10 +4,10 @@ import { ApiError, Button, Card, Hero, SkeletonList, TextField, useAuth } from '
 import { safeNext } from '../../shell/auth';
 
 const MESSAGES: Record<string, string> = {
-  INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
+  INVALID_CREDENTIALS: 'E-mail ou senha incorretos. Confira e tente de novo.',
   ACCOUNT_DISABLED: 'Esta conta está desativada. Procure a organização no balcão de apoio.',
-  ACCOUNT_LOCKED: 'Muitas tentativas. Por segurança, o acesso fica bloqueado por 5 minutos. Tente de novo depois.',
-  RATE_LIMITED: 'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
+  ACCOUNT_LOCKED: 'Muitas tentativas. Tente de novo em 5 minutos.',
+  RATE_LIMITED: 'Muitas tentativas. Tente de novo em 5 minutos.',
   NETWORK: 'Sem conexão. Confira a internet e tente de novo.',
 };
 
@@ -49,10 +49,10 @@ export default function M1Login() {
 
   return (
     <div className="tw-page tw-stack">
-      <Hero title="Entrar"><p>Área da mentora e da organização.</p></Hero>
+      <Hero title="Entrar"><p>Área da mentora e do painel de organização.</p></Hero>
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="m1-form">
         {error && <div className="tw-card" role="alert" data-testid="m1-error">{error}</div>}
-        <TextField label="E-mail" type="email" inputMode="email" autoComplete="username" value={email} error={emailError}
+        <TextField label="E-mail" placeholder="voce@email.com" type="email" inputMode="email" autoComplete="username" value={email} error={emailError}
           onChange={(e) => setEmail(e.target.value)} data-testid="m1-email" />
         <TextField label="Senha" type="password" autoComplete="current-password" value={password}
           onChange={(e) => setPassword(e.target.value)} data-testid="m1-password" />

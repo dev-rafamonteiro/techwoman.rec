@@ -23,7 +23,7 @@ export default function M2NovaSenha() {
 
   const errors = useMemo(() => ({
     current: current ? undefined : 'Informe a senha provisória.',
-    pw: pw.length >= PASSWORD_MIN_LENGTH ? undefined : `A nova senha precisa ter no mínimo ${PASSWORD_MIN_LENGTH} caracteres.`,
+    pw: pw.length >= PASSWORD_MIN_LENGTH ? undefined : `Use pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`,
     confirm: confirm === pw ? undefined : 'As senhas não são iguais.',
     name: name.trim().length >= 2 ? undefined : 'Informe seu nome.',
     photo: !photoUrl || /^https:\/\/\S+$/.test(photoUrl) ? undefined : 'Use um endereço https://',
@@ -59,7 +59,7 @@ export default function M2NovaSenha() {
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
       if (ae?.code === 'INVALID_CREDENTIALS') setError('A senha atual não confere.');
-      else if (ae?.code === 'WEAK_PASSWORD') setError(`Senha fraca. Use no mínimo ${PASSWORD_MIN_LENGTH} caracteres e evite senhas comuns.`);
+      else if (ae?.code === 'WEAK_PASSWORD') setError(`Use pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`);
       else setError(ae?.message ?? 'Não foi possível trocar a senha agora. Tente de novo.');
     } finally {
       setSubmitting(false);
@@ -78,25 +78,25 @@ export default function M2NovaSenha() {
 
   return (
     <div className="tw-page tw-stack">
-      <Hero title="Crie sua nova senha"><p>No primeiro acesso é obrigatório trocar a senha provisória.</p></Hero>
+      <Hero eyebrow="Primeiro acesso" title="Crie sua senha"><p>É seu primeiro acesso. Troque a senha provisória e confira seus dados.</p></Hero>
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="m2-form">
         {error && <div className="tw-card" role="alert" data-testid="m2-error">{error}</div>}
         <TextField label="Senha provisória" type="password" autoComplete="current-password" value={current} error={shown('current')}
           onChange={(e) => setCurrent(e.target.value)} data-testid="m2-current" />
         <TextField label="Nova senha" type="password" autoComplete="new-password" value={pw} error={shown('pw')}
-          hint={`Mínimo de ${PASSWORD_MIN_LENGTH} caracteres.`} ok={pw.length >= PASSWORD_MIN_LENGTH ? 'Tamanho ok' : undefined}
+          hint={<>{pw.length >= PASSWORD_MIN_LENGTH ? '✓' : '✗'} Mínimo de {PASSWORD_MIN_LENGTH} caracteres</>}
           onChange={(e) => setPw(e.target.value)} data-testid="m2-new" />
-        <TextField label="Confirmar senha" type="password" autoComplete="new-password" value={confirm} error={shown('confirm')}
+        <TextField label="Confirmar senha" type="password" autoComplete="new-password" value={confirm} error={shown('confirm')} hint={<>{confirm && confirm === pw ? '✓' : '✗'} Confirmação igual à nova senha</>}
           onChange={(e) => setConfirm(e.target.value)} data-testid="m2-confirm" />
 
         <Card>
-          <h2 className="tw-title tw-title--ink">Confira seu perfil</h2>
+          <h2 className="tw-title tw-title--ink">Seu perfil</h2>
           <div className="tw-stack">
-            <TextField label="Nome" autoComplete="name" value={name} error={shown('name')}
+            <TextField label="Nome completo" autoComplete="name" value={name} error={shown('name')}
               onChange={(e) => { setName(e.target.value); setProfileTouched(true); }} data-testid="m2-name" />
             <TextField label="LinkedIn" optional value={linkedin} hint="Pode ser só o usuário ou a URL completa."
               onChange={(e) => { setLinkedin(e.target.value); setProfileTouched(true); }} data-testid="m2-linkedin" />
-            <TextField label="Foto (endereço da imagem)" optional type="url" value={photoUrl} error={shown('photo')}
+            <TextField label="Foto" optional type="url" value={photoUrl} error={shown('photo')}
               onChange={(e) => { setPhotoUrl(e.target.value); setProfileTouched(true); }} data-testid="m2-photo" />
             {areaList.length > 0 && (
               <fieldset className="tw-stack" style={{ border: 0, padding: 0, margin: 0 }}>
