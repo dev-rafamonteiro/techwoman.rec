@@ -49,5 +49,6 @@ test("P4 -> M4/M5 -> P6 aceitar -> M6 concluir", async ({ browser }) => {
 
   // e a fila da mentora não tem mais a participante
   await mentor.goto("/mentora/aguardando");
-  await expect(mentor.getByTestId("m4-list")).not.toContainText("Joana");
+  await expect(mentor.getByTestId("m4")).toBeVisible();
+  await expect(mentor.getByTestId("m4")).not.toContainText("Joana");
 });

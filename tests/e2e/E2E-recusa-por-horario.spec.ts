@@ -32,7 +32,7 @@ test("recusa por horário volta para a fila com prioridade (RN06, RN03)", async 
   await expect(mentee.getByTestId("p6-proposto")).toBeVisible();
   await mentee.getByTestId("p6-decline").click();
   await mentee.getByTestId("p6-decline-schedule").click();
-  await expect(mentee.getByTestId("p6-aguardando")).toBeVisible();
+  await expect(mentee.getByTestId("p6-recusada")).toBeVisible();
   await expect(mentee.getByTestId("p6-outcome")).toBeVisible();
 
   // outra mentora vê a Ana primeiro, com marca de prioridade (mesmo que a Bia tenha se inscrito depois, a Ana
@@ -41,7 +41,7 @@ test("recusa por horário volta para a fila com prioridade (RN06, RN03)", async 
   await mentorB.goto("/mentora/aguardando");
   const items = mentorB.getByTestId("m4-list").locator("li");
   await expect(items.first()).toContainText("Ana");
-  await mentorB.getByTestId("m4-priority").check();
+  await mentorB.getByTestId("m4-priority").click();
   await expect(items).toHaveCount(1);
   await expect(items.first()).toContainText("Ana");
 });
