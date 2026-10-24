@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`layout 01-inscricao-recebida com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Recebemos sua inscrição na mentoria do Tech Woman"`;
+
+exports[`layout 02-convite-horario com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Ana quer te mentorar às 14h15"`;
+
+exports[`layout 03-confirmacao com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Combinado: 14h15 na Mesa 7"`;
+
+exports[`layout 04-convite-expirado com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"O prazo para confirmar sua mentoria terminou"`;
+
+exports[`layout 05-cancelamento-mentora com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Sua mentoria das 14h15 foi cancelada"`;
+
+exports[`layout 06-acesso-mentora com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Seu acesso ao painel de mentoras do Tech Woman"`;

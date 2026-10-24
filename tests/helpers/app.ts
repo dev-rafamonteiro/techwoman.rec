@@ -29,7 +29,7 @@ export async function loadApi(): Promise<ApiModules | null> {
       // adapta { db, client, now, streams? } para a assinatura real: buildApp({ config, client, db, logger, streams, now }) -> { app, ctx }
       buildApp: async (o: Record<string, any>) => {
         const config = loadConfig({ NODE_ENV: "test", JWT_SECRET: "t".repeat(40), TURNSTILE_MODE: "test", EVENT_ID: o.eventId ?? "techwoman-2026" } as NodeJS.ProcessEnv);
-        const { app: fastify } = await app.buildApp({ config, client: o.client, db: o.db, logger: false, streams: o.streams ?? false, ...(o.now ? { now: o.now } : {}) });
+        const { app: fastify } = await app.buildApp({ config, client: o.client, db: o.db, logger: false, streams: o.streams ?? false, ...(o.searchOverrides ? { searchOverrides: o.searchOverrides } : {}), ...(o.now ? { now: o.now } : {}) });
         return fastify;
       },
     };
