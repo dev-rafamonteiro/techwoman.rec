@@ -179,20 +179,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -380,6 +381,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a aria-current=page>Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Configurações do evento</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Configurações do evento</h1><p class=x-sub>Só super admin.</p></div><div class="tw-card tw-stack"><b>Evento</b><div class="tw-field"><label class="tw-field__label">Nome </label><input class="tw-input" type="text" value="Tech Woman 2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Data </label><input class="tw-input" type="text" value="14/11/2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Local </label><input class="tw-input" type="text" value="Recife" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Fuso</label><select class="tw-select"><option>America/Recife</option></select></div><div class="tw-field"><label class="tw-field__label">Hora de início </label><input class="tw-input" type="text" value="9h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Hora de fim </label><input class="tw-input" type="text" value="18h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Duração da sessão (min) </label><input class="tw-input" type="text" value="40" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Intervalo entre sessões (min) </label><input class="tw-input" type="text" value="5" placeholder=""></div><div><b>Prévia da grade</b><fieldset class="tw-slotgrid" style="margin-top:8px"><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">10h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">11h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">13h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">14h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">16h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">17h15<small>Horário gerado</small></button></fieldset></div></div>
 <div class="tw-card tw-stack"><b>Convites</b><div class="tw-field"><label class="tw-field__label">Prazo para responder (min) </label><input class="tw-input" type="text" value="15" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Antecedência mínima para convite (min) </label><input class="tw-input" type="text" value="10" placeholder=""></div><label class="x-switch"><i></i> Inscrições abertas</label><div class="tw-field"><span class="tw-field__label">Áreas disponíveis</span><div class="x-filters"><span class="x-chip on">Backend ✕</span><span class="x-chip on">Frontend ✕</span><span class="x-chip on">Dados ✕</span><span class="x-chip">+ Adicionar</span></div></div></div>
@@ -551,20 +553,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -752,6 +755,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a aria-current=page>Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Configurações do evento</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Configurações do evento</h1><p class=x-sub>Só super admin.</p></div><div class="tw-card tw-stack"><b>Evento</b><div class="tw-field"><label class="tw-field__label">Nome </label><input class="tw-input" type="text" value="Tech Woman 2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Data </label><input class="tw-input" type="text" value="14/11/2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Local </label><input class="tw-input" type="text" value="Recife" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Fuso</label><select class="tw-select"><option>America/Recife</option></select></div><div class="tw-field"><label class="tw-field__label">Hora de início </label><input class="tw-input" type="text" value="9h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Hora de fim </label><input class="tw-input" type="text" value="18h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Duração da sessão (min) </label><input class="tw-input" type="text" value="40" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Intervalo entre sessões (min) </label><input class="tw-input" type="text" value="5" placeholder=""></div><div><b>Prévia da grade</b><fieldset class="tw-slotgrid" style="margin-top:8px"><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">10h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">11h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">13h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">14h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">16h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">17h15<small>Horário gerado</small></button></fieldset></div></div>
 <div class="tw-card tw-stack"><b>Convites</b><div class="tw-field"><label class="tw-field__label">Prazo para responder (min) </label><input class="tw-input" type="text" value="15" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Antecedência mínima para convite (min) </label><input class="tw-input" type="text" value="10" placeholder=""></div><label class="x-switch"><i></i> Inscrições abertas</label><div class="tw-field"><span class="tw-field__label">Áreas disponíveis</span><div class="x-filters"><span class="x-chip on">Backend ✕</span><span class="x-chip on">Frontend ✕</span><span class="x-chip on">Dados ✕</span><span class="x-chip">+ Adicionar</span></div></div></div>
@@ -924,20 +928,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1125,6 +1130,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a aria-current=page>Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Configurações do evento</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Configurações do evento</h1></div><div class="x-banner x-err" role="alert">Não é possível alterar a grade com mentorias já marcadas.</div><div class="tw-card tw-stack"><b>Evento</b><div class="tw-field"><label class="tw-field__label">Nome </label><input class="tw-input" type="text" value="Tech Woman 2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Data </label><input class="tw-input" type="text" value="14/11/2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Local </label><input class="tw-input" type="text" value="Recife" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Fuso</label><select class="tw-select"><option>America/Recife</option></select></div><div class="tw-field"><label class="tw-field__label">Hora de início </label><input class="tw-input" type="text" value="9h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Hora de fim </label><input class="tw-input" type="text" value="18h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Duração da sessão (min) </label><input class="tw-input" type="text" value="40" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Intervalo entre sessões (min) </label><input class="tw-input" type="text" value="5" placeholder=""></div><div><b>Prévia da grade</b><fieldset class="tw-slotgrid" style="margin-top:8px"><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">10h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">11h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">13h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">14h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">16h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">17h15<small>Horário gerado</small></button></fieldset></div></div>
 <div class="tw-card tw-stack"><b>Convites</b><div class="tw-field"><label class="tw-field__label">Prazo para responder (min) </label><input class="tw-input" type="text" value="15" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Antecedência mínima para convite (min) </label><input class="tw-input" type="text" value="10" placeholder=""></div><label class="x-switch"><i></i> Inscrições abertas</label><div class="tw-field"><span class="tw-field__label">Áreas disponíveis</span><div class="x-filters"><span class="x-chip on">Backend ✕</span><span class="x-chip on">Frontend ✕</span><span class="x-chip on">Dados ✕</span><span class="x-chip">+ Adicionar</span></div></div></div>
@@ -1296,20 +1302,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1497,6 +1504,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a aria-current=page>Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Configurações do evento</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Configurações do evento</h1></div><div class="x-banner x-err" role="alert">Não é possível alterar a grade com mentorias já marcadas.</div><div class="tw-card tw-stack"><b>Evento</b><div class="tw-field"><label class="tw-field__label">Nome </label><input class="tw-input" type="text" value="Tech Woman 2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Data </label><input class="tw-input" type="text" value="14/11/2026" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Local </label><input class="tw-input" type="text" value="Recife" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Fuso</label><select class="tw-select"><option>America/Recife</option></select></div><div class="tw-field"><label class="tw-field__label">Hora de início </label><input class="tw-input" type="text" value="9h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Hora de fim </label><input class="tw-input" type="text" value="18h00" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Duração da sessão (min) </label><input class="tw-input" type="text" value="40" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Intervalo entre sessões (min) </label><input class="tw-input" type="text" value="5" placeholder=""></div><div><b>Prévia da grade</b><fieldset class="tw-slotgrid" style="margin-top:8px"><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">9h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">10h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">11h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">12h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">13h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">14h15<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h00<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">15h45<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">16h30<small>Horário gerado</small></button><button class="tw-slot" type="button" disabled style="background:#fff;color:inherit">17h15<small>Horário gerado</small></button></fieldset></div></div>
 <div class="tw-card tw-stack"><b>Convites</b><div class="tw-field"><label class="tw-field__label">Prazo para responder (min) </label><input class="tw-input" type="text" value="15" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Antecedência mínima para convite (min) </label><input class="tw-input" type="text" value="10" placeholder=""></div><label class="x-switch"><i></i> Inscrições abertas</label><div class="tw-field"><span class="tw-field__label">Áreas disponíveis</span><div class="x-filters"><span class="x-chip on">Backend ✕</span><span class="x-chip on">Frontend ✕</span><span class="x-chip on">Dados ✕</span><span class="x-chip">+ Adicionar</span></div></div></div>
@@ -1669,20 +1677,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1870,6 +1879,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Evento</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-state"><span class="tw-state__icon">⛔</span><h2 class="tw-state__title">Você não tem acesso a esta área</h2><p class="tw-state__text">Se acha que deveria ter, procure a organização no balcão de apoio.</p></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A7 Sem permissão 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2038,20 +2048,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2239,6 +2250,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Evento</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-state"><span class="tw-state__icon">⛔</span><h2 class="tw-state__title">Você não tem acesso a esta área</h2><p class="tw-state__text">Se acha que deveria ter, procure a organização no balcão de apoio.</p></div></div></main></div></div></body></html></template></figure></div></section>
 

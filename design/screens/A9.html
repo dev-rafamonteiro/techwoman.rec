@@ -179,20 +179,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -380,6 +381,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="true">Notificações</button><button class="x-tab" role="tab" aria-selected="false">Auditoria</button></div><div class="tw-table-wrap"><div class="tw-toolbar"><div class="tw-field"><label class="tw-field__label">Status</label><select class="tw-select"><option>Todos</option></select></div><button class="tw-btn tw-btn--secondary tw-btn--sm">Exportar CSV</button></div><div class="tw-scroll"><table class="tw-data"><thead><tr><th>Canal</th><th>Destinatária (mascarada)</th><th>Modelo</th><th>Status</th><th>Tentativas</th><th>Ação</th></tr></thead><tbody><tr tabindex="0"><td>E-mail</td><td>j***@exemplo.com</td><td>Convite</td><td><span class="tw-badge tw-badge--confirmed"><span class="tw-badge__dot"></span>Enviada</span></td><td>1</td><td></td></tr><tr tabindex="0"><td>WhatsApp</td><td>+55 81 9****-0001</td><td>Convite</td><td><span class="tw-badge tw-badge--negative"><span class="tw-badge__dot"></span>Falhou</span></td><td>3</td><td><button class="tw-btn tw-btn--secondary tw-btn--sm">Reenviar</button></td></tr><tr tabindex="0"><td>WhatsApp</td><td>+55 81 9****-0002</td><td>Lembrete</td><td><span class="tw-badge tw-badge--invited"><span class="tw-badge__dot"></span>Na fila</span></td><td>0</td><td></td></tr></tbody></table></div></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A9 Aba Notificações 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -548,20 +550,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -749,6 +752,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="true">Notificações</button><button class="x-tab" role="tab" aria-selected="false">Auditoria</button></div><div class="tw-table-wrap"><div class="tw-toolbar"><div class="tw-field"><label class="tw-field__label">Status</label><select class="tw-select"><option>Todos</option></select></div><button class="tw-btn tw-btn--secondary tw-btn--sm">Exportar CSV</button></div><div class="tw-scroll"><table class="tw-data"><thead><tr><th>Canal</th><th>Destinatária (mascarada)</th><th>Modelo</th><th>Status</th><th>Tentativas</th><th>Ação</th></tr></thead><tbody><tr tabindex="0"><td>E-mail</td><td>j***@exemplo.com</td><td>Convite</td><td><span class="tw-badge tw-badge--confirmed"><span class="tw-badge__dot"></span>Enviada</span></td><td>1</td><td></td></tr><tr tabindex="0"><td>WhatsApp</td><td>+55 81 9****-0001</td><td>Convite</td><td><span class="tw-badge tw-badge--negative"><span class="tw-badge__dot"></span>Falhou</span></td><td>3</td><td><button class="tw-btn tw-btn--secondary tw-btn--sm">Reenviar</button></td></tr><tr tabindex="0"><td>WhatsApp</td><td>+55 81 9****-0002</td><td>Lembrete</td><td><span class="tw-badge tw-badge--invited"><span class="tw-badge__dot"></span>Na fila</span></td><td>0</td><td></td></tr></tbody></table></div></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Aba Auditoria</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A9 Aba Auditoria 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -918,20 +922,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1119,6 +1124,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="false">Notificações</button><button class="x-tab" role="tab" aria-selected="true">Auditoria</button></div><div class="tw-table-wrap"><div class="tw-toolbar"><div class="tw-field"><label class="tw-field__label">Usuário</label><select class="tw-select"><option>Todos</option></select></div><div class="tw-field"><label class="tw-field__label">Ação</label><select class="tw-select"><option>Todas</option></select></div><button class="tw-btn tw-btn--secondary tw-btn--sm">Exportar CSV</button></div><div class="tw-scroll"><table class="tw-data"><thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody><tr tabindex="0"><td>14h02</td><td>Camila Prado</td><td>Cancelou mentoria</td><td>Joana Lima · 14h15 · Mesa 7</td></tr><tr tabindex="0"><td>13h58</td><td>Marina Souza</td><td>Enviou convite</td><td>Camila Ramos · 15h00</td></tr><tr tabindex="0"><td>13h40</td><td>Rafaela Dias</td><td>Override: moveu de mesa</td><td>Mesa 3 para Mesa 5</td></tr></tbody></table></div></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A9 Aba Auditoria 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -1287,20 +1293,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1488,6 +1495,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="false">Notificações</button><button class="x-tab" role="tab" aria-selected="true">Auditoria</button></div><div class="tw-table-wrap"><div class="tw-toolbar"><div class="tw-field"><label class="tw-field__label">Usuário</label><select class="tw-select"><option>Todos</option></select></div><div class="tw-field"><label class="tw-field__label">Ação</label><select class="tw-select"><option>Todas</option></select></div><button class="tw-btn tw-btn--secondary tw-btn--sm">Exportar CSV</button></div><div class="tw-scroll"><table class="tw-data"><thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody><tr tabindex="0"><td>14h02</td><td>Camila Prado</td><td>Cancelou mentoria</td><td>Joana Lima · 14h15 · Mesa 7</td></tr><tr tabindex="0"><td>13h58</td><td>Marina Souza</td><td>Enviou convite</td><td>Camila Ramos · 15h00</td></tr><tr tabindex="0"><td>13h40</td><td>Rafaela Dias</td><td>Override: moveu de mesa</td><td>Mesa 3 para Mesa 5</td></tr></tbody></table></div></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Vazio</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A9 Vazio 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -1657,20 +1665,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1858,6 +1867,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="true">Notificações</button><button class="x-tab" role="tab" aria-selected="false">Auditoria</button></div><div class="tw-state"><span class="tw-state__icon">∅</span><h2 class="tw-state__title">Nenhuma notificação ainda</h2><p class="tw-state__text">Elas aparecem aqui quando houver inscrições e convites.</p></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A9 Vazio 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2026,20 +2036,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2227,6 +2238,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="true">Notificações</button><button class="x-tab" role="tab" aria-selected="false">Auditoria</button></div><div class="tw-state"><span class="tw-state__icon">∅</span><h2 class="tw-state__title">Nenhuma notificação ainda</h2><p class="tw-state__text">Elas aparecem aqui quando houver inscrições e convites.</p></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Erro</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A9 Erro 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -2396,20 +2408,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2597,6 +2610,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="true">Notificações</button><button class="x-tab" role="tab" aria-selected="false">Auditoria</button></div><div class="tw-state"><span class="tw-state__icon">!</span><h2 class="tw-state__title">Não foi possível carregar</h2><p class="tw-state__text">Sem conexão. Confira a internet e tente de novo.</p><button class="tw-btn tw-btn--primary ">Tentar de novo</button></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A9 Erro 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2765,20 +2779,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2966,6 +2981,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a aria-current=page>Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Notificações e auditoria</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Notificações e auditoria</h1></div><div class="x-tabs" role="tablist"><button class="x-tab" role="tab" aria-selected="true">Notificações</button><button class="x-tab" role="tab" aria-selected="false">Auditoria</button></div><div class="tw-state"><span class="tw-state__icon">!</span><h2 class="tw-state__title">Não foi possível carregar</h2><p class="tw-state__text">Sem conexão. Confira a internet e tente de novo.</p><button class="tw-btn tw-btn--primary ">Tentar de novo</button></div></div></main></div></div></body></html></template></figure></div></section>
 

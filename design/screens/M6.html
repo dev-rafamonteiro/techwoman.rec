@@ -179,20 +179,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -380,6 +381,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="x-tl">
 <div class="tw-card"><div class="tw-row" style="justify-content:space-between"><b>9h45</b><span class="tw-badge tw-badge--done"><span class="tw-badge__dot"></span>Concluída</span></div><span>Larissa Gomes · Dados · Mesa 3</span></div>
@@ -554,20 +556,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -755,6 +758,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="x-tl">
 <div class="tw-card"><div class="tw-row" style="justify-content:space-between"><b>9h45</b><span class="tw-badge tw-badge--done"><span class="tw-badge__dot"></span>Concluída</span></div><span>Larissa Gomes · Dados · Mesa 3</span></div>
@@ -930,20 +934,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1131,6 +1136,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="x-tl">
 <div class="tw-card"><div class="tw-row" style="justify-content:space-between"><b>9h45</b><span class="tw-badge tw-badge--done"><span class="tw-badge__dot"></span>Concluída</span></div><span>Larissa Gomes · Dados · Mesa 3</span></div>
@@ -1305,20 +1311,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1506,6 +1513,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="x-tl">
 <div class="tw-card"><div class="tw-row" style="justify-content:space-between"><b>9h45</b><span class="tw-badge tw-badge--done"><span class="tw-badge__dot"></span>Concluída</span></div><span>Larissa Gomes · Dados · Mesa 3</span></div>
@@ -1681,20 +1689,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1882,6 +1891,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn tw-conn--reconnecting"><span class="tw-conn__dot"></span>Reconectando…</div><div class="x-tl">
 <div class="tw-card"><div class="tw-row" style="justify-content:space-between"><b>9h45</b><span class="tw-badge tw-badge--done"><span class="tw-badge__dot"></span>Concluída</span></div><span>Larissa Gomes · Dados · Mesa 3</span></div>
@@ -2056,20 +2066,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2257,6 +2268,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn tw-conn--reconnecting"><span class="tw-conn__dot"></span>Reconectando…</div><div class="x-tl">
 <div class="tw-card"><div class="tw-row" style="justify-content:space-between"><b>9h45</b><span class="tw-badge tw-badge--done"><span class="tw-badge__dot"></span>Concluída</span></div><span>Larissa Gomes · Dados · Mesa 3</span></div>
@@ -2432,20 +2444,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2633,6 +2646,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="tw-stack"><span class="tw-skeleton" style="height:90px;border-radius:20px"></span><span class="tw-skeleton" style="height:90px;border-radius:20px"></span><span class="tw-skeleton" style="height:90px;border-radius:20px"></span><span class="tw-skeleton" style="height:90px;border-radius:20px"></span></div></div></main><nav class="tw-tabbar"><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Aguardando</a><a class="tw-tab" aria-current=page><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Minha agenda</a><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Disponibilidade</a><button class="tw-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Sair</button></nav></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="M6 Carregando 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2801,20 +2815,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -3002,6 +3017,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="tw-stack"><span class="tw-skeleton" style="height:90px;border-radius:20px"></span><span class="tw-skeleton" style="height:90px;border-radius:20px"></span><span class="tw-skeleton" style="height:90px;border-radius:20px"></span><span class="tw-skeleton" style="height:90px;border-radius:20px"></span></div></div></main><nav class="tw-tabbar"><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Aguardando</a><a class="tw-tab" aria-current=page><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Minha agenda</a><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Disponibilidade</a><button class="tw-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Sair</button></nav></div></body></html></template></figure></div></section>
 <section class="state"><h2>Vazio (sem horários)</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="M6 Vazio (sem horários) 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -3171,20 +3187,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -3372,6 +3389,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="tw-state"><span class="tw-state__icon">∅</span><h2 class="tw-state__title">Você ainda não marcou horários</h2><p class="tw-state__text">Marque sua disponibilidade para aparecer aqui.</p><button class="tw-btn tw-btn--secondary ">Ir para Disponibilidade</button></div></div></main><nav class="tw-tabbar"><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Aguardando</a><a class="tw-tab" aria-current=page><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Minha agenda</a><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Disponibilidade</a><button class="tw-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Sair</button></nav></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="M6 Vazio (sem horários) 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -3540,20 +3558,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -3741,6 +3760,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="tw-state"><span class="tw-state__icon">∅</span><h2 class="tw-state__title">Você ainda não marcou horários</h2><p class="tw-state__text">Marque sua disponibilidade para aparecer aqui.</p><button class="tw-btn tw-btn--secondary ">Ir para Disponibilidade</button></div></div></main><nav class="tw-tabbar"><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Aguardando</a><a class="tw-tab" aria-current=page><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Minha agenda</a><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Disponibilidade</a><button class="tw-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Sair</button></nav></div></body></html></template></figure></div></section>
 <section class="state"><h2>Erro</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="M6 Erro 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -3910,20 +3930,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -4111,6 +4132,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="tw-state"><span class="tw-state__icon">!</span><h2 class="tw-state__title">Não foi possível carregar</h2><p class="tw-state__text">Sem conexão. Confira a internet e tente de novo.</p><button class="tw-btn tw-btn--primary ">Tentar de novo</button></div></div></main><nav class="tw-tabbar"><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Aguardando</a><a class="tw-tab" aria-current=page><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Minha agenda</a><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Disponibilidade</a><button class="tw-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Sair</button></nav></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="M6 Erro 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -4279,20 +4301,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -4480,6 +4503,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-app tw-app--mentor"><header class="tw-topbar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav class="tw-topnav"><a >Aguardando</a><a aria-current=page>Minha agenda</a><a >Disponibilidade</a><button>Sair</button></nav><div class="tw-topbar__right"><span class="tw-topbar__title">Marina</span></div></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Minha agenda</h1><p class=x-sub>Sábado, 14/11 · horário de Recife</p></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora</div><div class="tw-state"><span class="tw-state__icon">!</span><h2 class="tw-state__title">Não foi possível carregar</h2><p class="tw-state__text">Sem conexão. Confira a internet e tente de novo.</p><button class="tw-btn tw-btn--primary ">Tentar de novo</button></div></div></main><nav class="tw-tabbar"><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Aguardando</a><a class="tw-tab" aria-current=page><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Minha agenda</a><a class="tw-tab" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Disponibilidade</a><button class="tw-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Sair</button></nav></div></body></html></template></figure></div></section>
 

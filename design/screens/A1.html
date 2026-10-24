@@ -179,20 +179,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -380,6 +381,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora · a cada 15 s</div><div class="x-grid x-stats"><div class="x-stat"><b>142</b><span>Inscritas</span></div><div class="x-stat"><b>37</b><span>Aguardando</span></div><div class="x-stat"><b>5</b><span>Convites pendentes</span></div><div class="x-stat"><b>48</b><span>Confirmadas</span></div><div class="x-stat"><b>31</b><span>Concluídas</span></div><div class="x-stat"><b>4</b><span>Não compareceu</span></div><div class="x-stat"><b>14/20</b><span>Mesas ocupadas agora</span></div><div class="x-stat"><b>26</b><span>Sessões livres hoje</span></div><div class="x-stat"><b>38/50</b><span>Mentoras com login</span></div></div><div class="x-grid x-2col"><div class="tw-card tw-stack"><b>Inscritas por área</b><div class="tw-stack" style="gap:8px"><div class="x-bar"><span style="width:140px">Backend</span><i style="width:102px"></i><b>34</b></div><div class="x-bar"><span style="width:140px">Frontend</span><i style="width:84px"></i><b>28</b></div><div class="x-bar"><span style="width:140px">Dados</span><i style="width:90px"></i><b>30</b></div><div class="x-bar"><span style="width:140px">UX & Design</span><i style="width:60px"></i><b>20</b></div><div class="x-bar"><span style="width:140px">Produto</span><i style="width:48px"></i><b>16</b></div><div class="x-bar"><span style="width:140px">Cloud & Infra</span><i style="width:42px"></i><b>14</b></div></div></div><div class="tw-card tw-stack"><b>Inscrições por hora</b><svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Inscrições por hora"><polyline fill="none" stroke="#8a1f96" stroke-width="3" points="0,90 40,70 80,50 120,55 160,30 200,40 240,20 280,35 320,25"/><g fill="#f26430"><circle cx="0" cy="90" r="4"/><circle cx="80" cy="50" r="4"/><circle cx="160" cy="30" r="4"/><circle cx="240" cy="20" r="4"/><circle cx="320" cy="25" r="4"/></g></svg></div></div><div class="tw-card tw-stack" style="gap:8px"><b>Precisa de atenção</b><div class="tw-row"><span class="tw-badge tw-badge--invited"><span class="tw-badge__dot"></span>Convite prestes a expirar</span><span>Camila Ramos · 15h00 · expira em</span><b class="tw-countdown__value" style="font-size:16px;color:#8a1c1c">02:41</b></div><div class="tw-row"><span class="tw-badge tw-badge--negative"><span class="tw-badge__dot"></span>Mesa atrasada</span><span>Mesa 4 · mentoria das 14h15 ainda não concluída</span></div><div class="tw-row"><span class="tw-badge tw-badge--priority"><svg width="14" height="14" viewBox="0 0 24 24" fill="#D98CE6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>Prioridade</span><span>Larissa Gomes · na fila há 34 min</span></div></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A1 Padrão 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -548,20 +550,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -749,6 +752,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora · a cada 15 s</div><div class="x-grid x-stats"><div class="x-stat"><b>142</b><span>Inscritas</span></div><div class="x-stat"><b>37</b><span>Aguardando</span></div><div class="x-stat"><b>5</b><span>Convites pendentes</span></div><div class="x-stat"><b>48</b><span>Confirmadas</span></div><div class="x-stat"><b>31</b><span>Concluídas</span></div><div class="x-stat"><b>4</b><span>Não compareceu</span></div><div class="x-stat"><b>14/20</b><span>Mesas ocupadas agora</span></div><div class="x-stat"><b>26</b><span>Sessões livres hoje</span></div><div class="x-stat"><b>38/50</b><span>Mentoras com login</span></div></div><div class="x-grid x-2col"><div class="tw-card tw-stack"><b>Inscritas por área</b><div class="tw-stack" style="gap:8px"><div class="x-bar"><span style="width:140px">Backend</span><i style="width:102px"></i><b>34</b></div><div class="x-bar"><span style="width:140px">Frontend</span><i style="width:84px"></i><b>28</b></div><div class="x-bar"><span style="width:140px">Dados</span><i style="width:90px"></i><b>30</b></div><div class="x-bar"><span style="width:140px">UX & Design</span><i style="width:60px"></i><b>20</b></div><div class="x-bar"><span style="width:140px">Produto</span><i style="width:48px"></i><b>16</b></div><div class="x-bar"><span style="width:140px">Cloud & Infra</span><i style="width:42px"></i><b>14</b></div></div></div><div class="tw-card tw-stack"><b>Inscrições por hora</b><svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Inscrições por hora"><polyline fill="none" stroke="#8a1f96" stroke-width="3" points="0,90 40,70 80,50 120,55 160,30 200,40 240,20 280,35 320,25"/><g fill="#f26430"><circle cx="0" cy="90" r="4"/><circle cx="80" cy="50" r="4"/><circle cx="160" cy="30" r="4"/><circle cx="240" cy="20" r="4"/><circle cx="320" cy="25" r="4"/></g></svg></div></div><div class="tw-card tw-stack" style="gap:8px"><b>Precisa de atenção</b><div class="tw-row"><span class="tw-badge tw-badge--invited"><span class="tw-badge__dot"></span>Convite prestes a expirar</span><span>Camila Ramos · 15h00 · expira em</span><b class="tw-countdown__value" style="font-size:16px;color:#8a1c1c">02:41</b></div><div class="tw-row"><span class="tw-badge tw-badge--negative"><span class="tw-badge__dot"></span>Mesa atrasada</span><span>Mesa 4 · mentoria das 14h15 ainda não concluída</span></div><div class="tw-row"><span class="tw-badge tw-badge--priority"><svg width="14" height="14" viewBox="0 0 24 24" fill="#D98CE6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>Prioridade</span><span>Larissa Gomes · na fila há 34 min</span></div></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Carregando</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A1 Carregando 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -918,20 +922,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1119,6 +1124,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora · a cada 15 s</div><div class="tw-stack"><span class="tw-skeleton" style="height:100px;border-radius:20px"></span><span class="tw-skeleton" style="height:100px;border-radius:20px"></span><span class="tw-skeleton" style="height:100px;border-radius:20px"></span></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A1 Carregando 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -1287,20 +1293,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1488,6 +1495,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora · a cada 15 s</div><div class="tw-stack"><span class="tw-skeleton" style="height:100px;border-radius:20px"></span><span class="tw-skeleton" style="height:100px;border-radius:20px"></span><span class="tw-skeleton" style="height:100px;border-radius:20px"></span></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Erro</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A1 Erro 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -1657,20 +1665,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1858,6 +1867,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora · a cada 15 s</div><div class="tw-state"><span class="tw-state__icon">!</span><h2 class="tw-state__title">Não foi possível carregar</h2><p class="tw-state__text">Sem conexão. Confira a internet e tente de novo.</p><button class="tw-btn tw-btn--primary ">Tentar de novo</button></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A1 Erro 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2026,20 +2036,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2227,6 +2238,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn"><span class="tw-conn__dot"></span>Atualizado agora · a cada 15 s</div><div class="tw-state"><span class="tw-state__icon">!</span><h2 class="tw-state__title">Não foi possível carregar</h2><p class="tw-state__text">Sem conexão. Confira a internet e tente de novo.</p><button class="tw-btn tw-btn--primary ">Tentar de novo</button></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Sem conexão</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A1 Sem conexão 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -2396,20 +2408,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2597,6 +2610,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn tw-conn--reconnecting"><span class="tw-conn__dot"></span>Reconectando…</div><div class="x-grid x-stats"><div class="x-stat"><b>142</b><span>Inscritas</span></div><div class="x-stat"><b>37</b><span>Aguardando</span></div><div class="x-stat"><b>5</b><span>Convites pendentes</span></div><div class="x-stat"><b>48</b><span>Confirmadas</span></div><div class="x-stat"><b>31</b><span>Concluídas</span></div><div class="x-stat"><b>4</b><span>Não compareceu</span></div><div class="x-stat"><b>14/20</b><span>Mesas ocupadas agora</span></div><div class="x-stat"><b>26</b><span>Sessões livres hoje</span></div><div class="x-stat"><b>38/50</b><span>Mentoras com login</span></div></div><div class="x-grid x-2col"><div class="tw-card tw-stack"><b>Inscritas por área</b><div class="tw-stack" style="gap:8px"><div class="x-bar"><span style="width:140px">Backend</span><i style="width:102px"></i><b>34</b></div><div class="x-bar"><span style="width:140px">Frontend</span><i style="width:84px"></i><b>28</b></div><div class="x-bar"><span style="width:140px">Dados</span><i style="width:90px"></i><b>30</b></div><div class="x-bar"><span style="width:140px">UX & Design</span><i style="width:60px"></i><b>20</b></div><div class="x-bar"><span style="width:140px">Produto</span><i style="width:48px"></i><b>16</b></div><div class="x-bar"><span style="width:140px">Cloud & Infra</span><i style="width:42px"></i><b>14</b></div></div></div><div class="tw-card tw-stack"><b>Inscrições por hora</b><svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Inscrições por hora"><polyline fill="none" stroke="#8a1f96" stroke-width="3" points="0,90 40,70 80,50 120,55 160,30 200,40 240,20 280,35 320,25"/><g fill="#f26430"><circle cx="0" cy="90" r="4"/><circle cx="80" cy="50" r="4"/><circle cx="160" cy="30" r="4"/><circle cx="240" cy="20" r="4"/><circle cx="320" cy="25" r="4"/></g></svg></div></div><div class="tw-card tw-stack" style="gap:8px"><b>Precisa de atenção</b><div class="tw-row"><span class="tw-badge tw-badge--invited"><span class="tw-badge__dot"></span>Convite prestes a expirar</span><span>Camila Ramos · 15h00 · expira em</span><b class="tw-countdown__value" style="font-size:16px;color:#8a1c1c">02:41</b></div><div class="tw-row"><span class="tw-badge tw-badge--negative"><span class="tw-badge__dot"></span>Mesa atrasada</span><span>Mesa 4 · mentoria das 14h15 ainda não concluída</span></div><div class="tw-row"><span class="tw-badge tw-badge--priority"><svg width="14" height="14" viewBox="0 0 24 24" fill="#D98CE6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>Prioridade</span><span>Larissa Gomes · na fila há 34 min</span></div></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A1 Sem conexão 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2765,20 +2779,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2966,6 +2981,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a aria-current=page>Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a >Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Dashboard</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Dashboard</h1></div><div class="tw-conn tw-conn--reconnecting"><span class="tw-conn__dot"></span>Reconectando…</div><div class="x-grid x-stats"><div class="x-stat"><b>142</b><span>Inscritas</span></div><div class="x-stat"><b>37</b><span>Aguardando</span></div><div class="x-stat"><b>5</b><span>Convites pendentes</span></div><div class="x-stat"><b>48</b><span>Confirmadas</span></div><div class="x-stat"><b>31</b><span>Concluídas</span></div><div class="x-stat"><b>4</b><span>Não compareceu</span></div><div class="x-stat"><b>14/20</b><span>Mesas ocupadas agora</span></div><div class="x-stat"><b>26</b><span>Sessões livres hoje</span></div><div class="x-stat"><b>38/50</b><span>Mentoras com login</span></div></div><div class="x-grid x-2col"><div class="tw-card tw-stack"><b>Inscritas por área</b><div class="tw-stack" style="gap:8px"><div class="x-bar"><span style="width:140px">Backend</span><i style="width:102px"></i><b>34</b></div><div class="x-bar"><span style="width:140px">Frontend</span><i style="width:84px"></i><b>28</b></div><div class="x-bar"><span style="width:140px">Dados</span><i style="width:90px"></i><b>30</b></div><div class="x-bar"><span style="width:140px">UX & Design</span><i style="width:60px"></i><b>20</b></div><div class="x-bar"><span style="width:140px">Produto</span><i style="width:48px"></i><b>16</b></div><div class="x-bar"><span style="width:140px">Cloud & Infra</span><i style="width:42px"></i><b>14</b></div></div></div><div class="tw-card tw-stack"><b>Inscrições por hora</b><svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Inscrições por hora"><polyline fill="none" stroke="#8a1f96" stroke-width="3" points="0,90 40,70 80,50 120,55 160,30 200,40 240,20 280,35 320,25"/><g fill="#f26430"><circle cx="0" cy="90" r="4"/><circle cx="80" cy="50" r="4"/><circle cx="160" cy="30" r="4"/><circle cx="240" cy="20" r="4"/><circle cx="320" cy="25" r="4"/></g></svg></div></div><div class="tw-card tw-stack" style="gap:8px"><b>Precisa de atenção</b><div class="tw-row"><span class="tw-badge tw-badge--invited"><span class="tw-badge__dot"></span>Convite prestes a expirar</span><span>Camila Ramos · 15h00 · expira em</span><b class="tw-countdown__value" style="font-size:16px;color:#8a1c1c">02:41</b></div><div class="tw-row"><span class="tw-badge tw-badge--negative"><span class="tw-badge__dot"></span>Mesa atrasada</span><span>Mesa 4 · mentoria das 14h15 ainda não concluída</span></div><div class="tw-row"><span class="tw-badge tw-badge--priority"><svg width="14" height="14" viewBox="0 0 24 24" fill="#D98CE6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>Prioridade</span><span>Larissa Gomes · na fila há 34 min</span></div></div></div></main></div></div></body></html></template></figure></div></section>
 

@@ -179,20 +179,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -380,6 +381,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Nova mentora</h1></div><div class="tw-card tw-stack"><div class="tw-field"><label class="tw-field__label">Nome completo </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">E-mail (login) </label><input class="tw-input" type="email" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">LinkedIn <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Organização </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Áreas de atuação</span><div class="x-filters"><span class="x-chip on">Backend</span><span class="x-chip">Frontend</span><span class="x-chip">Dados</span><span class="x-chip">UX & Design</span><span class="x-chip">Produto</span><span class="x-chip">Cloud & Infraestrutura</span></div></div><div class="tw-field"><label class="tw-field__label">Mini bio <span class="tw-field__opt">(opcional)</span></label><textarea class="tw-textarea"></textarea><span class="tw-field__hint">0/200</span></div><div class="tw-field"><label class="tw-field__label">Foto <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Disponibilidade inicial</span><fieldset class="tw-slotgrid"><button class="tw-slot" aria-pressed="true" >9h00<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >9h45<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >10h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >11h15<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="true" >13h30<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >14h15<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >15h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >15h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >16h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >17h15<small>Indisponível</small></button></fieldset></div><label class="tw-check"><input type="checkbox"> <span>Também é admin <small class="x-sub">(só super admin vê esta opção)</small></span></label><label class="tw-check"><input type="checkbox" checked> <span>Enviar a senha provisória por e-mail ao salvar <small class="x-sub">(depois de salvar ela aparece uma única vez e não dá para enviar de novo)</small></span></label><button class="tw-btn tw-btn--primary tw-btn--lg">Salvar mentora</button></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Formulário (nova) 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -548,20 +550,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -749,6 +752,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Nova mentora</h1></div><div class="tw-card tw-stack"><div class="tw-field"><label class="tw-field__label">Nome completo </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">E-mail (login) </label><input class="tw-input" type="email" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">LinkedIn <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Organização </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Áreas de atuação</span><div class="x-filters"><span class="x-chip on">Backend</span><span class="x-chip">Frontend</span><span class="x-chip">Dados</span><span class="x-chip">UX & Design</span><span class="x-chip">Produto</span><span class="x-chip">Cloud & Infraestrutura</span></div></div><div class="tw-field"><label class="tw-field__label">Mini bio <span class="tw-field__opt">(opcional)</span></label><textarea class="tw-textarea"></textarea><span class="tw-field__hint">0/200</span></div><div class="tw-field"><label class="tw-field__label">Foto <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Disponibilidade inicial</span><fieldset class="tw-slotgrid"><button class="tw-slot" aria-pressed="true" >9h00<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >9h45<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >10h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >11h15<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="true" >13h30<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >14h15<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >15h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >15h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >16h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >17h15<small>Indisponível</small></button></fieldset></div><label class="tw-check"><input type="checkbox"> <span>Também é admin <small class="x-sub">(só super admin vê esta opção)</small></span></label><label class="tw-check"><input type="checkbox" checked> <span>Enviar a senha provisória por e-mail ao salvar <small class="x-sub">(depois de salvar ela aparece uma única vez e não dá para enviar de novo)</small></span></label><button class="tw-btn tw-btn--primary tw-btn--lg">Salvar mentora</button></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Formulário: erro de e-mail duplicado</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A3 Formulário: erro de e-mail duplicado 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -918,20 +922,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1119,6 +1124,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Nova mentora</h1></div><div class="tw-card tw-stack"><div class="tw-field"><label class="tw-field__label">Nome completo </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">E-mail (login) </label><input class="tw-input" type="email" value="marina@exemplo.com" aria-invalid="true"><span class="tw-field__error">Já existe uma mentora com este e-mail.</span></div><div class="tw-field"><label class="tw-field__label">LinkedIn <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Organização </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Áreas de atuação</span><div class="x-filters"><span class="x-chip on">Backend</span><span class="x-chip">Frontend</span><span class="x-chip">Dados</span><span class="x-chip">UX & Design</span><span class="x-chip">Produto</span><span class="x-chip">Cloud & Infraestrutura</span></div></div><div class="tw-field"><label class="tw-field__label">Mini bio <span class="tw-field__opt">(opcional)</span></label><textarea class="tw-textarea"></textarea><span class="tw-field__hint">0/200</span></div><div class="tw-field"><label class="tw-field__label">Foto <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Disponibilidade inicial</span><fieldset class="tw-slotgrid"><button class="tw-slot" aria-pressed="true" >9h00<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >9h45<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >10h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >11h15<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="true" >13h30<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >14h15<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >15h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >15h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >16h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >17h15<small>Indisponível</small></button></fieldset></div><label class="tw-check"><input type="checkbox"> <span>Também é admin <small class="x-sub">(só super admin vê esta opção)</small></span></label><label class="tw-check"><input type="checkbox" checked> <span>Enviar a senha provisória por e-mail ao salvar <small class="x-sub">(depois de salvar ela aparece uma única vez e não dá para enviar de novo)</small></span></label><button class="tw-btn tw-btn--primary tw-btn--lg">Salvar mentora</button></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Formulário: erro de e-mail duplicado 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -1287,20 +1293,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1488,6 +1495,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Nova mentora</h1></div><div class="tw-card tw-stack"><div class="tw-field"><label class="tw-field__label">Nome completo </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">E-mail (login) </label><input class="tw-input" type="email" value="marina@exemplo.com" aria-invalid="true"><span class="tw-field__error">Já existe uma mentora com este e-mail.</span></div><div class="tw-field"><label class="tw-field__label">LinkedIn <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><label class="tw-field__label">Organização </label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Áreas de atuação</span><div class="x-filters"><span class="x-chip on">Backend</span><span class="x-chip">Frontend</span><span class="x-chip">Dados</span><span class="x-chip">UX & Design</span><span class="x-chip">Produto</span><span class="x-chip">Cloud & Infraestrutura</span></div></div><div class="tw-field"><label class="tw-field__label">Mini bio <span class="tw-field__opt">(opcional)</span></label><textarea class="tw-textarea"></textarea><span class="tw-field__hint">0/200</span></div><div class="tw-field"><label class="tw-field__label">Foto <span class=tw-field__opt>(opcional)</span></label><input class="tw-input" type="text" value="" placeholder=""></div><div class="tw-field"><span class="tw-field__label">Disponibilidade inicial</span><fieldset class="tw-slotgrid"><button class="tw-slot" aria-pressed="true" >9h00<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >9h45<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >10h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >11h15<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >12h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="true" >13h30<small>Disponível</small></button><button class="tw-slot" aria-pressed="true" >14h15<small>Disponível</small></button><button class="tw-slot" aria-pressed="false" >15h00<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >15h45<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >16h30<small>Indisponível</small></button><button class="tw-slot" aria-pressed="false" >17h15<small>Indisponível</small></button></fieldset></div><label class="tw-check"><input type="checkbox"> <span>Também é admin <small class="x-sub">(só super admin vê esta opção)</small></span></label><label class="tw-check"><input type="checkbox" checked> <span>Enviar a senha provisória por e-mail ao salvar <small class="x-sub">(depois de salvar ela aparece uma única vez e não dá para enviar de novo)</small></span></label><button class="tw-btn tw-btn--primary tw-btn--lg">Salvar mentora</button></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Salvo: senha provisória exibida uma única vez</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A3 Salvo: senha provisória exibida uma única vez 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -1657,20 +1665,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -1858,6 +1867,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Mentora cadastrada</h1><p class=x-sub>Senha provisória enviada por e-mail a Ana Paula. Copie agora se precisar entregá-la pessoalmente.</p></div><div class="tw-secret"><strong>Senha provisória</strong><div class="tw-secret__row"><output class="tw-secret__value">••••••••••••••</output><button class="tw-btn tw-btn--mint">Mostrar</button></div><div class="tw-row"><button class="tw-btn tw-btn--primary">Copiar</button></div><span class="tw-secret__warn">Não será mostrada de novo. A mentora troca a senha no primeiro acesso.</span></div><button class="tw-btn tw-btn--secondary ">Já guardei, fechar</button></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Salvo: senha provisória exibida uma única vez 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2026,20 +2036,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2227,6 +2238,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Mentora cadastrada</h1><p class=x-sub>Senha provisória enviada por e-mail a Ana Paula. Copie agora se precisar entregá-la pessoalmente.</p></div><div class="tw-secret"><strong>Senha provisória</strong><div class="tw-secret__row"><output class="tw-secret__value">••••••••••••••</output><button class="tw-btn tw-btn--mint">Mostrar</button></div><div class="tw-row"><button class="tw-btn tw-btn--primary">Copiar</button></div><span class="tw-secret__warn">Não será mostrada de novo. A mentora troca a senha no primeiro acesso.</span></div><button class="tw-btn tw-btn--secondary ">Já guardei, fechar</button></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Redefinir senha: confirmação</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A3 Redefinir senha: confirmação 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -2396,20 +2408,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2597,6 +2610,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Marina Souza</h1></div><div class="tw-overlay"><div class="tw-sheet"><div class="tw-sheet__head"><h2 class="tw-sheet__title">Redefinir senha</h2><button class="tw-iconbtn">×</button></div><p>Gerar nova senha provisória para Marina? A atual deixa de valer e as sessões dela são encerradas.</p><label class="tw-check"><input type="checkbox" checked> <span>Enviar a nova senha por e-mail</span></label><button class="tw-btn tw-btn--primary tw-btn--block">Redefinir</button><button class="tw-btn tw-btn--ghost tw-btn--block">Cancelar</button></div></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Redefinir senha: confirmação 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -2765,20 +2779,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -2966,6 +2981,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Marina Souza</h1></div><div class="tw-overlay"><div class="tw-sheet"><div class="tw-sheet__head"><h2 class="tw-sheet__title">Redefinir senha</h2><button class="tw-iconbtn">×</button></div><p>Gerar nova senha provisória para Marina? A atual deixa de valer e as sessões dela são encerradas.</p><label class="tw-check"><input type="checkbox" checked> <span>Enviar a nova senha por e-mail</span></label><button class="tw-btn tw-btn--primary tw-btn--block">Redefinir</button><button class="tw-btn tw-btn--ghost tw-btn--block">Cancelar</button></div></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Importação, passo 1: modelo</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A3 Importação, passo 1: modelo 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -3135,20 +3151,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -3336,6 +3353,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step on">1. Modelo CSV</span><span class="x-step">2. Enviar arquivo</span><span class="x-step">3. Prévia</span><span class="x-step">4. Confirmar</span></div><div class="tw-card tw-stack"><p>Colunas: nome, email, linkedin, organizacao, areas, disponibilidade.</p><button class="tw-btn tw-btn--secondary ">Baixar modelo CSV</button></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Importação, passo 1: modelo 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -3504,20 +3522,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -3705,6 +3724,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step on">1. Modelo CSV</span><span class="x-step">2. Enviar arquivo</span><span class="x-step">3. Prévia</span><span class="x-step">4. Confirmar</span></div><div class="tw-card tw-stack"><p>Colunas: nome, email, linkedin, organizacao, areas, disponibilidade.</p><button class="tw-btn tw-btn--secondary ">Baixar modelo CSV</button></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Importação, passo 2: enviar arquivo</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A3 Importação, passo 2: enviar arquivo 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -3874,20 +3894,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -4075,6 +4096,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step">1. Modelo CSV</span><span class="x-step on">2. Enviar arquivo</span><span class="x-step">3. Prévia</span><span class="x-step">4. Confirmar</span></div><div class="tw-card tw-stack"><div class="tw-field"><label class="tw-field__label">Arquivo CSV</label><input class="tw-input" type="file"><span class="tw-field__hint">Até 2 MB.</span></div><button class="tw-btn tw-btn--primary ">Ver prévia</button></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Importação, passo 2: enviar arquivo 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -4243,20 +4265,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -4444,6 +4467,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step">1. Modelo CSV</span><span class="x-step on">2. Enviar arquivo</span><span class="x-step">3. Prévia</span><span class="x-step">4. Confirmar</span></div><div class="tw-card tw-stack"><div class="tw-field"><label class="tw-field__label">Arquivo CSV</label><input class="tw-input" type="file"><span class="tw-field__hint">Até 2 MB.</span></div><button class="tw-btn tw-btn--primary ">Ver prévia</button></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Importação, passo 3: prévia linha a linha</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A3 Importação, passo 3: prévia linha a linha 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -4613,20 +4637,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -4814,6 +4839,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step">1. Modelo CSV</span><span class="x-step">2. Enviar arquivo</span><span class="x-step on">3. Prévia</span><span class="x-step">4. Confirmar</span></div><div class="tw-table-wrap"><div class="tw-toolbar"><button class="tw-btn tw-btn--secondary tw-btn--sm">Exportar CSV</button></div><div class="tw-scroll"><table class="tw-data"><thead><tr><th>Linha</th><th>Nome</th><th>E-mail</th><th>Resultado</th></tr></thead><tbody><tr tabindex="0"><td>2</td><td>Ana Paula</td><td>ana@exemplo.com</td><td><span class="tw-badge tw-badge--confirmed"><span class="tw-badge__dot"></span>Válida</span></td></tr><tr tabindex="0"><td>3</td><td>Bruna</td><td>bruna@</td><td><span class="tw-badge tw-badge--negative">Erro: formato de e-mail</span></td></tr><tr tabindex="0"><td>4</td><td>Marina Souza</td><td>marina@exemplo.com</td><td><span class="tw-badge tw-badge--waiting"><span class="tw-badge__dot"></span>Já existe</span> <div class="tw-field"><label class="tw-field__label">Ação</label><select class="tw-select"><option>Atualizar</option></select></div></td></tr></tbody></table></div></div><div class="tw-row"><button class="tw-btn tw-btn--primary ">Confirmar importação</button><button class="tw-btn tw-btn--ghost ">Voltar</button></div></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Importação, passo 3: prévia linha a linha 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -4982,20 +5008,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -5183,6 +5210,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step">1. Modelo CSV</span><span class="x-step">2. Enviar arquivo</span><span class="x-step on">3. Prévia</span><span class="x-step">4. Confirmar</span></div><div class="tw-table-wrap"><div class="tw-toolbar"><button class="tw-btn tw-btn--secondary tw-btn--sm">Exportar CSV</button></div><div class="tw-scroll"><table class="tw-data"><thead><tr><th>Linha</th><th>Nome</th><th>E-mail</th><th>Resultado</th></tr></thead><tbody><tr tabindex="0"><td>2</td><td>Ana Paula</td><td>ana@exemplo.com</td><td><span class="tw-badge tw-badge--confirmed"><span class="tw-badge__dot"></span>Válida</span></td></tr><tr tabindex="0"><td>3</td><td>Bruna</td><td>bruna@</td><td><span class="tw-badge tw-badge--negative">Erro: formato de e-mail</span></td></tr><tr tabindex="0"><td>4</td><td>Marina Souza</td><td>marina@exemplo.com</td><td><span class="tw-badge tw-badge--waiting"><span class="tw-badge__dot"></span>Já existe</span> <div class="tw-field"><label class="tw-field__label">Ação</label><select class="tw-select"><option>Atualizar</option></select></div></td></tr></tbody></table></div></div><div class="tw-row"><button class="tw-btn tw-btn--primary ">Confirmar importação</button><button class="tw-btn tw-btn--ghost ">Voltar</button></div></div></main></div></div></body></html></template></figure></div></section>
 <section class="state"><h2>Importação, passo 4: concluída</h2><div class="pair"><figure><figcaption>Mobile 375 (derivada)</figcaption><template data-frame data-w="375" data-h="900" data-title="A3 Importação, passo 4: concluída 375"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
@@ -5352,20 +5380,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -5553,6 +5582,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step">1. Modelo CSV</span><span class="x-step">2. Enviar arquivo</span><span class="x-step">3. Prévia</span><span class="x-step on">4. Confirmar</span></div><div class="x-banner x-info">2 criadas, 1 atualizada, 1 com erro ignorada.</div><button class="tw-btn tw-btn--primary ">Baixar CSV com as senhas provisórias</button><span class="tw-secret__warn" style="color:#8a3210">Este arquivo não poderá ser baixado de novo.</span></div></main></div></div></body></html></template></figure><figure><figcaption>Desktop 1280 (derivada)</figcaption><template data-frame data-w="1280" data-h="800" data-title="A3 Importação, passo 4: concluída 1280"><!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>/*FONTS*/</style><style>html,body{margin:0;background:#FFFFFF}html{overflow:hidden}</style></head><body><style>/*
  * Tokens do design system Tech Woman.
@@ -5721,20 +5751,21 @@ body {
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 
 /* Campos */
-.tw-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.tw-field { display: flex; flex-direction: column; gap: 6px; }
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
-.tw-field__opt { font-weight: 400; color: var(--color-ink-muted); }
+.tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
 .tw-textarea { min-height: 96px; resize: vertical; }
-.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-500); }
+.tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
+.tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }
 .tw-field__hint { font-size: var(--text-sm); color: var(--color-ink-muted); }
-.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-900); font-weight: 700; }
-.tw-field__ok { font-size: var(--text-sm); color: var(--tw-mint-900); }
+.tw-field__error { font-size: var(--text-sm); color: var(--tw-red-700); font-weight: 600; }
+.tw-field__ok { font-size: var(--text-sm); color: #1f6b5c; font-weight: 600; }
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 700; font-size: var(--text-base-sm); cursor: pointer; }
-.tw-radio-card input { accent-color: var(--color-link); width: 20px; height: 20px; flex: none; }
+.tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
+.tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }
 .tw-radio-card:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -5922,6 +5953,7 @@ body {
 .x-tl{display:flex;flex-direction:column;gap:12px}.x-tl .tw-card{display:flex;flex-direction:column;gap:8px}.x-next{border:2px solid var(--color-cta)}
 .x-steps{display:flex;gap:8px;flex-wrap:wrap}.x-step{padding:6px 12px;border-radius:99px;background:var(--tw-lilac-100);font-weight:700;font-size:13px}.x-step.on{background:var(--tw-plum-950);color:#fff}
 .x-filters{display:flex;gap:8px;flex-wrap:wrap}.x-chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--color-border);background:#fff;font:inherit;font-weight:700;display:inline-flex;align-items:center}.x-chip.on{background:var(--tw-lilac-100);border-color:var(--color-link)}
+.tw-data .tw-btn{white-space:nowrap}.nw{white-space:nowrap}
 .x-pw{font-size:13px;color:var(--color-ink-muted)}
 </style><div class="tw-admin"><aside class="tw-sidebar"><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><nav><ul class="tw-navlist"><li><a >Dashboard</a></li><li><a >Participantes</a></li><li><a >Mapa de mesas</a></li><li><a aria-current=page>Mentoras</a></li><li><a >Mesas</a></li><li><a >Evento</a></li><li><a >Administradores</a></li><li><a >Logs</a></li><li><button>Sair</button></li></ul></nav></aside><div class="tw-admin__col"><header class="tw-topbar"><div class="tw-topbar__right"><button class="tw-menubtn">☰</button><a class="tw-brand"><span class="tw-brand__tech">TECH</span><span class="tw-brand__woman">WOMAN</span></a><span class="tw-topbar__title">Mentoras</span></div><select class="tw-areaswitch"><option>Painel admin</option></select></header><main class="tw-main"><div class="tw-page tw-stack"><div class="tw-stack" style="gap:4px"><h1 class="x-h">Importar mentoras</h1></div><div class="x-steps"><span class="x-step">1. Modelo CSV</span><span class="x-step">2. Enviar arquivo</span><span class="x-step">3. Prévia</span><span class="x-step on">4. Confirmar</span></div><div class="x-banner x-info">2 criadas, 1 atualizada, 1 com erro ignorada.</div><button class="tw-btn tw-btn--primary ">Baixar CSV com as senhas provisórias</button><span class="tw-secret__warn" style="color:#8a3210">Este arquivo não poderá ser baixado de novo.</span></div></main></div></div></body></html></template></figure></div></section>
 
