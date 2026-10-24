@@ -77,15 +77,23 @@ export class StreamHub {
       this.lastTokens[which] = change._id;
       void this.dispatch(which, change as ChangeStreamDocument<Document>, this.clients).catch((err) => this.ctx.log.warn({ err }, 'falha ao despachar evento SSE'));
     });
-    cs.on('error', (err) => {
-      this.ctx.log.warn({ err: (err as Error).message }, 'change stream caiu');
+    let handled = false;
+    const recover = (reason: string, fresh: boolean) => {
+      if (handled) return;
+      handled = true;
+      this.ctx.log.warn({ reason }, 'change stream encerrado');
       this.streams = this.streams.filter((s) => s !== cs);
       void cs.close().catch(() => undefined);
       if (this.stopped) return;
       for (const c of this.clients) c.send('resync', {});
       const delay = Math.min(30_000, 500 * 2 ** this.retry++);
+      // invalidate (drop/rename) não aceita retomar pelo token antigo: reabre do zero
+      if (fresh) delete this.lastTokens[which];
       setTimeout(() => !this.stopped && this.open(which, this.lastTokens[which] as Document | undefined), delay).unref();
-    });
+    };
+    cs.on('error', (err) => recover((err as Error).message, /resume|invalid|history/i.test((err as Error).message)));
+    cs.on('close', () => recover('close', true));
+    cs.on('end', () => recover('end', true));
   }
 
   /** Reenvia ao cliente o que perdeu (Last-Event-ID = resume token). Eventos são idempotentes no front. */
