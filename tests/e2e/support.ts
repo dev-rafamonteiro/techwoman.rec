@@ -36,7 +36,8 @@ export async function resetWorld(mentors = 2): Promise<E2EWorld> {
   const client = new MongoClient(db.uri);
   await client.connect();
   const fixed = client.db(E2E_DB);
-  await fixed.dropDatabase();
+  // NÃO derruba o banco: a API mantém Change Streams abertos (SSE) que se invalidam com dropDatabase. Só esvazia.
+  for (const c of await fixed.collections()) await c.deleteMany({});
   const w = await seedWorld(fixed, { mentors, tables: 20, mentees: 0, registrationOpen: true });
   const hash = await testPasswordHash();
   const users = getCollections(fixed).users;
@@ -44,7 +45,7 @@ export async function resetWorld(mentors = 2): Promise<E2EWorld> {
   w.mentors = Array.from({ length: mentors }, (_, i) => userDoc(i + 1, { passwordHash: hash }));
   await users.insertMany(w.mentors);
   return {
-    db: { ...db, client, db: fixed, dbName: E2E_DB, async drop() { await fixed.dropDatabase(); await client.close(); }, async clean() {} },
+    db: { ...db, client, db: fixed, dbName: E2E_DB, async drop() { for (const c of await fixed.collections()) await c.deleteMany({}); await client.close(); }, async clean() {} },
     w,
     mentorEmail: (i) => w.mentors[i]!.email,
   };
@@ -105,3 +106,28 @@ export async function inviteFromQueue(page: Page, menteeName: string) {
 }
 
 export const test = base;
+
+/** Cliente HTTP direto na API do E2E (mesma que o front usa), para montar cenários rápidos e simular a outra mentora. */
+export class ApiHttp {
+  cookie = "";
+  constructor(readonly base = `http://localhost:${process.env.E2E_API_PORT ?? "3100"}`) {}
+  async req(method: string, path: string, body?: unknown) {
+    const res = await fetch(this.base + path, {
+      method,
+      headers: { "content-type": "application/json", "x-requested-with": "tw-web", cookie: this.cookie },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    let json: any = null;
+    try { json = text ? JSON.parse(text) : null; } catch { /* não JSON */ }
+    const set = res.headers.getSetCookie?.() ?? [];
+    const sid = set.find((c) => c.startsWith("sid="));
+    if (sid) this.cookie = sid.split(";")[0]!;
+    return { status: res.status, body: json };
+  }
+  async login(email: string) {
+    const r = await this.req("POST", "/api/auth/login", { email, password: TEST_PASSWORD });
+    if (r.status !== 200) throw new Error(`login ${email}: ${r.status}`);
+    return this;
+  }
+}
