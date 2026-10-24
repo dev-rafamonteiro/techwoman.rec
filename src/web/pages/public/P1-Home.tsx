@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@tw/shared';
-import { Brand, ErrorState, LinkButton, SkeletonList, call, useQuery } from '../../ui';
+import { Brand, CalendarIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, PinFilledIcon, PinIcon, SkeletonList, call, useQuery } from '../../ui';
 import './public.css';
 
 function longDate(date: string, startTime: string): string {
@@ -8,12 +8,6 @@ function longDate(date: string, startTime: string): string {
   const [h, m] = startTime.split(':');
   return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}, a partir das ${Number(h)}h${m === '00' ? '' : m}`;
 }
-
-const MOSAIC: [string, string, string][] = [
-  ['#8a2a94', '#d98ce6', '●'], ['#d98ce6', '#f26430', ''], ['#3d0a45', '#f26430', '✺'],
-  ['#3d0a45', '#d98ce6', '♀'], ['#6e1a78', '#fff', '»'], ['#d98ce6', '#3d0a45', '∩'],
-  ['#f26430', '#3d0a45', '◗'], ['#c9f4ee', '#3d0a45', '14'], ['#8a2a94', '#f26430', '≋'],
-];
 
 /** P1 · Home do evento (E01) */
 export default function P1Home() {
@@ -38,7 +32,7 @@ export default function P1Home() {
             <span className="tw-pub__eyebrow">Save the date</span>
             <h1>Seu lugar na tecnologia começa aqui.</h1>
             <p className="tw-p1__where" data-testid="p1-when">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="#f26430"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zm0-9a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" /></svg>
+              <PinFilledIcon size={18} />
               {when} · Recife
             </p>
             <p>Um evento feito por mulheres e para mulheres: conteúdo, conexões e mentoria para você descobrir — ou acelerar — sua carreira em tecnologia.</p>
@@ -47,9 +41,7 @@ export default function P1Home() {
               <a className="tw-btn tw-btn--lg tw-btn--outline" href="#mentoria">Como funciona a mentoria</a>
             </div>
           </div>
-          <div className="tw-mosaic" aria-hidden="true">
-            {MOSAIC.map(([bg, fg, g], i) => <span key={i} style={{ background: bg, color: fg }}>{g}</span>)}
-          </div>
+          <div className="tw-mosaic" aria-hidden="true"><HeroMosaic /></div>
         </div>
       </section>
 
@@ -59,9 +51,9 @@ export default function P1Home() {
           {ev.status === 'loading' && <SkeletonList rows={1} height={90} />}
           {ev.status === 'error' && <ErrorState error={ev.error} onRetry={ev.reload} />}
           <div className="tw-p1__cards">
-            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#f26430' }} aria-hidden="true" /><h3>Quando</h3><p>{when}</p></div>
-            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true" /><h3>Onde</h3><p>Recife{where ? ` · ${where}` : ''}</p></div>
-            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true" /><h3>Para quem</h3><p>Mulheres que querem entrar ou crescer na área de tecnologia</p></div>
+            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#f26430' }} aria-hidden="true"><CalendarIcon size={20} color="#3D0A45" /></span><h3>Quando</h3><p>{when}</p></div>
+            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>Recife{where ? ` · ${where}` : ''}</p></div>
+            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true"><PeopleIcon size={20} color="#3D0A45" /></span><h3>Para quem</h3><p>Mulheres que querem entrar ou crescer na área de tecnologia</p></div>
           </div>
         </div>
       </section>

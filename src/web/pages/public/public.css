@@ -146,3 +146,33 @@
 .tw-p3 .tw-pub__progress { background: var(--tw-plum-950); }
 .tw-p3__body > .tw-row strong { color: #fff; }
 .tw-opt { font-weight: 700; } .tw-p3__white h2 { font-size: 22px; }
+
+/* P4: faixas de aviso (já inscrita, falha de rede). */
+.tw-banner { border-radius: 16px; padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.tw-banner--ok { background: var(--tw-mint-200); color: var(--tw-mint-900); font-weight: 600; }
+.tw-banner--err { background: var(--tw-red-100); color: var(--tw-red-900); flex-direction: column; gap: 4px; }
+.tw-banner--err strong { font-weight: 800; }
+.tw-banner--err span { font-size: 14px; }
+
+/* P6: escolhas (motivo de recusa, período) e diálogo de cancelamento. */
+.tw-choice { min-height: 48px; width: 100%; padding: 10px 14px; border-radius: 14px; border: 2px solid var(--color-border); background: #fff; color: var(--color-ink); font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+.tw-choice[aria-checked="true"] { border-color: var(--tw-purple-600); background: var(--tw-lilac-100); }
+.tw-choice:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.tw-choicegrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tw-choicegrid .tw-choice { text-align: center; }
+.tw-dialog { background: var(--tw-red-100); color: var(--tw-red-900); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.tw-dialog p { margin: 0; font-size: 14px; }
+.tw-dialog strong { font-weight: 800; font-size: 16px; }
+
+/* P2 intro: três cartões coloridos (arte). */
+.tw-p2i { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .tw-p2i { grid-template-columns: repeat(3, 1fr); } }
+.tw-p2i > div { border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+.tw-p2i strong { font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.1; }
+.tw-p2i__a { background: var(--tw-plum-950); color: #fff; } .tw-p2i__a strong { color: var(--tw-orange-500); }
+.tw-p2i__b { background: var(--tw-lilac-400); color: var(--tw-plum-950); }
+.tw-p2i__c { background: var(--tw-mint-200); color: var(--tw-plum-950); }
+.tw-p3__intro h1 { color: var(--tw-mint-200); font-size: clamp(32px, 7vw, 56px); }
+.tw-mosaic { display: block; }
+.tw-mosaic svg { width: 100%; height: auto; display: block; }
+.tw-hero p { color: var(--tw-lilac-75); font-size: 15px; margin: 0; }

@@ -34,19 +34,17 @@ export default function P2Jornada() {
       </header>
 
       {step === 'intro' ? (
-        <section className="tw-pub__hero" style={{ minHeight: '70vh' }}>
-          <div className="tw-pub__wrap tw-stack">
-            <span className="tw-pub__eyebrow">Gamificação</span>
-            <h1>Descubra sua aptidão na tecnologia.</h1>
-            <p>Responda algumas perguntas e encare desafios rápidos. No final, você recebe um resumo da sua aptidão e pode se inscrever na mentoria da sua área.</p>
-            <div className="tw-pub__grid tw-pub__grid--3">
-              <div className="tw-card"><strong>{total} etapas</strong><p>Perguntas e desafios</p></div>
-              <div className="tw-card"><strong>Aptidão</strong><p>Área, nível e perfil</p></div>
-              <div className="tw-card"><strong>Mentoria</strong><p>Inscreva-se na sua área</p></div>
-            </div>
-            <div><Button size="lg" onClick={() => setStep('quiz')} data-testid="p2-start">Começar jornada</Button></div>
+        <main className="tw-p3__body tw-p3__intro" style={{ gap: 20, paddingTop: 48 }}>
+          <span className="tw-pub__eyebrow">Gamificação</span>
+          <h1>Descubra sua aptidão na tecnologia.</h1>
+          <p style={{ margin: 0, maxWidth: 560 }}>Responda algumas perguntas e encare desafios rápidos. No final, você recebe um resumo da sua aptidão e pode se inscrever na mentoria da sua área.</p>
+          <div className="tw-p2i">
+            <div className="tw-p2i__a"><strong>{total} etapas</strong><span>Perguntas e desafios</span></div>
+            <div className="tw-p2i__b"><strong>Aptidão</strong><span>Área, nível e perfil</span></div>
+            <div className="tw-p2i__c"><strong>Mentoria</strong><span>Inscreva-se na sua área</span></div>
           </div>
-        </section>
+          <div><Button size="lg" onClick={() => setStep('quiz')} data-testid="p2-start">Começar jornada</Button></div>
+        </main>
       ) : (
         <main className="tw-p3__body">
           <div className="tw-row" style={{ justifyContent: 'space-between' }}>

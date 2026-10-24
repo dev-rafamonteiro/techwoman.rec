@@ -147,16 +147,14 @@ export default function P6MinhaMentoria() {
   const li = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linkedin.com') ? `https://${v}` : `https://www.linkedin.com/in/${v}`);
 
   const cancelDialog = (
-    <Card>
-      <div role="alertdialog" aria-label="Confirmar cancelamento" className="tw-stack">
-        <p><strong>Cancelar mesmo?</strong></p>
-        <p>Sua inscrição sai da fila e a mentora é avisada.</p>
-        <div className="tw-row">
-          <Button variant="danger" loading={busy === 'cancel'} onClick={() => void act('cancel', { action: 'cancel' })} data-testid="p6-cancel-yes">Sim, cancelar</Button>
-          <Button variant="ghost" onClick={() => setConfirmCancel(false)} data-testid="p6-cancel-no">Manter</Button>
-        </div>
+    <div role="alertdialog" aria-label="Confirmar cancelamento" className="tw-dialog" data-testid="p6-cancel-dialog">
+      <strong>Cancelar mesmo?</strong>
+      <p>Sua inscrição sai da fila e a mentora é avisada.</p>
+      <div className="tw-btnrow">
+        <Button variant="danger" size="sm" loading={busy === 'cancel'} onClick={() => void act('cancel', { action: 'cancel' })} data-testid="p6-cancel-yes">Sim, cancelar</Button>
+        <Button variant="secondary" size="sm" onClick={() => setConfirmCancel(false)} data-testid="p6-cancel-no">Manter</Button>
       </div>
-    </Card>
+    </div>
   );
 
   let badge: JSX.Element;
@@ -189,8 +187,8 @@ export default function P6MinhaMentoria() {
             {declining ? (
               <div className="tw-stack">
                 <strong>Por que você vai recusar?</strong>
-                <Button variant="secondary" block loading={busy === 'decline-schedule'} onClick={() => void act('decline-schedule', { action: 'decline', reason: 'schedule' })} data-testid="p6-decline-schedule">Horário não serve</Button>
-                <Button variant="secondary" block loading={busy === 'decline-interest'} onClick={() => void act('decline-interest', { action: 'decline', reason: 'no_interest' })} data-testid="p6-decline-interest">Não tenho mais interesse</Button>
+                <button type="button" className="tw-choice" disabled={busy !== null} onClick={() => void act('decline-schedule', { action: 'decline', reason: 'schedule' })} data-testid="p6-decline-schedule">Horário não serve</button>
+                <button type="button" className="tw-choice" disabled={busy !== null} onClick={() => void act('decline-interest', { action: 'decline', reason: 'no_interest' })} data-testid="p6-decline-interest">Não tenho mais interesse</button>
                 <Button variant="ghost" block onClick={() => setDeclining(false)}>Voltar</Button>
               </div>
             ) : (
@@ -272,7 +270,11 @@ export default function P6MinhaMentoria() {
             <div className="tw-kv"><dt>Período preferido</dt><dd>{PERIOD_LABELS[mentee.preferredPeriod]}</dd></div>
           </dl>
           {editing && (
-            <RadioCards legend="Novo período preferido" name="period" options={PERIODS} value={period ?? mentee.preferredPeriod} onChange={setPeriod} />
+            <div className="tw-choicegrid" role="radiogroup" aria-label="Novo período preferido">
+              {PERIODS.map((o) => (
+                <button key={o.value} type="button" role="radio" className="tw-choice" aria-checked={(period ?? mentee.preferredPeriod) === o.value} onClick={() => setPeriod(o.value)}>{o.label}</button>
+              ))}
+            </div>
           )}
           <Button variant="secondary" block loading={busy === 'pref'} data-testid={editing ? 'p6-save-period' : 'p6-edit-period'}
             onClick={() => {

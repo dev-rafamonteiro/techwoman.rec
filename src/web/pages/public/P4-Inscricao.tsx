@@ -54,7 +54,10 @@ export default function P4Inscricao() {
 
   const tsBox = useRef<HTMLDivElement>(null);
   const ts = useRef<TurnstileHandle | null>(null);
+  // O contêiner só existe depois que E01 carrega e as inscrições estão abertas.
+  const formReady = event.status === 'success' && event.data.registrationOpen;
   useEffect(() => {
+    if (!formReady) return;
     let alive = true;
     if (tsBox.current) {
       mountTurnstile(tsBox.current).then((h) => (alive ? (ts.current = h) : h.destroy()), () => undefined);
@@ -64,7 +67,7 @@ export default function P4Inscricao() {
       ts.current?.destroy();
       ts.current = null;
     };
-  }, []);
+  }, [formReady]);
 
   const errors = validate(values);
   const shown = (f: Field) => (touched[f] ? errors[f] : undefined);
@@ -91,6 +94,7 @@ export default function P4Inscricao() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     setFormError(null);
+    setAlready(false);
     setTouched({ name: true, email: true, phone: true, linkedin: true, area: true, preferredPeriod: true, note: true, consent: true });
     if (Object.keys(errors).length > 0) {
       document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
@@ -142,15 +146,16 @@ export default function P4Inscricao() {
 
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="p4-form">
         {already && (
-          <div className="tw-card tw-card--accent" role="status" data-testid="p4-already">
-            Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail.
+          <div className="tw-banner tw-banner--ok" role="status" data-testid="p4-already">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none', marginTop: 2 }}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+            <span>Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail.</span>
           </div>
         )}
         {formError && (
-          <div className="tw-card" role="alert" data-testid="p4-form-error">
+          <div className="tw-banner tw-banner--err" role="alert" data-testid="p4-form-error">
             {formError.network ? (
-              <><strong>Não conseguimos enviar agora</strong><br />Seus dados continuam preenchidos. Confira a conexão e toque em enviar de novo.</>
-            ) : formError.text}
+              <><strong>Não conseguimos enviar agora</strong><span>Seus dados continuam preenchidos. Confira a conexão e toque em enviar de novo.</span></>
+            ) : <span>{formError.text}</span>}
           </div>
         )}
         <TextField label="Nome completo" placeholder="Como você quer ser chamada" name="name" autoComplete="name" value={values.name} error={shown('name')} ok={values.name && !errors.name ? 'Tudo certo' : undefined}
