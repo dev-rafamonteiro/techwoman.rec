@@ -1,0 +1,17 @@
+/* M4 · Participantes aguardando: cards compactos no visual da agenda */
+.m4-search { position: relative; }
+.m4-search .tw-field__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.m4-search input { padding-left: 40px; background: var(--tw-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%238a1f96' stroke-width='2.4' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 14px center; border-radius: var(--radius-pill); }
+.m4-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.m4-list .tw-mentee { border: 1.5px solid var(--tw-lilac-200); border-radius: var(--radius-md); padding: var(--space-3); gap: var(--space-2); }
+.m4-list .tw-mentee__head { gap: var(--space-3); }
+.m4-list .tw-avatar { width: 40px; height: 40px; font-size: var(--text-md); }
+.m4-list .tw-mentee__name { font-size: var(--text-md); font-weight: 800; }
+.m4-list .tw-mentee__meta { font-size: var(--text-sm); }
+.m4-list .tw-mentee__note { background: none; padding: 0; font-size: var(--text-base-sm); line-height: 1.45; }
+.m4-list .tw-badge { padding: 4px 10px; font-size: var(--text-xs); }
+.m4-list .tw-mentee > .tw-row:last-child { justify-content: flex-end; }
+.m4-list .tw-mentee > .tw-row:last-child .tw-btn { min-height: 40px; font-size: var(--text-base-sm); padding: 0 var(--space-5); }
+.m4-prio .tw-mentee { border-color: var(--tw-plum-950); box-shadow: inset 4px 0 0 var(--tw-plum-950); }
+.m4-count { font-size: var(--text-sm); font-weight: 700; color: var(--color-ink-muted); }
+.m4-allareas { align-self: flex-start; font-size: var(--text-sm); }

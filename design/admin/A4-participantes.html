@@ -1,0 +1,202 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, participantes</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,input,select{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · Super admin</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Participantes</h1>
+<span style="color: #5E3A66">184 inscritas · {{qtd}} com os filtros atuais · dados de exemplo</span>
+</div>
+<button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 18px">Exportar CSV (filtros aplicados)</button>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<label for="p-busca" style="position: absolute; left: -9999px">Buscar</label>
+<input id="p-busca" type="search" placeholder="Buscar por nome ou e-mail" value="{{busca}}" sc-camel-on-change="{{onBusca}}" style="flex: 1 1 240px; min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 14px; font-size: 15px; background: #FFFFFF; color: #3D0A45">
+<label for="p-status" style="position: absolute; left: -9999px">Status</label>
+<sc-raw-select id="p-status" value="{{fStatus}}" sc-camel-on-change="{{onStatus}}" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px">
+<option value="todos">Todos os status</option><option>Aguardando</option><option>Horário proposto</option><option>Confirmada</option><option>Concluída</option><option>Não compareceu</option><option>Cancelada</option>
+</sc-raw-select>
+<sc-raw-select aria-label="Área" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option>Todas as áreas</option><option>Backend</option><option>Dados</option><option>Frontend</option><option>UX &amp; Design</option><option>Produto</option><option>Cloud</option></sc-raw-select>
+<sc-raw-select aria-label="Período preferido" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option>Todos os períodos</option><option>Manhã</option><option>Início da tarde</option><option>Fim da tarde</option><option>Qualquer horário</option></sc-raw-select>
+<button type="button" aria-pressed="{{prioPressed}}" sc-camel-on-click="{{togglePrio}}" style="cursor: pointer; min-height: 44px; border-radius: 12px; border: 2px solid {{prioBorda}}; background: {{prioBg}}; color: {{prioFg}}; font-weight: 700; padding: 0 12px">★ Só prioridade</button>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<div style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 18px; overflow-x: auto">
+<sc-raw-table style="width: 100%; min-width: 1060px; border-collapse: collapse; font-size: 14px">
+<sc-raw-thead><sc-raw-tr style="text-align: left; color: #5E3A66; font-size: 13px">
+<sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Nome</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">E-mail</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">WhatsApp</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Área</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Período</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Status</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Mentora</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Mesa</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Horário</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Inscrita</sc-raw-th>
+</sc-raw-tr></sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{linhas}}" as="r" hint-placeholder-count="10">
+<sc-raw-tr sc-camel-on-click="{{r.abrir}}" style="cursor: pointer; border-bottom: 1px solid #F6EEF7; background: {{r.fundo}}">
+<sc-raw-td style="padding: 10px 12px; font-weight: 800"><button type="button" sc-camel-on-click="{{r.abrir}}" style="cursor: pointer; border: 0; background: transparent; color: #3D0A45; font-weight: 800; font-size: 14px; padding: 6px 0; text-align: left">{{r.nome}}</button> <sc-if value="{{r.prio}}" hint-placeholder-val="{{ false }}"><span style="background: #5B1466; color: #FFFFFF; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; white-space: nowrap">★ Prioridade</span></sc-if></sc-raw-td>
+<sc-raw-td style="padding: 10px 12px; color: #5E3A66">{{r.email}}</sc-raw-td><sc-raw-td style="padding: 10px 12px; white-space: nowrap">{{r.whats}}</sc-raw-td><sc-raw-td style="padding: 10px 12px">{{r.area}}</sc-raw-td><sc-raw-td style="padding: 10px 12px">{{r.periodo}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 12px"><span style="background: {{r.sBg}}; color: {{r.sFg}}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px; white-space: nowrap">{{r.status}}</span></sc-raw-td>
+<sc-raw-td style="padding: 10px 12px">{{r.mentora}}</sc-raw-td><sc-raw-td style="padding: 10px 12px">{{r.mesa}}</sc-raw-td><sc-raw-td style="padding: 10px 12px">{{r.hora}}</sc-raw-td><sc-raw-td style="padding: 10px 12px; color: #5E3A66">{{r.em}}</sc-raw-td>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+
+<sc-if value="{{painel}}" hint-placeholder-val="{{ true }}">
+<aside aria-label="Detalhe da participante" style="flex: 1 1 340px; min-width: 0; background: #FFFFFF; border: 2px solid #3D0A45; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start">
+<div style="display: flex; flex-direction: column">
+<h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 19px">{{d.nome}}</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px">
+<span style="background: {{d.sBg}}; color: {{d.sFg}}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px">{{d.status}}</span>
+<sc-if value="{{d.prio}}" hint-placeholder-val="{{ true }}"><span style="background: #5B1466; color: #FFFFFF; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px">★ Prioridade</span></sc-if>
+</div>
+</div>
+<button type="button" sc-camel-on-click="{{fechar}}" aria-label="Fechar detalhe" style="cursor: pointer; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #F6E4F8; color: #3D0A45; font-size: 18px; font-weight: 800">×</button>
+</div>
+<dl style="margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 14px">
+<dt style="color: #5E3A66">E-mail</dt><dd style="margin: 0; overflow-wrap: anywhere">{{d.email}}</dd>
+<dt style="color: #5E3A66">WhatsApp</dt><dd style="margin: 0">{{d.whats}}</dd>
+<dt style="color: #5E3A66">LinkedIn</dt><dd style="margin: 0"><a href="#linkedin">{{d.linkedin}}</a></dd>
+<dt style="color: #5E3A66">Área</dt><dd style="margin: 0">{{d.area}} · jornada: nível 5</dd>
+<dt style="color: #5E3A66">Período</dt><dd style="margin: 0">{{d.periodo}}</dd>
+<dt style="color: #5E3A66">Comentário</dt><dd style="margin: 0">{{d.comentario}}</dd>
+</dl>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h3 style="margin: 0; font-size: 15px; font-weight: 800">Linha do tempo</h3>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+<sc-for list="{{d.eventos}}" as="e" hint-placeholder-count="4">
+<li style="display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 8px"><span style="color: #5E3A66; font-weight: 700">{{e.h}}</span><span>{{e.t}}</span></li>
+</sc-for>
+</ol>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h3 style="margin: 0; font-size: 15px; font-weight: 800">Notificações enviadas</h3>
+<sc-for list="{{d.notifs}}" as="n" hint-placeholder-count="3">
+<div style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px; background: #FBF3FC; border-radius: 10px; padding: 6px 10px"><span>{{n.t}}</span><span style="font-weight: 800; color: {{n.cor}}">{{n.s}}</span></div>
+</sc-for>
+</div>
+
+<sc-if value="{{agendando}}" hint-placeholder-val="{{ false }}">
+<div style="background: #F6E4F8; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h3 style="margin: 0; font-size: 15px; font-weight: 800">Agendar manualmente</h3>
+<label for="am-mentora" style="font-weight: 700; font-size: 13px">Mentora</label>
+<sc-raw-select id="am-mentora" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 10px; padding: 0 8px; background: #FFFFFF; color: #3D0A45"><option>Ana Ribeiro · Backend · 3 livres</option><option>Camila Freitas · Backend · 4 livres</option><option>Júlia Santana · Backend · 2 livres</option></sc-raw-select>
+<label for="am-hora" style="font-weight: 700; font-size: 13px">Horário</label>
+<sc-raw-select id="am-hora" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 10px; padding: 0 8px; background: #FFFFFF; color: #3D0A45"><option>15h00 · preferência dela</option><option>15h45 · preferência dela</option><option>16h30 · preferência dela</option></sc-raw-select>
+<label for="am-mesa" style="font-weight: 700; font-size: 13px">Mesa</label>
+<sc-raw-select id="am-mesa" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 10px; padding: 0 8px; background: #FFFFFF; color: #3D0A45"><option>Mesa 7 · mesma da mentora no horário anterior</option><option>Mesa 2</option><option>Mesa 9</option></sc-raw-select>
+<button type="button" sc-camel-on-click="{{confirmarAgenda}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800">Enviar convite</button>
+</div>
+</sc-if>
+
+<sc-if value="{{temMsg}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="background: #C9F4EE; color: #1F4A44; border-radius: 12px; padding: 10px 12px; font-weight: 700; font-size: 14px">{{msg}}</div>
+</sc-if>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button type="button" sc-camel-on-click="{{abrirAgenda}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 12px; background: #3D0A45; color: #FFFFFF; font-weight: 800; font-size: 14px">Agendar manualmente</button>
+<button type="button" sc-camel-on-click="{{togglePrioD}}" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; background: #FFFFFF; color: #5B1466; font-weight: 800; font-size: 14px">{{prioLabel}}</button>
+<button type="button" sc-camel-on-click="{{reenviar}}" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; background: #FFFFFF; color: #8A1F96; font-weight: 800; font-size: 14px">Reenviar link pessoal</button>
+<button type="button" sc-camel-on-click="{{cancelar}}" style="cursor: pointer; min-height: 44px; border: 2px solid #F3C2C2; border-radius: 12px; background: #FFFFFF; color: #8A1C1C; font-weight: 800; font-size: 14px">Cancelar inscrição</button>
+</div>
+</aside>
+</sc-if>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1200}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminParticipantes.dc.html'], ['Mapa de mesas', 'AdminMapa.dc.html'], ['Mentoras', 'AdminMentoras.dc.html'], ['Mesas', 'AdminMesas.dc.html'], ['Evento', 'AdminEvento.dc.html'], ['Administradores', 'AdminUsuarios.dc.html'], ['Logs', 'AdminLogs.dc.html']];
+function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var ST = { 'Aguardando': ['#EFE8F0', '#3D0A45'], 'Horário proposto': ['#FFE1D3', '#8A3210'], 'Confirmada': ['#C9F4EE', '#1F4A44'], 'Concluída': ['#E6E3E7', '#4A4550'], 'Não compareceu': ['#FBDADA', '#8A1C1C'], 'Cancelada': ['#FBDADA', '#8A1C1C'] };
+var P = [
+  { id: 'beatriz', nome: 'Beatriz Nunes', email: 'beatriz.n@email.com', whats: '(81) 98812-4410', area: 'Backend', periodo: 'Fim da tarde', status: 'Aguardando', prio: true, mentora: '—', mesa: '—', hora: '—', em: '12h43', linkedin: 'beatriznunes', comentario: 'Quero falar sobre APIs.',
+    eventos: [['12h43', 'Inscrição recebida'], ['12h58', 'Convite de Camila · 13h30 · Mesa 4'], ['13h01', 'Recusou: horário não serve'], ['13h01', 'Voltou para a fila com prioridade']],
+    notifs: [['Inscrição recebida · e-mail', 'Enviada', '#1F6B5C'], ['Inscrição recebida · WhatsApp', 'Enviada', '#1F6B5C'], ['Convite · WhatsApp', 'Falhou', '#8A1C1C']] },
+  { id: 'joana', nome: 'Joana Lima', email: 'joana@email.com', whats: '(81) 91234-5678', area: 'Backend', periodo: 'Início da tarde', status: 'Horário proposto', prio: false, mentora: 'Ana Ribeiro', mesa: '7', hora: '14h15', em: '13h00' },
+  { id: 'carla', nome: 'Carla Souza', email: 'carla.s@email.com', whats: '(81) 99654-1200', area: 'Backend', periodo: 'Início da tarde', status: 'Confirmada', prio: false, mentora: 'Ana Ribeiro', mesa: '7', hora: '13h30', em: '10h12' },
+  { id: 'larissa', nome: 'Larissa Melo', email: 'larissa.m@email.com', whats: '(81) 98100-3344', area: 'Cloud', periodo: 'Qualquer horário', status: 'Aguardando', prio: false, mentora: '—', mesa: '—', hora: '—', em: '13h07' },
+  { id: 'tai', nome: 'Tainá Rocha', email: 'taina.r@email.com', whats: '(87) 99911-2020', area: 'Backend', periodo: 'Início da tarde', status: 'Confirmada', prio: false, mentora: 'Ana Ribeiro', mesa: '7', hora: '12h45', em: '09h58' },
+  { id: 'mirela', nome: 'Mirela Santos', email: 'mirela.s@email.com', whats: '(81) 98765-0101', area: 'Backend', periodo: 'Manhã', status: 'Não compareceu', prio: false, mentora: 'Ana Ribeiro', mesa: '7', hora: '11h15', em: '09h21' },
+  { id: 'carol', nome: 'Carolina Dias', email: 'carol.d@email.com', whats: '(81) 99000-7788', area: 'Backend', periodo: 'Manhã', status: 'Concluída', prio: false, mentora: 'Ana Ribeiro', mesa: '7', hora: '9h00', em: '08h40' },
+  { id: 'renata', nome: 'Renata Alves', email: 'renata.a@email.com', whats: '(81) 98222-9090', area: 'Dados', periodo: 'Início da tarde', status: 'Aguardando', prio: false, mentora: '—', mesa: '—', hora: '—', em: '13h19' },
+  { id: 'livia', nome: 'Lívia Prado', email: 'livia.p@email.com', whats: '(81) 98444-1515', area: 'Dados', periodo: 'Início da tarde', status: 'Horário proposto', prio: false, mentora: 'Bruna Carvalho', mesa: '3', hora: '14h15', em: '11h50' },
+  { id: 'nina', nome: 'Nina Barros', email: 'nina.b@email.com', whats: '(81) 98333-2626', area: 'UX & Design', periodo: 'Manhã', status: 'Cancelada', prio: false, mentora: '—', mesa: '—', hora: '—', em: '09h05' }
+];
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { busca: '', fStatus: 'todos', soPrio: false, sel: 'beatriz', prioOff: {}, agendando: false, msg: '' }; }
+  renderVals() {
+    var self = this, st = this.state;
+    function prio(p) { return st.prioOff[p.id] === undefined ? p.prio : !st.prioOff[p.id]; }
+    var linhas = P.filter(function (p) {
+      if (st.busca && (p.nome + p.email).toLowerCase().indexOf(st.busca.toLowerCase()) < 0) return false;
+      if (st.fStatus !== 'todos' && p.status !== st.fStatus) return false;
+      if (st.soPrio && !prio(p)) return false;
+      return true;
+    }).map(function (p) { var s = ST[p.status];
+      return { nome: p.nome, email: p.email, whats: p.whats, area: p.area, periodo: p.periodo, status: p.status, sBg: s[0], sFg: s[1], prio: prio(p), mentora: p.mentora, mesa: p.mesa, hora: p.hora, em: p.em,
+        fundo: st.sel === p.id ? '#F6E4F8' : '#FFFFFF', abrir: function () { self.setState({ sel: p.id, agendando: false, msg: '' }); } }; });
+    var d = P.filter(function (p) { return p.id === st.sel; })[0] || P[0];
+    var ds = ST[d.status];
+    return {
+      menu: menu('Participantes'), qtd: linhas.length,
+      busca: st.busca, onBusca: function (e) { self.setState({ busca: e.target.value }); },
+      fStatus: st.fStatus, onStatus: function (e) { self.setState({ fStatus: e.target.value }); },
+      prioPressed: st.soPrio ? 'true' : 'false', prioBorda: st.soPrio ? '#5B1466' : '#EBCFF0', prioBg: st.soPrio ? '#5B1466' : '#FFFFFF', prioFg: st.soPrio ? '#FFFFFF' : '#3D0A45',
+      togglePrio: function () { self.setState({ soPrio: !self.state.soPrio }); },
+      linhas: linhas,
+      painel: !!st.sel,
+      fechar: function () { self.setState({ sel: null }); },
+      d: { nome: d.nome, email: d.email, whats: d.whats, linkedin: d.linkedin || 'linkedin.com/in/' + d.id, area: d.area, periodo: d.periodo, comentario: d.comentario || '—',
+        status: d.status, sBg: ds[0], sFg: ds[1], prio: prio(d),
+        eventos: (d.eventos || [[d.em, 'Inscrição recebida']]).map(function (e) { return { h: e[0], t: e[1] }; }),
+        notifs: (d.notifs || [['Inscrição recebida · e-mail', 'Enviada', '#1F6B5C']]).map(function (n) { return { t: n[0], s: n[1], cor: n[2] }; }) },
+      prioLabel: prio(d) ? 'Tirar prioridade' : 'Marcar prioridade',
+      togglePrioD: function () { var x = Object.assign({}, self.state.prioOff); x[d.id] = prio(d); self.setState({ prioOff: x }); },
+      agendando: st.agendando,
+      abrirAgenda: function () { self.setState({ agendando: true, msg: '' }); },
+      confirmarAgenda: function () { self.setState({ agendando: false, msg: 'Convite enviado: Ana Ribeiro · 15h00 · Mesa 7' }); },
+      reenviar: function () { self.setState({ msg: 'Link pessoal reenviado por e-mail e WhatsApp' }); },
+      cancelar: function () { self.setState({ msg: 'Inscrição cancelada e participante avisada' }); },
+      temMsg: !!st.msg, msg: st.msg
+    };
+  }
+}
+</script>
+
+
+</body></html>

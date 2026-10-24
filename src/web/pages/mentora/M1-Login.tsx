@@ -9,6 +9,7 @@ const MESSAGES: Record<string, string> = {
   ACCOUNT_DISABLED: 'Esta conta está desativada. Procure a organização no balcão de apoio.',
   ACCOUNT_LOCKED: 'Muitas tentativas. Tente de novo em 5 minutos.',
   RATE_LIMITED: 'Muitas tentativas. Tente de novo em 5 minutos.',
+  TEMP_PASSWORD_EXPIRED: 'Sua senha provisória venceu. Peça uma nova senha ao admin.',
   NETWORK: 'Sem conexão. Confira a internet e tente de novo.',
 };
 

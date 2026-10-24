@@ -1,6 +1,7 @@
 import { ENDPOINTS } from '@tw/shared';
 import { Brand, CalendarIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, PinFilledIcon, PinIcon, SkeletonList, call, useQuery } from '../../ui';
 import './public.css';
+import './p1.css';
 
 function longDate(date: string, startTime: string): string {
   const d = new Date(`${date}T12:00:00-03:00`);
@@ -75,7 +76,7 @@ export default function P1Home() {
             <span className="tw-p1__eyebrow">Convite recebido</span>
             <h3 style={{ margin: 0 }}>Mesa 7 · 14h15</h3>
             <p style={{ margin: 0 }}>Ana quer te mentorar em Backend. Sessão de 40 minutos, aqui no evento.</p>
-            <div className="tw-row"><span className="tw-badge tw-badge--invited">Horário proposto</span><span className="tw-badge tw-badge--priority">Responda até 14h10</span></div>
+            <div className="tw-row"><span className="tw-badge tw-badge--invited">Horário proposto</span><span className="tw-badge tw-badge--priority">Responda até 14h05</span></div>
             <div className="tw-btnrow" aria-hidden="true"><span className="tw-btn tw-btn--primary">Aceitar</span><span className="tw-btn tw-btn--secondary">Recusar</span></div>
           </div>
         </div>

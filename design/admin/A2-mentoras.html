@@ -1,0 +1,177 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, mentoras</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,input,select{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · Super admin</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Mentoras</h1>
+<span style="color: #5E3A66">{{resumo}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<a href="AdminImportar.dc.html" style="text-decoration: none; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 18px">Importar lista (CSV)</a>
+<a href="AdminMentoraForm.dc.html" style="text-decoration: none; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 18px">+ Nova mentora</a>
+</div>
+</div>
+
+<sc-if value="{{temSenha}}" hint-placeholder-val="{{ false }}">
+<div role="alertdialog" aria-label="Nova senha provisória" style="background: #3D0A45; color: #FFFFFF; border-radius: 18px; padding: 18px 20px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center">
+<div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-weight: 800">Nova senha provisória de {{senhaDe}}</span>
+<span style="font-size: 13px; color: #F1D9F5">Não será mostrada de novo. Ela troca no primeiro acesso.</span>
+</div>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; background: #5B1466; padding: 10px 14px; border-radius: 12px; letter-spacing: 0.06em">{{senhaTxt}}</span>
+<button type="button" sc-camel-on-click="{{verSenha}}" style="cursor: pointer; min-height: 44px; border: 2px solid #D98CE6; border-radius: 999px; background: transparent; color: #FFFFFF; font-weight: 700; padding: 0 14px">{{verSenhaLabel}}</button>
+<button type="button" sc-camel-on-click="{{copiar}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 16px">{{copiarLabel}}</button>
+<button type="button" sc-camel-on-click="{{fecharSenha}}" aria-label="Fechar" style="cursor: pointer; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #5B1466; color: #FFFFFF; font-size: 18px; font-weight: 800">×</button>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<label for="m-busca" style="position: absolute; left: -9999px">Buscar mentora</label>
+<input id="m-busca" type="search" placeholder="Buscar por nome ou e-mail" value="{{busca}}" sc-camel-on-change="{{onBusca}}" style="flex: 1 1 260px; min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 14px; font-size: 15px; background: #FFFFFF; color: #3D0A45">
+<label for="m-status" style="position: absolute; left: -9999px">Status</label>
+<sc-raw-select id="m-status" value="{{fStatus}}" sc-camel-on-change="{{onStatus}}" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px">
+<option value="todos">Todos os status</option><option value="Ativa">Ativa</option><option value="Nunca acessou">Nunca acessou</option><option value="Desativada">Desativada</option>
+</sc-raw-select>
+<label for="m-area" style="position: absolute; left: -9999px">Área</label>
+<sc-raw-select id="m-area" value="{{fArea}}" sc-camel-on-change="{{onArea}}" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px">
+<option value="todas">Todas as áreas</option><option value="Backend">Backend</option><option value="Frontend">Frontend</option><option value="Dados">Dados</option><option value="UX &amp; Design">UX &amp; Design</option><option value="Produto">Produto</option><option value="Cloud">Cloud</option>
+</sc-raw-select>
+<button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; background: #FFFFFF; color: #8A1F96; font-weight: 700; padding: 0 14px">Exportar CSV</button>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 18px; overflow-x: auto">
+<sc-raw-table style="width: 100%; min-width: 1080px; border-collapse: collapse; font-size: 14px">
+<sc-raw-thead>
+<sc-raw-tr style="text-align: left; color: #5E3A66; font-size: 13px">
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Nome</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">E-mail</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Organização <span style="font-weight: 500">(interno)</span></sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Áreas</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0; text-align: right">Horários disp.</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0; text-align: right">Confirm. / concl.</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Último acesso</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Status</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0"><span style="position: absolute; left: -9999px">Ações</span></sc-raw-th>
+</sc-raw-tr>
+</sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{linhas}}" as="r" hint-placeholder-count="10">
+<sc-raw-tr style="border-bottom: 1px solid #F6EEF7">
+<sc-raw-td style="padding: 10px 14px; font-weight: 800">{{r.nome}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 14px; color: #5E3A66">{{r.email}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 14px">{{r.org}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 14px">{{r.areas}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 14px; text-align: right; font-weight: 700">{{r.horarios}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 14px; text-align: right">{{r.mentorias}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 14px; color: #5E3A66">{{r.acesso}}</sc-raw-td>
+<sc-raw-td style="padding: 10px 14px"><span style="background: {{r.sBg}}; color: {{r.sFg}}; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 999px; white-space: nowrap">{{r.status}}</span></sc-raw-td>
+<sc-raw-td style="padding: 6px 14px; white-space: nowrap">
+<a href="AdminMentoraForm.dc.html" style="font-weight: 700; padding: 10px 6px; display: inline-block">Editar</a>
+<button type="button" sc-camel-on-click="{{r.redefinir}}" style="cursor: pointer; border: 0; background: transparent; color: #8A1F96; font-weight: 700; font-size: 14px; padding: 10px 6px; min-height: 44px">Redefinir senha</button>
+<button type="button" sc-camel-on-click="{{r.alternar}}" style="cursor: pointer; border: 0; background: transparent; color: {{r.altCor}}; font-weight: 700; font-size: 14px; padding: 10px 6px; min-height: 44px">{{r.altLabel}}</button>
+<a href="Agenda.dc.html" style="font-weight: 700; padding: 10px 6px; display: inline-block">Ver agenda</a>
+</sc-raw-td>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+<sc-if value="{{vazio}}" hint-placeholder-val="{{ false }}">
+<div style="background: #FFFFFF; border-radius: 18px; padding: 24px; text-align: center; color: #5E3A66">Nenhuma mentora com esses filtros. <button type="button" sc-camel-on-click="{{limpar}}" style="cursor: pointer; border: 0; background: transparent; color: #8A1F96; font-weight: 800; text-decoration: underline; min-height: 44px">Limpar filtros</button></div>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1100}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminParticipantes.dc.html'], ['Mapa de mesas', 'AdminMapa.dc.html'], ['Mentoras', 'AdminMentoras.dc.html'], ['Mesas', 'AdminMesas.dc.html'], ['Evento', 'AdminEvento.dc.html'], ['Administradores', 'AdminUsuarios.dc.html'], ['Logs', 'AdminLogs.dc.html']];
+function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var MENTORAS = [
+  ['Ana Ribeiro', 'ana.ribeiro@email.com', 'Empresa A', 'Backend, Cloud', 10, '3 / 2', 'hoje, 13h20', 'Ativa'],
+  ['Bruna Carvalho', 'bruna.c@email.com', 'Empresa B', 'Dados', 8, '2 / 3', 'hoje, 13h02', 'Ativa'],
+  ['Camila Freitas', 'camila.f@email.com', 'Empresa A', 'Backend', 6, '1 / 2', 'hoje, 12h48', 'Ativa'],
+  ['Daniela Moura', 'dani.moura@email.com', 'Empresa C', 'Cloud', 12, '2 / 1', 'hoje, 11h30', 'Ativa'],
+  ['Elisa Tavares', 'elisa.t@email.com', 'Empresa D', 'UX & Design, Frontend', 0, '0 / 0', '—', 'Nunca acessou'],
+  ['Fernanda Lopes', 'fe.lopes@email.com', 'Empresa B', 'Dados, Produto', 9, '1 / 3', 'hoje, 13h11', 'Ativa'],
+  ['Gabriela Pires', 'gabi.pires@email.com', 'Empresa E', 'Frontend', 7, '2 / 1', 'ontem, 18h40', 'Ativa'],
+  ['Helena Duarte', 'helena.d@email.com', 'Empresa C', 'Produto', 0, '0 / 0', '—', 'Nunca acessou'],
+  ['Isabela Rocha', 'isa.rocha@email.com', 'Empresa F', 'UX & Design', 5, '0 / 2', '12/11, 20h05', 'Desativada'],
+  ['Júlia Santana', 'julia.s@email.com', 'Empresa A', 'Backend, Dados', 11, '3 / 1', 'hoje, 13h24', 'Ativa']
+];
+var STATUS = { 'Ativa': ['#C9F4EE', '#1F4A44'], 'Nunca acessou': ['#EFE8F0', '#3D0A45'], 'Desativada': ['#FBDADA', '#8A1C1C'] };
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { busca: '', fStatus: 'todos', fArea: 'todas', desat: {}, senhaDe: null, ver: false, copiado: false }; }
+  renderVals() {
+    var self = this, st = this.state;
+    var linhas = MENTORAS.map(function (m) {
+      var status = st.desat[m[0]] === undefined ? m[7] : (st.desat[m[0]] ? 'Desativada' : 'Ativa');
+      return { m: m, status: status };
+    }).filter(function (x) {
+      var m = x.m;
+      if (st.busca && (m[0] + m[1]).toLowerCase().indexOf(st.busca.toLowerCase()) < 0) return false;
+      if (st.fStatus !== 'todos' && x.status !== st.fStatus) return false;
+      if (st.fArea !== 'todas' && m[3].indexOf(st.fArea) < 0) return false;
+      return true;
+    }).map(function (x) {
+      var m = x.m, s = STATUS[x.status], desativada = x.status === 'Desativada';
+      return { nome: m[0], email: m[1], org: m[2], areas: m[3], horarios: m[4], mentorias: m[5], acesso: m[6], status: x.status, sBg: s[0], sFg: s[1],
+        altLabel: desativada ? 'Ativar' : 'Desativar', altCor: desativada ? '#1F6B5C' : '#A3262A',
+        alternar: function () { var d = Object.assign({}, self.state.desat); d[m[0]] = !desativada; self.setState({ desat: d }); },
+        redefinir: function () { self.setState({ senhaDe: m[0], ver: false, copiado: false }); } };
+    });
+    return {
+      menu: menu('Mentoras'),
+      resumo: '50 mentoras · 41 já acessaram · 9 nunca acessaram',
+      busca: st.busca, onBusca: function (e) { self.setState({ busca: e.target.value }); },
+      fStatus: st.fStatus, onStatus: function (e) { self.setState({ fStatus: e.target.value }); },
+      fArea: st.fArea, onArea: function (e) { self.setState({ fArea: e.target.value }); },
+      linhas: linhas, vazio: linhas.length === 0,
+      limpar: function () { self.setState({ busca: '', fStatus: 'todos', fArea: 'todas' }); },
+      temSenha: !!st.senhaDe, senhaDe: st.senhaDe || '',
+      senhaTxt: st.ver ? 'roxa-mesa-7429' : '••••••••••••••',
+      verSenhaLabel: st.ver ? 'Ocultar' : 'Mostrar',
+      verSenha: function () { self.setState({ ver: !self.state.ver }); },
+      copiarLabel: st.copiado ? 'Copiada ✓' : 'Copiar',
+      copiar: function () { self.setState({ copiado: true }); },
+      fecharSenha: function () { self.setState({ senhaDe: null }); }
+    };
+  }
+}
+</script>
+
+
+</body></html>

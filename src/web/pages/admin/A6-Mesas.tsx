@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ENDPOINTS, TableInUseDetailsSchema, type E40PutBody, type TableView } from '@tw/shared';
-import { ApiError, Button, DataTable, ErrorState, LinkButton, Overlay, SkeletonList, TextField, call, formatTime, useQuery, useToast, type Column } from '../../ui';
-import { PageHead, errMsg, useTitle } from './lib/common';
+import { ApiError, Button, DataTable, ErrorState, Overlay, SkeletonList, TextField, call, formatTime, saveBlob, toCsv, useQuery, useToast, type Column } from '../../ui';
+import { PageHead, Switch, errMsg, useTitle } from './lib/common';
+import './lib/a4-a6.css';
 
 type InUse = ReturnType<typeof TableInUseDetailsSchema.parse>;
 interface Edit { id?: string; number: string; name: string; location: string }
@@ -9,28 +11,29 @@ interface Edit { id?: string; number: string; name: string; location: string }
 const toBody = (tables: readonly TableView[]): E40PutBody['tables'] =>
   tables.map((t) => ({ id: t.id, number: t.number, name: t.name, location: t.location, active: t.active }));
 
-/** A6 · Mesas (E40, só super admin). Cada ação grava a lista inteira (PUT substitui). */
+/** A6 · Mesas (E40, só super admin). Cada ação grava a lista inteira (PUT substitui). Visual: design/admin/A6-mesas.html. */
 export default function A6Mesas() {
   useTitle('Mesas');
   const toast = useToast();
   const q = useQuery((s) => call(ENDPOINTS.E40Get, { signal: s }), []);
   const [n, setN] = useState('20');
   const [edit, setEdit] = useState<Edit | null>(null);
-  const [inUse, setInUse] = useState<InUse | null>(null);
+  const [inUse, setInUse] = useState<(InUse & { number: number | null }) | null>(null);
   const [busy, setBusy] = useState(false);
   const [formErr, setFormErr] = useState('');
 
-  const put = async (tables: E40PutBody['tables'], ok: string): Promise<boolean> => {
+  const put = async (tables: E40PutBody['tables'], ok: string, number: number | null = null): Promise<boolean> => {
     setBusy(true);
     try {
       await call(ENDPOINTS.E40Put, { body: { tables } });
       toast.success(ok);
+      setInUse(null);
       await q.refetch();
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.code === 'TABLE_IN_USE') {
         const p = TableInUseDetailsSchema.safeParse(e.details);
-        setInUse(p.success ? p.data : { appointments: [] });
+        setInUse({ ...(p.success ? p.data : { appointments: [] }), number });
       } else if (e instanceof ApiError && e.code === 'VALIDATION_ERROR') setFormErr(e.message);
       else toast.error(errMsg(e));
       return false;
@@ -38,8 +41,12 @@ export default function A6Mesas() {
   };
 
   const current = q.status === 'success' ? q.data.tables : [];
+  const active = current.filter((t) => t.active).length;
 
-  const toggle = (t: TableView) => put(toBody(current).map((x) => (x.id === t.id ? { ...x, active: !t.active } : x)), t.active ? `Mesa ${t.number} desativada.` : `Mesa ${t.number} ativada.`);
+  const toggle = (t: TableView) => {
+    if (busy) return;
+    void put(toBody(current).map((x) => (x.id === t.id ? { ...x, active: !t.active } : x)), t.active ? `Mesa ${t.number} desativada.` : `Mesa ${t.number} ativada.`, t.active ? t.number : null);
+  };
 
   const generate = () => {
     const count = Math.min(200, Math.max(1, Math.floor(Number(n)) || 0));
@@ -62,37 +69,48 @@ export default function A6Mesas() {
   };
 
   const columns: Column<TableView>[] = [
-    { key: 'table', header: 'Mesa', render: (t) => <strong>Mesa {t.number}{t.name ? ` · ${t.name}` : ''}</strong>, text: (t) => t.number },
-    { key: 'loc', header: 'Localização', render: (t) => t.location ?? '—', text: (t) => t.location ?? '' },
-    { key: 'status', header: 'Situação', render: (t) => (t.active ? 'Ativa' : 'Inativa'), text: (t) => (t.active ? 'Ativa' : 'Inativa') },
+    { key: 'table', header: 'Mesa', render: (t) => <span className="a6-num">Mesa {t.number}{t.name ? ` · ${t.name}` : ''}</span>, text: (t) => t.number },
+    { key: 'loc', header: 'Localização', render: (t) => t.location ?? <span className="a4-muted">—</span>, text: (t) => t.location ?? '' },
+    { key: 'status', header: 'Situação', render: (t) => <Switch checked={t.active} label={t.active ? 'Ativa' : 'Inativa'} onChange={() => toggle(t)} />, text: (t) => (t.active ? 'Ativa' : 'Inativa') },
     {
       key: 'actions', header: 'Ações',
-      render: (t) => (
-        <div className="tw-row">
-          <Button size="sm" variant="secondary" onClick={() => { setFormErr(''); setEdit({ id: t.id, number: String(t.number), name: t.name ?? '', location: t.location ?? '' }); }}>Editar</Button>
-          <Button size="sm" variant={t.active ? 'danger' : 'mint'} disabled={busy} onClick={() => void toggle(t)}>{t.active ? 'Desativar' : 'Ativar'}</Button>
-        </div>
-      ),
+      render: (t) => <button type="button" className="a6-edit" aria-label={`Editar mesa ${t.number}`} onClick={() => { setFormErr(''); setEdit({ id: t.id, number: String(t.number), name: t.name ?? '', location: t.location ?? '' }); }}>Editar</button>,
     },
   ];
 
-  const filters = (
-    <>
-      <Button variant="secondary" onClick={() => { setFormErr(''); setEdit({ number: String(Math.max(0, ...current.map((t) => t.number)) + 1), name: '', location: '' }); }}>Adicionar mesa</Button>
-      <TextField label="Gerar mesas de 1 a N" type="number" min={1} max={200} value={n} onChange={(e) => setN(e.target.value)} />
-      <Button variant="secondary" loading={busy} onClick={generate}>Gerar 1 a N</Button>
-    </>
-  );
+  const exportCsv = () => saveBlob(new Blob([toCsv(current, columns)], { type: 'text/csv;charset=utf-8' }), 'mesas.csv');
 
   return (
-    <div className="tw-page tw-stack">
-      <PageHead title="Mesas" sub="Só super admin." />
+    <div className="tw-page a6">
+      <PageHead title="Mesas" sub={q.status === 'success' ? `${active} ${active === 1 ? 'ativa' : 'ativas'} de ${current.length} · só super admin` : 'Só super admin.'}>
+        <div className="a6-gen">
+          <label htmlFor="a6-gerar-n">Gerar mesas de 1 a</label>
+          <input id="a6-gerar-n" className="a46-in" type="number" min={1} max={200} value={n} onChange={(e) => setN(e.target.value)} />
+          <button type="button" className="a46-pill" disabled={busy || q.status !== 'success'} onClick={generate}>Gerar</button>
+          <button type="button" className="a46-pill a46-pill--cta" disabled={q.status !== 'success'} onClick={() => { setFormErr(''); setEdit({ number: String(Math.max(0, ...current.map((t) => t.number)) + 1), name: '', location: '' }); }}>+ Adicionar mesa</button>
+          <button type="button" className="a46-pill" disabled={current.length === 0} onClick={exportCsv}>Exportar CSV</button>
+        </div>
+      </PageHead>
+      {inUse && (
+        <div className="a6-alert" role="alert" data-testid="tables-realocar">
+          <strong>
+            {inUse.number ? `Mesa ${inUse.number} tem` : 'A mesa tem'} {inUse.appointments.length} {inUse.appointments.length === 1 ? 'mentoria futura' : 'mentorias futuras'}. Realoque antes de desativar:
+          </strong>
+          {inUse.appointments.length > 0 && (
+            <ul>{inUse.appointments.map((a) => <li key={a.id}>{formatTime(a.startAt)} · Mesa {a.tableNumber} · {a.mentorName} com {a.menteeName}</li>)}</ul>
+          )}
+          <div className="a6-alert__acts">
+            <Link className="a46-pill a46-pill--dark" to="/admin/mapa">Realocar no mapa de mesas</Link>
+            <button type="button" className="a46-pill a46-pill--keep" onClick={() => setInUse(null)}>Manter ativa</button>
+          </div>
+        </div>
+      )}
       {q.status === 'loading' && <SkeletonList rows={5} height={56} />}
       {q.status === 'error' && <ErrorState error={q.error} onRetry={q.reload} />}
       {q.status === 'success' && (
         <div data-testid="a6-table">
-          <DataTable caption="Lista de mesas" columns={columns} rows={q.data.tables} rowKey={(t) => t.id} filters={filters} exportName="mesas.csv"
-            emptyTitle="Nenhuma mesa cadastrada" emptyText="Use “Gerar 1 a N” ou “Adicionar mesa”." />
+          <DataTable caption="Lista de mesas" columns={columns} rows={q.data.tables} rowKey={(t) => t.id} exportName="mesas.csv"
+            emptyTitle="Nenhuma mesa cadastrada" emptyText="Use “Gerar” ou “+ Adicionar mesa”." />
         </div>
       )}
       <Overlay title={edit?.id ? 'Editar mesa' : 'Adicionar mesa'} open={!!edit} onClose={() => setEdit(null)}>
@@ -103,17 +121,6 @@ export default function A6Mesas() {
             <TextField label="Nome" optional value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
             <TextField label="Localização" optional placeholder="Área B" value={edit.location} onChange={(e) => setEdit({ ...edit, location: e.target.value })} />
             <div className="tw-row"><Button loading={busy} onClick={() => void save()}>Salvar</Button><Button variant="ghost" onClick={() => setEdit(null)}>Cancelar</Button></div>
-          </div>
-        )}
-      </Overlay>
-      <Overlay title="Realocar mentorias antes de desativar" open={!!inUse} onClose={() => setInUse(null)}>
-        {inUse && (
-          <div className="tw-stack" data-testid="tables-realocar">
-            <p>Estas mentorias futuras estão na mesa que você quer desativar. Mova cada uma no mapa de mesas e tente de novo.</p>
-            <ul className="adm-list">
-              {inUse.appointments.map((a) => <li key={a.id}><span>Mesa {a.tableNumber} · {formatTime(a.startAt)}</span><span>{a.mentorName} com {a.menteeName}</span></li>)}
-            </ul>
-            <LinkButton to="/admin/mapa">Abrir mapa de mesas</LinkButton>
           </div>
         )}
       </Overlay>

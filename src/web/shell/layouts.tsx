@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { Role } from '@tw/shared';
 import { Brand } from '../ui/components/Layout';
 import { Overlay } from '../ui/components/Overlay';
@@ -85,15 +85,26 @@ export const ADMIN_ITEMS: readonly AdminItem[] = [
 ];
 
 function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
-  const { hasRole, logout } = useAuth();
+  const { hasRole } = useAuth();
   const items = ADMIN_ITEMS.filter((i) => !i.roles || hasRole(...i.roles));
   return (
     <ul className="tw-navlist">
       {items.map((i) => (
-        <li key={i.to}><NavLink to={i.to} end={i.end} onClick={onNavigate}>{i.label}</NavLink></li>
+        <li key={i.to}><NavLink to={i.to} end={i.end} onClick={onNavigate}><span className="tw-navlist__dot" aria-hidden="true" />{i.label}</NavLink></li>
       ))}
-      <li><button type="button" onClick={() => void logout()}>Sair</button></li>
     </ul>
+  );
+}
+
+/** Rodapé do menu do admin (design: "Ir para a Área da mentora →" e quem está logada). */
+function AdminSideFoot() {
+  const { user, hasRole, logout } = useAuth();
+  return (
+    <div className="tw-sidebar__foot">
+      {hasRole('mentor') && <Link to="/mentora/aguardando" className="tw-sidebar__switch">Ir para a Área da mentora →</Link>}
+      {user && <span className="tw-sidebar__who">{user.name.split(' ')[0]} · {hasRole('super_admin') ? 'Super admin' : 'Admin'}</span>}
+      <button type="button" className="tw-sidebar__logout" onClick={() => void logout()}>Sair</button>
+    </div>
   );
 }
 
@@ -110,8 +121,9 @@ export function AdminLayout(): ReactNode {
   return (
     <div className="tw-admin">
       <aside className="tw-sidebar" aria-label="Menu do painel admin">
-        <Brand to="/admin" />
+        <div className="tw-sidebar__brand"><Brand to="/admin" /><span>Painel da mentoria</span></div>
         <nav aria-label="Painel admin"><AdminNav /></nav>
+        <AdminSideFoot />
       </aside>
       <div className="tw-admin__col">
         <header className="tw-topbar">
@@ -125,7 +137,7 @@ export function AdminLayout(): ReactNode {
         <main className="tw-main"><Outlet /></main>
       </div>
       <Overlay title="Menu" open={open} onClose={() => setOpen(false)} side>
-        <nav className="tw-drawer-nav" aria-label="Painel admin"><AdminNav onNavigate={() => setOpen(false)} /></nav>
+        <nav className="tw-drawer-nav" aria-label="Painel admin"><AdminNav onNavigate={() => setOpen(false)} /><AdminSideFoot /></nav>
       </Overlay>
     </div>
   );

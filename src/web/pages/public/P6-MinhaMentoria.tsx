@@ -2,11 +2,10 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom';
 import { ENDPOINTS, type E03Response, type PreferredPeriod } from '@tw/shared';
 import {
-  ApiError, type BodyOf, Button, Card, Countdown, ErrorState, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList,
-  StatusBadge, PriorityBadge, TextField, call, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useToast, usePolling,
+  ApiError, type BodyOf, Button, Card, Countdown, ErrorState, ExternalButton, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList,
+  StatusBadge, PriorityBadge, TextField, call, endpointUrl, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useToast, usePolling,
 } from '../../ui';
 import { FALLBACK_AREAS } from './lib/areas';
-import { buildIcs, downloadIcs } from './lib/format';
 import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
 import './public.css';
 
@@ -228,10 +227,8 @@ export default function P6MinhaMentoria() {
             {ap.mentor.linkedin && <a className="tw-link" href={li(ap.mentor.linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
           </div>
         </Card>
-        <Button variant="mint" block data-testid="p6-ics" onClick={() => downloadIcs('mentoria-tech-woman.ics', buildIcs({
-          uid: `${ap.id}`, startAt: ap.slot.startAt, endAt: ap.slot.endAt, summary: `Mentoria Tech Woman com ${ap.mentor.name}`,
-          location: tableLabel(ap.table), description: `Mentoria de ${ap.durationMinutes} min com ${ap.mentor.name}. Chegue 5 minutos antes.`,
-        }))}>Adicionar à agenda (.ics)</Button>
+        <ExternalButton variant="mint" block data-testid="p6-ics" download="mentoria-tech-woman.ics"
+          href={endpointUrl(ENDPOINTS.E06, { query: { t: getMenteeToken() ?? '' } })}>Adicionar à agenda (.ics)</ExternalButton>
         <Button variant="danger-link" block onClick={() => setConfirmCancel(true)} data-testid="p6-cancel">Cancelar mentoria</Button>
       </>
     );

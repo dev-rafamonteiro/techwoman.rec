@@ -27,23 +27,35 @@
   .tw-topnav a[aria-current='page'] { background: var(--tw-plum-800); box-shadow: inset 0 -3px 0 var(--tw-orange-500); }
 }
 
-/* Admin: menu lateral (>=1024), gaveta no menor */
-.tw-admin { display: flex; min-height: 100dvh; background: var(--color-bg); }
+/* Admin: menu lateral (>=1024), gaveta no menor. Visual do design (design/admin/A1-dashboard.html). */
+.tw-admin { display: flex; min-height: 100dvh; background: var(--color-bg); font-size: 15px; line-height: 1.5; }
 .tw-sidebar { display: none; }
 .tw-admin__col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.tw-navlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.tw-navlist a, .tw-navlist button { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--touch-target); padding: 0 var(--space-4); border-radius: var(--radius-md); border: 0; background: transparent; color: var(--tw-white); font-family: inherit; font-weight: 700; font-size: var(--text-md); text-decoration: none; text-align: left; cursor: pointer; }
-.tw-navlist a[aria-current='page'] { background: var(--tw-plum-800); box-shadow: inset 4px 0 0 var(--tw-orange-500); }
-.tw-navlist a:hover, .tw-navlist button:hover { background: var(--tw-plum-900); }
+.tw-navlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.tw-navlist a { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 0; background: transparent; color: var(--tw-lilac-150); font-family: inherit; font-weight: 700; font-size: 15px; text-decoration: none; text-align: left; cursor: pointer; }
+.tw-navlist__dot { width: 8px; height: 8px; border-radius: 2px; background: var(--tw-plum-600); flex: none; }
+.tw-navlist a[aria-current='page'] { background: var(--tw-orange-500); color: var(--tw-plum-950); }
+.tw-navlist a[aria-current='page'] .tw-navlist__dot { background: var(--tw-plum-950); }
+.tw-navlist a:not([aria-current='page']):hover { background: var(--tw-plum-900); color: var(--tw-white); }
+.tw-sidebar__brand { display: flex; flex-direction: column; padding: 0 8px; }
+.tw-sidebar__brand .tw-brand__tech { font-size: 12px; }
+.tw-sidebar__brand .tw-brand__woman { font-size: 22px; }
+.tw-sidebar__brand > span { font-size: 12px; font-weight: 700; color: var(--tw-lilac-150); margin-top: 6px; }
+.tw-sidebar__foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px; }
+.tw-sidebar__switch { color: var(--tw-mint-200); font-weight: 700; font-size: 14px; }
+.tw-sidebar__who { font-size: 13px; color: var(--tw-lilac-150); }
+.tw-sidebar__logout { align-self: flex-start; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--tw-plum-600); background: transparent; color: var(--tw-lilac-150); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
+.tw-sidebar__logout:hover { background: var(--tw-plum-900); color: var(--tw-white); }
 .tw-menubtn { min-height: var(--touch-target); min-width: var(--touch-target); border: 0; border-radius: var(--radius-md); background: var(--tw-plum-800); color: var(--tw-white); font-size: 22px; cursor: pointer; }
-.tw-drawer-nav { background: var(--tw-plum-950); border-radius: var(--radius-lg); padding: var(--space-3); }
+.tw-drawer-nav { background: var(--tw-plum-950); border-radius: var(--radius-lg); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-4); }
+.tw-admin .tw-page { max-width: none; padding: 28px 32px 48px; }
+.tw-admin .tw-page.tw-stack { gap: 24px; }
+@media (max-width: 767px) { .tw-admin .tw-page { padding: 20px var(--page-gutter) 40px; } }
 @media (min-width: 1024px) {
-  .tw-sidebar { display: flex; flex-direction: column; gap: var(--space-4); width: var(--sidebar-w); flex: none; background: var(--tw-plum-950); padding: var(--space-5) var(--space-3); position: sticky; top: 0; height: 100dvh; overflow: auto; }
+  .tw-sidebar { display: flex; flex-direction: column; gap: 20px; width: 232px; flex: none; background: var(--tw-plum-950); padding: 20px 14px; position: sticky; top: 0; height: 100dvh; overflow: auto; }
   .tw-menubtn { display: none; }
-  .tw-admin .tw-topbar { background: var(--tw-white); border-bottom: 1px solid var(--color-border); }
-  .tw-admin .tw-topbar .tw-brand { display: none; }
-  .tw-admin .tw-topbar__title { color: var(--color-ink); }
-  .tw-admin .tw-areaswitch { background: var(--tw-lilac-50); color: var(--color-ink); border-color: var(--color-border); }
+  /* No desktop o menu lateral já tem marca e navegação: sem barra no topo (como no design). */
+  .tw-admin .tw-topbar { display: none; }
 }
 
 @media (max-width: 767px) {

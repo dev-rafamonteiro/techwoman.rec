@@ -1,0 +1,152 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, cadastro de mentora</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,input,select,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · Super admin</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<a href="AdminMentoras.dc.html" style="font-weight: 700; font-size: 14px; padding: 6px 0">← Mentoras</a>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Nova mentora</h1>
+<span style="color: #5E3A66">O e-mail é o login dela. A senha provisória é gerada ao salvar.</span>
+</div>
+
+<sc-if value="{{salvo}}" hint-placeholder-val="{{ false }}">
+<div role="alertdialog" aria-label="Senha provisória gerada" style="background: #3D0A45; color: #FFFFFF; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 18px; color: #C9F4EE">Mentora cadastrada!</span>
+<span style="color: #F1D9F5">Esta é a senha provisória de Ana Ribeiro. <strong style="color: #FFFFFF">Não será mostrada de novo.</strong></span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 18px; background: #5B1466; padding: 12px 16px; border-radius: 12px; letter-spacing: 0.06em">{{senhaTxt}}</span>
+<button type="button" sc-camel-on-click="{{verSenha}}" style="cursor: pointer; min-height: 44px; border: 2px solid #D98CE6; border-radius: 999px; background: transparent; color: #FFFFFF; font-weight: 700; padding: 0 14px">{{verLabel}}</button>
+<button type="button" sc-camel-on-click="{{copiar}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 16px">{{copiarLabel}}</button>
+<button type="button" sc-camel-on-click="{{enviar}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #C9F4EE; color: #1F4A44; font-weight: 800; padding: 0 16px">{{enviarLabel}}</button>
+</div>
+<a href="AdminMentoras.dc.html" style="color: #C9F4EE; font-weight: 700">Voltar para a lista</a>
+</div>
+</sc-if>
+
+<form aria-label="Cadastro de mentora" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<div style="flex: 1 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Dados</h2>
+<sc-for list="{{campos}}" as="c" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="{{c.id}}" style="font-weight: 700">{{c.label}} <span style="font-weight: 500; color: #5E3A66">{{c.nota}}</span></label>
+<input id="{{c.id}}" type="{{c.type}}" value="{{c.valor}}" placeholder="{{c.ph}}" style="min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 12px; font-size: 15px; color: #3D0A45; width: 100%">
+</div>
+</sc-for>
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="font-weight: 700; padding: 0; margin-bottom: 8px">Áreas de atuação</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{areas}}" as="a" hint-placeholder-count="6">
+<button type="button" aria-pressed="{{a.pressed}}" sc-camel-on-click="{{a.toggle}}" style="cursor: pointer; min-height: 40px; border-radius: 999px; border: 2px solid {{a.border}}; background: {{a.bg}}; color: {{a.fg}}; font-weight: 700; font-size: 14px; padding: 0 14px">{{a.label}}</button>
+</sc-for>
+</div>
+</fieldset>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f-bio" style="font-weight: 700">Mini bio <span style="font-weight: 500; color: #5E3A66">(opcional)</span></label>
+<textarea id="f-bio" rows="3" maxlength="200" value="{{bio}}" sc-camel-on-change="{{onBio}}" style="box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 10px 12px; font-size: 15px; color: #3D0A45; resize: vertical; width: 100%"></textarea>
+<span style="font-size: 13px; color: #5E3A66; text-align: right">{{bioCont}}/200</span>
+</div>
+<div style="display: flex; align-items: center; gap: 14px">
+<span aria-hidden="true" style="width: 56px; height: 56px; border-radius: 50%; background: #F6E4F8; border: 2px dashed #D98CE6"></span>
+<button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 700; padding: 0 14px">Enviar foto (opcional)</button>
+</div>
+<label style="display: flex; gap: 10px; align-items: center; min-height: 44px; background: #F6E4F8; border-radius: 12px; padding: 0 12px; cursor: pointer">
+<input type="checkbox" style="width: 20px; height: 20px; accent-color: #8A1F96; margin: 0">
+<span style="font-weight: 700">Também é admin</span><span style="font-size: 13px; color: #5E3A66">· só super admin vê esta opção</span>
+</label>
+</div>
+
+<div style="flex: 1 1 340px; min-width: 0; background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Disponibilidade inicial</h2>
+<span style="font-size: 13px; color: #5E3A66">{{totalDisp}} de 12</span>
+</div>
+<span style="font-size: 13px; color: #5E3A66">A mentora pode ajustar depois, pelo celular.</span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{slots}}" as="s" hint-placeholder-count="12">
+<button type="button" role="switch" aria-checked="{{s.on}}" sc-camel-on-click="{{s.toggle}}" style="cursor: pointer; min-height: 48px; border-radius: 12px; border: 2px solid {{s.border}}; background: {{s.bg}}; color: {{s.fg}}; font-weight: 800; font-size: 14px">{{s.hora}}</button>
+</sc-for>
+</div>
+</div>
+
+<div style="flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end">
+<a href="AdminMentoras.dc.html" style="text-decoration: none; min-height: 48px; box-sizing: border-box; display: inline-flex; align-items: center; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 22px">Cancelar</a>
+<button type="button" sc-camel-on-click="{{salvar}}" style="cursor: pointer; min-height: 48px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; font-size: 15px; padding: 0 24px">Salvar e gerar senha</button>
+</div>
+</form>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;estado&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;novo&quot;,&quot;options&quot;:[&quot;novo&quot;,&quot;senha-gerada&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1500}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminParticipantes.dc.html'], ['Mapa de mesas', 'AdminMapa.dc.html'], ['Mentoras', 'AdminMentoras.dc.html'], ['Mesas', 'AdminMesas.dc.html'], ['Evento', 'AdminEvento.dc.html'], ['Administradores', 'AdminUsuarios.dc.html'], ['Logs', 'AdminLogs.dc.html']];
+function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var AREAS = ['Backend', 'Frontend', 'Dados', 'UX & Design', 'Produto', 'Cloud & Infraestrutura'];
+var SLOTS = ['9h00', '9h45', '10h30', '11h15', '12h00', '12h45', '13h30', '14h15', '15h00', '15h45', '16h30', '17h15'];
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { areas: { 'Backend': true, 'Cloud & Infraestrutura': true }, disp: { 0: 1, 1: 1, 2: 1, 3: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1 }, bio: 'Tech lead de backend, apaixonada por arquitetura de sistemas e por formar times.', salvo: props.estado === 'senha-gerada', ver: false, copiado: false, enviado: false }; }
+  componentDidUpdate(prev) { if (prev.estado !== this.props.estado) this.setState({ salvo: this.props.estado === 'senha-gerada' }); }
+  renderVals() {
+    var self = this, st = this.state, total = 0;
+    var slots = SLOTS.map(function (h, i) {
+      var on = !!st.disp[i]; if (on) total++;
+      return { hora: h, on: on ? 'true' : 'false', border: on ? '#8A1F96' : '#EBCFF0', bg: on ? '#F6E4F8' : '#FFFFFF', fg: on ? '#3D0A45' : '#5E3A66',
+        toggle: function () { var d = Object.assign({}, self.state.disp); d[i] = !d[i]; self.setState({ disp: d }); } };
+    });
+    return {
+      menu: menu('Mentoras'),
+      campos: [
+        { id: 'f-nome', label: 'Nome completo', nota: '', type: 'text', valor: 'Ana Ribeiro', ph: '' },
+        { id: 'f-email', label: 'E-mail', nota: '(login)', type: 'email', valor: 'ana.ribeiro@email.com', ph: '' },
+        { id: 'f-li', label: 'LinkedIn', nota: '', type: 'text', valor: 'linkedin.com/in/ana', ph: '' },
+        { id: 'f-org', label: 'Organização', nota: '(uso interno, nunca aparece para a participante)', type: 'text', valor: '', ph: 'Onde ela trabalha' }
+      ],
+      areas: AREAS.map(function (a) { var on = !!st.areas[a]; return { label: a, pressed: on ? 'true' : 'false', border: on ? '#8A1F96' : '#EBCFF0', bg: on ? '#8A1F96' : '#FFFFFF', fg: on ? '#FFFFFF' : '#3D0A45',
+        toggle: function () { var x = Object.assign({}, self.state.areas); x[a] = !x[a]; self.setState({ areas: x }); } }; }),
+      bio: st.bio, bioCont: st.bio.length, onBio: function (e) { self.setState({ bio: e.target.value.slice(0, 200) }); },
+      slots: slots, totalDisp: total,
+      salvo: st.salvo, salvar: function () { self.setState({ salvo: true }); },
+      senhaTxt: st.ver ? 'lilas-mesa-3851' : '••••••••••••••',
+      verLabel: st.ver ? 'Ocultar' : 'Mostrar', verSenha: function () { self.setState({ ver: !self.state.ver }); },
+      copiarLabel: st.copiado ? 'Copiada ✓' : 'Copiar', copiar: function () { self.setState({ copiado: true }); },
+      enviarLabel: st.enviado ? 'Enviada ✓' : 'Enviar por e-mail', enviar: function () { self.setState({ enviado: true }); }
+    };
+  }
+}
+</script>
+
+
+</body></html>

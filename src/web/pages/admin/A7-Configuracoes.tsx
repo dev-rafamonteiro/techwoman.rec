@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ENDPOINTS, type E41PutBody, type EventConfig } from '@tw/shared';
-import { ApiError, Button, ErrorState, SkeletonList, Card, SlotToggleGrid, TextArea, TextField, call, callBlob, endpointUrl, saveBlob, useQuery, useToast } from '../../ui';
+import { ApiError, ErrorState, SkeletonList, Overlay, SelectField, TextArea, TextField, call, callBlob, endpointUrl, saveBlob, useQuery, useToast } from '../../ui';
 import { PageHead, Switch, errMsg, useTitle } from './lib/common';
+import './lib/a7-a9.css';
 
-type Draft = Omit<EventConfig, 'id' | 'slots'>;
+/** `emailSubjects` (assuntos dos 6 layouts) é do contrato de E41 combinado com o backend; ids de src/api/notifications/templates/email/subjects.ts. */
+type EmailLayoutId = '01-inscricao-recebida' | '02-convite-horario' | '03-confirmacao' | '04-convite-expirado' | '05-cancelamento-mentora' | '06-acesso-mentora';
+type Draft = Omit<EventConfig, 'id' | 'slots'> & { emailSubjects?: Partial<Record<EmailLayoutId, string>> };
+const EMAIL_LAYOUTS: [EmailLayoutId, string][] = [
+  ['01-inscricao-recebida', 'Inscrição recebida'], ['02-convite-horario', 'Convite de horário'], ['03-confirmacao', 'Confirmação'],
+  ['04-convite-expirado', 'Convite expirado'], ['05-cancelamento-mentora', 'Cancelamento pela mentora'], ['06-acesso-mentora', 'Acesso da mentora'],
+];
 const TEMPLATE_LABELS: [keyof EventConfig['templates'], string][] = [
   ['registered', 'Inscrição recebida'], ['invite', 'Convite de horário'], ['confirmed', 'Confirmação'],
   ['reminder', 'Lembrete'], ['expired', 'Convite expirado'], ['cancelled', 'Cancelamento pela mentora'],
@@ -29,6 +36,18 @@ export default function A7Configuracoes() {
   const lock = useQuery((s) => call(ENDPOINTS.E38, { signal: s }), []);
   const [d, setD] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewId, setPreviewId] = useState<EmailLayoutId>('01-inscricao-recebida');
+  const [preview, setPreview] = useState<{ subject: string; html: string; error: string }>({ subject: '', html: '', error: '' });
+  useEffect(() => {
+    if (!previewOpen) return;
+    const ctrl = new AbortController();
+    setPreview({ subject: '', html: '', error: '' });
+    call(ENDPOINTS.E46, { params: { tipo: previewId }, signal: ctrl.signal })
+      .then((j) => setPreview({ subject: j.subject, html: j.html, error: '' }))
+      .catch((e) => { if (!ctrl.signal.aborted) setPreview({ subject: '', html: '', error: 'Não foi possível carregar a prévia.' }); void e; });
+    return () => ctrl.abort();
+  }, [previewOpen, previewId]);
   const [gridError, setGridError] = useState('');
   const lockRef = useRef<HTMLDivElement>(null);
   useEffect(() => { if (gridError) lockRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, [gridError]);
@@ -37,10 +56,12 @@ export default function A7Configuracoes() {
     if (q.status === 'success') { const { id: _i, slots: _s, ...rest } = q.data.event; setD(rest); }
   }, [q.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasActive = lock.status === 'success' && lock.data.appointments.some((a) => ['invited', 'confirmed', 'in_progress'].includes(a.status));
+  const activeCount = lock.status === 'success' ? lock.data.appointments.filter((a) => ['invited', 'confirmed', 'in_progress'].includes(a.status)).length : 0;
+  const hasActive = activeCount > 0;
+  const [newArea, setNewArea] = useState('');
   const slots = useMemo(() => (d ? previewSlots(d) : []), [d]);
 
-  if (q.status === 'loading' || !d) return q.status === 'error' ? <div className="tw-page"><ErrorState error={q.error} onRetry={q.reload} /></div> : <div className="tw-page"><SkeletonList rows={4} /></div>;
+  if (q.status === 'loading' || !d) return <div className="tw-page tw-stack"><PageHead title="Configurações do evento" sub="Só o super admin vê esta área." />{q.status === 'error' ? <ErrorState error={q.error} onRetry={q.reload} /> : <SkeletonList rows={4} />}</div>;
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((p) => (p ? { ...p, [k]: v } : p));
   const num = (k: 'slotMinutes' | 'gapMinutes' | 'responseWindowMinutes' | 'minLeadMinutes') => (e: React.ChangeEvent<HTMLInputElement>) => set(k, Number(e.target.value));
   const timesInvalid = toMin(d.endTime) <= toMin(d.startTime);
@@ -63,61 +84,131 @@ export default function A7Configuracoes() {
     try { saveBlob(await callBlob(kind === 'png' ? ENDPOINTS.E42Png : ENDPOINTS.E42Svg), `qrcode-inscricao.${kind}`); } catch (e) { toast.error(errMsg(e)); }
   };
 
+  const addArea = () => {
+    const label = newArea.trim();
+    if (!label || d.areas.some((a) => a.label.toLowerCase() === label.toLowerCase())) return;
+    set('areas', [...d.areas, { key: slug(label), label }]);
+    setNewArea('');
+  };
+
   return (
-    <div className="tw-page tw-stack">
-      <PageHead title="Configurações do evento" sub="Só super admin." />
-      {gridError && <div className="adm-note" role="alert" data-testid="grid-locked" ref={lockRef} tabIndex={-1}>{gridError}</div>}
-      {hasActive && <div className="adm-note">Há mentorias ativas: horário, duração e intervalo ficam bloqueados.</div>}
+    <div className="tw-page tw-stack a79 a7">
+      <PageHead title="Configurações do evento" sub="Só o super admin vê esta área.">
+        <button type="button" className="a79-btn a79-btn--o a79-btn--lg" disabled={saving || timesInvalid || d.areas.length === 0} aria-busy={saving || undefined} onClick={() => void save()}>
+          {saving && <span className="tw-spinner" aria-hidden="true" />}Salvar configurações
+        </button>
+      </PageHead>
+      {gridError && <div className="a79-alert" role="alert" data-testid="grid-locked" ref={lockRef} tabIndex={-1}>{gridError}</div>}
 
-      <Card className="tw-stack"><b>Evento</b><div className="adm-form">
-        <TextField label="Nome do evento" value={d.name} onChange={(e) => set('name', e.target.value)} />
-        <TextField label="Data" type="date" value={d.date} onChange={(e) => set('date', e.target.value)} />
-        <TextField label="Local" optional value={d.location ?? ''} onChange={(e) => set('location', e.target.value || null)} />
-        <TextField label="Fuso horário" value={d.timezone} onChange={(e) => set('timezone', e.target.value)} />
-        <TextField label="Início" type="time" value={d.startTime} disabled={hasActive} onChange={(e) => set('startTime', e.target.value)} />
-        <TextField label="Fim" type="time" value={d.endTime} disabled={hasActive} onChange={(e) => set('endTime', e.target.value)} error={timesInvalid ? 'O fim deve ser depois do início.' : undefined} />
-        <TextField label="Duração da sessão (min)" type="number" min={5} max={180} value={d.slotMinutes} disabled={hasActive} onChange={num('slotMinutes')} />
-        <TextField label="Intervalo entre sessões (min)" type="number" min={0} max={60} value={d.gapMinutes} disabled={hasActive} onChange={num('gapMinutes')} />
-      </div>
-        <div aria-live="polite" data-testid="grid-preview"><b>Prévia da grade</b>
-          {slots.length === 0 ? <p>Nenhum horário cabe nesses valores.</p> : (
-            <SlotToggleGrid legend="Prévia da grade de horários" disabled caption="Horário gerado" selected={new Set()} onToggle={() => undefined} slots={slots.map((l) => ({ id: l, label: l.split(' – ')[0]! }))} />
-          )}
+      <div className="a7-cols">
+        <div className="a7-main">
+          <section className="a7-sec" aria-labelledby="a7-evento">
+            <h2 id="a7-evento">Evento</h2>
+            <div className="a7-grid">
+              <TextField label="Nome" value={d.name} onChange={(e) => set('name', e.target.value)} />
+              <TextField label="Data" type="date" value={d.date} onChange={(e) => set('date', e.target.value)} />
+              <TextField label="Local" optional value={d.location ?? ''} onChange={(e) => set('location', e.target.value || null)} />
+              <TextField label="Fuso" value={d.timezone} onChange={(e) => set('timezone', e.target.value)} />
+            </div>
+            <div className="a7-insc" data-on={d.registrationOpen}>
+              <span className="a7-insc__txt">
+                <strong>Inscrições {d.registrationOpen ? 'abertas' : 'fechadas'}</strong>
+                <span>Fechadas, o formulário mostra um aviso e não aceita novas inscrições.</span>
+              </span>
+              <Switch label="Inscrições abertas" checked={d.registrationOpen} onChange={(v) => set('registrationOpen', v)} />
+            </div>
+          </section>
+
+          <section className="a7-sec" aria-labelledby="a7-grade">
+            <div className="a7-sec__head"><h2 id="a7-grade">Grade de sessões</h2><span className="a79-hint">Fuso {d.timezone}</span></div>
+            {hasActive && (
+              <div className="a7-lock" role="status">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+                Há {activeCount} {activeCount === 1 ? 'mentoria ativa' : 'mentorias ativas'}: horário, duração e intervalo ficam bloqueados.
+              </div>
+            )}
+            <div className="a7-grid a7-grid--4">
+              <TextField label="Hora de início" type="time" value={d.startTime} disabled={hasActive} onChange={(e) => set('startTime', e.target.value)} />
+              <TextField label="Hora de fim" type="time" value={d.endTime} disabled={hasActive} onChange={(e) => set('endTime', e.target.value)} error={timesInvalid ? 'O fim deve ser depois do início.' : undefined} />
+              <TextField label="Duração da sessão (min)" type="number" min={5} max={180} value={d.slotMinutes} disabled={hasActive} onChange={num('slotMinutes')} />
+              <TextField label="Intervalo entre sessões (min)" type="number" min={0} max={60} value={d.gapMinutes} disabled={hasActive} onChange={num('gapMinutes')} />
+            </div>
+            <div className="a7-preview" aria-live="polite" data-testid="grid-preview">
+              <strong>Prévia: {slots.length} {slots.length === 1 ? 'sessão' : 'sessões'} no dia</strong>
+              {slots.length === 0 ? <p className="a79-hint" style={{ margin: 0 }}>Nenhum horário cabe nesses valores.</p> : (
+                <ul className="a7-chips" aria-label="Prévia da grade de horários">{slots.map((l) => <li key={l} title={l}>{l.split(' – ')[0]}</li>)}</ul>
+              )}
+            </div>
+          </section>
+
+          <section className="a7-sec" aria-labelledby="a7-convites">
+            <h2 id="a7-convites">Convites</h2>
+            <div className="a7-grid a7-grid--2">
+              <TextField label="Prazo para responder (min)" type="number" min={1} max={120} value={d.responseWindowMinutes} onChange={num('responseWindowMinutes')} />
+              <TextField label="Antecedência mínima do convite (min)" type="number" min={0} max={120} value={d.minLeadMinutes} onChange={num('minLeadMinutes')} />
+            </div>
+          </section>
+
+          <section className="a7-sec" aria-labelledby="a7-areas" style={{ gap: 12 }}>
+            <h2 id="a7-areas">Áreas disponíveis</h2>
+            <ul className="a7-areas">
+              {d.areas.map((a, i) => (
+                <li key={a.key || i} className="a7-area">{a.label}
+                  <button type="button" disabled={d.areas.length <= 1} aria-label={`Remover área ${a.label}`} onClick={() => set('areas', d.areas.filter((_, j) => j !== i))}>×</button>
+                </li>
+              ))}
+            </ul>
+            <div className="a7-addarea">
+              <label htmlFor="a7-nova-area" className="a79-sr">Nova área</label>
+              <input id="a7-nova-area" className="tw-input" placeholder="Nova área" maxLength={60} value={newArea} onChange={(e) => setNewArea(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addArea(); } }} />
+              <button type="button" className="a79-btn a79-btn--line" onClick={addArea}>Adicionar</button>
+            </div>
+          </section>
+
+          <section className="a7-sec" aria-labelledby="a7-assuntos">
+            <div className="a7-sec__head"><h2 id="a7-assuntos">Assuntos dos e-mails</h2><span className="a79-hint">Só o assunto é editável. O HTML dos 6 e-mails é fixo no código.</span></div>
+            <div className="a7-subjects">
+              {EMAIL_LAYOUTS.map(([id, label]) => (
+                <TextField key={id} label={label} maxLength={200} value={d.emailSubjects?.[id] ?? ''} data-testid={`subject-${id}`}
+                  onChange={(e) => set('emailSubjects', { ...d.emailSubjects, [id]: e.target.value })} />
+              ))}
+            </div>
+            <div><button type="button" className="a79-btn a79-btn--line" onClick={() => setPreviewOpen(true)} data-testid="email-preview-open">Prévia dos e-mails</button></div>
+          </section>
+
+          <section className="a7-sec" aria-labelledby="a7-msgs">
+            <div className="a7-sec__head"><h2 id="a7-msgs">Textos do WhatsApp</h2><span className="a79-hint">Variáveis: {'{nome}'} {'{mentora}'} {'{mesa}'} {'{horario}'}</span></div>
+            <div className="a7-msgs">
+              {TEMPLATE_LABELS.map(([k, label]) => (
+                <TextArea key={k} label={label} rows={2} maxLength={1000} value={d.templates[k]} onChange={(e) => set('templates', { ...d.templates, [k]: e.target.value })} />
+              ))}
+            </div>
+          </section>
         </div>
-      </Card>
-      <Card className="tw-stack"><b>Convites</b><div className="adm-form">
-        <TextField label="Prazo para responder ao convite (min)" type="number" min={1} max={120} value={d.responseWindowMinutes} onChange={num('responseWindowMinutes')} />
-        <TextField label="Antecedência mínima do convite (min)" type="number" min={0} max={120} value={d.minLeadMinutes} onChange={num('minLeadMinutes')} />
-        <div className="adm-wide"><Switch label="Inscrições abertas" checked={d.registrationOpen} onChange={(v) => set('registrationOpen', v)} /></div>
-      </div>
-        <div className="tw-stack"><b>Áreas disponíveis</b>
+
+        <section className="a7-qr" data-testid="qr" aria-labelledby="a7-qr">
+          <h2 id="a7-qr">QR Code da inscrição</h2>
+          <div className="a7-qr__img"><img src={endpointUrl(ENDPOINTS.E42Svg)} alt="QR Code da página de inscrição" /></div>
+          <span className="a7-qr__hint">Leva para a página de inscrição na mentoria.</span>
           <div className="tw-row">
-            {d.areas.map((a, i) => (
-              <button key={a.key || i} type="button" className="adm-chip adm-chip--on" disabled={d.areas.length <= 1} aria-label={`Remover área ${a.label}`} onClick={() => set('areas', d.areas.filter((_, j) => j !== i))}>{a.label} ✕</button>
-            ))}
-            <button type="button" className="adm-chip" onClick={() => { const label = window.prompt('Nome da nova área')?.trim(); if (label) set('areas', [...d.areas, { key: slug(label), label }]); }}>+ Adicionar</button>
+            <button type="button" className="a79-btn a79-btn--o" onClick={() => void qr('png')}>Baixar PNG</button>
+            <button type="button" className="a79-btn a79-btn--line" onClick={() => void qr('svg')}>Baixar SVG</button>
           </div>
+        </section>
+      </div>
+
+      <Overlay title="Prévia dos e-mails" open={previewOpen} onClose={() => setPreviewOpen(false)}>
+        <div className="tw-stack" data-testid="email-preview">
+          <SelectField label="Layout" value={previewId} onChange={(e) => setPreviewId(e.target.value as EmailLayoutId)}>
+            {EMAIL_LAYOUTS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+          </SelectField>
+          {preview.error && <p role="alert">{preview.error}</p>}
+          {preview.subject && <p><b>Assunto:</b> {preview.subject}</p>}
+          <iframe title={`Prévia do e-mail ${EMAIL_LAYOUTS.find(([id]) => id === previewId)?.[1] ?? ''}`} sandbox="" srcDoc={preview.html}
+            style={{ width: '100%', height: '70vh', border: '1px solid var(--tw-border, #ddd)', borderRadius: 8, background: '#fff' }} />
+          <small className="tw-field__hint">Dados de exemplo.</small>
         </div>
-      </Card>
-
-      
-
-      
-
-      <Card className="tw-stack"><b>Mensagens</b><div className="adm-form">
-        <p className="adm-wide adm-sub">Variáveis: {'{nome}'}, {'{mentora}'}, {'{mesa}'}, {'{horario}'}.</p>
-        {TEMPLATE_LABELS.map(([k, label]) => (
-          <TextArea key={k} label={label} maxLength={1000} value={d.templates[k]} onChange={(e) => set('templates', { ...d.templates, [k]: e.target.value })} />
-        ))}
-      </div></Card>
-
-      <Card className="tw-stack"><div data-testid="qr" className="tw-stack">
-        <b>QR Code da inscrição</b>
-        <img className="adm-qr" src={endpointUrl(ENDPOINTS.E42Svg)} alt="QR Code da página de inscrição" />
-        <div className="tw-row"><Button variant="secondary" onClick={() => void qr('png')}>Baixar PNG</Button><Button variant="secondary" onClick={() => void qr('svg')}>Baixar SVG</Button></div>
-      </div></Card>
-
-      <div><Button loading={saving} disabled={timesInvalid || d.areas.length === 0} onClick={() => void save()}>Salvar configurações</Button></div>
+      </Overlay>
     </div>
   );
 }

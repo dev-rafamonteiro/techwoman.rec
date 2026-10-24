@@ -3,15 +3,19 @@ import { Link } from 'react-router-dom';
 import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E22Response, type MenteeStaffView, type MentorStreamEvent, type PreferredPeriod } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, ConnectionBar, EmptyState, ErrorState, MenteeCard, PERIOD_LABELS, SelectField, SkeletonList,
-  TextField, call, formatTime, useAuth, useEventStream, usePolling, useQuery,
+  TextField, call, formatDayShort, formatTime, useAuth, useEventStream, usePolling, useQuery,
 } from '../../ui';
 import { FALLBACK_AREAS } from '../public/lib/areas';
 import { M5ScheduleDrawer } from './M5ScheduleDrawer';
 import '../public/public.css';
+import './mentora.css';
+import './m4.css';
 
 const LEAVE_MS = 350;
 /** Frames de controle do E27: `degraded` = cair para polling de 10 s; `resync` = recarregar tudo. */
 type ControlEvent = { type: 'degraded' | 'resync'; data: unknown };
+const SEARCH_MIN = 2;
+const SEARCH_MAX = 200;
 const sortQueue = (a: MenteeStaffView, b: MenteeStaffView) =>
   Number(b.priority) - Number(a.priority) || new Date(a.queuedAt).getTime() - new Date(b.queuedAt).getTime();
 
@@ -30,7 +34,7 @@ export default function M4Aguardando() {
   const [panel, setPanel] = useState<'areas' | 'period' | null>(null);
   const [q, setQ] = useState('');
   useEffect(() => {
-    const t = setTimeout(() => setQ(search.trim()), 300);
+    const t = setTimeout(() => setQ(search.trim().length >= SEARCH_MIN ? search.trim().slice(0, SEARCH_MAX) : ''), 300);
     return () => clearTimeout(t);
   }, [search]);
 
@@ -90,9 +94,10 @@ export default function M4Aguardando() {
       .sort((a, b) => a.startAt.localeCompare(b.startAt))[0] ?? null;
   }, [agenda, nowMs]);
 
+  // Com busca a lista é ranqueada pelo servidor: eventos só atualizam/removem quem já está na tela.
+  const ranked = !!q;
   const matches = (m: MenteeStaffView) =>
-    (areaFilter.size === 0 || areaFilter.has(m.area)) && (!period || m.preferredPeriod === period) && (!onlyPriority || m.priority) &&
-    (!q || m.name.toLowerCase().includes(q.toLowerCase()));
+    (areaFilter.size === 0 || areaFilter.has(m.area)) && (!period || m.preferredPeriod === period) && (!onlyPriority || m.priority);
 
   const notify = (text: string) => {
     const id = Date.now() + Math.random();
@@ -108,6 +113,7 @@ export default function M4Aguardando() {
       // queue.added é upsert: reaparece quando prioridade ou preferência mudam.
       setItems((p) => {
         const rest = p.filter((x) => x.id !== m.id);
+        if (ranked) return p.some((x) => x.id === m.id) ? p.map((x) => (x.id === m.id ? { ...x, ...m } : x)) : p;
         return matches(m) ? [...rest, m].sort(sortQueue) : rest;
       });
       setMeta((p) => p);
@@ -151,17 +157,23 @@ export default function M4Aguardando() {
   }
 
   const toggleArea = (key: string) => setAreaFilter((p) => { const n = new Set(p); if (n.has(key)) n.delete(key); else n.add(key); return n; });
+  const allAreas = areas.every((a) => areaFilter.has(a.key));
+  const selectAllAreas = () => setAreaFilter(new Set(areas.map((a) => a.key)));
   const filtered = areaFilter.size > 0 || !!period || onlyPriority || !!q;
+  const dayIso = agenda.status === 'success' ? agenda.data.slots[0]?.slot.startAt : undefined;
 
   return (
-    <div className="tw-page tw-stack" data-testid="m4">
-      <header><h1 className="tw-ptitle">Participantes aguardando</h1></header>
-      <div className="tw-darkcard">
-        <strong data-testid="m4-free">Seus horários livres hoje: {meta?.freeSlots ?? '–'}</strong>
-        {next && <span data-testid="m4-next">Próximo atendimento: {formatTime(next.startAt)} · Mesa {next.table.number} · {next.mentee.name.split(' ')[0]}</span>}
-      </div>
-      <ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} />
-
+    <div className="tw-page" data-testid="m4">
+      <header className="mt-hero">
+        <span className="mt-hero__when">{dayIso ? `${formatDayShort(dayIso).replace(/^./, (c) => c.toUpperCase())} · ` : ''}agora {formatTime(new Date(nowMs).toISOString())} · horário de Recife</span>
+        <h1 className="mt-hero__title">Participantes aguardando</h1>
+        <span className="mt-hero__counts" data-testid="m4-free">
+          {loaded ? `${items.length}${nextCursor ? '+' : ''} ${items.length === 1 && !nextCursor ? 'participante' : 'participantes'} na fila · ` : ''}Seus horários livres hoje: {meta?.freeSlots ?? '–'}
+        </span>
+        {next && <span className="mt-hero__next" data-testid="m4-next">Próximo: <b>{formatTime(next.startAt)}</b> · Mesa {next.table.number} · {next.mentee.name.split(' ')[0]}</span>}
+      </header>
+      <div className="mt-live"><ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} /></div>
+      <div className="mt-section">
       {meta && !meta.hasAvailability && (
         <div className="tw-card" role="status" data-testid="m4-no-availability">
           Você ainda não marcou nenhum horário. Marque ao menos um para poder mentorar. <Link className="tw-link" to="/mentora/disponibilidade">Ir para Disponibilidade</Link>
@@ -172,7 +184,10 @@ export default function M4Aguardando() {
       </div>
 
       <div className="tw-stack" style={{ gap: 8 }}>
-        <div className="tw-chips">
+        <div className="m4-search">
+          <TextField label="Buscar por nome ou assunto" placeholder="Buscar por nome ou assunto" type="search" maxLength={SEARCH_MAX} value={search} onChange={(e) => setSearch(e.target.value)} data-testid="m4-search" />
+        </div>
+        <div className="mt-chips">
           <button type="button" className="tw-chip" aria-expanded={panel === 'areas'} aria-pressed={areaFilter.size > 0} onClick={() => setPanel(panel === 'areas' ? null : 'areas')} data-testid="m4-areas">Minhas áreas ▾</button>
           <button type="button" className="tw-chip" aria-expanded={panel === 'period'} aria-pressed={!!period} onClick={() => setPanel(panel === 'period' ? null : 'period')} data-testid="m4-period-chip">Período ▾</button>
           <button type="button" className="tw-chip" aria-pressed={onlyPriority} onClick={() => setOnlyPriority((v) => !v)} data-testid="m4-priority">Só prioridade</button>
@@ -180,6 +195,7 @@ export default function M4Aguardando() {
         {panel === 'areas' && (
           <fieldset className="tw-pop" style={{ margin: 0 }}>
             <legend className="tw-sr-only">Áreas</legend>
+            <CheckboxField label="Todas" checked={allAreas} onChange={() => (allAreas ? setAreaFilter(new Set()) : selectAllAreas())} data-testid="m4-areas-all" />
             {areas.map((a) => <CheckboxField key={a.key} label={a.label} checked={areaFilter.has(a.key)} onChange={() => toggleArea(a.key)} />)}
           </fieldset>
         )}
@@ -191,8 +207,7 @@ export default function M4Aguardando() {
             </SelectField>
           </div>
         )}
-        <TextField label="Buscar por nome" placeholder="Nome da participante" type="search" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="m4-search" />
-        {areaFilter.size > 0 && <button type="button" className="tw-linkbtn" onClick={() => setAreaFilter(new Set())} data-testid="m4-all-areas">Ver todas as áreas</button>}
+        {areaFilter.size > 0 && !allAreas && <button type="button" className="tw-linkbtn m4-allareas" onClick={selectAllAreas} data-testid="m4-all-areas">Ver todas as áreas</button>}
       </div>
 
       {error && !loaded ? (
@@ -203,16 +218,17 @@ export default function M4Aguardando() {
         <EmptyState title="Ninguém aguardando agora" text={filtered ? 'Nenhuma participante com esses filtros.' : 'Novas inscrições aparecem aqui sozinhas.'}
           action={filtered ? <Button variant="secondary" onClick={() => { setAreaFilter(new Set()); setPeriod(''); setOnlyPriority(false); setSearch(''); }}>Limpar filtros</Button> : undefined} />
       ) : (
-        <ul className="tw-stack" style={{ listStyle: 'none', padding: 0, margin: 0 }} data-testid="m4-list">
+        <ul className="m4-list" data-testid="m4-list">
           {items.map((m) => (
-            <li key={m.id}>
+            <li key={m.id} className={m.priority ? 'm4-prio' : undefined}>
               <MenteeCard mentee={m} areaLabel={areaLabel} nowMs={nowMs} leaving={leaving.has(m.id)}
-                actions={<Button block onClick={() => setSelected(m)} disabled={leaving.has(m.id)} data-testid="m4-mentor">Mentorar</Button>} />
+                actions={<Button onClick={() => setSelected(m)} disabled={leaving.has(m.id)} data-testid="m4-mentor">Mentorar</Button>} />
             </li>
           ))}
         </ul>
       )}
       {nextCursor && <Button variant="secondary" block loading={loadingMore} onClick={() => void more()}>Carregar mais</Button>}
+      </div>
 
       <M5ScheduleDrawer open={!!selected} mentee={selected} areaLabel={areaLabel} onClose={() => setSelected(null)}
         onDone={() => { void loadFirst(); void agenda.refetch(); }} />

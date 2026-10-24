@@ -30,6 +30,8 @@ export interface ScheduleDrawerProps {
   submitLabel?: string;
   /** Texto de apoio abaixo do botão. */
   helpText?: string;
+  /** Horário já escolhido ao abrir (ex.: a mentora tocou num horário livre da agenda, M6). Padrão: o preferido dela. */
+  initialSlotId?: string;
 }
 
 /** Mensagem curta por details.reason de SLOT_UNAVAILABLE (RN04). */
@@ -43,7 +45,7 @@ const UNAVAILABLE_TEXT: Record<string, string> = {
 
 const defaultSubmit = ({ menteeId, slotId, tableId }: { menteeId: string; slotId: string; tableId: string }) => call(ENDPOINTS.E24, { body: { menteeId, slotId, tableId } });
 
-export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions, onSubmit = defaultSubmit, mentorId, mentorPicker, warnings, onDone, submitLabel = 'Enviar convite', helpText = 'Ela tem até 15 min para confirmar; se não confirmar, o horário volta a ficar livre.' }: ScheduleDrawerProps) {
+export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions, onSubmit = defaultSubmit, mentorId, mentorPicker, warnings, onDone, initialSlotId, submitLabel = 'Enviar convite', helpText = 'Ela tem até 15 min para confirmar; se não confirmar, o horário volta a ficar livre.' }: ScheduleDrawerProps) {
   const toast = useToast();
   const [opts, setOpts] = useState<E23Response | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
@@ -76,9 +78,9 @@ export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions
       setError(null);
       setSlotId(null);
       setTableId(null);
-      void load();
+      void load(initialSlotId);
     }
-  }, [open, mentee?.id, mentorId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, mentee?.id, mentorId, initialSlotId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!mentee) return null;
   const first = mentee.name.split(' ')[0];
