@@ -4,8 +4,8 @@ import type { AppContext } from '../ctx.js';
 import { loadEvent } from '../ctx.js';
 import { AppError, notFound } from '../lib/errors.js';
 import { writeAudit } from '../lib/audit.js';
-import { enqueueMenteeNotifications } from '../lib/outbox.js';
-import { checkInvite, reminderSendAt, type Actor, type InviteWarning } from '../domain/index.js';
+import { enqueueMenteeNotifications, enqueueReminders } from '../lib/outbox.js';
+import { checkInvite, type Actor, type InviteWarning } from '../domain/index.js';
 import { insertAppointment, newAppointmentDoc } from './appointments.js';
 import { applyTransition } from './transitions.js';
 
@@ -65,7 +65,7 @@ export async function moveAppointment(
   const mentee = await ctx.c.mentees.findOneAndUpdate({ _id: old.menteeId }, { $set: { currentAppointmentId: fresh._id, updatedAt: now }, $inc: { version: 1 } }, { session, returnDocument: 'after' });
   if (!mentee) throw notFound('Participante');
   await enqueueMenteeNotifications(ctx, session, { type: 'moved', mentee, appointmentId: fresh._id });
-  await enqueueMenteeNotifications(ctx, session, { type: 'reminder', mentee, appointmentId: fresh._id, sendAt: reminderSendAt(fresh.startAt, now) });
+  await enqueueReminders(ctx, session, mentee, fresh);
   await writeAudit(ctx, session, { actor: input.actor, action: 'appointment.move_to', entity: 'appointment', entityId: fresh._id, before: { appointmentId: String(old._id), slotId: old.slotId, tableId: String(old.tableId) }, after: { slotId: fresh.slotId, tableId: String(fresh.tableId) }, ip: input.ip ?? null });
   return { appointment: fresh, warnings: check.warnings };
 }

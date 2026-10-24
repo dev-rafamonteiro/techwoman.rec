@@ -44,6 +44,8 @@ export interface EventDoc {
   };
   /** Assuntos de e-mail editados em A7 (por id de layout); ausente = assunto padrão. */
   emailSubjects?: Partial<Record<string, string>>;
+  /** Lembretes antes de cada mentoria (A7); ausente = um lembrete 15 min antes pelo WhatsApp (RN15). */
+  reminders?: { minutesBefore: number; channels: ('email' | 'whatsapp')[] }[];
   consentVersion: string;
   version: number;
   updatedAt: Date;

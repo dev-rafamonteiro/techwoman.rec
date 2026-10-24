@@ -252,6 +252,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Nome, data, local, fuso (America/Recife), hora de início e de fim, duração da sessão (40 min), intervalo entre sessões (5 min). Prévia ao vivo da grade de horários gerada.
 - Prazo para a participante responder ao convite (15 min) e antecedência mínima para convite (10 min antes do horário).
+- Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min pelo WhatsApp. Sem WhatsApp disponível, vai por e-mail.
 - Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario}; botão "Prévia dos e-mails" que abre cada um dos 6 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
 - Alterar a grade com mentorias já marcadas é bloqueado. Dados: **E41**, QR Code: **E42**.
@@ -292,7 +293,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Inscrição recebida | E-mail + WhatsApp | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
 | Convite de horário | E-mail + WhatsApp | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
 | Confirmação | E-mail + WhatsApp | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
-| Lembrete (15 min antes) | WhatsApp | "Sua mentoria começa às {horario} na {mesa}. Te esperamos!" |
+| Lembrete (antes da mentoria, tempos e canais configurados em A7; padrão 15 min) | WhatsApp e/ou e-mail | "Sua mentoria começa às {horario} na {mesa}. Te esperamos!" |
 | Convite expirado | E-mail | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
 | Cancelamento pela mentora | E-mail + WhatsApp | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
 

@@ -188,6 +188,16 @@ export const AuditEntryViewSchema = z.object({
 });
 export type AuditEntryView = z.infer<typeof AuditEntryViewSchema>;
 
+/** Lembretes antes de cada mentoria (A7): até 10, cada um com minutos antes do início e canais. */
+export const MAX_REMINDERS = 10;
+export const ReminderChannelSchema = z.enum(['email', 'whatsapp']);
+export const ReminderRuleSchema = z
+  .object({ minutesBefore: z.number().int().min(1).max(1440), channels: z.array(ReminderChannelSchema).min(1).max(2) })
+  .strict();
+export type ReminderRule = z.infer<typeof ReminderRuleSchema>;
+/** Padrão (RN15): 15 min antes, pelo WhatsApp (e-mail se não houver WhatsApp). */
+export const DEFAULT_REMINDERS: ReminderRule[] = [{ minutesBefore: 15, channels: ['whatsapp'] }];
+
 export const EventConfigSchema = z.object({
   id: z.string(),
   name: z.string().min(1).max(120),
@@ -215,6 +225,12 @@ export const EventConfigSchema = z.object({
     .strict(),
   /** Assuntos dos e-mails que substituem os padrões, por layout (aceitam `{{variavel}}` do layout). */
   emailSubjects: z.partialRecord(EmailPreviewTypeSchema, z.string().trim().min(1).max(200)).optional(),
+  /** Lembretes antes de cada mentoria; ausente = DEFAULT_REMINDERS. Minutos não se repetem. */
+  reminders: z
+    .array(ReminderRuleSchema)
+    .max(MAX_REMINDERS)
+    .refine((r) => new Set(r.map((x) => x.minutesBefore)).size === r.length, { message: 'Cada lembrete precisa de um tempo diferente.' })
+    .optional(),
   version: z.number().int(),
 });
 export type EventConfig = z.infer<typeof EventConfigSchema>;

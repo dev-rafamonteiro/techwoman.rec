@@ -252,7 +252,7 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
 12. **RN12 · Desativar mentora.** Bloqueado enquanto ela tiver mentorias futuras ativas; a API devolve a lista para o admin realocar ou cancelar. Desativar revoga todas as sessões dela.
 13. **RN13 · Mesa sugerida.** Em M5, sugere a mesa da mentoria anterior mais próxima da mentora, se estiver livre no horário escolhido; senão, a mesa livre de menor número.
 14. **RN14 · Período preferido.** Manhã = horários que começam antes de 12h00; início da tarde = 12h00 a 14h59; fim da tarde = 15h00 em diante (horário de Recife). Só pode ser alterado enquanto a participante está `waiting`.
-15. **RN15 · Lembrete.** Ao confirmar, agenda na `outbox` o lembrete para 15 min antes do horário; no envio, o worker confere o status atual e descarta (`skipped`) se não estiver mais `confirmed`.
+15. **RN15 · Lembretes.** Ao confirmar (ou mover), agenda na `outbox` um lembrete por regra configurada em A7 (`events.reminders`: até 10, cada uma com minutos antes do início, de 1 a 1440, e canais e-mail/WhatsApp; padrão: um lembrete 15 min antes pelo WhatsApp). Regras cujo horário já passou são puladas; se todas passaram e a mentoria não começou, sai um só, agora. WhatsApp indisponível (desligado ou sem telefone) cai para e-mail. No envio, o worker confere o status atual e descarta (`skipped`) se não estiver mais `confirmed`. As regras valem para as mentorias confirmadas depois de salvas.
 16. **RN16 · Mudança de grade.** Alterar horários, duração ou intervalo do evento é recusado se existir qualquer mentoria ativa.
 17. **RN17 · Auditoria.** Toda escrita feita por staff e toda mudança de status gera um registro em `audit_logs`.
 
@@ -434,7 +434,7 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
 | Inscrição criada ou link reenviado | `registered` | E-mail, WhatsApp | `registered:<menteeId>:<n>` |
 | Convite criado | `invite` | E-mail, WhatsApp | `invite:<appointmentId>` |
 | Confirmada | `confirmed` | E-mail, WhatsApp | `confirmed:<appointmentId>` |
-| 15 min antes | `reminder` | WhatsApp (e-mail se não houver) | `reminder:<appointmentId>` |
+| Lembretes antes da mentoria (A7, até 10; padrão 15 min) | `reminder` | Canais da regra (WhatsApp sem telefone ou desligado vira e-mail) | `reminder:<appointmentId>:<minutos>` |
 | Convite expirado | `expired` | E-mail | `expired:<appointmentId>` |
 | Cancelada pela mentora/admin ou movida | `cancelled` / `moved` | E-mail, WhatsApp | `cancelled:<appointmentId>` |
 | Senha provisória enviada pelo admin | `staff_password` | E-mail | `pwd:<userId>:<n>` |

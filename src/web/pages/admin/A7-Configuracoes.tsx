@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ENDPOINTS, type E41PutBody, type EventConfig } from '@tw/shared';
+import { DEFAULT_REMINDERS, ENDPOINTS, MAX_REMINDERS, type E41PutBody, type EventConfig, type ReminderRule } from '@tw/shared';
 import { ApiError, ErrorState, SkeletonList, Overlay, SelectField, TextArea, TextField, call, callBlob, endpointUrl, saveBlob, useQuery, useToast } from '../../ui';
 import { PageHead, Switch, errMsg, useTitle } from './lib/common';
 import './lib/a7-a9.css';
@@ -65,6 +65,24 @@ export default function A7Configuracoes() {
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((p) => (p ? { ...p, [k]: v } : p));
   const num = (k: 'slotMinutes' | 'gapMinutes' | 'responseWindowMinutes' | 'minLeadMinutes') => (e: React.ChangeEvent<HTMLInputElement>) => set(k, Number(e.target.value));
   const timesInvalid = toMin(d.endTime) <= toMin(d.startTime);
+  // Lembretes antes de cada mentoria (até 10): tempos de 1 a 1440 min, sem repetir, ao menos um canal cada.
+  const reminders: ReminderRule[] = d.reminders ?? DEFAULT_REMINDERS;
+  const setReminder = (i: number, r: Partial<ReminderRule>) => set('reminders', reminders.map((x, j) => (j === i ? { ...x, ...r } : x)));
+  const toggleChannel = (i: number, c: 'email' | 'whatsapp') => {
+    const has = reminders[i]!.channels.includes(c);
+    setReminder(i, { channels: has ? reminders[i]!.channels.filter((x) => x !== c) : [...reminders[i]!.channels, c] });
+  };
+  const addReminder = () => {
+    const used = new Set(reminders.map((r) => r.minutesBefore));
+    const next = [60, 30, 15, 10, 5, 2, 1, 45, 20, 120].find((m) => !used.has(m)) ?? 1;
+    set('reminders', [...reminders, { minutesBefore: next, channels: ['whatsapp'] }]);
+  };
+  const reminderError = reminders.some((r) => !Number.isInteger(r.minutesBefore) || r.minutesBefore < 1 || r.minutesBefore > 1440)
+    ? 'Use de 1 a 1440 minutos (até 24 h) em cada lembrete.'
+    : new Set(reminders.map((r) => r.minutesBefore)).size !== reminders.length
+      ? 'Dois lembretes com o mesmo tempo: use tempos diferentes.'
+      : reminders.some((r) => r.channels.length === 0) ? 'Escolha ao menos um canal em cada lembrete.' : '';
+  const reminderSummary = [...reminders].sort((a, b) => b.minutesBefore - a.minutesBefore).map((r) => `${r.minutesBefore} min`).join(', ');
 
   const save = async () => {
     setSaving(true); setGridError('');
@@ -94,7 +112,7 @@ export default function A7Configuracoes() {
   return (
     <div className="tw-page tw-stack a79 a7">
       <PageHead title="Configurações do evento" sub="Só o super admin vê esta área.">
-        <button type="button" className="a79-btn a79-btn--o a79-btn--lg" disabled={saving || timesInvalid || d.areas.length === 0} aria-busy={saving || undefined} onClick={() => void save()}>
+        <button type="button" className="a79-btn a79-btn--o a79-btn--lg" disabled={saving || timesInvalid || d.areas.length === 0 || !!reminderError} aria-busy={saving || undefined} onClick={() => void save()}>
           {saving && <span className="tw-spinner" aria-hidden="true" />}Salvar configurações
         </button>
       </PageHead>
@@ -147,6 +165,30 @@ export default function A7Configuracoes() {
               <TextField label="Prazo para responder (min)" type="number" min={1} max={120} value={d.responseWindowMinutes} onChange={num('responseWindowMinutes')} />
               <TextField label="Antecedência mínima do convite (min)" type="number" min={0} max={120} value={d.minLeadMinutes} onChange={num('minLeadMinutes')} />
             </div>
+          </section>
+
+          <section className="a7-sec" aria-labelledby="a7-lembretes" data-testid="a7-reminders">
+            <div className="a7-sec__head"><h2 id="a7-lembretes">Lembretes antes da mentoria</h2><span className="a79-hint">{reminders.length} de {MAX_REMINDERS}</span></div>
+            <p className="a79-hint" style={{ margin: 0 }}>
+              {reminders.length ? `A participante recebe ${reminders.length === 1 ? 'um lembrete' : `${reminders.length} lembretes`} antes de cada mentoria confirmada: ${reminderSummary} antes do início.` : 'Nenhum lembrete: a participante não é avisada antes da mentoria.'}
+              {' '}Sem WhatsApp disponível (desligado ou sem telefone), o lembrete vai por e-mail. Vale para as mentorias confirmadas depois de salvar.
+            </p>
+            <ul className="a7-rems">
+              {reminders.map((r, i) => (
+                <li key={i} className="a7-rem" data-testid={`reminder-${i}`}>
+                  <label className="a7-rem__min">
+                    <input className="tw-input" type="number" min={1} max={1440} value={r.minutesBefore} aria-label={`Lembrete ${i + 1}: minutos antes`}
+                      onChange={(e) => setReminder(i, { minutesBefore: Number(e.target.value) })} />
+                    <span>min antes</span>
+                  </label>
+                  <label className="a7-rem__ch"><input type="checkbox" checked={r.channels.includes('email')} onChange={() => toggleChannel(i, 'email')} />E-mail</label>
+                  <label className="a7-rem__ch"><input type="checkbox" checked={r.channels.includes('whatsapp')} onChange={() => toggleChannel(i, 'whatsapp')} />WhatsApp</label>
+                  <button type="button" className="a7-rem__del" aria-label={`Remover lembrete de ${r.minutesBefore} min`} onClick={() => set('reminders', reminders.filter((_, j) => j !== i))}>×</button>
+                </li>
+              ))}
+            </ul>
+            {reminderError && <p role="alert" className="a7-rem__err">{reminderError}</p>}
+            <div><button type="button" className="a79-btn a79-btn--line" disabled={reminders.length >= MAX_REMINDERS} onClick={addReminder} data-testid="reminder-add">+ Adicionar lembrete</button></div>
           </section>
 
           <section className="a7-sec" aria-labelledby="a7-areas" style={{ gap: 12 }}>

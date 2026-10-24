@@ -3,8 +3,8 @@ import type { AppointmentDoc, MenteeDoc } from '@tw/db';
 import type { AppContext } from '../ctx.js';
 import { AppError, fromRuleError } from '../lib/errors.js';
 import { writeAudit } from '../lib/audit.js';
-import { enqueueMenteeNotifications } from '../lib/outbox.js';
-import { isRuleError, planTransition, reminderSendAt, type Actor, type TransitionAction, type TransitionPlan } from '../domain/index.js';
+import { enqueueMenteeNotifications, enqueueReminders } from '../lib/outbox.js';
+import { isRuleError, planTransition, type Actor, type TransitionAction, type TransitionPlan } from '../domain/index.js';
 
 export interface ApplyTransitionInput {
   appointmentId: ObjectId;
@@ -104,12 +104,7 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     await enqueueMenteeNotifications(ctx, session, { type: plan.notify, mentee, appointmentId: appt._id });
   }
   if (plan.scheduleReminder) {
-    await enqueueMenteeNotifications(ctx, session, {
-      type: 'reminder',
-      mentee,
-      appointmentId: appt._id,
-      sendAt: reminderSendAt(appt.startAt, now),
-    });
+    await enqueueReminders(ctx, session, mentee, appt);
   }
   await writeAudit(ctx, session, {
     actor: input.actor,

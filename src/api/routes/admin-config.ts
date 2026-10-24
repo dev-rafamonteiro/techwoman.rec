@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import QRCode from 'qrcode';
 import {
   E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg, E43Create, E43List, E43Patch, E44List, E44Retry, E45,
-  generateSlots, type EventConfig,
+  DEFAULT_REMINDERS, generateSlots, type EventConfig,
 } from '@tw/shared';
 import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, type EventDoc, type UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
@@ -37,6 +37,7 @@ export function toEventConfig(ev: EventDoc): EventConfig {
     areas: ev.areas,
     templates: ev.templates,
     emailSubjects: ev.emailSubjects ?? {},
+    reminders: ev.reminders?.length ? ev.reminders : DEFAULT_REMINDERS,
     version: ev.version,
   };
 }
@@ -119,7 +120,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
             name: body.name, date: body.date, location: body.location, timezone: body.timezone, startTime: body.startTime, endTime: body.endTime,
             slotMinutes: body.slotMinutes, gapMinutes: body.gapMinutes, slots: slots.map((s) => ({ id: s.id, startAt: s.startAt, endAt: s.endAt })),
             responseWindowMinutes: body.responseWindowMinutes, minLeadMinutes: body.minLeadMinutes, registrationOpen: body.registrationOpen,
-            areas: body.areas, templates: body.templates, ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}), updatedAt: ctx.now(),
+            areas: body.areas, templates: body.templates, ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}), ...(body.reminders ? { reminders: [...body.reminders].sort((x, y) => y.minutesBefore - x.minutesBefore) } : {}), updatedAt: ctx.now(),
           },
           $inc: { version: 1 },
         },
