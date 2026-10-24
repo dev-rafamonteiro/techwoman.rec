@@ -1,4 +1,5 @@
-import type { Db } from 'mongodb';
+import { isDeepStrictEqual } from 'node:util';
+import type { Db, Document } from 'mongodb';
 import {
   APPOINTMENT_STATUSES,
   MENTEE_STATUSES,
@@ -49,6 +50,7 @@ export const usersSchema: Schema = strictObject(
     lockedUntil: dateN,
     passwordChangedAt: dateN,
     passwordResetCount: int,
+    tempPasswordExpiresAt: dateN,
     createdBy: oidN,
     createdAt: date,
     updatedAt: date,
@@ -141,19 +143,41 @@ export const VALIDATED_COLLECTIONS: Record<string, Schema> = {
 
 /** Cria/atualiza o validador `$jsonSchema` (strict, error) das coleções. Idempotente. */
 export async function applyValidators(db: Db): Promise<void> {
-  const existing = new Set((await db.listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name));
+  const current = new Map(
+    (await db.listCollections({}).toArray()).map((c) => [c.name, (c as { options?: Document }).options ?? {}]),
+  );
   for (const [name, schema] of Object.entries(VALIDATED_COLLECTIONS)) {
     const validator = { $jsonSchema: schema };
-    if (existing.has(name)) {
-      await db.command({ collMod: name, validator, validationLevel: 'strict', validationAction: 'error' });
+    const opts = current.get(name);
+    if (opts) {
+      await updateValidator(db, name, validator, opts);
     } else {
       try {
         await db.createCollection(name, { validator, validationLevel: 'strict', validationAction: 'error' });
       } catch (err) {
         // outra réplica criou primeiro (NamespaceExists): só aplica o validador
         if ((err as { code?: number }).code !== 48) throw err;
-        await db.command({ collMod: name, validator, validationLevel: 'strict', validationAction: 'error' });
+        await updateValidator(db, name, validator, {});
       }
     }
+  }
+}
+
+/**
+ * `collMod` exige dbAdmin; o usuário da aplicação no Atlas só tem readWrite (PLAN, Segurança). Por isso só roda
+ * quando o validador gravado difere do código; sem permissão, falha com instrução em vez do erro cru do servidor.
+ */
+async function updateValidator(db: Db, name: string, validator: Document, opts: Document): Promise<void> {
+  const same =
+    isDeepStrictEqual(opts.validator, validator) && opts.validationLevel === 'strict' && opts.validationAction === 'error';
+  if (same) return;
+  try {
+    await db.command({ collMod: name, validator, validationLevel: 'strict', validationAction: 'error' });
+  } catch (err) {
+    if ((err as { code?: number }).code !== 13) throw err;
+    throw new Error(
+      `validador de "${name}" desatualizado e o usuário do banco não tem permissão de collMod; ` +
+        'aplique com um usuário dbAdmin (npm run db:indexes) ou recrie a coleção vazia',
+    );
   }
 }

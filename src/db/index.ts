@@ -4,6 +4,7 @@ export * from './env.js';
 export * from './client.js';
 export * from './schemas.js';
 export * from './indexes.js';
+export * from './search-indexes.js';
 export * from './password.js';
 export * from './event.js';
 export * from './seed-super-admin.js';

@@ -7,7 +7,7 @@ import type { MongoClient, Db } from 'mongodb';
 import { API_PREFIX, SESSION_COOKIE } from '@tw/shared';
 import { loadConfig, type Config } from './config.js';
 import type { Notifier } from './worker/notifier.js';
-import { makeContext, type AppContext } from './ctx.js';
+import { makeContext, type AppContext, type SearchOverrides } from './ctx.js';
 import { AppError } from './lib/errors.js';
 import { StreamHub } from './lib/stream-hub.js';
 import { registerRoutes } from './routes/index.js';
@@ -23,6 +23,8 @@ export interface BuildAppOptions {
   /** Abre os Change Streams (SSE). Padrão: true. */
   streams?: boolean;
   now?: () => Date;
+  /** Testes: troca a execução do `$search`. */
+  searchOverrides?: SearchOverrides;
 }
 
 const stripQuery = (url: string) => url.split('?')[0] ?? url;
@@ -83,7 +85,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<{ app: FastifyIns
     errorResponseBuilder: (_req, ctx) => new AppError('RATE_LIMITED', 'Muitas requisições. Aguarde um instante.', { headers: { 'Retry-After': String(Math.ceil(ctx.ttl / 1000)) } }),
   });
 
-  const ctx = makeContext({ client: opts.client, db: opts.db, config, log: app.log, ...(opts.now ? { now: opts.now } : {}) });
+  const ctx = makeContext({ client: opts.client, db: opts.db, config, log: app.log, ...(opts.now ? { now: opts.now } : {}), ...(opts.searchOverrides ? { searchOverrides: opts.searchOverrides } : {}) });
 
   app.addHook('onRequest', async (req, reply) => {
     void reply.header('X-Request-Id', req.id);

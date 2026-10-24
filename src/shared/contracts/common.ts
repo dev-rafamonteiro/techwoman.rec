@@ -116,6 +116,7 @@ export const ERROR_CODES = [
   'ACCOUNT_DISABLED',
   'ACCOUNT_LOCKED',
   'PASSWORD_CHANGE_REQUIRED',
+  'TEMP_PASSWORD_EXPIRED',
   'WEAK_PASSWORD',
   'FORBIDDEN',
   'CSRF',
@@ -162,6 +163,7 @@ export const ERROR_HTTP_STATUS: Record<ErrorCode, number> = {
   ACCOUNT_DISABLED: 403,
   ACCOUNT_LOCKED: 423,
   PASSWORD_CHANGE_REQUIRED: 403,
+  TEMP_PASSWORD_EXPIRED: 403,
   WEAK_PASSWORD: 422,
   FORBIDDEN: 403,
   CSRF: 403,
@@ -228,6 +230,11 @@ export const QueryBoolSchema = z.enum(['true', 'false']).transform((v) => v === 
 // ---------------------------------------------------------------------------
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+/** Busca livre (`q`) de E22, E31 e E35: de 2 a 200 caracteres. */
+export const SEARCH_Q_MIN = 2;
+export const SEARCH_Q_MAX = 200;
+export const SearchQSchema = z.string().trim().min(SEARCH_Q_MIN).max(SEARCH_Q_MAX);
+
 export type EndpointAuth = 'public' | 'mentee' | 'staff';
 
 export interface EndpointDef<

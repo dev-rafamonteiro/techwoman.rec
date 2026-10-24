@@ -1,11 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
-import { E01, E02, E03, E04, E05, type E01Response } from '@tw/shared';
+import { E01, E02, E03, E04, E05, E06, type E01Response } from '@tw/shared';
 import { hashMenteeToken, menteeToken, personalPath } from '../lib/tokens.js';
 import type { MenteeDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, isDuplicateKey } from '../lib/errors.js';
-import { respond, route } from '../lib/route.js';
+import { RAW, respond, route } from '../lib/route.js';
+import { findMenteeByToken } from '../lib/mentee-auth.js';
+import { buildIcs, ICS_FILENAME, icsIdentity } from '../notifications/ics.js';
 import { writeAudit } from '../lib/audit.js';
 import { normalizeLinkedin, normalizePhoneBR } from '../lib/normalize.js';
 import { enqueueMenteeNotifications } from '../lib/outbox.js';
@@ -172,6 +174,33 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
 
   // E03 · GET /public/me
   route(app, ctx, E03, async ({ mentee }) => buildMenteeState(ctx, mentee));
+
+  // E06 · GET /public/calendar.ics?t=<token> · só mentoria confirmada
+  route(
+    app,
+    ctx,
+    E06,
+    async ({ reply, query }) => {
+      const mentee = await findMenteeByToken(ctx, query.t);
+      const notFound = () => new AppError('NOT_FOUND', 'Não há mentoria confirmada para adicionar à agenda.');
+      const appt = mentee.currentAppointmentId ? await ctx.c.appointments.findOne({ _id: mentee.currentAppointmentId, menteeId: mentee._id }) : null;
+      if (!appt || (appt.status !== 'confirmed' && appt.status !== 'in_progress')) throw notFound();
+      const [event, mentor, table, ics] = await Promise.all([
+        loadEvent(ctx),
+        ctx.c.users.findOne({ _id: appt.mentorId }, { projection: { name: 1 } }),
+        ctx.c.tables.findOne({ _id: appt.tableId }),
+        icsIdentity(ctx.c.appointments, appt),
+      ]);
+      if (!mentor || !table) throw notFound();
+      void reply
+        .header('Content-Type', 'text/calendar; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${ICS_FILENAME}"`)
+        .header('Cache-Control', 'no-store')
+        .send(buildIcs({ appointment: appt, event, mentor, table, ...ics }));
+      return RAW;
+    },
+    { rateLimit: { max: 60, timeWindow: '1 minute' } },
+  );
 
   // E04 · POST /public/me/actions · RN06, RN14
   route(app, ctx, E04, async ({ req, mentee, body, idem }) => {

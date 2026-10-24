@@ -7,7 +7,7 @@ import { authenticate, hasAnyRole } from './auth.js';
 import { checkCsrf } from './csrf.js';
 import { AppError } from './errors.js';
 import { requestHash, withIdempotency, type IdemHandle } from './idempotency.js';
-import { hashMenteeToken } from './tokens.js';
+import { findMenteeByToken } from './mentee-auth.js';
 
 type Present<T> = Exclude<T, undefined>;
 type Out<T> = [Present<T>] extends [never] ? undefined : Present<T> extends z.ZodType ? z.output<Present<T>> : undefined;
@@ -89,16 +89,7 @@ export function route<E extends EndpointDef>(
         }
       } else if (e.auth === 'mentee') {
         const raw = req.headers[HEADERS.menteeToken.toLowerCase()];
-        const token = Array.isArray(raw) ? raw[0] : raw;
-        if (!token || token.length > 200) throw new AppError('NOT_FOUND', 'Não encontramos sua inscrição.');
-        const doc = await ctx.c.mentees.findOne({ tokenHash: hashMenteeToken(token), eventId: ctx.config.eventId });
-        if (!doc) throw new AppError('NOT_FOUND', 'Não encontramos sua inscrição.');
-        const ev = await ctx.c.events.findOne({ _id: ctx.config.eventId }, { projection: { date: 1 } });
-        if (ev) {
-          const until = Date.parse(`${ev.date}T00:00:00Z`) + (1 + ctx.config.linkValidDaysAfterEvent) * 86400_000;
-          if (ctx.now().getTime() > until) throw new AppError('NOT_FOUND', 'Este link expirou.');
-        }
-        mentee = doc;
+        mentee = await findMenteeByToken(ctx, Array.isArray(raw) ? raw[0] : raw);
       } else if (isWrite && e.code !== 'E02' && e.code !== 'E05') {
         // E10 (login) é público mas usa cookie: exige o header anti-CSRF
         checkCsrf(req, ctx.config);

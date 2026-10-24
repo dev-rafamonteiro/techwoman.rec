@@ -3,6 +3,7 @@ import type { OutboxChannel, OutboxType } from '@tw/shared';
 import type { MenteeDoc, OutboxDoc, UserDoc } from '@tw/db';
 import { ObjectId as Oid } from 'mongodb';
 import type { AppContext } from '../ctx.js';
+import { sealSecret } from './secret-box.js';
 
 /**
  * Canais por tipo (PLAN, "Notificações"): e-mail é o canal obrigatório; WhatsApp só se ligado e houver telefone.
@@ -56,7 +57,10 @@ export async function enqueueMenteeNotifications(ctx: AppContext, session: Clien
   if (docs.length) await ctx.c.outbox.insertMany(docs, session ? { session } : {});
 }
 
-/** Senha provisória enviada por e-mail (dedupeKey `pwd:<userId>:<n>`). A senha vai no payload até o envio e é apagada. */
+/** dedupeKey de `staff_password`: `pwd:<userId>:<n>` (também é o AAD da cifra). */
+export const staffPasswordKey = (userId: ObjectId, n: number) => `pwd:${userId}:${n}`;
+
+/** Senha provisória enviada por e-mail (dedupeKey `pwd:<userId>:<n>`). Vai cifrada em `secret` (AES-256-GCM) e o worker a apaga. */
 export async function enqueueStaffPassword(
   ctx: AppContext,
   session: ClientSession | undefined,
@@ -65,6 +69,7 @@ export async function enqueueStaffPassword(
   provisionalPassword: string,
 ): Promise<void> {
   const now = ctx.now();
+  const dedupeKey = staffPasswordKey(user._id, n);
   await ctx.c.outbox.insertOne(
     {
       _id: new Oid(),
@@ -75,7 +80,8 @@ export async function enqueueStaffPassword(
       menteeId: null,
       userId: user._id,
       appointmentId: null,
-      payload: { provisionalPassword },
+      payload: {},
+      secret: sealSecret(ctx.config.outboxKey, provisionalPassword, dedupeKey),
       status: 'pending',
       attempts: 0,
       nextAttemptAt: now,
@@ -83,7 +89,7 @@ export async function enqueueStaffPassword(
       lockedBy: null,
       sentAt: null,
       lastError: null,
-      dedupeKey: `pwd:${user._id}:${n}`,
+      dedupeKey,
       createdAt: now,
     },
     session ? { session } : {},

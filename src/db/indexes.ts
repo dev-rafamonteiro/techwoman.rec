@@ -1,6 +1,7 @@
 import type { Db, IndexDescription } from 'mongodb';
 import { COLLECTIONS } from './collections.js';
 import { applyValidators } from './schemas.js';
+import { createSearchIndexes } from './search-indexes.js';
 
 /** Nomes estáveis dos índices únicos de agenda; a API mapeia E11000 por eles (keyPattern como principal). */
 export const INDEX_NAMES = {
@@ -80,7 +81,7 @@ const INDEXES: Record<string, IndexDescription[]> = {
  * Cria validadores e índices. Idempotente: pode rodar a cada start da API. Se um índice existir com o mesmo nome
  * e definição diferente, o MongoDB recusa; nesse caso derrube o índice antes (ambiente de dev).
  */
-export async function createIndexes(db: Db): Promise<void> {
+export async function createIndexes(db: Db, opts: { searchIndexes?: boolean } = {}): Promise<void> {
   await applyValidators(db);
   for (const [coll, specs] of Object.entries(INDEXES)) {
     await db.collection(coll).createIndexes(specs);
@@ -95,4 +96,6 @@ export async function createIndexes(db: Db): Promise<void> {
       if ((err as { code?: number }).code !== 48) throw err;
     }
   }
+  // Atlas Search (busca por palavra); em MongoDB sem Atlas Search é ignorado
+  if (opts.searchIndexes !== false) await createSearchIndexes(db);
 }

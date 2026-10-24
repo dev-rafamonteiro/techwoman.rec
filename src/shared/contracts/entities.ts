@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EmailPreviewTypeSchema } from './E46-admin-email-preview.js';
 import {
   AppointmentStatusSchema,
   AreaSchema,
@@ -212,6 +213,8 @@ export const EventConfigSchema = z.object({
       cancelled: z.string().max(1000),
     })
     .strict(),
+  /** Assuntos dos e-mails que substituem os padrões, por layout (aceitam `{{variavel}}` do layout). */
+  emailSubjects: z.partialRecord(EmailPreviewTypeSchema, z.string().trim().min(1).max(200)).optional(),
   version: z.number().int(),
 });
 export type EventConfig = z.infer<typeof EventConfigSchema>;

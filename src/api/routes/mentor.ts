@@ -1,10 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
+import type { MenteeDoc } from '@tw/db';
 import { E20, E21, E22, E23, E25, E26, E27, E28, QUEUE_PAGE_SIZE, type E20Response, type E25Response } from '@tw/shared';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
-import { decodeCursor, encodeCursor, escapeRegex } from '../lib/pagination.js';
+import { decodeCursor, encodeCursor } from '../lib/pagination.js';
+import { menteeSearchPipeline, runSearch } from '../search/text.js';
 import { normalizeLinkedin } from '../lib/normalize.js';
 import { openSse } from '../lib/sse.js';
 import { RAW, route } from '../lib/route.js';
@@ -69,27 +71,39 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
   route(app, ctx, E22, async ({ user, query }) => {
     const now = ctx.now();
     const event = await loadEvent(ctx);
-    const filter: Record<string, unknown> = { eventId: event._id, status: 'waiting' };
-    if (query.area?.length) filter['area'] = { $in: query.area };
-    if (query.period) filter['preferredPeriod'] = query.period;
-    if (query.priority) filter['priority'] = true;
-    if (query.q) filter['name'] = { $regex: escapeRegex(query.q), $options: 'i' };
-    const cur = decodeCursor<{ p: boolean; t: number; id: string }>(query.cursor);
-    if (cur) {
-      const t = new Date(cur.t);
-      const id = oid(cur.id);
-      const after = { $or: [{ queuedAt: { $gt: t } }, { queuedAt: t, _id: { $gt: id } }] };
-      filter['$and'] = [cur.p ? { $or: [{ priority: true, ...after }, { priority: false }] } : { priority: false, ...after }];
+    let page: MenteeDoc[];
+    let nextCursor: string | null = null;
+    if (query.q) {
+      // busca livre: Atlas Search (até 50 itens, sem cursor), sem contato
+      page = await runSearch<MenteeDoc>(
+        ctx,
+        ctx.c.mentees,
+        menteeSearchPipeline({ q: query.q, eventId: event._id, status: 'waiting', ...(query.area?.length ? { areas: query.area } : {}), ...(query.period ? { period: query.period } : {}), ...(query.priority ? { priority: true } : {}) }),
+        'E22',
+      );
+    } else {
+      const filter: Record<string, unknown> = { eventId: event._id, status: 'waiting' };
+      if (query.area?.length) filter['area'] = { $in: query.area };
+      if (query.period) filter['preferredPeriod'] = query.period;
+      if (query.priority) filter['priority'] = true;
+      const cur = decodeCursor<{ p: boolean; t: number; id: string }>(query.cursor);
+      if (cur) {
+        const t = new Date(cur.t);
+        const id = oid(cur.id);
+        const after = { $or: [{ queuedAt: { $gt: t } }, { queuedAt: t, _id: { $gt: id } }] };
+        filter['$and'] = [cur.p ? { $or: [{ priority: true, ...after }, { priority: false }] } : { priority: false, ...after }];
+      }
+      const docs = await ctx.c.mentees.find(filter).sort({ priority: -1, queuedAt: 1, _id: 1 }).limit(QUEUE_PAGE_SIZE + 1).toArray();
+      page = docs.slice(0, QUEUE_PAGE_SIZE);
+      const last = page[page.length - 1];
+      nextCursor = docs.length > QUEUE_PAGE_SIZE && last ? encodeCursor({ p: last.priority, t: last.queuedAt.getTime(), id: String(last._id) }) : null;
     }
-    const docs = await ctx.c.mentees.find(filter).sort({ priority: -1, queuedAt: 1, _id: 1 }).limit(QUEUE_PAGE_SIZE + 1).toArray();
-    const page = docs.slice(0, QUEUE_PAGE_SIZE);
-    const last = page[page.length - 1];
     const taken = await ctx.c.appointments.find({ eventId: event._id, mentorId: user._id, slotLock: true }, { projection: { slotId: 1 } }).toArray();
     const takenSet = new Set(taken.map((a) => a.slotId));
     const freeSlots = event.slots.filter((s) => user.availability.includes(s.id) && !takenSet.has(s.id) && s.startAt.getTime() > now.getTime()).length;
     return {
       items: page.map(toMenteeStaffView),
-      nextCursor: docs.length > QUEUE_PAGE_SIZE && last ? encodeCursor({ p: last.priority, t: last.queuedAt.getTime(), id: String(last._id) }) : null,
+      nextCursor,
       freeSlots,
       hasAvailability: user.availability.length > 0,
     };

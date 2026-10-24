@@ -21,6 +21,12 @@ export async function verifyPassword(hash: string, plain: string): Promise<boole
   }
 }
 
+/** Validade da senha provisória (PLAN, "Notificações"): 72 h. */
+export const TEMP_PASSWORD_TTL_HOURS = 72;
+
+/** Fim da validade de uma senha provisória gerada em `now`. */
+export const tempPasswordExpiry = (now: Date): Date => new Date(now.getTime() + TEMP_PASSWORD_TTL_HOURS * 3600_000);
+
 // Sem caracteres ambíguos (0/O, 1/l/I).
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
 

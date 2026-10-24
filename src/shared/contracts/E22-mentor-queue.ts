@@ -5,6 +5,7 @@ import {
   pageOf,
   PreferredPeriodSchema,
   QueryBoolSchema,
+  SearchQSchema,
 } from './common.js';
 import { MenteeStaffViewSchema } from './entities.js';
 
@@ -20,7 +21,7 @@ export const E22QuerySchema = z
       .optional(),
     period: PreferredPeriodSchema.optional(),
     priority: QueryBoolSchema.optional(),
-    q: z.string().trim().max(80).optional(),
+    q: SearchQSchema.optional(),
     cursor: z.string().max(500).optional(),
   })
   .strict();

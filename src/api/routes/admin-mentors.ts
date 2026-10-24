@@ -1,14 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
 import { E30, E31Create, E31List, E32, E33, E34, type E30Response, type MentorListItem } from '@tw/shared';
-import { generateProvisionalPassword, hashPassword, importMentors, ImportFormatError, type UserDoc } from '@tw/db';
+import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, importMentors, ImportFormatError, type UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, isDuplicateKey, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
 
 import { normalizeLinkedin } from '../lib/normalize.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
-import { escapeRegex } from '../lib/pagination.js';
+import { mentorSearchPipeline, runSearch } from '../search/text.js';
 import { respond, route } from '../lib/route.js';
 import { iso, toUserView } from '../lib/views.js';
 import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers } from '../domain/index.js';
@@ -90,11 +90,23 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
   // E31 · GET /admin/mentors
   route(app, ctx, E31List, async ({ query }) => {
     const filter: Record<string, unknown> = { roles: 'mentor' };
-    if (query.q) filter['$or'] = [{ name: { $regex: escapeRegex(query.q), $options: 'i' } }, { email: { $regex: escapeRegex(query.q), $options: 'i' } }];
     if (query.status === 'active' || query.status === 'disabled') filter['status'] = query.status;
     if (query.status === 'never_logged_in') filter['lastLoginAt'] = null;
     if (query.area) filter['areas'] = query.area;
-    const users = await ctx.c.users.find(filter).sort({ name: 1 }).toArray();
+    // busca livre: Atlas Search (até 50 itens, na ordem de relevância); sem q, todas por nome
+    const users = query.q
+      ? await runSearch<UserDoc>(
+          ctx,
+          ctx.c.users,
+          mentorSearchPipeline({
+            q: query.q,
+            ...(query.status === 'active' || query.status === 'disabled' ? { status: query.status } : {}),
+            ...(query.status === 'never_logged_in' ? { neverLoggedIn: true } : {}),
+            ...(query.area ? { area: query.area } : {}),
+          }),
+          'E31',
+        )
+      : await ctx.c.users.find(filter).sort({ name: 1 }).toArray();
     const counts = await ctx.c.appointments
       .aggregate<{ _id: { m: ObjectId; s: string }; n: number }>([
         { $match: { eventId: ctx.config.eventId, mentorId: { $in: users.map((u) => u._id) }, status: { $in: ['confirmed', 'in_progress', 'done'] } } },
@@ -144,6 +156,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       lockedUntil: null,
       passwordChangedAt: null,
       passwordResetCount: body.sendPasswordByEmail ? 1 : 0,
+      tempPasswordExpiresAt: tempPasswordExpiry(now),
       createdBy: user._id,
       createdAt: now,
       updatedAt: now,
@@ -275,7 +288,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       }
       const upd = await ctx.c.users.findOneAndUpdate(
         { _id: id },
-        { $set: { passwordHash: hash, mustChangePassword: true, passwordChangedAt: null, failedLogins: 0, failedLoginWindowStart: null, lockedUntil: null, updatedAt: ctx.now() }, $inc: { passwordResetCount: 1 } },
+        { $set: { passwordHash: hash, mustChangePassword: true, passwordChangedAt: null, tempPasswordExpiresAt: tempPasswordExpiry(ctx.now()), failedLogins: 0, failedLoginWindowStart: null, lockedUntil: null, updatedAt: ctx.now() }, $inc: { passwordResetCount: 1 } },
         { session, returnDocument: 'after' },
       );
       await ctx.c.sessions.deleteMany({ userId: id }, { session });

@@ -34,7 +34,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/copy-email-templates.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput & node --watch --env-file-if-exists=../../.env dist/server.js",
     "dev:worker": "node --watch --env-file-if-exists=../../.env dist/worker.js",
@@ -42,6 +42,7 @@
     "start:worker": "node dist/worker.js"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1156.0",
     "@fastify/cookie": "^11.0.0",
     "@fastify/multipart": "^9.0.0",
     "@fastify/rate-limit": "^10.0.0",
@@ -49,13 +50,16 @@
     "@tw/shared": "*",
     "fastify": "^5.4.0",
     "jose": "^6.0.0",
+    "juice": "^12.2.0",
     "mongodb": "^6.20.0",
+    "nodemailer": "^10.2.1",
     "pino": "^9.7.0",
     "qrcode": "^1.5.4",
     "zod": "^4.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/qrcode": "^1.5.5"
   }
 }

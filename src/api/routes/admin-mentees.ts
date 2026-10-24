@@ -9,6 +9,7 @@ import { csvLine } from '../lib/csv.js';
 import { enqueueMenteeNotifications } from '../lib/outbox.js';
 import { decodeCursor, encodeCursor, escapeRegex } from '../lib/pagination.js';
 import { openSse } from '../lib/sse.js';
+import { menteeSearchPipeline, runSearch } from '../search/text.js';
 import { RAW, route } from '../lib/route.js';
 import { iso, toMenteeAdminView, toTableView } from '../lib/views.js';
 import { sha256Hex } from '../lib/tokens.js';
@@ -54,6 +55,24 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
   // E35 · GET /admin/mentees
   route(app, ctx, E35, async ({ query }) => {
     const event = await loadEvent(ctx);
+    if (query.q) {
+      // busca livre: Atlas Search (até 50 itens, sem cursor)
+      const found = await runSearch<MenteeDoc>(
+        ctx,
+        ctx.c.mentees,
+        menteeSearchPipeline({
+          q: query.q,
+          eventId: event._id,
+          admin: true,
+          ...(query.status ? { status: query.status } : {}),
+          ...(query.area ? { areas: [query.area] } : {}),
+          ...(query.priority ? { priority: true } : {}),
+          ...(query.period ? { period: query.period } : {}),
+        }),
+        'E35',
+      );
+      return { items: await enrich(event, found), nextCursor: null };
+    }
     const filter = filterOf(query);
     const cur = decodeCursor<{ t: number; id: string }>(query.cursor);
     if (cur) {

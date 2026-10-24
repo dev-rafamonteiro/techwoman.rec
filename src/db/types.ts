@@ -42,6 +42,8 @@ export interface EventDoc {
     expired: string;
     cancelled: string;
   };
+  /** Assuntos de e-mail editados em A7 (por id de layout); ausente = assunto padrão. */
+  emailSubjects?: Partial<Record<string, string>>;
   consentVersion: string;
   version: number;
   updatedAt: Date;
@@ -69,6 +71,8 @@ export interface UserDoc {
   passwordChangedAt: Date | null;
   /** Contador usado na dedupeKey `pwd:<userId>:<n>`. */
   passwordResetCount: number;
+  /** Fim da validade (72 h) da senha provisória; null quando não há senha provisória pendente. */
+  tempPasswordExpiresAt?: Date | null;
   createdBy: ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
@@ -168,6 +172,8 @@ export interface OutboxDoc {
   userId: ObjectId | null;
   appointmentId: ObjectId | null;
   payload: Record<string, unknown>;
+  /** Segredo cifrado (AES-256-GCM) lido só pelo worker e removido ao marcar sent/failed/skipped. */
+  secret?: { v: 1; iv: string; tag: string; ct: string };
   status: OutboxStatus;
   attempts: number;
   nextAttemptAt: Date;

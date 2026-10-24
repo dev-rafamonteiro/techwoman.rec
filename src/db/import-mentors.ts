@@ -3,7 +3,7 @@ import { ObjectId, type Db } from 'mongodb';
 import { z } from 'zod';
 import { EmailSchema, zonedParts, type E33Response, type ImportRow } from '@tw/shared';
 import { getCollections } from './collections.js';
-import { generateProvisionalPassword, hashPassword } from './password.js';
+import { generateProvisionalPassword, hashPassword, tempPasswordExpiry } from './password.js';
 import type { EventDoc, UserDoc } from './types.js';
 
 export class ImportFormatError extends Error {}
@@ -194,6 +194,7 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
           lockedUntil: null,
           passwordChangedAt: null,
           passwordResetCount: 0,
+          tempPasswordExpiresAt: tempPasswordExpiry(now),
           createdBy: opts.createdBy ?? null,
           createdAt: now,
           updatedAt: now,

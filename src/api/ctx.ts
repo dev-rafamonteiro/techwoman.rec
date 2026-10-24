@@ -1,9 +1,14 @@
-import type { ClientSession, Db, MongoClient } from 'mongodb';
+import type { ClientSession, Db, Document, MongoClient } from 'mongodb';
 import type { FastifyBaseLogger } from 'fastify';
 import { getCollections, type Collections, type EventDoc } from '@tw/db';
 import type { Config } from './config.js';
 import { AppError } from './lib/errors.js';
 import type { StreamHub } from './lib/stream-hub.js';
+
+/** Ganchos de teste da busca: trocam a execução do pipeline (ex.: função que lança simula o Atlas fora do ar). */
+export interface SearchOverrides {
+  search?: (pipeline: Document[]) => Promise<Document[]>;
+}
 
 export interface AppContext {
   client: MongoClient;
@@ -14,6 +19,7 @@ export interface AppContext {
   now: () => Date;
   log: FastifyBaseLogger;
   hub: StreamHub | null;
+  searchOverrides?: SearchOverrides;
 }
 
 export function makeContext(init: {
@@ -22,6 +28,7 @@ export function makeContext(init: {
   config: Config;
   log: FastifyBaseLogger;
   now?: () => Date;
+  searchOverrides?: SearchOverrides;
 }): AppContext {
   return {
     client: init.client,
@@ -31,6 +38,7 @@ export function makeContext(init: {
     now: init.now ?? (() => new Date()),
     log: init.log,
     hub: null,
+    ...(init.searchOverrides ? { searchOverrides: init.searchOverrides } : {}),
   };
 }
 

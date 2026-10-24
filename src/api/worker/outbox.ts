@@ -3,8 +3,12 @@ import type { OutboxDoc } from '@tw/db';
 import type { Config } from '../config.js';
 import type { AppContext } from '../ctx.js';
 import { shouldSendReminder } from '../domain/index.js';
-import { NotifierError, type Notifier } from './notifier.js';
+import { NotifierError, type Notifier, type NotifierMessage } from './notifier.js';
 import { render } from './render.js';
+import { openSecret } from '../lib/secret-box.js';
+import { icsIdentity } from '../notifications/ics.js';
+import { buildEmailMessage } from '../notifications/message.js';
+import { RenderError } from '../notifications/render.js';
 import { workerContext } from './context.js';
 
 /** Esperas entre tentativas (1 envio + 5 reenvios = 6 envios no total). */
@@ -47,9 +51,14 @@ function skipReason(item: OutboxDoc, ctx: AppContext, appt: { status: string; ex
   }
 }
 
+/** Tipos cujo e-mail leva o `.ics` (layout 3). */
+const WITH_ICS = new Set(['confirmed', 'moved', 'reminder']);
+
 async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res: OutboxResult): Promise<void> {
   const { c } = ctx;
-  const done = (set: Partial<OutboxDoc>) => c.outbox.updateOne({ _id: item._id, status: 'sending' }, { $set: set });
+  // estados finais apagam a senha cifrada da outbox (PLAN, "Senha provisória")
+  const done = (set: Partial<OutboxDoc>, terminal = true) =>
+    c.outbox.updateOne({ _id: item._id, status: 'sending' }, { $set: set, ...(terminal ? { $unset: { secret: '' as const } } : {}) });
   const [event, mentee, appt] = await Promise.all([
     c.events.findOne({ _id: item.eventId }),
     item.menteeId ? c.mentees.findOne({ _id: item.menteeId }) : null,
@@ -61,25 +70,59 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     res.skipped++;
     return;
   }
-  const [mentor, table] = await Promise.all([appt ? c.users.findOne({ _id: appt.mentorId }) : null, appt ? c.tables.findOne({ _id: appt.tableId }) : null]);
-  const { subject, text } = render({ item, event, mentee, appointment: appt, mentor, table, baseUrl: ctx.config.publicBaseUrl, menteeTokenSecret: ctx.config.menteeTokenSecret });
+  const fail = async (message: string) => {
+    await done({ status: 'failed', lastError: message.slice(0, 300), lockedAt: null, lockedBy: null });
+    res.failed++;
+  };
+  const [mentor, table, staffUser] = await Promise.all([
+    appt ? c.users.findOne({ _id: appt.mentorId }) : null,
+    appt ? c.tables.findOne({ _id: appt.tableId }) : null,
+    item.userId ? c.users.findOne({ _id: item.userId }) : null,
+  ]);
+  let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments'>;
   try {
-    await notifier.send({ channel: item.channel, to: item.to, type: item.type, text, subject, idempotencyKey: item.dedupeKey, payload: item.payload });
+    if (item.channel === 'email') {
+      let provisionalPassword: string | null = null;
+      if (item.type === 'staff_password') {
+        if (!item.secret) return await fail('senha provisória indisponível; reenvie para gerar outra');
+        try {
+          provisionalPassword = openSecret(ctx.config.outboxKey, item.secret, item.dedupeKey);
+        } catch {
+          return await fail('senha provisória ilegível (chave da outbox diferente?)');
+        }
+      }
+      const email = buildEmailMessage({
+        item, event, mentee, appointment: appt, mentor, table, staffUser, provisionalPassword,
+        baseUrl: ctx.config.publicBaseUrl,
+        menteeTokenSecret: ctx.config.menteeTokenSecret,
+        tempPasswordHours: ctx.config.tempPasswordHours,
+        ics: appt && WITH_ICS.has(item.type) ? await icsIdentity(c.appointments, appt) : { uid: '', sequence: 0 },
+      });
+      message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
+    } else {
+      message = render({ item, event, mentee, appointment: appt, mentor, table, baseUrl: ctx.config.publicBaseUrl, menteeTokenSecret: ctx.config.menteeTokenSecret });
+    }
+  } catch (err) {
+    if (err instanceof RenderError) return await fail(`render: ${err.message}`);
+    throw err;
+  }
+  try {
+    await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
     await done({ status: 'sent', sentAt: ctx.now(), lastError: null, lockedAt: null, lockedBy: null, payload: {} });
     res.sent++;
   } catch (err) {
-    const message = (err instanceof Error ? err.message : String(err)).slice(0, 300);
+    const text = (err instanceof Error ? err.message : String(err)).slice(0, 300);
     const permanent = err instanceof NotifierError && err.permanent;
     if (permanent || item.attempts >= MAX_ATTEMPTS) {
       // canal desligado por configuração não é falha: fica `skipped`
-      const off = message.startsWith('canal ') && message.endsWith('desligado');
-      await done({ status: off ? 'skipped' : 'failed', lastError: message, lockedAt: null, lockedBy: null });
+      const off = text.startsWith('canal ') && text.endsWith('desligado');
+      await done({ status: off ? 'skipped' : 'failed', lastError: text, lockedAt: null, lockedBy: null });
       if (off) res.skipped++;
       else res.failed++;
     } else {
       const base = BACKOFF_MS[item.attempts - 1] ?? BACKOFF_MS[BACKOFF_MS.length - 1]!;
       const wait = Math.round(base * (1 + Math.random() * 0.1));
-      await done({ status: 'pending', lastError: message, nextAttemptAt: new Date(ctx.now().getTime() + wait), lockedAt: null, lockedBy: null });
+      await done({ status: 'pending', lastError: text, nextAttemptAt: new Date(ctx.now().getTime() + wait), lockedAt: null, lockedBy: null }, false);
       res.retried++;
     }
   }

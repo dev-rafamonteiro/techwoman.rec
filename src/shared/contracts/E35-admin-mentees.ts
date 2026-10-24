@@ -11,6 +11,7 @@ import {
   pageOf,
   PreferredPeriodSchema,
   QueryBoolSchema,
+  SearchQSchema,
 } from './common.js';
 import { AppointmentHistoryEntrySchema, MenteeAdminViewSchema } from './entities.js';
 
@@ -20,7 +21,7 @@ export const MenteeFiltersSchema = z.object({
   area: AreaKeySchema.optional(),
   priority: QueryBoolSchema.optional(),
   period: PreferredPeriodSchema.optional(),
-  q: z.string().trim().max(80).optional(),
+  q: SearchQSchema.optional(),
 });
 
 /** E35 · GET /admin/mentees?status=&area=&priority=&q=&cursor= · A4 */

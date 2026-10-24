@@ -71,6 +71,9 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: AppContext): void 
         throw new AppError('INVALID_CREDENTIALS', 'E-mail ou senha inválidos.');
       }
       if (user.status !== 'active') throw new AppError('ACCOUNT_DISABLED', 'Esta conta está desativada. Procure a organização.');
+      if (user.mustChangePassword && user.tempPasswordExpiresAt && user.tempPasswordExpiresAt.getTime() <= now.getTime()) {
+        throw new AppError('TEMP_PASSWORD_EXPIRED', 'A senha provisória venceu. Peça uma nova senha a quem administra o evento.');
+      }
       const updated = await ctx.c.users.findOneAndUpdate(
         { _id: user._id },
         { $set: { lastLoginAt: now, failedLogins: 0, failedLoginWindowStart: null, lockedUntil: null, updatedAt: now } },
@@ -102,7 +105,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: AppContext): void 
     const now = ctx.now();
     await ctx.c.users.updateOne(
       { _id: user._id },
-      { $set: { passwordHash: await hashPassword(body.newPassword), mustChangePassword: false, passwordChangedAt: now, updatedAt: now } },
+      { $set: { passwordHash: await hashPassword(body.newPassword), mustChangePassword: false, passwordChangedAt: now, tempPasswordExpiresAt: null, updatedAt: now } },
     );
     await revokeSessions(ctx, user._id, req.auth?.sid);
     await writeAudit(ctx, undefined, { actor: { userId: user._id.toHexString(), role: user.roles.includes('super_admin') ? 'super_admin' : user.roles.includes('admin') ? 'admin' : 'mentor' }, action: 'auth.change_password', entity: 'user', entityId: user._id, ip: req.ip });

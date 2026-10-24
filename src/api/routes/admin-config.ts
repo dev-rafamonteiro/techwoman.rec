@@ -5,15 +5,17 @@ import {
   E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg, E43Create, E43List, E43Patch, E44List, E44Retry, E45,
   generateSlots, type EventConfig,
 } from '@tw/shared';
-import { generateProvisionalPassword, hashPassword, type EventDoc, type UserDoc } from '@tw/db';
+import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, type EventDoc, type UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, isDuplicateKey, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
+import { sealSecret } from '../lib/secret-box.js';
+import { invalidSubjectVariable } from '../notifications/render.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { RAW, respond, route } from '../lib/route.js';
 import { iso, toOutboxItemView, toTableView, toUserView } from '../lib/views.js';
-import { checkGridChange, checkSuperAdminInvariant } from '../domain/index.js';
+import { canGrantAdminRole, checkGridChange, checkSuperAdminInvariant } from '../domain/index.js';
 
 const ACTIVE = ['invited', 'confirmed', 'in_progress'] as const;
 
@@ -34,6 +36,7 @@ export function toEventConfig(ev: EventDoc): EventConfig {
     registrationOpen: ev.registrationOpen,
     areas: ev.areas,
     templates: ev.templates,
+    emailSubjects: ev.emailSubjects ?? {},
     version: ev.version,
   };
 }
@@ -105,6 +108,8 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
       const locked = await ctx.c.appointments.countDocuments({ eventId: cur._id, slotLock: true }, { session });
       const check = checkGridChange(cur, body, locked);
       if (!check.ok) throw fromRuleError(check);
+      const badSubject = invalidSubjectVariable(body.emailSubjects);
+      if (badSubject) throw new AppError('VALIDATION_ERROR', `O assunto usa {{${badSubject.variable}}}, que não existe neste e-mail.`, { details: { field: `emailSubjects.${badSubject.layout}` } });
       const areaKeys = new Set(body.areas.map((a) => a.key));
       if (areaKeys.size !== body.areas.length) throw new AppError('VALIDATION_ERROR', 'Áreas com chave repetida.');
       const res = await ctx.c.events.findOneAndUpdate(
@@ -114,7 +119,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
             name: body.name, date: body.date, location: body.location, timezone: body.timezone, startTime: body.startTime, endTime: body.endTime,
             slotMinutes: body.slotMinutes, gapMinutes: body.gapMinutes, slots: slots.map((s) => ({ id: s.id, startAt: s.startAt, endAt: s.endAt })),
             responseWindowMinutes: body.responseWindowMinutes, minLeadMinutes: body.minLeadMinutes, registrationOpen: body.registrationOpen,
-            areas: body.areas, templates: body.templates, updatedAt: ctx.now(),
+            areas: body.areas, templates: body.templates, ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}), updatedAt: ctx.now(),
           },
           $inc: { version: 1 },
         },
@@ -157,7 +162,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
     const doc: UserDoc = {
       _id: new ObjectId(), name: body.name, email: body.email, roles: [...new Set(body.roles)], passwordHash: await hashPassword(password), mustChangePassword: true, status: 'active',
       linkedin: null, organization: null, areas: [], bio: null, photoUrl: null, availability: [], lastLoginAt: null, failedLogins: 0, failedLoginWindowStart: null, lockedUntil: null,
-      passwordChangedAt: null, passwordResetCount: body.sendPasswordByEmail ? 1 : 0, createdBy: user._id, createdAt: now, updatedAt: now,
+      passwordChangedAt: null, passwordResetCount: body.sendPasswordByEmail ? 1 : 0, tempPasswordExpiresAt: tempPasswordExpiry(now), createdBy: user._id, createdAt: now, updatedAt: now,
     };
     try {
       await runTxn(ctx, async (session) => {
@@ -199,6 +204,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
         set['passwordHash'] = hash;
         set['mustChangePassword'] = true;
         set['passwordChangedAt'] = null;
+        set['tempPasswordExpiresAt'] = tempPasswordExpiry(ctx.now());
         set['failedLogins'] = 0;
         set['failedLoginWindowStart'] = null;
         set['lockedUntil'] = null;
@@ -233,9 +239,37 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
     return { items: page.map(toOutboxItemView), nextCursor: docs.length > limit && last ? encodeCursor({ t: last.createdAt.getTime(), id: String(last._id) }) : null };
   });
 
-  route(app, ctx, E44Retry, async ({ req, params }) => {
+  route(app, ctx, E44Retry, async ({ req, user, params }) => {
     const id = oid(params.id);
     const now = ctx.now();
+    const current = await ctx.c.outbox.findOne({ _id: id, status: 'failed' });
+    if (current?.type === 'staff_password') {
+      // a senha cifrada já foi apagada: o reenvio gera uma nova senha provisória (e invalida a anterior)
+      if (!current.userId) throw new AppError('INVALID_STATE', 'Notificação sem usuário de destino.');
+      const password = generateProvisionalPassword();
+      const hash = await hashPassword(password);
+      const item = await runTxn(ctx, async (session) => {
+        const target = await ctx.c.users.findOne({ _id: current.userId! }, { session });
+        if (!target) throw notFound('Usuário');
+        if ((target.roles.includes('admin') || target.roles.includes('super_admin')) && !canGrantAdminRole(user.roles)) {
+          throw new AppError('FORBIDDEN', 'Só super admin redefine a senha de um administrador.');
+        }
+        await ctx.c.users.updateOne(
+          { _id: target._id },
+          { $set: { passwordHash: hash, mustChangePassword: true, passwordChangedAt: null, tempPasswordExpiresAt: tempPasswordExpiry(now), failedLogins: 0, failedLoginWindowStart: null, lockedUntil: null, updatedAt: now } },
+          { session },
+        );
+        await ctx.c.sessions.deleteMany({ userId: target._id }, { session });
+        return ctx.c.outbox.findOneAndUpdate(
+          { _id: id, status: 'failed' },
+          { $set: { status: 'pending', attempts: 0, nextAttemptAt: now, lockedAt: null, lockedBy: null, lastError: null, secret: sealSecret(ctx.config.outboxKey, password, current.dedupeKey) } },
+          { session, returnDocument: 'after' },
+        );
+      });
+      if (!item) throw new AppError('INVALID_STATE', 'Só é possível reenviar notificações que falharam.');
+      await writeAudit(ctx, undefined, { actor: actorForRoute(req, 'admin'), action: 'notification.retry', entity: 'outbox', entityId: id, ip: req.ip });
+      return { item: toOutboxItemView(item) };
+    }
     const item = await ctx.c.outbox.findOneAndUpdate(
       { _id: id, status: 'failed' },
       { $set: { status: 'pending', attempts: 0, nextAttemptAt: now, lockedAt: null, lockedBy: null, lastError: null } },

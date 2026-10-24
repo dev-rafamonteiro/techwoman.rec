@@ -5,6 +5,7 @@ import {
   EmailSchema,
   LinkedinInputSchema,
   MENTOR_BIO_MAX,
+  SearchQSchema,
   SlotIdSchema,
   UserStatusSchema,
 } from './common.js';
@@ -13,7 +14,7 @@ import { MentorListItemSchema, UserViewSchema } from './entities.js';
 /** E31 · GET /admin/mentors · A2 */
 export const E31ListQuerySchema = z
   .object({
-    q: z.string().trim().max(80).optional(),
+    q: SearchQSchema.optional(),
     status: z.union([UserStatusSchema, z.literal('never_logged_in')]).optional(),
     area: AreaKeySchema.optional(),
   })

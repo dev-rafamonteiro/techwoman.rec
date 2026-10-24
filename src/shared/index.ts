@@ -7,6 +7,7 @@ export * from './contracts/E02-create-mentee.js';
 export * from './contracts/E03-public-me.js';
 export * from './contracts/E04-mentee-actions.js';
 export * from './contracts/E05-resend-link.js';
+export * from './contracts/E06-public-calendar.js';
 export * from './contracts/E10-login.js';
 export * from './contracts/E11-logout.js';
 export * from './contracts/E12-me.js';
@@ -36,6 +37,7 @@ export * from './contracts/E42-admin-event-qrcode.js';
 export * from './contracts/E43-admin-users.js';
 export * from './contracts/E44-admin-notifications.js';
 export * from './contracts/E45-admin-audit.js';
+export * from './contracts/E46-admin-email-preview.js';
 
 import type { EndpointDef } from './contracts/common.js';
 import { E01 } from './contracts/E01-public-event.js';
@@ -43,6 +45,7 @@ import { E02 } from './contracts/E02-create-mentee.js';
 import { E03 } from './contracts/E03-public-me.js';
 import { E04 } from './contracts/E04-mentee-actions.js';
 import { E05 } from './contracts/E05-resend-link.js';
+import { E06 } from './contracts/E06-public-calendar.js';
 import { E10 } from './contracts/E10-login.js';
 import { E11 } from './contracts/E11-logout.js';
 import { E12 } from './contracts/E12-me.js';
@@ -72,15 +75,16 @@ import { E42Png, E42Svg } from './contracts/E42-admin-event-qrcode.js';
 import { E43Create, E43List, E43Patch } from './contracts/E43-admin-users.js';
 import { E44List, E44Retry } from './contracts/E44-admin-notifications.js';
 import { E45 } from './contracts/E45-admin-audit.js';
+import { E46 } from './contracts/E46-admin-email-preview.js';
 
 /** Todos os endpoints, por nome. Usado pelo cliente HTTP tipado e pelo registro de rotas da API. */
 export const ENDPOINTS = {
-  E01, E02, E03, E04, E05,
+  E01, E02, E03, E04, E05, E06,
   E10, E11, E12, E13,
   E20, E21, E22, E23, E24, E25, E26, E27, E28,
   E30, E31List, E31Create, E32, E33, E34, E35, E35Detail, E36, E37, E38, E38Stream,
   E39Create, E39Patch, E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg,
-  E43List, E43Create, E43Patch, E44List, E44Retry, E45,
+  E43List, E43Create, E43Patch, E44List, E44Retry, E45, E46,
 } as const;
 
 export type EndpointName = keyof typeof ENDPOINTS;

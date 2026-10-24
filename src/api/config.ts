@@ -1,4 +1,5 @@
-import { readEnv } from '@tw/db';
+import { readEnv, TEMP_PASSWORD_TTL_HOURS } from '@tw/db';
+import { parseOutboxKey } from './lib/secret-box.js';
 
 const bool = (v: string | undefined, def: boolean) => (v === undefined || v === '' ? def : ['1', 'true', 'yes'].includes(v.toLowerCase()));
 
@@ -31,6 +32,10 @@ export interface Config {
   /** Retenção/links: o link vale até N dias após o evento. */
   linkValidDaysAfterEvent: number;
   sessionHours: number;
+  /** Chave AES-256-GCM da senha provisória na outbox (Docker secret `outbox_key`). */
+  outboxKey: Buffer;
+  /** Validade da senha provisória (PLAN: 72 h). */
+  tempPasswordHours: number;
 }
 
 /** `role: 'worker'` não exige JWT_SECRET nem TURNSTILE_SECRET (o worker não autentica nem valida Turnstile). */
@@ -44,6 +49,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, role: 'api' | '
   for (const [name, v] of required) {
     if (!v || v.length < 32) throw new Error(`${name} (ou ${name}_FILE) ausente ou curto demais (mínimo 32 caracteres)`);
   }
+  const outboxRaw = readEnv('OUTBOX_KEY', env) ?? (isProd ? '' : Buffer.from('dev-only-outbox-key-change-me-00').toString('base64'));
+  if (!outboxRaw) throw new Error('OUTBOX_KEY (ou OUTBOX_KEY_FILE) é obrigatório em produção');
+  const outboxKey = parseOutboxKey(outboxRaw);
   const turnstileMode = env['TURNSTILE_MODE'] === 'test' ? 'test' : 'live';
   if (isProd && turnstileMode === 'test') throw new Error('TURNSTILE_MODE=test não é permitido em produção');
   const publicBaseUrl = (env['PUBLIC_BASE_URL'] || (isProd ? 'https://techwoman.dev' : 'http://localhost:5173')).replace(/\/$/, '');
@@ -71,5 +79,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, role: 'api' | '
     mongoDb: readEnv('MONGODB_DB', env),
     linkValidDaysAfterEvent: 7,
     sessionHours: 12,
+    outboxKey,
+    tempPasswordHours: TEMP_PASSWORD_TTL_HOURS,
   };
 }

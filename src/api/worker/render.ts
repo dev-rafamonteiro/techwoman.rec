@@ -10,7 +10,6 @@ const SUBJECTS: Record<string, string> = {
   expired: 'O prazo para confirmar terminou',
   cancelled: 'Sua mentoria foi cancelada',
   moved: 'Sua mentoria mudou de horário',
-  staff_password: 'Seu acesso ao painel Tech Woman',
 };
 
 const MOVED_DEFAULT = 'Sua mentoria foi remarcada: {horario} na {mesa} com {mentora}. Sua confirmação continua valendo.';
@@ -29,10 +28,6 @@ export interface RenderInput {
 export function render(i: RenderInput): { subject: string; text: string } {
   const { item, event } = i;
   const subject = SUBJECTS[item.type] ?? 'Tech Woman';
-  if (item.type === 'staff_password') {
-    const pwd = String(item.payload['provisionalPassword'] ?? '');
-    return { subject, text: `Seu acesso ao painel Tech Woman foi criado. Senha provisória: ${pwd}\nVocê vai trocá-la no primeiro acesso: ${i.baseUrl}/entrar` };
-  }
   const tpl = item.type === 'moved' ? MOVED_DEFAULT : (event.templates as Record<string, string>)[item.type] ?? '';
   const a = i.appointment;
   const vars: Record<string, string> = {
