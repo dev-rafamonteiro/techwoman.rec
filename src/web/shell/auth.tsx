@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ENDPOINTS, type E10Body, type Role, type SessionUser } from '@tw/shared';
 import { ApiError, call, onPasswordChangeRequired, onSessionExpired } from '../net/client';
@@ -39,10 +39,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const userRef = useRef<SessionUser | null>(null);
+  userRef.current = user;
 
   const refresh = useCallback(async () => {
     try {
-      const { user: u } = await call(ENDPOINTS.E12);
+      const { user: u } = await call(ENDPOINTS.E12, { silentAuth: true });
       setUser(u);
       return u;
     } catch (e) {
@@ -57,6 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sessão expirada em qualquer chamada de staff: volta para M1 mantendo a rota de retorno.
   useEffect(() => onSessionExpired(() => {
+    // Sem usuário no estado não há sessão que expirar (visitante em rota pública): nada a fazer.
+    if (!userRef.current) return;
     setUser(null);
     const here = window.location.pathname + window.location.search;
     if (!here.startsWith('/entrar')) navigate(loginUrl(here), { replace: true });

@@ -84,6 +84,8 @@ export interface CallOptions<E extends EndpointDef> {
   idempotencyKey?: string;
   /** Corpo multipart (E33, upload de CSV). Usado por callForm; o Content-Type com boundary fica por conta do navegador. */
   form?: FormData;
+  /** Não dispara o redirecionamento de sessão expirada em 401 (probe inicial de E12: 401 ali só significa "sem sessão"). */
+  silentAuth?: boolean;
   /** Token do Turnstile (E02). */
   turnstileToken?: string;
   signal?: AbortSignal;
@@ -142,7 +144,7 @@ async function send<E extends EndpointDef>(ep: E, opts: CallOptions<E>): Promise
       /* corpo não-JSON */
     }
     const err = new ApiError(res.status, code, message, details);
-    if (ep.auth === 'staff' && err.code === 'UNAUTHENTICATED') sessionExpiredListeners.forEach((fn) => fn());
+    if (ep.auth === 'staff' && err.code === 'UNAUTHENTICATED' && !opts.silentAuth) sessionExpiredListeners.forEach((fn) => fn());
     if (ep.auth === 'staff' && err.code === 'PASSWORD_CHANGE_REQUIRED') passwordChangeListeners.forEach((fn) => fn());
     throw err;
   }
