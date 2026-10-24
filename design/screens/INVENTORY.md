@@ -41,11 +41,15 @@ Também não existem na arte os componentes: Selo de prioridade como componente 
 
 Decisão do ui-kit: M1–M6 e A1–A9 serão DERIVADAS do UI-SPEC com os tokens e componentes extraídos (mesma identidade). Cada `design/screens/<codigo>.html` dessas telas leva o aviso "derivada do UI-SPEC, sem arte do Claude Design".
 
+## Referências geradas
+
+`design/screens/{P1,P2,P3,P4,P5,P6,QR}.html`: autocontidas (fontes embutidas), 375 e 1280 lado a lado, um bloco por estado (P2: intro, pergunta, feedback; P3: resultado; P4: normal, erros, já inscrita, falha de rede; P5: padrão, copiado; P6: 8 status + urgente, recusando, editando período, confirmando cancelamento). Capturadas do HTML original renderizado no Chrome. `M1..M6` e `A1..A9` não têm referência (sem arte); o kit em `src/web/ui` é a referência visual deles.
+
 ## Telas existentes com um só breakpoint
 
 | Tela | Desenhada em | Falta derivar |
 | --- | --- | --- |
-| P1, P2, P3 | 1440 | 375 (o site atual em `css/`/`js/` na raiz já é responsivo; usar como guia) |
+| P1, P2, P3 | 1440 | 375: verificado renderizando em 375 px, o layout da arte é fluido (flex-wrap) e vira coluna sozinho; `design/screens/P1..P3.html` mostram os dois lado a lado |
 | P4, P5, P6 | 375 | 1280 (centralizar coluna única de até 480 px sobre o fundo `--color-bg`; no desktop o header ocupa a largura toda) |
 
 ## Códigos RN e E citados no HTML
