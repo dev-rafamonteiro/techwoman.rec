@@ -1,4 +1,8 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+
+const domain = fileURLToPath(new URL("../src/api/domain/index.ts", import.meta.url));
+const alias = { "@tw/api/domain": domain };
 
 export default defineConfig({
   test: {
@@ -6,6 +10,7 @@ export default defineConfig({
       {
         test: {
           name: "unit",
+          alias,
           include: ["unit/**/*.test.ts"],
           environment: "node",
         },
@@ -13,6 +18,7 @@ export default defineConfig({
       {
         test: {
           name: "integration",
+          alias,
           include: ["integration/**/*.test.ts"],
           environment: "node",
           // cada arquivo usa um banco isolado; arquivos em paralelo, testes dentro do arquivo em sequência
