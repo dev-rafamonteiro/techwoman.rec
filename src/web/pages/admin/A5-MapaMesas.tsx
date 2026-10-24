@@ -50,11 +50,10 @@ export default function A5MapaMesas() {
 
   return (
     <div className="tw-page tw-stack">
-      <PageHead title="Mapa de mesas">
+      <PageHead title="Mapa de mesas" sub={`${activeTables.length} mesas × ${slots.length} horários.`}>
         <Button size="sm" variant={view === 'now' ? 'primary' : 'secondary'} aria-pressed={view === 'now'} onClick={() => setView('now')}>Agora</Button>
         <Button size="sm" variant={view === 'all' ? 'primary' : 'secondary'} aria-pressed={view === 'all'} onClick={() => setView('all')}>Dia inteiro</Button>
       </PageHead>
-      <p style={{ margin: 0 }}>{activeTables.length} mesas × {slots.length} horários.</p>
       <ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} />
       {activeTables.length === 0 || slots.length === 0 ? (
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />

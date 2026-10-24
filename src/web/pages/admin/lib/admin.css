@@ -36,3 +36,13 @@
 .tw-page .tw-scroll { max-width: 100%; }
 .tw-data input.tw-input { min-width: 110px; }
 .tw-page .tw-scroll { position: relative; }
+.adm-head h1 { font-size: var(--text-2xl); }
+.adm-sub { margin: 0; color: var(--color-ink-muted); }
+.adm-switch { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font: inherit; font-weight: 700; background: none; border: 0; cursor: pointer; color: inherit; padding: 0; }
+.adm-switch i { width: 48px; height: 28px; border-radius: 14px; background: var(--tw-gray-400); position: relative; flex: none; }
+.adm-switch i::after { content: ''; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--tw-white); transition: left .15s; }
+.adm-switch[aria-checked="true"] i { background: var(--tw-mint-900); }
+.adm-switch[aria-checked="true"] i::after { left: 23px; }
+.adm-switch:focus-visible, .adm-chip:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.adm-chip { min-height: 44px; padding: 0 14px; border-radius: 99px; border: 2px solid var(--color-border); background: var(--tw-white); font: inherit; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: inherit; }
+.adm-chip--on { background: var(--tw-lilac-100); border-color: var(--color-link); }

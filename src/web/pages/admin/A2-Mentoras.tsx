@@ -70,7 +70,7 @@ export default function A2Mentoras() {
     {
       key: 'actions', header: 'Ações',
       render: (m) => (
-        <div className="tw-row" onClick={(e) => e.stopPropagation()}>
+        <div className="tw-row" style={{ flexWrap: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
           <LinkButton to={`/admin/mentoras/${m.id}`} variant="secondary" size="sm">Editar</LinkButton>
           <Button variant="secondary" size="sm" disabled={busy === m.id} onClick={() => { setSendByEmail(false); setResetFor(m); }}>Redefinir senha</Button>
           <Button variant={m.status === 'active' ? 'danger' : 'mint'} size="sm" disabled={busy === m.id} onClick={() => void toggle(m)}>{m.status === 'active' ? 'Desativar' : 'Ativar'}</Button>
@@ -95,7 +95,7 @@ export default function A2Mentoras() {
 
   return (
     <div className="tw-page">
-      <PageHead title="Mentoras">
+      <PageHead title="Mentoras" sub="Organização é de uso interno e nunca aparece para a participante.">
         <LinkButton to="/admin/mentoras/importar" variant="secondary">Importar lista (CSV)</LinkButton>
         <LinkButton to="/admin/mentoras/nova">Nova mentora</LinkButton>
       </PageHead>

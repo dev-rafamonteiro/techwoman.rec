@@ -4,10 +4,13 @@ import { ApiError, call, useQuery } from '../../../ui';
 import './admin.css';
 
 /** Cabeçalho de página com ações à direita. */
-export function PageHead({ title, children }: { title: string; children?: ReactNode }) {
+export function PageHead({ title, sub, children }: { title: string; sub?: string; children?: ReactNode }) {
   return (
     <div className="adm-head">
-      <h1>{title}</h1>
+      <div className="tw-stack" style={{ gap: 4 }}>
+        <h1>{title}</h1>
+        {sub && <p className="adm-sub">{sub}</p>}
+      </div>
       {children && <div className="tw-row">{children}</div>}
     </div>
   );
@@ -75,5 +78,15 @@ export function LineChart({ data, label }: { data: { label: string; value: numbe
         </g>
       ))}
     </svg>
+  );
+}
+
+/** Interruptor (role=switch), como na referência de A7. */
+export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} className="adm-switch" onClick={() => onChange(!checked)}>
+      <i aria-hidden="true" />
+      {label}
+    </button>
   );
 }

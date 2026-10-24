@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ENDPOINTS, type Area, type E41PutBody, type EventConfig } from '@tw/shared';
-import { ApiError, Button, CheckboxField, ErrorState, SkeletonList, TextArea, TextField, call, callBlob, endpointUrl, saveBlob, useQuery, useToast } from '../../ui';
-import { PageHead, errMsg, useTitle } from './lib/common';
+import { ENDPOINTS, type E41PutBody, type EventConfig } from '@tw/shared';
+import { ApiError, Button, ErrorState, SkeletonList, Card, SlotToggleGrid, TextArea, TextField, call, callBlob, endpointUrl, saveBlob, useQuery, useToast } from '../../ui';
+import { PageHead, Switch, errMsg, useTitle } from './lib/common';
 
 type Draft = Omit<EventConfig, 'id' | 'slots'>;
 const TEMPLATE_LABELS: [keyof EventConfig['templates'], string][] = [
@@ -41,7 +41,6 @@ export default function A7Configuracoes() {
   if (q.status === 'loading' || !d) return q.status === 'error' ? <div className="tw-page"><ErrorState error={q.error} onRetry={q.reload} /></div> : <div className="tw-page"><SkeletonList rows={4} /></div>;
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((p) => (p ? { ...p, [k]: v } : p));
   const num = (k: 'slotMinutes' | 'gapMinutes' | 'responseWindowMinutes' | 'minLeadMinutes') => (e: React.ChangeEvent<HTMLInputElement>) => set(k, Number(e.target.value));
-  const setArea = (i: number, patch: Partial<Area>) => set('areas', d.areas.map((a, j) => (j === i ? { ...a, ...patch } : a)));
   const timesInvalid = toMin(d.endTime) <= toMin(d.startTime);
 
   const save = async () => {
@@ -64,11 +63,11 @@ export default function A7Configuracoes() {
 
   return (
     <div className="tw-page tw-stack">
-      <PageHead title="Configurações do evento"><Button loading={saving} disabled={timesInvalid || d.areas.length === 0} onClick={() => void save()}>Salvar configurações</Button></PageHead>
+      <PageHead title="Configurações do evento" sub="Só super admin." />
       {gridError && <div className="adm-note" role="alert" data-testid="grid-locked">{gridError}</div>}
       {hasActive && <div className="adm-note">Há mentorias ativas: horário, duração e intervalo ficam bloqueados.</div>}
 
-      <section className="adm-panel adm-form">
+      <Card className="tw-stack"><b>Evento</b><div className="adm-form">
         <TextField label="Nome do evento" value={d.name} onChange={(e) => set('name', e.target.value)} />
         <TextField label="Data" type="date" value={d.date} onChange={(e) => set('date', e.target.value)} />
         <TextField label="Local" optional value={d.location ?? ''} onChange={(e) => set('location', e.target.value || null)} />
@@ -77,40 +76,46 @@ export default function A7Configuracoes() {
         <TextField label="Fim" type="time" value={d.endTime} disabled={hasActive} onChange={(e) => set('endTime', e.target.value)} error={timesInvalid ? 'O fim deve ser depois do início.' : undefined} />
         <TextField label="Duração da sessão (min)" type="number" min={5} max={180} value={d.slotMinutes} disabled={hasActive} onChange={num('slotMinutes')} />
         <TextField label="Intervalo entre sessões (min)" type="number" min={0} max={60} value={d.gapMinutes} disabled={hasActive} onChange={num('gapMinutes')} />
+      </div>
+        <div aria-live="polite" data-testid="grid-preview"><b>Prévia da grade</b>
+          {slots.length === 0 ? <p>Nenhum horário cabe nesses valores.</p> : (
+            <SlotToggleGrid legend="Prévia da grade de horários" disabled caption="Horário gerado" selected={new Set()} onToggle={() => undefined} slots={slots.map((l) => ({ id: l, label: l.split(' – ')[0]! }))} />
+          )}
+        </div>
+      </Card>
+      <Card className="tw-stack"><b>Convites</b><div className="adm-form">
         <TextField label="Prazo para responder ao convite (min)" type="number" min={1} max={120} value={d.responseWindowMinutes} onChange={num('responseWindowMinutes')} />
         <TextField label="Antecedência mínima do convite (min)" type="number" min={0} max={120} value={d.minLeadMinutes} onChange={num('minLeadMinutes')} />
-        <div className="adm-wide"><CheckboxField label="Inscrições abertas" checked={d.registrationOpen} onChange={(e) => set('registrationOpen', e.target.checked)} /></div>
-      </section>
-
-      <section className="adm-panel" aria-live="polite" data-testid="grid-preview">
-        <h2>Prévia da grade ({slots.length} horários)</h2>
-        {slots.length === 0 ? <p>Nenhum horário cabe nesses valores.</p> : <div className="tw-row">{slots.map((s) => <span key={s} className="tw-badge tw-badge--area">{s}</span>)}</div>}
-      </section>
-
-      <section className="adm-panel tw-stack">
-        <h2>Áreas disponíveis</h2>
-        {d.areas.map((a, i) => (
-          <div className="tw-row" key={a.key || i}>
-            <input className="tw-input" aria-label={`Nome da área ${i + 1}`} value={a.label} onChange={(e) => setArea(i, { label: e.target.value, key: a.key || slug(e.target.value) })} />
-            <Button size="sm" variant="danger-link" disabled={d.areas.length <= 1} onClick={() => set('areas', d.areas.filter((_, j) => j !== i))}>Remover</Button>
+        <div className="adm-wide"><Switch label="Inscrições abertas" checked={d.registrationOpen} onChange={(v) => set('registrationOpen', v)} /></div>
+      </div>
+        <div className="tw-stack"><b>Áreas disponíveis</b>
+          <div className="tw-row">
+            {d.areas.map((a, i) => (
+              <button key={a.key || i} type="button" className="adm-chip adm-chip--on" disabled={d.areas.length <= 1} aria-label={`Remover área ${a.label}`} onClick={() => set('areas', d.areas.filter((_, j) => j !== i))}>{a.label} ✕</button>
+            ))}
+            <button type="button" className="adm-chip" onClick={() => { const label = window.prompt('Nome da nova área')?.trim(); if (label) set('areas', [...d.areas, { key: slug(label), label }]); }}>+ Adicionar</button>
           </div>
-        ))}
-        <div><Button variant="secondary" size="sm" onClick={() => set('areas', [...d.areas, { key: '', label: '' }])}>Adicionar área</Button></div>
-      </section>
+        </div>
+      </Card>
 
-      <section className="adm-panel adm-form">
-        <h2 className="adm-wide">Textos das mensagens</h2>
-        <p className="adm-wide">Variáveis: {'{nome}'}, {'{mentora}'}, {'{mesa}'}, {'{horario}'}.</p>
+      
+
+      
+
+      <Card className="tw-stack"><b>Mensagens</b><div className="adm-form">
+        <p className="adm-wide adm-sub">Variáveis: {'{nome}'}, {'{mentora}'}, {'{mesa}'}, {'{horario}'}.</p>
         {TEMPLATE_LABELS.map(([k, label]) => (
           <TextArea key={k} label={label} maxLength={1000} value={d.templates[k]} onChange={(e) => set('templates', { ...d.templates, [k]: e.target.value })} />
         ))}
-      </section>
+      </div></Card>
 
-      <section className="adm-panel tw-stack" data-testid="qr">
-        <h2>QR Code da inscrição</h2>
+      <Card className="tw-stack"><div data-testid="qr" className="tw-stack">
+        <b>QR Code da inscrição</b>
         <img className="adm-qr" src={endpointUrl(ENDPOINTS.E42Svg)} alt="QR Code da página de inscrição" />
         <div className="tw-row"><Button variant="secondary" onClick={() => void qr('png')}>Baixar PNG</Button><Button variant="secondary" onClick={() => void qr('svg')}>Baixar SVG</Button></div>
-      </section>
+      </div></Card>
+
+      <div><Button loading={saving} disabled={timesInvalid || d.areas.length === 0} onClick={() => void save()}>Salvar configurações</Button></div>
     </div>
   );
 }

@@ -61,7 +61,7 @@ export default function A8Administradores() {
         return (
           <div className="tw-row">
             <Button size="sm" variant="secondary" disabled={busy === u.id || (self && isSuper)} title={self && isSuper ? 'Você não pode remover o próprio papel.' : undefined}
-              onClick={() => void patch(u, { roles: [isSuper ? 'admin' : 'super_admin'] }, 'Papel atualizado.')}>{isSuper ? 'Tornar admin' : 'Tornar super admin'}</Button>
+              onClick={() => { if (window.confirm(`Trocar o papel de ${u.name} para ${isSuper ? 'Admin' : 'Super admin'}?`)) void patch(u, { roles: [isSuper ? 'admin' : 'super_admin'] }, 'Papel atualizado.'); }}>Trocar papel</Button>
             <Button size="sm" variant="secondary" disabled={busy === u.id} onClick={() => { if (window.confirm(`Redefinir a senha de ${u.name}?`)) void patch(u, { resetPassword: true }, ''); }}>Redefinir senha</Button>
             <Button size="sm" variant={u.status === 'active' ? 'danger' : 'mint'} disabled={busy === u.id || (self && u.status === 'active')}
               onClick={() => void patch(u, { status: u.status === 'active' ? 'disabled' : 'active' }, u.status === 'active' ? 'Usuário desativado.' : 'Usuário reativado.')}>{u.status === 'active' ? 'Desativar' : 'Ativar'}</Button>
@@ -73,7 +73,7 @@ export default function A8Administradores() {
 
   return (
     <div className="tw-page">
-      <PageHead title="Administradores"><Button onClick={() => setCreating(true)}>Novo administrador</Button></PageHead>
+      <PageHead title="Administradores" sub="Só super admin."><Button onClick={() => setCreating(true)}>Novo administrador</Button></PageHead>
       {q.status === 'loading' && <SkeletonList rows={4} height={56} />}
       {q.status === 'error' && <ErrorState error={q.error} onRetry={q.reload} />}
       {q.status === 'success' && <DataTable caption="Administradores" columns={columns} rows={q.data.items} rowKey={(u) => u.id} exportName="administradores.csv" emptyTitle="Nenhum administrador" emptyText="Crie o primeiro com “Novo administrador”." />}
