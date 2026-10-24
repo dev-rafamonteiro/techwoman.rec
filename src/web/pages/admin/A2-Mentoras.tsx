@@ -1,0 +1,133 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ENDPOINTS, MentorHasAppointmentsDetailsSchema, type MentorHasAppointmentsDetails, type MentorListItem } from '@tw/shared';
+import { ApiError, Button, DataTable, ErrorState, LinkButton, Overlay, SecretReveal, SelectField, SkeletonList, TextField, call, formatDateTime, formatTime, useQuery, useToast, type Column } from '../../ui';
+import { PageHead, errMsg, useAreas, useDebounced, useTitle } from './lib/common';
+
+type StatusFilter = '' | 'active' | 'disabled' | 'never_logged_in';
+
+function statusOf(m: MentorListItem): { label: string; key: string } {
+  if (m.status === 'disabled') return { label: 'Desativada', key: 'disabled' };
+  if (m.neverLoggedIn) return { label: 'Nunca acessou', key: 'never' };
+  return { label: 'Ativa', key: 'active' };
+}
+
+/** A2 · Mentoras (E31, E32, E34). */
+export default function A2Mentoras() {
+  useTitle('Mentoras');
+  const toast = useToast();
+  const { areas, label: areaLabel } = useAreas();
+  const [q, setQ] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('');
+  const [area, setArea] = useState('');
+  const dq = useDebounced(q);
+  const list = useQuery(
+    (signal) => call(ENDPOINTS.E31List, { query: { q: dq || undefined, status: status || undefined, area: area || undefined }, signal }),
+    [dq, status, area],
+  );
+  const [secret, setSecret] = useState<{ name: string; id: string; password: string } | null>(null);
+  const [realocar, setRealocar] = useState<{ name: string; details: MentorHasAppointmentsDetails } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const toggle = async (m: MentorListItem) => {
+    const next = m.status === 'active' ? 'disabled' : 'active';
+    setBusy(m.id);
+    try {
+      await call(ENDPOINTS.E32, { params: { id: m.id }, body: { status: next } });
+      toast.success(next === 'disabled' ? `${m.name} foi desativada.` : `${m.name} foi reativada.`);
+      await list.refetch();
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'MENTOR_HAS_APPOINTMENTS') {
+        const parsed = MentorHasAppointmentsDetailsSchema.safeParse(e.details);
+        setRealocar({ name: m.name, details: parsed.success ? parsed.data : { appointments: [] } });
+      } else toast.error(errMsg(e));
+    } finally { setBusy(null); }
+  };
+
+  const reset = async (m: MentorListItem) => {
+    if (!window.confirm(`Redefinir a senha de ${m.name}? A senha atual deixa de valer e as sessões são encerradas.`)) return;
+    setBusy(m.id);
+    try {
+      const r = await call(ENDPOINTS.E34, { params: { id: m.id }, body: { sendByEmail: false } });
+      setSecret({ name: m.name, id: m.id, password: r.provisionalPassword });
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
+  };
+
+  const sendEmail = async () => {
+    if (!secret) return;
+    try {
+      // E34 gera nova senha; reenvio por e-mail troca o valor mostrado.
+      const r = await call(ENDPOINTS.E34, { params: { id: secret.id }, body: { sendByEmail: true } });
+      setSecret({ ...secret, password: r.provisionalPassword });
+      toast.success('Nova senha provisória enviada por e-mail.');
+    } catch (e) { toast.error(errMsg(e)); }
+  };
+
+  const columns: Column<MentorListItem>[] = [
+    { key: 'name', header: 'Nome', render: (m) => <strong>{m.name}</strong>, text: (m) => m.name },
+    { key: 'email', header: 'E-mail', render: (m) => m.email, text: (m) => m.email },
+    { key: 'org', header: 'Organização (interno)', render: (m) => m.organization ?? '—', text: (m) => m.organization ?? '' },
+    { key: 'areas', header: 'Áreas', render: (m) => m.areas.map(areaLabel).join(', ') || '—', text: (m) => m.areas.map(areaLabel).join(', ') },
+    { key: 'slots', header: 'Horários', render: (m) => m.availableSlots, text: (m) => m.availableSlots },
+    { key: 'appts', header: 'Mentorias (conf./concl.)', render: (m) => `${m.confirmedCount}/${m.doneCount}`, text: (m) => `${m.confirmedCount}/${m.doneCount}` },
+    { key: 'last', header: 'Último acesso', render: (m) => (m.lastLoginAt ? formatDateTime(m.lastLoginAt) : '—'), text: (m) => m.lastLoginAt ?? '' },
+    { key: 'status', header: 'Status', render: (m) => <span data-testid={`status-${m.id}`}>{statusOf(m).label}</span>, text: (m) => statusOf(m).label },
+    {
+      key: 'actions', header: 'Ações',
+      render: (m) => (
+        <div className="tw-row" onClick={(e) => e.stopPropagation()}>
+          <LinkButton to={`/admin/mentoras/${m.id}`} variant="secondary" size="sm">Editar</LinkButton>
+          <Button variant="secondary" size="sm" disabled={busy === m.id} onClick={() => void reset(m)}>Redefinir senha</Button>
+          <Button variant={m.status === 'active' ? 'danger' : 'mint'} size="sm" disabled={busy === m.id} onClick={() => void toggle(m)}>{m.status === 'active' ? 'Desativar' : 'Ativar'}</Button>
+          <Link to={`/admin/mapa?mentora=${m.id}`} className="tw-btn tw-btn--ghost tw-btn--sm">Ver agenda</Link>
+        </div>
+      ),
+    },
+  ];
+
+  const filters = (
+    <>
+      <div className="tw-toolbar__grow"><TextField label="Buscar" placeholder="Nome ou e-mail" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+      <SelectField label="Status" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
+        <option value="">Todos</option><option value="active">Ativa</option><option value="disabled">Desativada</option><option value="never_logged_in">Nunca acessou</option>
+      </SelectField>
+      <SelectField label="Área" value={area} onChange={(e) => setArea(e.target.value)}>
+        <option value="">Todas</option>
+        {areas.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
+      </SelectField>
+    </>
+  );
+
+  return (
+    <div className="tw-page">
+      <PageHead title="Mentoras">
+        <LinkButton to="/admin/mentoras/importar" variant="secondary">Importar lista (CSV)</LinkButton>
+        <LinkButton to="/admin/mentoras/nova">Nova mentora</LinkButton>
+      </PageHead>
+      {list.status === 'loading' && <SkeletonList rows={5} height={56} />}
+      {list.status === 'error' && <ErrorState error={list.error} onRetry={list.reload} />}
+      {list.status === 'success' && (
+        <DataTable
+          caption="Lista de mentoras" columns={columns} rows={list.data.items} rowKey={(m) => m.id} filters={filters}
+          exportName="mentoras.csv" emptyTitle="Nenhuma mentora encontrada" emptyText="Cadastre uma mentora ou importe a lista em CSV."
+        />
+      )}
+      <Overlay title={`Senha de ${secret?.name ?? ''}`} open={!!secret} onClose={() => setSecret(null)}>
+        {secret && <SecretReveal secret={secret.password} onSendEmail={sendEmail} onDone={() => setSecret(null)} />}
+      </Overlay>
+      <Overlay title="Realocar mentorias antes de desativar" open={!!realocar} onClose={() => setRealocar(null)}>
+        {realocar && (
+          <div className="tw-stack" data-testid="realocar-lista">
+            <p>{realocar.name} tem mentorias futuras. Mova ou cancele cada uma no mapa de mesas e tente desativar de novo.</p>
+            <ul className="adm-list">
+              {realocar.details.appointments.map((a) => (
+                <li key={a.id}><span>{formatTime(a.startAt)} · mesa {a.tableNumber}</span><span>{a.menteeName}</span></li>
+              ))}
+            </ul>
+            <LinkButton to="/admin/mapa" onClick={() => setRealocar(null)}>Abrir mapa de mesas</LinkButton>
+          </div>
+        )}
+      </Overlay>
+    </div>
+  );
+}
