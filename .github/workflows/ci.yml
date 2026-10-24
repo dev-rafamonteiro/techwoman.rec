@@ -20,7 +20,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
+      # build antes: o typecheck dos testes lê os .d.ts de @tw/shared, @tw/db e @tw/api
       - run: npm run build
+      - run: npm run typecheck
       - run: npm test
       - run: npm run test:integration
