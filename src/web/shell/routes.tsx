@@ -59,6 +59,10 @@ export const routes: RouteObject[] = [
     { path: '/mentoria/inscricao', element: el('public', 'P4') },
     { path: '/mentoria/inscricao/ok', element: el('public', 'P5') },
   ] },
+  { element: <ParticipantLayout title="Privacidade" />, children: [
+    // Aviso de privacidade (LGPD), linkado em P4. Arquivo: pages/public/Privacidade*.tsx.
+    { path: '/privacidade', element: el('public', 'Privacidade') },
+  ] },
   { element: <ParticipantLayout title="Minha mentoria" />, children: [
     { path: '/mentoria/minha', element: el('public', 'P6') },
   ] },
