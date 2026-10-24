@@ -21,8 +21,6 @@ export default defineConfig({
           alias,
           include: ["integration/**/*.test.ts"],
           environment: "node",
-          // cada arquivo usa um banco isolado; arquivos em paralelo, testes dentro do arquivo em sequência
-          fileParallelism: true,
           testTimeout: 30_000,
           hookTimeout: 60_000,
         },
