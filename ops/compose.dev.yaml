@@ -18,7 +18,7 @@ x-dev-env: &dev-env
   # chaves de teste públicas da Cloudflare (sempre aprovam)
   TURNSTILE_SECRET: 1x0000000000000000000000000000000AA
   TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+  # EMAIL_PROVIDER, EMAIL_API_KEY e EMAIL_FROM vêm do .env da raiz (Resend); sem eles, o worker só registra em log.
   WHATSAPP_ENABLED: "false"
 
 services:
@@ -38,6 +38,9 @@ services:
 
   api:
     build: { context: .., dockerfile: ops/api.Dockerfile }
+    env_file:
+      - path: ../.env
+        required: false
     command: ["node", "dist/server.js"]
     stop_grace_period: 30s
     environment: *dev-env
@@ -56,6 +59,9 @@ services:
 
   worker:
     build: { context: .., dockerfile: ops/api.Dockerfile }
+    env_file:
+      - path: ../.env
+        required: false
     command: ["node", "dist/worker.js"]
     stop_grace_period: 30s
     environment: *dev-env

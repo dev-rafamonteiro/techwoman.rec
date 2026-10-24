@@ -8,3 +8,4 @@ export * from './password.js';
 export * from './event.js';
 export * from './seed-super-admin.js';
 export * from './import-mentors.js';
+export * from './demo.js';

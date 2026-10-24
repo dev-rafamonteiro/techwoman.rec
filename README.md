@@ -49,6 +49,29 @@ docker compose -f ops/compose.dev.yaml up --build   # mongo-local + api + worker
 docker compose -f ops/compose.dev.yaml down
 ```
 
+E-mail: `api` e `worker` leem `EMAIL_PROVIDER`, `EMAIL_API_KEY` e `EMAIL_FROM` do `.env` da raiz. Com
+`EMAIL_PROVIDER=resend` e a chave preenchida, as notificações saem pelo Resend (domínio `techwoman.dev` verificado);
+sem isso, o worker só registra em log. WhatsApp fica desligado (`WHATSAPP_ENABLED=false`). Os testes E2E forçam
+`EMAIL_PROVIDER=console` e não enviam nada.
+
+### Massa de demonstração
+
+Com a stack de pé, carregue evento, mesas e a massa (1 coordenação, 10 mentoras, 40 participantes: 28 na fila,
+2 com prioridade, 3 convites pendentes e 9 confirmadas). `MENTEE_TOKEN_SECRET` tem de ser o mesmo da API
+(o valor de dev está em `ops/compose.dev.yaml`) para os links pessoais impressos funcionarem.
+
+```sh
+export MONGODB_URI='mongodb://localhost:27017/?directConnection=true' MONGODB_DB=techwoman EVENT_ID=dev
+export SEED_REGISTRATION_OPEN=true MENTEE_TOKEN_SECRET='<o mesmo de ops/compose.dev.yaml>'
+npm run db:seed
+npm run db:seed:demo               # imprime logins, senha (uma vez) e links pessoais de exemplo
+npm run db:seed:demo -- --reset    # apaga a massa anterior e recria (DEMO_PASSWORD fixa a senha)
+```
+
+Os e-mails da massa são `delivered+tw-demo-<nome>@resend.dev` (endereços de teste do Resend: simulam entrega).
+Para receber de verdade, use `DEMO_EMAIL_TEMPLATE='voce+{slug}@seu-dominio'`. Os convites pendentes vencem em
+15 minutos (RN da janela de resposta); recarregue com `--reset` antes da apresentação.
+
 Produção (`ops/compose.yaml`): `cloudflared`, `web`, `api`, `worker`; redes `edge`, `app` (`internal: true`) e `egress`;
 nenhuma porta publicada. Segredos em arquivos `ops/secrets/<nome>` (gitignored): `mongo_uri`, `jwt_secret`,
 `turnstile_secret`, `email_api_key`, `whatsapp_token`, `cf_tunnel_token`. A aplicação lê `VAR` ou `VAR_FILE`.
