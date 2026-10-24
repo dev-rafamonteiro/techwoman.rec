@@ -66,7 +66,7 @@ export function CheckboxField({ label, error, ...rest }: { label: ReactNode; err
         <input {...rest} id={id} type="checkbox" aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-msg` : undefined} />
         <span>{label}</span>
       </label>
-      {error && <span id={`${id}-msg`} className="tw-field__error" role="alert">{error}</span>}
+      {error && <span id={`${id}-msg`} className="tw-field__error" role="alert"><span aria-hidden="true">⚠ </span>{error}</span>}
     </div>
   );
 }
@@ -98,7 +98,7 @@ export function RadioCards<V extends string>({ legend, name, options, value, onC
           </label>
         ))}
       </div>
-      {error ? <span id={`${id}-msg`} className="tw-field__error" role="alert">{error}</span> : hint ? <span id={`${id}-msg`} className="tw-field__hint">{hint}</span> : null}
+      {error ? <span id={`${id}-msg`} className="tw-field__error" role="alert"><span aria-hidden="true">⚠ </span>{error}</span> : hint ? <span id={`${id}-msg`} className="tw-field__hint" style={{ fontWeight: 600 }}>{hint}</span> : null}
     </fieldset>
   );
 }

@@ -68,6 +68,8 @@ export const routes: RouteObject[] = [
   ] },
   { element: <ParticipantLayout title="Entrar" />, children: [
     { path: '/entrar', element: el('mentora', 'M1') },
+  ] },
+  { element: <ParticipantLayout title="Primeiro acesso" />, children: [
     { path: '/entrar/nova-senha', element: <RequireRole allowPasswordChange>{el('mentora', 'M2')}</RequireRole> },
   ] },
   { element: <RequireRole roles={['mentor']}><MentorLayout /></RequireRole>, children: [
