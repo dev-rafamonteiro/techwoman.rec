@@ -137,8 +137,8 @@ export default function P4Inscricao() {
 
   return (
     <div className="tw-page">
-      <Hero eyebrow={`Mentoria · ${ev.date.slice(8, 10)}/${ev.date.slice(5, 7)}`} title="Inscrição na mentoria">
-        <p>Leva um minuto. A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</p>
+      <Hero eyebrow="Inscrição" title="Quero uma mentoria">
+        <p>Leva 1 minuto. Uma mentora da sua área vai propor horário e mesa.</p>
       </Hero>
 
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="p4-form">
@@ -152,15 +152,15 @@ export default function P4Inscricao() {
             {formError}
           </div>
         )}
-        <TextField label="Nome completo" name="name" autoComplete="name" value={values.name} error={shown('name')}
+        <TextField label="Nome completo" placeholder="Como você quer ser chamada" name="name" autoComplete="name" value={values.name} error={shown('name')}
           onChange={(e) => set('name', e.target.value)} onBlur={() => touch('name')} data-testid="p4-name" />
-        <TextField label="E-mail" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} error={shown('email')}
+        <TextField label="E-mail" placeholder="voce@email.com" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} error={shown('email')}
           onChange={(e) => { set('email', e.target.value); setAlready(false); }} onBlur={() => touch('email')} data-testid="p4-email" />
         <TextField label="WhatsApp" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" value={values.phone}
           error={shown('phone')} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
-        <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" hint="Pode ser só o usuário ou a URL completa." value={values.linkedin}
+        <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
           error={shown('linkedin')} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
-        <SelectField label="Área de interesse" name="area" value={values.area} error={shown('area')}
+        <SelectField label="Área de interesse" hint={journey ? "Preenchida com o resultado da sua jornada. Pode trocar." : undefined} name="area" value={values.area} error={shown('area')}
           onChange={(e) => set('area', e.target.value)} onBlur={() => touch('area')} data-testid="p4-area">
           <option value="">Selecione</option>
           {areas.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
@@ -168,14 +168,16 @@ export default function P4Inscricao() {
         <RadioCards legend="Período preferido" name="preferredPeriod" options={periods} value={values.preferredPeriod}
           error={shown('preferredPeriod')} hint="É só uma preferência. O horário final é definido pela mentora e você confirma."
           onChange={(v) => { set('preferredPeriod', v); touch('preferredPeriod'); }} />
-        <TextArea label="Comentário para a mentora" optional name="note" rows={3} maxLength={NOTE_MAX + 40} placeholder="O que você quer conversar?"
+        <TextArea label="O que você quer conversar?" optional name="note" rows={3} maxLength={NOTE_MAX + 40} placeholder="Ex.: como migrar de suporte para backend"
           hint={`${values.note.length}/${NOTE_MAX}`} value={values.note} error={shown('note')}
           onChange={(e) => set('note', e.target.value)} onBlur={() => touch('note')} data-testid="p4-note" />
         <CheckboxField name="consent" checked={values.consent} error={shown('consent')}
           onChange={(e) => { set('consent', e.target.checked); touch('consent'); }} data-testid="p4-consent"
-          label={<>Li e aceito o <a className="tw-link" href="/privacidade" target="_blank" rel="noopener noreferrer">aviso de privacidade</a>.</>} />
+          label={<>Concordo com o uso dos meus dados para organizar a mentoria, conforme o <a className="tw-link" href="/privacidade" target="_blank" rel="noopener noreferrer">aviso de privacidade</a>.</>} />
         <div ref={tsBox} aria-hidden="true" />
+        <p className="tw-field__hint">Verificação de segurança automática ativa</p>
         <Button type="submit" size="lg" block loading={submitting} data-testid="p4-submit">Quero ser mentorada</Button>
+        <p className="tw-field__hint">A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</p>
       </form>
     </div>
   );

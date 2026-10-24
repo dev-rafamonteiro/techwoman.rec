@@ -139,7 +139,7 @@ export default function P6MinhaMentoria() {
   const { mentee, appointment: ap, lastOutcome, event, serverNow } = me;
   const area = FALLBACK_AREAS.find((a) => a.key === mentee.area)?.label ?? mentee.area;
   const first = mentee.name.split(' ')[0];
-  const fresh = <p className="tw-field__hint" data-testid="p6-fresh">{freshAt && Date.now() - freshAt < 60000 ? 'Atualizado agora' : 'Atualiza sozinho a cada 30 s'}</p>;
+  const fresh = <p className="tw-field__hint" data-testid="p6-fresh">{(freshAt && Date.now() - freshAt < 60000 ? 'Atualizado agora' : 'Atualizada') + ' · esta página se atualiza sozinha'}</p>;
 
   const periodEditor = (
     <Card>
@@ -148,7 +148,7 @@ export default function P6MinhaMentoria() {
           <RadioCards legend="Período preferido" name="period" options={PERIODS} value={period ?? mentee.preferredPeriod} onChange={setPeriod}
             hint="É só uma preferência. O horário final é definido pela mentora e você confirma." />
           <div className="tw-row">
-            <Button loading={busy === 'pref'} onClick={() => period && void act('pref', { action: 'update_preference', preferredPeriod: period }, 'Preferência atualizada.')} data-testid="p6-save-period">Salvar</Button>
+            <Button loading={busy === 'pref'} onClick={() => period && void act('pref', { action: 'update_preference', preferredPeriod: period }, 'Preferência atualizada.')} data-testid="p6-save-period">Salvar período</Button>
             <Button variant="ghost" onClick={() => setEditing(false)}>Voltar</Button>
           </div>
         </div>
@@ -246,8 +246,11 @@ export default function P6MinhaMentoria() {
         <Card>
           <StatusBadge status="waiting" label="Aguardando mentora" />{mentee.priority && <> <PriorityBadge /></>}
           <p><strong>Sua inscrição está ativa</strong></p>
-          <p>Área: {area}</p>
-          <p>Período preferido: {PERIOD_LABELS[mentee.preferredPeriod]}</p>
+          <p>Assim que uma mentora escolher você, avisamos por e-mail e WhatsApp e o convite aparece aqui.</p>
+          <dl>
+            <dt>Área</dt><dd>{area}</dd>
+            <dt>Período preferido</dt><dd>{PERIOD_LABELS[mentee.preferredPeriod]}</dd>
+          </dl>
         </Card>
         {periodEditor}
         {cancelBlock}

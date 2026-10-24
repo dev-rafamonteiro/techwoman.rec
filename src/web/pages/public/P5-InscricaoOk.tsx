@@ -32,14 +32,23 @@ export default function P5InscricaoOk() {
         <h1 className="tw-title tw-title--ink">Recebemos sua inscrição!</h1>
         <p>Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail e WhatsApp.</p>
       </Card>
+      <Card>
+        <h2 className="tw-title tw-title--ink">O que acontece agora</h2>
+        <ol>
+          <li>Uma mentora da sua área escolhe sua inscrição.</li>
+          <li>Você recebe horário e mesa e tem 15 minutos para confirmar.</li>
+          <li>Chegue 5 minutos antes na mesa indicada.</li>
+        </ol>
+      </Card>
       {link && (
         <>
           <LinkButton to={path!} size="lg" block data-testid="p5-track">Acompanhar minha mentoria</LinkButton>
           <Card>
             <p><strong>Salve este link</strong></p>
+            <p className="tw-field__hint">É a sua página pessoal. Por ela você confirma o horário que a mentora propuser.</p>
             <p className="tw-field__hint" data-testid="p5-link" style={{ wordBreak: 'break-all' }}>{link}</p>
             <Button variant="secondary" block onClick={() => void copy()} data-testid="p5-copy" aria-live="polite">
-              {copied ? 'Copiado ✓' : 'Copiar link'}
+              {copied ? 'Copiado ✓' : 'Copiar'}
             </Button>
           </Card>
         </>
