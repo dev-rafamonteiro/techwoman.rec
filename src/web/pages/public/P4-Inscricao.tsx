@@ -8,6 +8,7 @@ import {
 import { FALLBACK_AREAS } from './lib/areas';
 import { loadJourney, savePersonalPath } from './lib/journey';
 import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
+import './public.css';
 
 type Field = 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'preferredPeriod' | 'note' | 'consent';
 const NOTE_MAX = 280;
@@ -31,7 +32,6 @@ function validate(v: Values): Partial<Record<Field, string>> {
   if (v.linkedin && !/^([a-z0-9-]{3,100}|(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-z0-9-]{3,100}\/?)$/i.test(v.linkedin.trim())) {
     e.linkedin = 'Use seu usuário ou o link completo do perfil.';
   }
-  if (!v.area) e.area = 'Escolha uma área de interesse.';
   if (!v.preferredPeriod) e.preferredPeriod = 'Escolha um período.';
   if (v.note.length > NOTE_MAX) e.note = `Use no máximo ${NOTE_MAX} caracteres.`;
   if (!v.consent) e.consent = 'Precisamos do seu consentimento para continuar.';
@@ -75,6 +75,7 @@ export default function P4Inscricao() {
   if (event.status === 'error') return <div className="tw-page"><ErrorState error={event.error} onRetry={event.reload} /></div>;
   const ev = event.data;
   const areas = ev.areas.length ? ev.areas : FALLBACK_AREAS;
+  const effArea = values.area || areas[0]!.key;
   const periods = ev.periods.length
     ? ev.periods.map((p) => ({ value: p.key, label: p.label }))
     : (Object.entries(PERIOD_LABELS) as [PreferredPeriod, string][]).map(([value, label]) => ({ value, label }));
@@ -107,7 +108,7 @@ export default function P4Inscricao() {
           email: values.email.trim(),
           phone: values.phone,
           ...(values.linkedin.trim() ? { linkedin: values.linkedin.trim() } : {}),
-          area: values.area,
+          area: effArea,
           preferredPeriod: values.preferredPeriod!,
           ...(values.note.trim() ? { note: values.note.trim() } : {}),
           ...(journey?.scores ? { quizScores: journey.scores } : {}),
@@ -160,24 +161,23 @@ export default function P4Inscricao() {
           error={shown('phone')} ok={values.phone && !errors.phone ? 'Vamos avisar o convite por aqui' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
         <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
           error={shown('linkedin')} ok={values.linkedin && !errors.linkedin ? 'A mentora verá seu perfil' : undefined} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
-        <SelectField label="Área de interesse" hint={journey ? "Preenchida com o resultado da sua jornada. Pode trocar." : undefined} name="area" value={values.area} error={shown('area')}
+        <SelectField label="Área de interesse" hint="Preenchida com o resultado da sua jornada. Pode trocar." name="area" value={effArea} error={shown('area')}
           onChange={(e) => set('area', e.target.value)} onBlur={() => touch('area')} data-testid="p4-area">
-          <option value="">Selecione</option>
           {areas.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
         </SelectField>
         <RadioCards legend="Período preferido" name="preferredPeriod" options={periods} value={values.preferredPeriod}
           error={shown('preferredPeriod')} hint="É só uma preferência. O horário final é definido pela mentora e você confirma."
           onChange={(v) => { set('preferredPeriod', v); touch('preferredPeriod'); }} />
         <TextArea label="O que você quer conversar?" optional name="note" rows={3} maxLength={NOTE_MAX + 40} placeholder="Ex.: como migrar de suporte para backend"
-          hint={`${values.note.length}/${NOTE_MAX}`} value={values.note} error={shown('note')}
+          hint={<span className="tw-counter">{values.note.length}/{NOTE_MAX}</span>} value={values.note} error={shown('note')}
           onChange={(e) => set('note', e.target.value)} onBlur={() => touch('note')} data-testid="p4-note" />
         <CheckboxField name="consent" checked={values.consent} error={shown('consent')}
           onChange={(e) => { set('consent', e.target.checked); touch('consent'); }} data-testid="p4-consent"
           label={<>Concordo com o uso dos meus dados para organizar a mentoria, conforme o <a className="tw-link" href="/privacidade" target="_blank" rel="noopener noreferrer">aviso de privacidade</a>.</>} />
         <div ref={tsBox} aria-hidden="true" />
-        <p className="tw-field__hint">Verificação de segurança automática ativa</p>
+        <p className="tw-field__hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Verificação de segurança automática ativa</p>
         <Button type="submit" size="lg" block loading={submitting} data-testid="p4-submit">Quero ser mentorada</Button>
-        <p className="tw-field__hint">A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</p>
+        <p className="tw-field__hint tw-center">A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</p>
       </form>
     </div>
   );

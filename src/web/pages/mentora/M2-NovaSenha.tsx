@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
 import { ApiError, Button, Card, CheckboxField, Hero, TextField, call, useAuth, useQuery, useToast } from '../../ui';
+import '../public/public.css';
 
 /** M2 · Primeiro acesso / troca de senha (E13) + conferência do perfil (E28) */
 export default function M2NovaSenha() {

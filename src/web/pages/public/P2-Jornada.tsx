@@ -26,10 +26,10 @@ export default function P2Jornada() {
   };
 
   return (
-    <div className="tw-pub" data-testid="p2">
+    <div className="tw-pub tw-p3" data-testid="p2" style={{ minHeight: '100vh' }}>
       <header className="tw-pub__head">
         <Brand />
-        <span className="tw-pub__xp" aria-live="polite" data-testid="p2-xp">{calcXp(answers)} XP</span>
+        <span className="tw-p3__xp" aria-live="polite" data-testid="p2-xp">{calcXp(answers)} XP</span>
         <Link className="tw-pub__back" to="/">Voltar ao início</Link>
       </header>
 
@@ -48,12 +48,15 @@ export default function P2Jornada() {
           </div>
         </section>
       ) : (
-        <main className="tw-pub__section">
-          <div className="tw-pub__wrap tw-stack" style={{ maxWidth: 720 }}>
-            <div className="tw-pub__progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><div style={{ width: `${progress}%` }} /></div>
-            <p className="tw-pub__muted">Etapa {i + 1} de {total} · <span className="tw-pub__tag" data-testid="p2-kind">{q.tipo === 'desafio' ? 'Desafio' : 'Pergunta'}</span></p>
-            <h2 data-testid="p2-question">{q.texto}</h2>
-            <div className="tw-stack" role="group" aria-label="Alternativas">
+        <main className="tw-p3__body">
+          <div className="tw-row" style={{ justifyContent: 'space-between' }}>
+            <strong>Etapa {i + 1} de {total}</strong>
+            <span className="tw-pub__tag" data-testid="p2-kind">{q.tipo === 'desafio' ? 'Desafio' : 'Pergunta'}</span>
+          </div>
+          <div className="tw-pub__progress" role="progressbar" aria-label="Progresso" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><div style={{ width: `${progress}%` }} /></div>
+          <section className="tw-p3__white">
+            <h2 style={{ margin: 0 }} data-testid="p2-question">{q.texto}</h2>
+            <div className="tw-p2__opts" role="group" aria-label="Alternativas">
               {q.opcoes.map((o, k) => (
                 <button key={k} type="button" className="tw-opt" aria-pressed={sel === k} data-testid={`p2-opt-${k}`}
                   onClick={() => setAnswers((p) => ({ ...p, [i]: k }))}>
@@ -67,11 +70,11 @@ export default function P2Jornada() {
                 <p>{q.explica}</p>
               </div>
             )}
-            <div className="tw-row">
+            <div className="tw-row" style={{ justifyContent: 'space-between' }}>
               <Button variant="secondary" onClick={() => (i === 0 ? setStep('intro') : setI(i - 1))} data-testid="p2-back">Voltar</Button>
               <Button disabled={!hasSel} onClick={next} data-testid="p2-next">{i === total - 1 ? 'Ver meu resultado' : 'Próxima'}</Button>
             </div>
-          </div>
+          </section>
         </main>
       )}
     </div>

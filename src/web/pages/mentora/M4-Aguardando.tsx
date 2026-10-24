@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E22Response, type MenteeStaffView, type MentorStreamEvent, type PreferredPeriod } from '@tw/shared';
 import {
-  ApiError, Button, CheckboxField, ConnectionBar, EmptyState, ErrorState, Hero, MenteeCard, PERIOD_LABELS, SelectField, SkeletonList,
+  ApiError, Button, CheckboxField, ConnectionBar, EmptyState, ErrorState, MenteeCard, PERIOD_LABELS, SelectField, SkeletonList,
   TextField, call, formatTime, useEventStream, useQuery,
 } from '../../ui';
 import { FALLBACK_AREAS } from '../public/lib/areas';
 import { M5ScheduleDrawer } from './M5ScheduleDrawer';
+import '../public/public.css';
 
 const LEAVE_MS = 350;
 const sortQueue = (a: MenteeStaffView, b: MenteeStaffView) =>
@@ -22,6 +23,7 @@ export default function M4Aguardando() {
   const [period, setPeriod] = useState<PreferredPeriod | ''>('');
   const [onlyPriority, setOnlyPriority] = useState(false);
   const [search, setSearch] = useState('');
+  const [panel, setPanel] = useState<'areas' | 'period' | null>(null);
   const [q, setQ] = useState('');
   useEffect(() => {
     const t = setTimeout(() => setQ(search.trim()), 300);
@@ -141,10 +143,11 @@ export default function M4Aguardando() {
 
   return (
     <div className="tw-page tw-stack" data-testid="m4">
-      <Hero title="Participantes aguardando">
-        <p data-testid="m4-free">Seus horários livres hoje: {meta?.freeSlots ?? '–'}</p>
-        {next && <p data-testid="m4-next">Próximo atendimento: {formatTime(next.startAt)} · Mesa {next.table.number} · {next.mentee.name.split(' ')[0]}</p>}
-      </Hero>
+      <header><h1 className="tw-ptitle">Participantes aguardando</h1></header>
+      <div className="tw-darkcard">
+        <strong data-testid="m4-free">Seus horários livres hoje: {meta?.freeSlots ?? '–'}</strong>
+        {next && <span data-testid="m4-next">Próximo atendimento: {formatTime(next.startAt)} · Mesa {next.table.number} · {next.mentee.name.split(' ')[0]}</span>}
+      </div>
       <ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} />
 
       {meta && !meta.hasAvailability && (
@@ -156,22 +159,29 @@ export default function M4Aguardando() {
         {notices.map((n) => <div key={n.id} className="tw-card" role="status" data-testid="m4-notice">{n.text}</div>)}
       </div>
 
-      <details className="tw-card" open={filtered || undefined}>
-        <summary>Filtros{filtered ? ' (ativos)' : ''}</summary>
-        <div className="tw-stack">
-          <TextField label="Buscar por nome" placeholder="Nome da participante" type="search" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="m4-search" />
-          <fieldset className="tw-stack" style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend className="tw-field__label">Minhas áreas</legend>
-            {areas.map((a) => <CheckboxField key={a.key} label={a.label} checked={areaFilter.has(a.key)} onChange={() => toggleArea(a.key)} />)}
-            {areaFilter.size > 0 && <Button variant="ghost" size="sm" onClick={() => setAreaFilter(new Set())} data-testid="m4-all-areas">Ver todas as áreas</Button>}
-          </fieldset>
-          <SelectField label="Período preferido" value={period} onChange={(e) => setPeriod(e.target.value as PreferredPeriod | '')} data-testid="m4-period">
-            <option value="">Todos</option>
-            {(Object.entries(PERIOD_LABELS) as [PreferredPeriod, string][]).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          </SelectField>
-          <CheckboxField label="Só prioridade" checked={onlyPriority} onChange={(e) => setOnlyPriority(e.target.checked)} data-testid="m4-priority" />
+      <div className="tw-stack" style={{ gap: 8 }}>
+        <div className="tw-chips">
+          <button type="button" className="tw-chip" aria-expanded={panel === 'areas'} aria-pressed={areaFilter.size > 0} onClick={() => setPanel(panel === 'areas' ? null : 'areas')} data-testid="m4-areas">Minhas áreas ▾</button>
+          <button type="button" className="tw-chip" aria-expanded={panel === 'period'} aria-pressed={!!period} onClick={() => setPanel(panel === 'period' ? null : 'period')} data-testid="m4-period-chip">Período ▾</button>
+          <button type="button" className="tw-chip" aria-pressed={onlyPriority} onClick={() => setOnlyPriority((v) => !v)} data-testid="m4-priority">Só prioridade</button>
         </div>
-      </details>
+        {panel === 'areas' && (
+          <fieldset className="tw-pop" style={{ margin: 0 }}>
+            <legend className="tw-sr-only">Áreas</legend>
+            {areas.map((a) => <CheckboxField key={a.key} label={a.label} checked={areaFilter.has(a.key)} onChange={() => toggleArea(a.key)} />)}
+          </fieldset>
+        )}
+        {panel === 'period' && (
+          <div className="tw-pop">
+            <SelectField label="Período preferido" value={period} onChange={(e) => setPeriod(e.target.value as PreferredPeriod | '')} data-testid="m4-period">
+              <option value="">Todos</option>
+              {(Object.entries(PERIOD_LABELS) as [PreferredPeriod, string][]).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            </SelectField>
+          </div>
+        )}
+        <TextField label="Buscar por nome" placeholder="Nome da participante" type="search" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="m4-search" />
+        {areaFilter.size > 0 && <button type="button" className="tw-linkbtn" onClick={() => setAreaFilter(new Set())} data-testid="m4-all-areas">Ver todas as áreas</button>}
+      </div>
 
       {error && !loaded ? (
         <ErrorState error={error} onRetry={() => void loadFirst()} />
@@ -185,7 +195,7 @@ export default function M4Aguardando() {
           {items.map((m) => (
             <li key={m.id}>
               <MenteeCard mentee={m} areaLabel={areaLabel} nowMs={nowMs} leaving={leaving.has(m.id)}
-                actions={<Button onClick={() => setSelected(m)} disabled={leaving.has(m.id)} data-testid="m4-mentor">Mentorar</Button>} />
+                actions={<Button block onClick={() => setSelected(m)} disabled={leaving.has(m.id)} data-testid="m4-mentor">Mentorar</Button>} />
             </li>
           ))}
         </ul>

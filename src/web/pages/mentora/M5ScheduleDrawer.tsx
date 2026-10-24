@@ -120,7 +120,7 @@ export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions
         ) : (
           <>
             <SlotSingleChoice legend="Horário" value={slotId}
-              slots={opts.slots.map((s) => ({ id: s.id, label: formatTime(s.startAt), preferred: s.preferred }))}
+              slots={opts.slots.map((s) => ({ id: s.id, label: formatTime(s.startAt), preferred: s.preferred, caption: 'Livre' }))}
               onChange={(id) => { setSlotId(id); void load(id, true); }} />
             <TablePicker tables={opts.tables.map((t) => ({ id: t.id, number: t.number, name: t.name, location: t.location, busy: !t.free }))}
               value={tableId} onChange={setTableId} suggestedId={opts.suggestedTableId} />

@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom';
 import { ENDPOINTS, type E03Response, type PreferredPeriod } from '@tw/shared';
 import {
-  ApiError, type BodyOf, Button, Card, Countdown, ErrorState, Hero, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList,
+  ApiError, type BodyOf, Button, Card, Countdown, ErrorState, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList,
   StatusBadge, PriorityBadge, TextField, call, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useToast, usePolling,
 } from '../../ui';
 import { FALLBACK_AREAS } from './lib/areas';
 import { buildIcs, downloadIcs } from './lib/format';
 import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
+import './public.css';
 
 type Me = E03Response;
 const PERIODS = (Object.entries(PERIOD_LABELS) as [PreferredPeriod, string][]).map(([value, label]) => ({ value, label }));
@@ -49,10 +50,10 @@ function InvalidLink() {
   }
 
   return (
-    <div className="tw-page tw-stack" data-testid="p6-invalid">
-      <Hero title="Não encontramos sua inscrição">
-        <p>O link pode estar incompleto. Informe seu e-mail e enviamos o link certo.</p>
-      </Hero>
+    <div className="tw-page tw-stack" data-testid="p6-invalid" style={{ paddingTop: "var(--space-6)" }}>
+      <span className="tw-qmark" aria-hidden="true">?</span>
+      <h1 className="tw-title tw-title--ink">Não encontramos sua inscrição</h1>
+      <p>O link pode estar incompleto. Informe seu e-mail e enviamos o link certo.</p>
       {state === 'sent' ? (
         <Card accent><p role="status" data-testid="p6-resent">Link enviado ✓ Confira seu e-mail</p></Card>
       ) : (
@@ -138,7 +139,7 @@ export default function P6MinhaMentoria() {
   const { mentee, appointment: ap, lastOutcome, event, serverNow } = me;
   const area = FALLBACK_AREAS.find((a) => a.key === mentee.area)?.label ?? mentee.area;
   const first = mentee.name.split(' ')[0];
-  const fresh = <p className="tw-field__hint" data-testid="p6-fresh">{(freshAt && Date.now() - freshAt < 60000 ? 'Atualizado agora' : 'Atualizada') + ' · esta página se atualiza sozinha'}</p>;
+  const fresh = <p className="tw-fresh" data-testid="p6-fresh">{(freshAt && Date.now() - freshAt < 60000 ? 'Atualizado agora' : 'Atualizada') + ' · esta página se atualiza sozinha'}</p>;
   const li = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linkedin.com') ? `https://${v}` : `https://www.linkedin.com/in/${v}`);
 
   const cancelDialog = (
@@ -166,20 +167,20 @@ export default function P6MinhaMentoria() {
     const t = ap.expiresAt ? formatTime(ap.expiresAt) : null;
     body = (
       <>
-        <Card>
+        <Card accent>
           <div className="tw-stack">
-            <div className="tw-row">
+            <div className="tw-mentorrow">
               <span className="tw-avatar" aria-hidden="true">{ap.mentor.name.charAt(0)}</span>
               <div>
                 <strong>{ap.mentor.name}</strong>
-                {ap.mentor.linkedin && <><br /><a className="tw-link" href={li(ap.mentor.linkedin)} target="_blank" rel="noopener noreferrer">Ver LinkedIn</a></>}
+                {ap.mentor.linkedin && <a className="tw-link" href={li(ap.mentor.linkedin)} target="_blank" rel="noopener noreferrer">Ver LinkedIn</a>}
               </div>
             </div>
-            <div className="tw-row">
-              <div><small>MESA</small><br /><strong data-testid="p6-table">{ap.table.number}</strong></div>
-              <div><small>HORÁRIO</small><br /><strong data-testid="p6-time">{formatTime(ap.slot.startAt)}</strong></div>
+            <div className="tw-stats">
+              <div className="tw-stat"><small>MESA</small><strong data-testid="p6-table">{ap.table.number}</strong></div>
+              <div className="tw-stat"><small>HORÁRIO</small><strong data-testid="p6-time">{formatTime(ap.slot.startAt)}</strong></div>
             </div>
-            <span>Sessão de {ap.durationMinutes} min ({formatRange(ap.slot.startAt, ap.slot.endAt).replace(' às ', ' às ')}) · horário de Recife</span>
+            <span>Sessão de {ap.durationMinutes} min ({formatRange(ap.slot.startAt, ap.slot.endAt)}) · horário de Recife</span>
             {ap.expiresAt && <Countdown expiresAt={ap.expiresAt} serverNow={serverNow} label={`Responda até ${t}`} onExpire={() => void load(true)} />}
             {declining ? (
               <div className="tw-stack">
@@ -189,8 +190,8 @@ export default function P6MinhaMentoria() {
                 <Button variant="ghost" block onClick={() => setDeclining(false)}>Voltar</Button>
               </div>
             ) : (
-              <div className="tw-row">
-                <Button size="lg" variant="mint" loading={busy === 'accept'} onClick={() => void act('accept', { action: 'accept' }, 'Mentoria confirmada!')} data-testid="p6-accept">Aceitar</Button>
+              <div className="tw-btnrow">
+                <Button size="lg" loading={busy === 'accept'} onClick={() => void act('accept', { action: 'accept' }, 'Mentoria confirmada!')} data-testid="p6-accept">Aceitar</Button>
                 <Button size="lg" variant="secondary" onClick={() => setDeclining(true)} data-testid="p6-decline">Recusar</Button>
               </div>
             )}
@@ -205,19 +206,24 @@ export default function P6MinhaMentoria() {
     title = 'Mentoria confirmada';
     body = confirmCancel ? cancelDialog : (
       <>
-        <Card accent>
-          <strong data-testid="p6-summary">Mesa {ap.table.number} · {formatTime(ap.slot.startAt)} · com {ap.mentor.name.split(' ')[0]}</strong>
-          <p>{formatDayShort(ap.slot.startAt).replace(/^./, (c) => c.toUpperCase())} · {ap.durationMinutes} min · horário de Recife</p>
-          <p>Chegue 5 minutos antes</p>
+        <Card dark className="tw-confirm">
+          <div className="tw-stack">
+            <h2 data-testid="p6-summary">Mesa {ap.table.number} · {formatTime(ap.slot.startAt)} · com {ap.mentor.name.split(' ')[0]}</h2>
+            <span>{formatDayShort(ap.slot.startAt).replace(/^./, (c) => c.toUpperCase())} · {ap.durationMinutes} min · horário de Recife</span>
+            <span className="tw-pill">Chegue 5 minutos antes</span>
+          </div>
         </Card>
         <Card>
-          <div className="tw-row">
+          <div className="tw-mentorrow">
             <span className="tw-avatar" aria-hidden="true">{ap.mentor.name.charAt(0)}</span>
-            <strong>{ap.mentor.name}</strong>
+            <div>
+              <strong>{ap.mentor.name}</strong>
+              {ap.mentor.areas[0] && <small>{FALLBACK_AREAS.find((x) => x.key === ap.mentor.areas[0])?.label ?? ap.mentor.areas[0]}</small>}
+            </div>
             {ap.mentor.linkedin && <a className="tw-link" href={li(ap.mentor.linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
           </div>
         </Card>
-        <Button variant="secondary" block data-testid="p6-ics" onClick={() => downloadIcs('mentoria-tech-woman.ics', buildIcs({
+        <Button variant="mint" block data-testid="p6-ics" onClick={() => downloadIcs('mentoria-tech-woman.ics', buildIcs({
           uid: `${ap.id}`, startAt: ap.slot.startAt, endAt: ap.slot.endAt, summary: `Mentoria Tech Woman com ${ap.mentor.name}`,
           location: tableLabel(ap.table), description: `Mentoria de ${ap.durationMinutes} min com ${ap.mentor.name}. Chegue 5 minutos antes.`,
         }))}>Adicionar à agenda (.ics)</Button>
@@ -257,9 +263,9 @@ export default function P6MinhaMentoria() {
       <>
         <p data-testid="p6-outcome">{text}</p>
         <Card>
-          <dl>
-            <dt>Área</dt><dd>{area}</dd>
-            <dt>Período preferido</dt><dd>{PERIOD_LABELS[mentee.preferredPeriod]}</dd>
+          <dl style={{ margin: 0 }}>
+            <div className="tw-kv"><dt>Área</dt><dd>{area}</dd></div>
+            <div className="tw-kv"><dt>Período preferido</dt><dd>{PERIOD_LABELS[mentee.preferredPeriod]}</dd></div>
           </dl>
           {editing && (
             <RadioCards legend="Novo período preferido" name="period" options={PERIODS} value={period ?? mentee.preferredPeriod} onChange={setPeriod} />
@@ -278,7 +284,11 @@ export default function P6MinhaMentoria() {
 
   return (
     <div className="tw-page tw-stack" data-testid={testid}>
-      <Hero eyebrow={`Oi, ${first}!`} title={title}><div className="tw-row">{badge}</div></Hero>
+      <div className="tw-hero" data-testid="p6-hero">
+        <span className="tw-greet">Oi, {first}!</span>
+        <div className="tw-row">{badge}</div>
+        <h1 className="tw-title" data-testid="p6-title">{title}</h1>
+      </div>
       {body}
       {fresh}
     </div>
