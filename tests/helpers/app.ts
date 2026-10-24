@@ -11,8 +11,8 @@ export const testPasswordHash = () => (cachedHash ??= hashPassword(TEST_PASSWORD
 export interface ApiModules {
   buildApp: (opts: Record<string, unknown>) => Promise<FastifyInstance>;
   expireInvites?: (db: Db, client: MongoClient, now: Date) => Promise<{ expired: number }>;
-  processOutbox?: (db: Db, opts: Record<string, unknown>) => Promise<{ sent: number; failed: number; skipped: number }>;
-  MemoryNotifier?: new (...a: any[]) => { sent: any[] };
+  processOutbox?: (db: Db, opts: Record<string, unknown>) => Promise<{ sent: number; failed: number; skipped: number; retried: number }>;
+  MemoryNotifier?: new (...a: any[]) => { sent: any[]; failNext(times?: number, permanent?: boolean): void };
 }
 
 /** Carrega a API (src/api/app.ts); se o import falhar os testes de integração da API ficam `skip`. */
@@ -21,7 +21,7 @@ export async function loadApi(): Promise<ApiModules | null> {
   const configPath = "../../src/api/config.js";
   const expirePath = "../../src/api/worker/expire.js";
   const outboxPath = "../../src/api/worker/outbox.js";
-  const notifierPath = "../../src/api/notifier.js";
+  const notifierPath = "../../src/api/worker/notifier.js";
   try {
     const app = await import(/* @vite-ignore */ appPath);
     const { loadConfig } = await import(/* @vite-ignore */ configPath);
