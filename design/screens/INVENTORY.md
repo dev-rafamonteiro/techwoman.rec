@@ -39,11 +39,11 @@ Estados de P6 existentes no componente (`status`): aguardando, recusada (selo Pr
 
 Também não existem na arte os componentes: Selo de prioridade como componente isolado (existe só inline em P6), seletor de horário, seletor de mesa, faixa de conexão "Reconectando…" (só o "Atualizado agora" de P6), toast, tabela com filtros, revelação única de senha, skeleton, estados vazio/erro/sem permissão/sessão expirada.
 
-Decisão do ui-kit: M1–M6 e A1–A9 serão DERIVADAS do UI-SPEC com os tokens e componentes extraídos (mesma identidade). Cada `design/screens/<codigo>.html` dessas telas leva o aviso "derivada do UI-SPEC, sem arte do Claude Design".
+Decisão (aprovada pelo Felipe): M1–M6 e A1–A9 foram DERIVADAS do UI-SPEC com os tokens e componentes extraídos (mesma identidade). Cada `design/screens/<codigo>.html` dessas telas leva o aviso "derivada do UI-SPEC, sem arte do Claude Design".
 
 ## Referências geradas
 
-`design/screens/{P1,P2,P3,P4,P5,P6,QR}.html`: autocontidas (fontes embutidas), 375 e 1280 lado a lado, um bloco por estado (P2: intro, pergunta, feedback; P3: resultado; P4: normal, erros, já inscrita, falha de rede; P5: padrão, copiado; P6: 8 status + urgente, recusando, editando período, confirmando cancelamento). Capturadas do HTML original renderizado no Chrome. `M1..M6` e `A1..A9` não têm referência (sem arte); o kit em `src/web/ui` é a referência visual deles.
+`design/screens/{P1,P2,P3,P4,P5,P6,QR}.html`: autocontidas (fontes embutidas), 375 e 1280 lado a lado, um bloco por estado (P2: intro, pergunta, feedback; P3: resultado; P4: normal, erros, já inscrita, falha de rede; P5: padrão, copiado; P6: 8 status + urgente, recusando, editando período, confirmando cancelamento). Capturadas do HTML original renderizado no Chrome. `M1..M6` e `A1..A9` (15 arquivos): **derivada do UI-SPEC, sem arte** (Felipe aprovou derivar). Montadas com tokens e componentes do kit (CSS real de `src/web`), mesmo HTML em 375 e 1280, com estados (vazio, carregando, erro, sem permissão, conflitos 409, revelação de senha, painéis). Onde divergirem de P1–P6 (que têm arte), P1–P6 prevalecem.
 
 ## Telas existentes com um só breakpoint
 
@@ -73,7 +73,16 @@ Para o Felipe decidir; ninguém implementa nada fora do PLAN até a decisão.
 7. **Links internos do HTML** apontam para arquivos do protótipo (`Jornada.dc.html`, `Inscricao.dc.html`, `InscricaoOk.dc.html`, `MinhaMentoria.dc.html`, `Main.dc.html`); mapeamento para rotas: Jornada → `/jornada`, Inscricao → `/mentoria/inscricao`, InscricaoOk → `/mentoria/inscricao/ok`, MinhaMentoria → `/mentoria/minha?t=`, Main → `/`.
 8. **Texto "Mentoria · 14/11" no header** de P4/P5 e "Minha mentoria" em P6 são fixos na arte; data deve vir de E01.
 
+## Conferência dos "RN0"/"RN1" do arquivo bruto
+
+Busca por substring (sem fronteira de palavra) no `techwoman.html` bruto: 16 ocorrências de `RN0` e 6 de `RN1`. Todas estão no meio de sequências base64 (ex.: `…BCIiIRN0UOrCJ9…`, `…LI0XRN16d5Yr…`, sempre com letra/dígito antes e depois), dentro dos blobs gzip. As 22 são ruído; texto real de RN: zero.
+
 ## Pendências para o Felipe
+
+- **As 15 telas sem arte (M1–M6, A1–A9):** hoje derivadas do UI-SPEC; gerar a arte no Claude Design se quiser fidelidade de pixel.
+- **P1 (E01):** placeholders literais `[Descrição curta do Tech Woman em uma frase]`, `[Parágrafo sobre o propósito…]`, `[Endereço do local]`, `[Resumo da agenda…]`, `[Organização]` devem vir de E01/A7.
+- **Cartaz do QR Code:** fora das 21 telas; peça gráfica ligada a E42 (A7, PNG/SVG) apontando para `techwoman.dev/cadastro`.
+- **RN:** zero RNxx/Exx citados no conteúdo decodificado (seção acima).
 
 - Gerar no Claude Design (ou aprovar derivação) de M1–M6 e A1–A9.
 - Versões mobile de P1–P3 e desktop de P4–P6.

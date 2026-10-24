@@ -45,3 +45,8 @@
   .tw-admin .tw-topbar__title { color: var(--color-ink); }
   .tw-admin .tw-areaswitch { background: var(--tw-lilac-50); color: var(--color-ink); border-color: var(--color-border); }
 }
+
+@media (max-width: 767px) {
+  /* O título da seção já aparece no h1 da página; evita corte no topo estreito. */
+  .tw-admin .tw-topbar__title { display: none; }
+}
