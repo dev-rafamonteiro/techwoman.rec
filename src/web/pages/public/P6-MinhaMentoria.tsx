@@ -123,7 +123,7 @@ export default function P6MinhaMentoria() {
       if (ok) toast.success(ok);
     } catch (e) {
       const ae = e as ApiError;
-      if (ae.code === 'INVITE_EXPIRED' || ae.code === 'INVITE_NOT_ACTIVE' || ae.code === 'INVALID_STATE') {
+      if (ae.isConflict) {
         toast.conflict(ae.message, () => void load(true));
         void load(true);
       } else toast.error(ae.message || 'Não foi possível concluir agora. Tente de novo.');
