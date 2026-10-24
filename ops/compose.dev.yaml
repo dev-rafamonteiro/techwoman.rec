@@ -67,7 +67,11 @@ services:
       start_period: 15s
 
   web:
-    build: { context: .., dockerfile: ops/web.Dockerfile }
+    build:
+      context: ..
+      dockerfile: ops/web.Dockerfile
+      args:
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]

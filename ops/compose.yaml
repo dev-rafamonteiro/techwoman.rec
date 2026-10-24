@@ -38,7 +38,11 @@ services:
     deploy: { resources: { limits: { cpus: "0.5", memory: 128M } } }
 
   web:
-    build: { context: .., dockerfile: ops/web.Dockerfile }
+    build:
+      context: ..
+      dockerfile: ops/web.Dockerfile
+      args:
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:?defina VITE_TURNSTILE_SITE_KEY}
     <<: *hardening
     tmpfs: ["/tmp"]
     networks: [edge, app]

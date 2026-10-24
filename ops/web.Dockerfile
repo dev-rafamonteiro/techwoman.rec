@@ -13,6 +13,8 @@ FROM deps AS build
 COPY tsconfig.base.json ./
 COPY src/shared src/shared
 COPY src/web src/web
+ARG VITE_TURNSTILE_SITE_KEY=
+ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
 RUN npm run -w @tw/shared build && npm run -w @tw/web build
 
 FROM nginx:alpine AS runtime
