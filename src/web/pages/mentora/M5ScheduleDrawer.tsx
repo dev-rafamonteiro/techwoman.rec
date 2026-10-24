@@ -5,45 +5,49 @@ import { ApiError, Button, ErrorState, MenteeCard, Overlay, SkeletonList, SlotSi
 /**
  * M5 · Agendar mentoria (gaveta no celular, modal no desktop). E23 a cada troca de horário, E24 ao enviar · RN04, RN05, RN13.
  *
- * Reutilizado por A4 (agendar manualmente): o admin passa `loadOptions`/`submit` próprios e, se quiser,
- * `header` (ex.: seletor de mentora). Os dois devem ter o mesmo contrato de E23 / E24 e lançar ApiError.
+ * Reutilizado por A4 (agendar manualmente): o admin passa `loadOptions(slotId)` e `onSubmit(...)` próprios
+ * (E38 + E39Create), `mentorPicker` (seletor de mentora) e `warnings` (avisos de override, RN04).
+ * `loadOptions` devolve o formato de E23; ambos lançam ApiError em falha (409 trata os conflitos).
  */
 export interface ScheduleDrawerProps {
   open: boolean;
   onClose: () => void;
   mentee: MenteeStaffView | null;
   areaLabel: (key: string) => string;
-  /** Padrão: E23. */
-  loadOptions?: (menteeId: string, slotId?: string) => Promise<E23Response>;
-  /** Padrão: E24. Deve lançar ApiError em conflito (409). */
-  submit?: (input: { menteeId: string; slotId: string; tableId: string }) => Promise<unknown>;
+  /** Padrão: E23 da mentora. `slotId` ausente = horário preferido/primeiro livre. */
+  loadOptions?: (slotId?: string) => Promise<E23Response>;
+  /** Padrão: E24. Deve lançar ApiError em conflito (409). `mentorId` só é preenchido quando a prop `mentorId` é passada (admin). */
+  onSubmit?: (input: { menteeId: string; slotId: string; tableId: string; mentorId?: string }) => Promise<unknown>;
+  /** Mentora escolhida (admin). Mudar o valor recarrega as opções. */
+  mentorId?: string;
+  /** Seletor de mentora (A4), mostrado no topo. */
+  mentorPicker?: ReactNode;
+  /** Avisos de override do admin (RN04), mostrados acima do botão. */
+  warnings?: readonly string[];
   /** Chamado após o convite enviado, ou quando um conflito exige atualizar a tela de trás (ex.: refetch de M4). */
   onDone: (result: 'sent' | 'conflict') => void;
-  /** Conteúdo extra no topo (ex.: seletor de mentora de A4). */
-  header?: ReactNode;
   /** Rótulo do botão. Padrão: "Enviar convite". */
   submitLabel?: string;
   /** Texto de apoio abaixo do botão. */
   helpText?: string;
 }
 
-const defaultLoad = (menteeId: string, slotId?: string) => call(ENDPOINTS.E23, { query: { menteeId, ...(slotId ? { slotId } : {}) } });
-const defaultSubmit = (body: { menteeId: string; slotId: string; tableId: string }) => call(ENDPOINTS.E24, { body });
+const defaultSubmit = ({ menteeId, slotId, tableId }: { menteeId: string; slotId: string; tableId: string }) => call(ENDPOINTS.E24, { body: { menteeId, slotId, tableId } });
 
-export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions = defaultLoad, submit = defaultSubmit, onDone, header, submitLabel = 'Enviar convite', helpText = 'Ela tem até 15 min para confirmar; se não confirmar, o horário volta a ficar livre.' }: ScheduleDrawerProps) {
+export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions, onSubmit = defaultSubmit, mentorId, mentorPicker, warnings, onDone, submitLabel = 'Enviar convite', helpText = 'Ela tem até 15 min para confirmar; se não confirmar, o horário volta a ficar livre.' }: ScheduleDrawerProps) {
   const toast = useToast();
   const [opts, setOpts] = useState<E23Response | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [slotId, setSlotId] = useState<string | null>(null);
   const [tableId, setTableId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const loadRef = useRef(loadOptions);
-  loadRef.current = loadOptions;
+  const loadRef = useRef<(slotId?: string) => Promise<E23Response>>(async () => { throw new Error('sem mentee'); });
+  loadRef.current = loadOptions ?? ((slotId) => call(ENDPOINTS.E23, { query: { menteeId: mentee!.id, ...(slotId ? { slotId } : {}) } }));
 
   const load = useCallback(async (slot?: string, keepTable = false) => {
     if (!mentee) return;
     try {
-      const r = await loadRef.current(mentee.id, slot);
+      const r = await loadRef.current(slot);
       setOpts(r);
       setError(null);
       setSlotId(r.selectedSlotId);
@@ -65,7 +69,7 @@ export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions
       setTableId(null);
       void load();
     }
-  }, [open, mentee?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, mentee?.id, mentorId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!mentee) return null;
   const first = mentee.name.split(' ')[0];
@@ -74,7 +78,7 @@ export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions
     if (!mentee || !slotId || !tableId) return;
     setSending(true);
     try {
-      await submit({ menteeId: mentee.id, slotId, tableId });
+      await onSubmit({ menteeId: mentee.id, slotId, tableId, ...(mentorId ? { mentorId } : {}) });
       toast.success(`Convite enviado para ${first}.`);
       onClose();
       onDone('sent');
@@ -105,7 +109,7 @@ export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions
   return (
     <Overlay title="Agendar mentoria" open={open} onClose={onClose}>
       <div className="tw-stack" data-testid="m5">
-        {header}
+        {mentorPicker}
         <MenteeCard mentee={mentee} areaLabel={areaLabel} variant="full" />
         {error ? (
           <ErrorState error={error} onRetry={() => void load(slotId ?? undefined)} />
@@ -120,6 +124,9 @@ export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions
               onChange={(id) => { setSlotId(id); void load(id, true); }} />
             <TablePicker tables={opts.tables.map((t) => ({ id: t.id, number: t.number, name: t.name, location: t.location, busy: !t.free }))}
               value={tableId} onChange={setTableId} suggestedId={opts.suggestedTableId} />
+            {warnings && warnings.length > 0 && (
+              <ul className="tw-card" role="status" data-testid="m5-warnings">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
+            )}
             <Button size="lg" block loading={sending} disabled={!slotId || !tableId} onClick={() => void send()} data-testid="m5-send">{submitLabel}</Button>
             <p className="tw-field__hint">{helpText}</p>
           </>

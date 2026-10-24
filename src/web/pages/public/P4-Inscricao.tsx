@@ -6,13 +6,11 @@ import {
   TextArea, TextField, call, maskPhone, useQuery,
 } from '../../ui';
 import { FALLBACK_AREAS } from './lib/areas';
-import { isValidPhone } from './lib/format';
 import { loadJourney, savePersonalPath } from './lib/journey';
 import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
 
 type Field = 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'preferredPeriod' | 'note' | 'consent';
 const NOTE_MAX = 280;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 interface Values {
   name: string;
@@ -27,16 +25,16 @@ interface Values {
 
 function validate(v: Values): Partial<Record<Field, string>> {
   const e: Partial<Record<Field, string>> = {};
-  if (v.name.trim().length < 2) e.name = 'Informe seu nome completo.';
-  if (!EMAIL_RE.test(v.email.trim())) e.email = 'Informe um e-mail válido.';
-  if (!isValidPhone(v.phone)) e.phone = 'Informe o WhatsApp com DDD, ex.: (81) 99999-9999.';
-  if (v.linkedin.trim() && !/^(https?:\/\/)?([\w-]+\.)?linkedin\.com\/.+|^[\w.-]{3,100}$/i.test(v.linkedin.trim())) {
-    e.linkedin = 'Informe só o usuário ou a URL completa do seu LinkedIn.';
+  if (v.name.trim().split(/\s+/).length < 2) e.name = 'Informe nome e sobrenome.';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) e.email = 'Digite um e-mail válido.';
+  if (v.phone.replace(/\D/g, '').length !== 11) e.phone = 'Use DDD + número: (00) 00000-0000.';
+  if (v.linkedin && !/^([a-z0-9-]{3,100}|(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-z0-9-]{3,100}\/?)$/i.test(v.linkedin.trim())) {
+    e.linkedin = 'Use seu usuário ou o link completo do perfil.';
   }
   if (!v.area) e.area = 'Escolha uma área de interesse.';
   if (!v.preferredPeriod) e.preferredPeriod = 'Escolha um período.';
   if (v.note.length > NOTE_MAX) e.note = `Use no máximo ${NOTE_MAX} caracteres.`;
-  if (!v.consent) e.consent = 'Para se inscrever, aceite o aviso de privacidade.';
+  if (!v.consent) e.consent = 'Precisamos do seu consentimento para continuar.';
   return e;
 }
 
@@ -51,7 +49,7 @@ export default function P4Inscricao() {
   });
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<{ network: boolean; text: string } | null>(null);
   const [already, setAlready] = useState(false);
 
   const tsBox = useRef<HTMLDivElement>(null);
@@ -125,11 +123,11 @@ export default function P4Inscricao() {
       navigate('/mentoria/inscricao/ok', { state: { personalPath: res.personalPath } });
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
-      if (ae?.code === 'NETWORK') setFormError('Sem conexão. Seus dados continuam aqui; confira a internet e tente de novo.');
-      else if (ae?.code === 'REGISTRATION_CLOSED') setFormError('As inscrições estão fechadas no momento.');
-      else if (ae?.code === 'VALIDATION_ERROR') setFormError('Confira os campos e tente de novo.');
-      else if (ae?.code === 'RATE_LIMITED') setFormError('Muitas tentativas. Aguarde um instante e tente de novo.');
-      else setFormError(ae?.message ?? 'Não foi possível enviar agora. Tente de novo.');
+      if (ae?.code === 'NETWORK') setFormError({ network: true, text: '' });
+      else if (ae?.code === 'REGISTRATION_CLOSED') setFormError({ network: false, text: 'As inscrições estão fechadas no momento.' });
+      else if (ae?.code === 'VALIDATION_ERROR') setFormError({ network: false, text: 'Confira os campos e tente de novo.' });
+      else if (ae?.code === 'RATE_LIMITED') setFormError({ network: false, text: 'Muitas tentativas. Aguarde um instante e tente de novo.' });
+      else setFormError({ network: false, text: ae?.message ?? 'Não foi possível enviar agora. Tente de novo.' });
     } finally {
       setSubmitting(false);
     }
@@ -149,17 +147,19 @@ export default function P4Inscricao() {
         )}
         {formError && (
           <div className="tw-card" role="alert" data-testid="p4-form-error">
-            {formError}
+            {formError.network ? (
+              <><strong>Não conseguimos enviar agora</strong><br />Seus dados continuam preenchidos. Confira a conexão e toque em enviar de novo.</>
+            ) : formError.text}
           </div>
         )}
-        <TextField label="Nome completo" placeholder="Como você quer ser chamada" name="name" autoComplete="name" value={values.name} error={shown('name')}
+        <TextField label="Nome completo" placeholder="Como você quer ser chamada" name="name" autoComplete="name" value={values.name} error={shown('name')} ok={values.name && !errors.name ? 'Tudo certo' : undefined}
           onChange={(e) => set('name', e.target.value)} onBlur={() => touch('name')} data-testid="p4-name" />
-        <TextField label="E-mail" placeholder="voce@email.com" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} error={shown('email')}
+        <TextField label="E-mail" placeholder="voce@email.com" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} error={shown('email')} ok={values.email && !errors.email ? 'Uma inscrição por e-mail' : undefined}
           onChange={(e) => { set('email', e.target.value); setAlready(false); }} onBlur={() => touch('email')} data-testid="p4-email" />
         <TextField label="WhatsApp" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" value={values.phone}
-          error={shown('phone')} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
+          error={shown('phone')} ok={values.phone && !errors.phone ? 'Vamos avisar o convite por aqui' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
         <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
-          error={shown('linkedin')} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
+          error={shown('linkedin')} ok={values.linkedin && !errors.linkedin ? 'A mentora verá seu perfil' : undefined} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
         <SelectField label="Área de interesse" hint={journey ? "Preenchida com o resultado da sua jornada. Pode trocar." : undefined} name="area" value={values.area} error={shown('area')}
           onChange={(e) => set('area', e.target.value)} onBlur={() => touch('area')} data-testid="p4-area">
           <option value="">Selecione</option>
