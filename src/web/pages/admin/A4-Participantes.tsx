@@ -20,12 +20,12 @@ export default function A4Participantes() {
   const [status, setStatus] = useState('');
   const [area, setArea] = useState('');
   const [period, setPeriod] = useState('');
-  const [priority, setPriority] = useState(false);
+  const [priority, setPriority] = useState('');
   const dq = useDebounced(q);
 
   const filters = (): Omit<E35Query, 'cursor'> => ({
     q: dq || undefined, status: (status || undefined) as MenteeStatus | undefined, area: area || undefined,
-    period: (period || undefined) as (typeof PREFERRED_PERIODS)[number] | undefined, priority: priority ? 'true' : undefined,
+    period: (period || undefined) as (typeof PREFERRED_PERIODS)[number] | undefined, priority: priority === 'true' || priority === 'false' ? priority : undefined,
   });
   const first = useQuery((signal) => call(ENDPOINTS.E35, { query: filters(), signal }), [dq, status, area, period, priority]);
   const [extra, setExtra] = useState<MenteeAdminView[]>([]);
@@ -80,7 +80,7 @@ export default function A4Participantes() {
       <SelectField label="Período" value={period} onChange={(e) => setPeriod(e.target.value)}>
         <option value="">Todos</option>{PREFERRED_PERIODS.map((p) => <option key={p} value={p}>{PERIOD_LABELS[p]}</option>)}
       </SelectField>
-      <CheckboxField label="Só prioridade" checked={priority} onChange={(e) => setPriority(e.target.checked)} />
+      <SelectField label="Prioridade" value={priority} onChange={(e) => setPriority(e.target.value)}><option value="">Todas</option><option value="true">Com prioridade</option><option value="false">Sem prioridade</option></SelectField>
     </>
   );
 
