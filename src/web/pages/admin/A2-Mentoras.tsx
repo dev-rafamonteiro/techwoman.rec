@@ -72,7 +72,7 @@ export default function A2Mentoras() {
       key: 'actions', header: 'Ações',
       render: (m) => (
         <div onClick={(e) => e.stopPropagation()}>
-          <Button variant="secondary" size="sm" aria-haspopup="dialog" aria-label={`Ações de ${m.name}`} onClick={() => setMenuFor(m)}>Ações ⋯</Button>
+          <Button variant="secondary" size="sm" aria-haspopup="dialog" aria-label={`Ações de ${m.name}`} style={{ whiteSpace: 'nowrap' }} onClick={() => setMenuFor(m)}>Ações ⋯</Button>
         </div>
       ),
     },

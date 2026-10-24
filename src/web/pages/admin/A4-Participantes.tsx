@@ -60,14 +60,13 @@ export default function A4Participantes() {
 
   const columns: Column<MenteeAdminView>[] = [
     { key: 'name', header: 'Nome e e-mail', render: (m) => <><strong>{m.name}</strong><br /><small>{m.email}</small></>, text: (m) => `${m.name} <${m.email}>` },
-    { key: 'phone', header: 'WhatsApp', render: (m) => phoneFmt(m.phone), text: (m) => phoneFmt(m.phone) },
+    { key: 'phone', header: 'WhatsApp', render: (m) => <span style={{ whiteSpace: 'nowrap' }}>{phoneFmt(m.phone)}</span>, text: (m) => phoneFmt(m.phone) },
     { key: 'area', header: 'Área', render: (m) => <AreaBadge label={areaLabel(m.area)} />, text: (m) => areaLabel(m.area) },
     { key: 'period', header: 'Período', render: (m) => PERIOD_LABELS[m.preferredPeriod], text: (m) => PERIOD_LABELS[m.preferredPeriod] },
-    { key: 'status', header: 'Status', render: (m) => <StatusBadge status={STATUS_BADGE[m.status]} />, text: (m) => m.status },
-    { key: 'prio', header: 'Prioridade', render: (m) => (m.priority ? <PriorityBadge /> : '—'), text: (m) => (m.priority ? 'Sim' : 'Não') },
+    { key: 'status', header: 'Status / prioridade', render: (m) => <div className="tw-stack" style={{ gap: 4, alignItems: 'flex-start' }}><StatusBadge status={STATUS_BADGE[m.status]} />{m.priority && <PriorityBadge />}</div>, text: (m) => `${m.status}${m.priority ? ' / prioridade' : ''}` },
     { key: 'mentor', header: 'Mentora', render: (m) => m.mentorName ?? '—', text: (m) => m.mentorName ?? '' },
-    { key: 'table', header: 'Mesa e horário', render: (m) => (m.table && m.slot ? `Mesa ${m.table.number} · ${formatTime(m.slot.startAt)}` : '—'), text: (m) => (m.table && m.slot ? `Mesa ${m.table.number} · ${formatTime(m.slot.startAt)}` : '') },
-    { key: 'at', header: 'Inscrita em', render: (m) => formatDateTime(m.createdAt), text: (m) => m.createdAt },
+    { key: 'table', header: 'Mesa e horário', render: (m) => (m.table && m.slot ? <><b>Mesa {m.table.number}</b><br /><small>{formatTime(m.slot.startAt)}</small></> : '—'), text: (m) => (m.table && m.slot ? `Mesa ${m.table.number} · ${formatTime(m.slot.startAt)}` : '') },
+    { key: 'at', header: 'Inscrita', render: (m) => formatTime(m.createdAt), text: (m) => m.createdAt },
   ];
 
   const toolbar = (
