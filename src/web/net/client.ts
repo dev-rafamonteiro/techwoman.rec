@@ -74,6 +74,8 @@ export interface CallOptions<E extends EndpointDef> {
   menteeToken?: string;
   /** Idempotency-Key explícita; para endpoints idempotentes é gerada sozinha. */
   idempotencyKey?: string;
+  /** Corpo multipart (E33, upload de CSV). Usado por callForm; o Content-Type com boundary fica por conta do navegador. */
+  form?: FormData;
   /** Token do Turnstile (E02). */
   turnstileToken?: string;
   signal?: AbortSignal;
@@ -97,7 +99,7 @@ export function newIdempotencyKey(): string {
 async function send<E extends EndpointDef>(ep: E, opts: CallOptions<E>): Promise<Response> {
   const headers: Record<string, string> = { Accept: ep.contentType ?? 'application/json' };
   if (ep.method !== 'GET') headers[HEADERS.requestedWith] = REQUESTED_WITH_VALUE;
-  if (ep.body !== undefined) headers['Content-Type'] = 'application/json';
+  if (ep.body !== undefined && !opts.form) headers['Content-Type'] = 'application/json';
   if (ep.auth === 'mentee') {
     const t = opts.menteeToken ?? getMenteeToken();
     if (t) headers[HEADERS.menteeToken] = t;
@@ -112,7 +114,7 @@ async function send<E extends EndpointDef>(ep: E, opts: CallOptions<E>): Promise
       method: ep.method,
       headers,
       credentials: 'include',
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      body: opts.form ?? (opts.body !== undefined ? JSON.stringify(opts.body) : undefined),
       signal: opts.signal,
     });
   } catch (e) {
@@ -143,6 +145,11 @@ export async function call<E extends EndpointDef>(ep: E, opts: CallOptions<E> = 
   const res = await send(ep, opts);
   if (res.status === 204) return undefined as ResponseOf<E>;
   return (await res.json()) as ResponseOf<E>;
+}
+
+/** Envio multipart (E33: campo `file`). Devolve o JSON tipado. */
+export async function callForm<E extends EndpointDef>(ep: E, opts: CallOptions<E> & { form: FormData }): Promise<ResponseOf<E>> {
+  return call(ep, opts);
 }
 
 /** Para respostas que não são JSON (CSV de E37, PNG/SVG de E42, CSV de senhas de E33). */

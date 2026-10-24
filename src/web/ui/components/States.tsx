@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { ApiError } from '../../api/client';
+import { ApiError } from '../../net/client';
 import { Button, LinkButton } from './Button';
 
 /** Esqueleto de carregamento. */

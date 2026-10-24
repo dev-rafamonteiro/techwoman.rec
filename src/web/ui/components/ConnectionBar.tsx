@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { StreamStatus } from '../../api/useEventStream';
+import type { StreamStatus } from '../../net/useEventStream';
 
 /** Faixa de conexão: "Reconectando…" ou "Atualizado agora / há N s". */
 export function ConnectionBar({ status, lastUpdateAt, idleText }: { status: StreamStatus; lastUpdateAt: number | null; idleText?: string }) {

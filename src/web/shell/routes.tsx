@@ -3,6 +3,7 @@ import { Navigate, Outlet, useParams, type RouteObject } from 'react-router-dom'
 import { NotFoundState } from '../ui/components/States';
 import { SkeletonList } from '../ui/components/States';
 import { RequireRole } from './auth';
+const Gallery = lazy(() => import('../ui/Gallery'));
 import { AdminLayout, BareLayout, MentorLayout, ParticipantLayout } from './layouts';
 
 /**
@@ -84,6 +85,7 @@ export const routes: RouteObject[] = [
     { path: '/admin/usuarios', element: guard(['super_admin'], el('admin', 'A8')) },
     { path: '/admin/logs', element: el('admin', 'A9') },
   ] },
+  ...(import.meta.env.DEV ? [{ path: '/_ui', element: <Suspense fallback={null}><Gallery /></Suspense> }] : []),
   { path: '*', element: <div className="tw-page"><NotFoundState /></div> },
 ];
 

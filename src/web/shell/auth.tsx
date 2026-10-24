@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ENDPOINTS, type E10Body, type Role, type SessionUser } from '@tw/shared';
-import { ApiError, call, onSessionExpired } from '../api/client';
+import { ApiError, call, onSessionExpired } from '../net/client';
 import { NoPermission, SkeletonList } from '../ui/components/States';
 
 interface AuthValue {
