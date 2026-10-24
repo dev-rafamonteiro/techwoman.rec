@@ -13,12 +13,14 @@ export interface SlotOption {
 }
 
 /** Seletor de horário LIGA/DESLIGA (M3, A3): cada horário é um botão "Disponível". */
-export function SlotToggleGrid({ legend, slots, selected, onToggle, disabled }: {
+export function SlotToggleGrid({ legend, slots, selected, onToggle, disabled, caption }: {
   legend: string;
   slots: readonly SlotOption[];
   selected: ReadonlySet<string>;
   onToggle: (id: string) => void;
   disabled?: boolean;
+  /** Texto fixo sob cada horário livre de trava (ex.: "Horário gerado" numa prévia, A7), no lugar de Disponível/Indisponível. */
+  caption?: string;
 }) {
   return (
     <fieldset className="tw-slotgrid" disabled={disabled}>
@@ -35,7 +37,7 @@ export function SlotToggleGrid({ legend, slots, selected, onToggle, disabled }: 
             onClick={() => onToggle(s.id)}
           >
             {s.label}
-            <small>{s.locked ? `Marcada${s.caption ? ` · ${s.caption}` : ''}` : on ? 'Disponível' : 'Indisponível'}</small>
+            <small>{s.locked ? `Marcada${s.caption ? ` · ${s.caption}` : ''}` : caption ?? (on ? 'Disponível' : 'Indisponível')}</small>
           </button>
         );
       })}
