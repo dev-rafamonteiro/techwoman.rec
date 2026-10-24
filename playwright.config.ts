@@ -7,7 +7,10 @@ try {
   /* sem .env: usa o ambiente */
 }
 
-const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:5173";
+// Portas próprias do E2E, separadas da API/vite manuais (3000/5173).
+const apiPort = process.env.E2E_API_PORT ?? "3100";
+const webPort = process.env.E2E_WEB_PORT ?? "5180";
+const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${webPort}`;
 // Com E2E_BASE_URL apontando para uma stack já no ar (ex.: compose dev em :8080), não sobe servidores.
 const startServers = !process.env.E2E_BASE_URL;
 
@@ -29,11 +32,11 @@ export default defineConfig({
     ? [
         {
           command: "npm run -w @tw/api start",
-          url: "http://localhost:3000/ready",
-          reuseExistingServer: true,
+          url: `http://localhost:${apiPort}/ready`,
+          reuseExistingServer: false,
           timeout: 60_000,
           env: {
-            PORT: "3000",
+            PORT: apiPort,
             MONGODB_URI: process.env.MONGODB_URI_TEST ?? "mongodb://localhost:27017/?directConnection=true",
             MONGODB_DB: "tw_e2e",
             EVENT_ID: "techwoman-2026",
@@ -45,11 +48,11 @@ export default defineConfig({
           },
         },
         {
-          command: "npm run -w @tw/web dev -- --port 5173 --strictPort",
-          url: "http://localhost:5173",
-          reuseExistingServer: true,
+          command: `npm run -w @tw/web dev -- --port ${webPort} --strictPort`,
+          url: `http://localhost:${webPort}`,
+          reuseExistingServer: false,
           timeout: 60_000,
-          env: { VITE_API_PROXY: "http://localhost:3000" },
+          env: { VITE_API_PROXY: `http://localhost:${apiPort}` },
         },
       ]
     : undefined,

@@ -29,7 +29,7 @@ O mongo-local é necessário porque transações e Change Streams (SSE, E38) exi
 ```sh
 npm test                    # unitários
 npm run test:integration    # integração, usa MONGODB_URI_TEST (mongo-local no ar)
-npm run test:e2e            # Playwright
+npm run test:e2e            # Playwright (API :3100, vite :5180, banco tw_e2e; E2E_API_PORT/E2E_WEB_PORT mudam; E2E_BASE_URL usa stack já no ar)
 ```
 
 ## Stack completa com containers
@@ -55,5 +55,5 @@ EVENT_ID=... PUBLIC_BASE_URL=https://techwoman.dev docker compose -f ops/compose
 - DNS: o Docker usa `127.0.0.11`, o Podman usa o gateway da rede. Por isso o `web` descobre o resolver em `/etc/resolv.conf` na partida (`ops/web-entrypoint.sh`) e o Nginx re-resolve `api` a cada requisição (escala com `--scale api=N`).
 - Nginx roda sem root na porta 8080, com `pid` e temporários em `/tmp` (tmpfs, filesystem read-only).
 - `mongodb-atlas-local` não reinicia limpo sobre dados de um container anterior (erro RSGhost / keyfile ausente), então o dev não usa volume: `stop`/`start` preserva os dados, `down` zera o banco. Para persistir, rode índices e seed de novo (`npm run db:indexes`, `npm run db:seed`).
-- Healthcheck do mongo-local usa `CMD-SHELL` com `db.hello().isWritablePrimary` (só ping responde antes de o replica set eleger primário e a API caía com NotPrimaryOrSecondary); `CMD` com `--eval` contendo espaços foi quebrado em argumentos pelo Podman.
+- Healthcheck do mongo-local combina `db.runCommand({ping:1})` e `db.hello().isWritablePrimary` via `CMD-SHELL` (só o ping responde antes de o replica set eleger primário e a API caía com NotPrimaryOrSecondary); `CMD` com `--eval` contendo espaços foi quebrado em argumentos pelo Podman.
 - Imagens sem prefixo de registry são resolvidas como `docker.io/...` pelo Podman.

@@ -62,6 +62,7 @@ services:
   api:
     build: { context: .., dockerfile: ops/api.Dockerfile }
     command: ["node", "dist/server.js"]
+    stop_grace_period: 30s
     <<: *hardening
     environment:
       <<: *app-env
@@ -82,16 +83,18 @@ services:
   worker:
     build: { context: .., dockerfile: ops/api.Dockerfile }
     command: ["node", "dist/worker.js"]
+    stop_grace_period: 30s
     <<: *hardening
     environment:
       <<: *app-env
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_API_KEY_FILE: /run/secrets/email_api_key
+      MENTEE_TOKEN_SECRET_FILE: /run/secrets/mentee_token_secret
       WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
       WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
       WHATSAPP_TOKEN_FILE: /run/secrets/whatsapp_token
-    secrets: [mongo_uri, email_api_key, whatsapp_token]
+    secrets: [mongo_uri, mentee_token_secret, email_api_key, whatsapp_token]
     networks: [egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js", "worker"]

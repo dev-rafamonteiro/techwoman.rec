@@ -30,7 +30,7 @@ services:
     # `stop`/`start` preserva os dados, `down` zera o banco de dev.
     networks: [dev]
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'quit(db.hello().isWritablePrimary ? 0 : 1)'"]
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand({ping:1}); quit(db.hello().isWritablePrimary ? 0 : 1)'"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -39,6 +39,7 @@ services:
   api:
     build: { context: .., dockerfile: ops/api.Dockerfile }
     command: ["node", "dist/server.js"]
+    stop_grace_period: 30s
     environment: *dev-env
     read_only: true
     tmpfs: ["/tmp"]
@@ -56,6 +57,7 @@ services:
   worker:
     build: { context: .., dockerfile: ops/api.Dockerfile }
     command: ["node", "dist/worker.js"]
+    stop_grace_period: 30s
     environment: *dev-env
     read_only: true
     tmpfs: ["/tmp"]
