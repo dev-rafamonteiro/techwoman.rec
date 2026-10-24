@@ -22,7 +22,7 @@
 .adm-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4); }
 .adm-form .adm-wide { grid-column: 1 / -1; }
 .adm-tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
-.adm-tabs button { min-height: var(--touch-target); padding: 0 var(--space-4); border-radius: 999px; border: 1px solid var(--color-border); background: var(--tw-white); font: inherit; font-weight: 800; cursor: pointer; }
+.adm-tabs button { min-height: var(--touch-target); padding: 0 var(--space-4); border-radius: 999px; border: 1px solid var(--color-border); background: var(--tw-white); font: inherit; font-weight: 800; cursor: pointer; color: var(--color-ink); }
 .adm-tabs button[aria-selected="true"] { background: var(--tw-plum-950); color: var(--tw-white); }
 .adm-steps { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0; list-style: none; margin: 0 0 var(--space-4); }
 .adm-steps li { padding: 6px 12px; border-radius: 999px; background: var(--tw-gray-100); font-size: var(--text-sm); font-weight: 700; }
@@ -46,3 +46,5 @@
 .adm-switch:focus-visible, .adm-chip:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .adm-chip { min-height: 44px; padding: 0 14px; border-radius: 99px; border: 2px solid var(--color-border); background: var(--tw-white); font: inherit; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: inherit; }
 .adm-chip--on { background: var(--tw-lilac-100); border-color: var(--color-link); }
+.tw-page .tw-data th, .tw-page .tw-data td { padding: 8px 10px; }
+.tw-page .tw-data small { color: var(--color-ink-muted); }

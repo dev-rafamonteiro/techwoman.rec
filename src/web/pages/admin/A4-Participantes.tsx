@@ -59,16 +59,14 @@ export default function A4Participantes() {
   };
 
   const columns: Column<MenteeAdminView>[] = [
-    { key: 'name', header: 'Nome', render: (m) => <strong>{m.name}</strong>, text: (m) => m.name },
-    { key: 'email', header: 'E-mail', render: (m) => m.email, text: (m) => m.email },
+    { key: 'name', header: 'Nome e e-mail', render: (m) => <><strong>{m.name}</strong><br /><small>{m.email}</small></>, text: (m) => `${m.name} <${m.email}>` },
     { key: 'phone', header: 'WhatsApp', render: (m) => phoneFmt(m.phone), text: (m) => phoneFmt(m.phone) },
     { key: 'area', header: 'Área', render: (m) => <AreaBadge label={areaLabel(m.area)} />, text: (m) => areaLabel(m.area) },
     { key: 'period', header: 'Período', render: (m) => PERIOD_LABELS[m.preferredPeriod], text: (m) => PERIOD_LABELS[m.preferredPeriod] },
     { key: 'status', header: 'Status', render: (m) => <StatusBadge status={STATUS_BADGE[m.status]} />, text: (m) => m.status },
     { key: 'prio', header: 'Prioridade', render: (m) => (m.priority ? <PriorityBadge /> : '—'), text: (m) => (m.priority ? 'Sim' : 'Não') },
     { key: 'mentor', header: 'Mentora', render: (m) => m.mentorName ?? '—', text: (m) => m.mentorName ?? '' },
-    { key: 'table', header: 'Mesa', render: (m) => (m.table ? m.table.number : '—'), text: (m) => m.table?.number ?? '' },
-    { key: 'slot', header: 'Horário', render: (m) => (m.slot ? formatTime(m.slot.startAt) : '—'), text: (m) => (m.slot ? formatTime(m.slot.startAt) : '') },
+    { key: 'table', header: 'Mesa e horário', render: (m) => (m.table && m.slot ? `Mesa ${m.table.number} · ${formatTime(m.slot.startAt)}` : '—'), text: (m) => (m.table && m.slot ? `Mesa ${m.table.number} · ${formatTime(m.slot.startAt)}` : '') },
     { key: 'at', header: 'Inscrita em', render: (m) => formatDateTime(m.createdAt), text: (m) => m.createdAt },
   ];
 

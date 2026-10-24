@@ -28,6 +28,7 @@ export default function A2Mentoras() {
   const [secret, setSecret] = useState<{ name: string; id: string; password: string } | null>(null);
   const [realocar, setRealocar] = useState<{ name: string; details: MentorHasAppointmentsDetails } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<MentorListItem | null>(null);
 
   const toggle = async (m: MentorListItem) => {
     const next = m.status === 'active' ? 'disabled' : 'active';
@@ -61,20 +62,17 @@ export default function A2Mentoras() {
   const columns: Column<MentorListItem>[] = [
     { key: 'name', header: 'Nome', render: (m) => <strong>{m.name}</strong>, text: (m) => m.name },
     { key: 'email', header: 'E-mail', render: (m) => m.email, text: (m) => m.email },
-    { key: 'org', header: 'Organização (interno)', render: (m) => m.organization ?? '—', text: (m) => m.organization ?? '' },
+    { key: 'org', header: 'Organização', render: (m) => m.organization ?? '—', text: (m) => m.organization ?? '' },
     { key: 'areas', header: 'Áreas', render: (m) => m.areas.map(areaLabel).join(', ') || '—', text: (m) => m.areas.map(areaLabel).join(', ') },
     { key: 'slots', header: 'Horários', render: (m) => m.availableSlots, text: (m) => m.availableSlots },
-    { key: 'appts', header: 'Mentorias (conf./concl.)', render: (m) => `${m.confirmedCount}/${m.doneCount}`, text: (m) => `${m.confirmedCount}/${m.doneCount}` },
+    { key: 'appts', header: 'Mentorias', render: (m) => `${m.confirmedCount}/${m.doneCount}`, text: (m) => `${m.confirmedCount}/${m.doneCount}` },
     { key: 'last', header: 'Último acesso', render: (m) => (m.lastLoginAt ? formatDateTime(m.lastLoginAt) : '—'), text: (m) => m.lastLoginAt ?? '' },
     { key: 'status', header: 'Status', render: (m) => <span data-testid={`status-${m.id}`}>{statusOf(m).label}</span>, text: (m) => statusOf(m).label },
     {
       key: 'actions', header: 'Ações',
       render: (m) => (
-        <div className="tw-row" style={{ flexWrap: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
-          <LinkButton to={`/admin/mentoras/${m.id}`} variant="secondary" size="sm">Editar</LinkButton>
-          <Button variant="secondary" size="sm" disabled={busy === m.id} onClick={() => { setSendByEmail(true); setResetFor(m); }}>Redefinir senha</Button>
-          <Button variant={m.status === 'active' ? 'danger' : 'mint'} size="sm" disabled={busy === m.id} onClick={() => void toggle(m)}>{m.status === 'active' ? 'Desativar' : 'Ativar'}</Button>
-          <Link to={`/admin/mapa?mentora=${m.id}`} className="tw-btn tw-btn--ghost tw-btn--sm">Ver agenda</Link>
+        <div onClick={(e) => e.stopPropagation()}>
+          <Button variant="secondary" size="sm" aria-haspopup="dialog" aria-label={`Ações de ${m.name}`} onClick={() => setMenuFor(m)}>Ações ⋯</Button>
         </div>
       ),
     },
@@ -107,6 +105,16 @@ export default function A2Mentoras() {
           exportName="mentoras.csv" emptyTitle="Nenhuma mentora encontrada" emptyText="Cadastre uma mentora ou importe a lista em CSV."
         />
       )}
+      <Overlay title={menuFor?.name ?? 'Ações'} open={!!menuFor} onClose={() => setMenuFor(null)}>
+        {menuFor && (
+          <div className="tw-stack" style={{ gap: 8 }} data-testid="mentor-actions">
+            <LinkButton to={`/admin/mentoras/${menuFor.id}`} variant="secondary" block>Editar</LinkButton>
+            <Button variant="secondary" block onClick={() => { const m = menuFor; setMenuFor(null); setSendByEmail(true); setResetFor(m); }}>Redefinir senha</Button>
+            <Button variant={menuFor.status === 'active' ? 'danger' : 'mint'} block onClick={() => { const m = menuFor; setMenuFor(null); void toggle(m); }}>{menuFor.status === 'active' ? 'Desativar' : 'Ativar'}</Button>
+            <LinkButton to={`/admin/mapa?mentora=${menuFor.id}`} variant="ghost" block>Ver agenda</LinkButton>
+          </div>
+        )}
+      </Overlay>
       <Overlay title="Redefinir senha" open={!!resetFor} onClose={() => setResetFor(null)}>
         <div className="tw-stack">
           <p>Redefinir a senha de {resetFor?.name}? A senha atual deixa de valer e as sessões são encerradas.</p>
