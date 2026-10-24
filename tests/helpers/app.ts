@@ -15,20 +15,31 @@ export interface ApiModules {
   MemoryNotifier?: new (...a: any[]) => { sent: any[] };
 }
 
-/** Carrega a API se já existir (src/api/app.ts); senão null e os testes de integração da API ficam `skip`. */
+/** Carrega a API (src/api/app.ts); se o import falhar os testes de integração da API ficam `skip`. */
 export async function loadApi(): Promise<ApiModules | null> {
   const appPath = "../../src/api/app.js";
-  const workerPath = "../../src/api/worker/expire.js";
+  const configPath = "../../src/api/config.js";
+  const expirePath = "../../src/api/worker/expire.js";
   const outboxPath = "../../src/api/worker/outbox.js";
   const notifierPath = "../../src/api/notifier.js";
   try {
     const app = await import(/* @vite-ignore */ appPath);
-    const mods: ApiModules = { buildApp: app.buildApp };
-    mods.expireInvites = (await import(/* @vite-ignore */ workerPath).catch(() => ({}))).expireInvites;
+    const { loadConfig } = await import(/* @vite-ignore */ configPath);
+    const mods: ApiModules = {
+      // adapta { db, client, now, streams? } para a assinatura real: buildApp({ config, client, db, logger, streams, now }) -> { app, ctx }
+      buildApp: async (o: Record<string, any>) => {
+        const config = loadConfig({ NODE_ENV: "test", JWT_SECRET: "t".repeat(40), TURNSTILE_MODE: "test", EVENT_ID: o.eventId ?? "techwoman-2026" } as NodeJS.ProcessEnv);
+        const { app: fastify } = await app.buildApp({ config, client: o.client, db: o.db, logger: false, streams: o.streams ?? false, ...(o.now ? { now: o.now } : {}) });
+        return fastify;
+      },
+    };
+    const w = await import(/* @vite-ignore */ expirePath).catch(() => ({}));
+    mods.expireInvites = w.expireInvites;
     mods.processOutbox = (await import(/* @vite-ignore */ outboxPath).catch(() => ({}))).processOutbox;
-    mods.MemoryNotifier = (await import(/* @vite-ignore */ notifierPath).catch(() => ({}))).MemoryNotifier ?? app.MemoryNotifier;
-    return typeof mods.buildApp === "function" ? mods : null;
-  } catch {
+    mods.MemoryNotifier = (await import(/* @vite-ignore */ notifierPath).catch(() => ({}))).MemoryNotifier;
+    return typeof app.buildApp === "function" ? mods : null;
+  } catch (e) {
+    if (process.env.TW_DEBUG_LOADAPI) console.error(e);
     return null;
   }
 }
@@ -40,8 +51,11 @@ export interface Res<T = any> {
 }
 
 /** Cliente HTTP em memória (app.inject) com cookie de sessão e headers de CSRF/idempotência. */
+let ipSeq = 1;
 export class Client {
   cookie: string | undefined;
+  /** IP simulado (X-Forwarded-For): cada cliente tem o seu, como no evento real com várias redes. */
+  readonly ip = `10.${(ipSeq >> 8) & 255}.${ipSeq & 255}.${(ipSeq++ % 250) + 1}`;
   menteeToken: string | undefined;
   constructor(readonly app: FastifyInstance) {}
 
@@ -60,7 +74,7 @@ export class Client {
   }
 
   async req(method: string, url: string, body?: unknown, headers: Record<string, string> = {}): Promise<Res> {
-    const h: Record<string, string> = { ...headers };
+    const h: Record<string, string> = { "x-forwarded-for": this.ip, ...headers };
     if (method !== "GET") h[HEADERS.requestedWith] = REQUESTED_WITH_VALUE;
     if (this.cookie) h.cookie = this.cookie;
     if (this.menteeToken) h[HEADERS.menteeToken] = this.menteeToken;

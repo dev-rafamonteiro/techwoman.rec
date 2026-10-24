@@ -25,7 +25,7 @@ export interface Booted {
 export async function bootApi(
   api: ApiModules,
   label: string,
-  opts: { mentors?: number; mentees?: number; tables?: number; registrationOpen?: boolean } = {},
+  opts: { mentors?: number; mentees?: number; tables?: number; registrationOpen?: boolean; streams?: boolean } = {},
 ): Promise<Booted> {
   const { mentors = 2, mentees = 5, tables = 20, registrationOpen = true } = opts;
   const t = await createTestDb(label);
@@ -41,7 +41,7 @@ export async function bootApi(
   if (w.mentors.length) await c.users.insertMany(w.mentors);
   await c.users.insertMany(staff);
   const clock = { now: NOW };
-  const app = await api.buildApp({ db: t.db, client: t.client, now: () => clock.now, config: { turnstile: { mode: "test" }, rateLimit: false } });
+  const app = await api.buildApp({ db: t.db, client: t.client, now: () => clock.now, streams: opts.streams ?? false });
   const login = async (email: string) => {
     const cl = new Client(app);
     const r = await cl.login(email);

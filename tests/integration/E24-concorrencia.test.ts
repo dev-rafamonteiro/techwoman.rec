@@ -24,7 +24,7 @@ describe.skipIf(!api)("E24 concorrência: 50 mentoras x mesmas 10 participantes 
     await getCollections(t.db).users.deleteMany({});
     w.mentors = Array.from({ length: opts.mentors }, (_, i) => userDoc(i + 1, { passwordHash: hash }));
     await getCollections(t.db).users.insertMany(w.mentors);
-    app = await api!.buildApp({ db: t.db, client: t.client, now: () => NOW, config: { turnstile: { mode: "test" }, rateLimit: false } });
+    app = await api!.buildApp({ db: t.db, client: t.client, now: () => NOW, });
     apps.push(app);
     const clients = await Promise.all(w.mentors.map(async (m) => {
       const c = new Client(app);

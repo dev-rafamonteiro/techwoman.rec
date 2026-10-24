@@ -8,7 +8,7 @@ const api = await loadApi();
 describe.skipIf(!api)("tempo real: SSE alimentado por Change Streams (E27 mentora, E38 admin)", () => {
   let b: Booted;
   beforeAll(async () => {
-    b = await bootApi(api!, "sse", { mentors: 2, mentees: 3 });
+    b = await bootApi(api!, "sse", { mentors: 2, mentees: 3, streams: true });
   });
   afterAll(async () => b?.close());
 

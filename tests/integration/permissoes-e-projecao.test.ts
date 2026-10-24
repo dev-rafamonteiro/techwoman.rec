@@ -88,8 +88,9 @@ describe.skipIf(!api)("permissões, escopo por dono e projeção sem contato (ma
     it("E25 só devolve as mentorias da própria mentora", async () => {
       const mine = await b.mentor[0]!.get("/api/mentor/appointments");
       const other = await b.mentor[1]!.get("/api/mentor/appointments");
-      expect(mine.body.appointments?.length ?? mine.body.items?.length).toBe(1);
-      expect(other.body.appointments?.length ?? other.body.items?.length ?? 0).toBe(0);
+      const booked = (r: any) => r.body.slots.filter((s: any) => s.appointment).length;
+      expect(booked(mine)).toBe(1);
+      expect(booked(other)).toBe(0);
     });
 
     it("E26: mentora B não age na mentoria da mentora A (404/403) e nada muda", async () => {

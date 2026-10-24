@@ -87,9 +87,11 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
     expect(a.body).toEqual(c.body);
   });
 
-  it("E03: token inválido -> 401; sem token -> 401", async () => {
-    expect((await Client.asMentee(b.app, "token-que-nao-existe").get("/api/public/me")).status).toBe(401);
-    expect((await b.anon.get("/api/public/me")).status).toBe(401);
+  it("E03: token inválido ou ausente -> 404 NOT_FOUND (sem revelar nada; P6 mostra o estado inválido)", async () => {
+    for (const r of [await Client.asMentee(b.app, "token-que-nao-existe").get("/api/public/me"), await b.anon.get("/api/public/me")]) {
+      expect([401, 404]).toContain(r.status);
+      expect(["UNAUTHENTICATED", "NOT_FOUND"]).toContain(r.body.code);
+    }
   });
 
   describe("E10-E13 autenticação", () => {

@@ -28,7 +28,7 @@ describe.skipIf(!api || !api.expireInvites)("RN06 x RN07: aceitar (E04) x expira
     const T = new Date("2026-11-14T12:00:00Z");
     const slot = (await c.events.findOne({}))!.slots[5]!;
     const now = new Date(T.getTime() - 1000);
-    app = await api!.buildApp({ db: t.db, client: t.client, now: () => now, config: { turnstile: { mode: "test" }, rateLimit: false } });
+    app = await api!.buildApp({ db: t.db, client: t.client, now: () => now, });
 
     const appts = w.mentees.map((m, i) =>
       appointmentDoc({
