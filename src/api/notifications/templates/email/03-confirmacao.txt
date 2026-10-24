@@ -1,0 +1,25 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[CONFIRMADA]
+
+Combinado, {{nome}}!
+
+Sua mentoria está confirmada. Chegue 5 minutos antes na mesa indicada.
+
+MESA: {{mesa}}
+HORÁRIO: {{horario}}
+MENTORA: {{mentora_nome}}
+
+Adicionar à agenda: {{link_agenda}}
+Ver minha mentoria: {{link_minha_mentoria}}
+
+{{evento_data}} · sessão de 40 minutos · horário de Recife.
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_minha_mentoria}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

@@ -1,0 +1,48 @@
+{
+  "common": {
+    "evento_nome": "Tech Woman",
+    "evento_data": "Sábado, 14 de novembro de 2026",
+    "evento_local": "Recife",
+    "link_privacidade": "https://techwoman.dev/privacidade",
+    "ano": "2026"
+  },
+  "templates": {
+    "01-inscricao-recebida": {
+      "nome": "Joana",
+      "link_minha_mentoria": "https://techwoman.dev/mentoria/minha?t=8f3k2q"
+    },
+    "02-convite-horario": {
+      "nome": "Joana",
+      "mentora_nome": "Ana",
+      "mentora_linkedin": "https://www.linkedin.com/in/ana-exemplo",
+      "mesa": "Mesa 7",
+      "horario": "14h15",
+      "prazo": "14h05",
+      "link_minha_mentoria": "https://techwoman.dev/mentoria/minha?t=8f3k2q"
+    },
+    "03-confirmacao": {
+      "nome": "Joana",
+      "mentora_nome": "Ana",
+      "mesa": "Mesa 7",
+      "horario": "14h15",
+      "link_minha_mentoria": "https://techwoman.dev/mentoria/minha?t=8f3k2q",
+      "link_agenda": "https://techwoman.dev/public/calendar.ics?t=8f3k2q"
+    },
+    "04-convite-expirado": {
+      "nome": "Joana",
+      "link_minha_mentoria": "https://techwoman.dev/mentoria/minha?t=8f3k2q"
+    },
+    "05-cancelamento-mentora": {
+      "nome": "Joana",
+      "horario": "14h15",
+      "link_minha_mentoria": "https://techwoman.dev/mentoria/minha?t=8f3k2q"
+    },
+    "06-acesso-mentora": {
+      "mentora_nome": "Ana",
+      "email_login": "ana@email.com",
+      "senha_provisoria": "lilas-mesa-3851",
+      "link_login": "https://techwoman.dev/entrar",
+      "validade_senha": "72 horas"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[CANCELADA]
+
+Sua mentoria foi cancelada
+
+Oi, {{nome}}. A mentoria das {{horario}} precisou ser cancelada pela mentora.
+
+Você voltou para a fila com prioridade: as mentoras veem sua inscrição primeiro.
+
+Acompanhar minha mentoria: {{link_minha_mentoria}}
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_minha_mentoria}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}
