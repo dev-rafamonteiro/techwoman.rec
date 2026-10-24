@@ -16,9 +16,9 @@ function Shell({ id, label, optional, hint, error, ok, children }: FieldShell & 
       </label>
       {children}
       {error ? (
-        <span id={`${id}-msg`} className="tw-field__error" role="alert">{error}</span>
+        <span id={`${id}-msg`} className="tw-field__error" role="alert"><span aria-hidden="true">⚠ </span>{error}</span>
       ) : ok ? (
-        <span id={`${id}-msg`} className="tw-field__ok">{ok}</span>
+        <span id={`${id}-msg`} className="tw-field__ok"><span aria-hidden="true">✓ </span>{ok}</span>
       ) : hint ? (
         <span id={`${id}-msg`} className="tw-field__hint">{hint}</span>
       ) : null}
@@ -33,7 +33,7 @@ export function TextField({ label, optional, hint, error, ok, ...rest }: FieldSh
   const id = useId();
   return (
     <Shell id={id} label={label} optional={optional} hint={hint} error={error} ok={ok}>
-      <input {...rest} id={id} className="tw-input" aria-invalid={error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })} />
+      <input {...rest} id={id} className="tw-input" aria-invalid={error ? true : undefined} data-ok={ok && !error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })} />
     </Shell>
   );
 }
@@ -42,7 +42,7 @@ export function TextArea({ label, optional, hint, error, ok, ...rest }: FieldShe
   const id = useId();
   return (
     <Shell id={id} label={label} optional={optional} hint={hint} error={error} ok={ok}>
-      <textarea {...rest} id={id} className="tw-textarea" aria-invalid={error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })} />
+      <textarea {...rest} id={id} className="tw-textarea" aria-invalid={error ? true : undefined} data-ok={ok && !error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })} />
     </Shell>
   );
 }
@@ -51,7 +51,7 @@ export function SelectField({ label, optional, hint, error, ok, children, ...res
   const id = useId();
   return (
     <Shell id={id} label={label} optional={optional} hint={hint} error={error} ok={ok}>
-      <select {...rest} id={id} className="tw-select" aria-invalid={error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })}>
+      <select {...rest} id={id} className="tw-select" aria-invalid={error ? true : undefined} data-ok={ok && !error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })}>
         {children}
       </select>
     </Shell>
