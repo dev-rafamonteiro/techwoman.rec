@@ -1,0 +1,89 @@
+# Ambiente local completo, sem cloudflared:
+#   docker compose -f ops/compose.dev.yaml up --build     (web em http://localhost:8080)
+#   docker compose -f ops/compose.dev.yaml up -d mongo-local   (só o banco, p/ rodar api/testes no host)
+# mongo-local: replica set (transações e Change Streams do SSE, E38) via mongodb-atlas-local.
+# Valores abaixo são só de desenvolvimento local; nada aqui é segredo real.
+x-dev-env: &dev-env
+  NODE_ENV: development
+  PORT: "3000"
+  EVENT_ID: ${EVENT_ID:-dev}
+  PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+  MONGODB_DB: ${MONGODB_DB:-techwoman}
+  MONGODB_URI: mongodb://mongo-local:27017/?directConnection=true
+  JWT_SECRET: dev-only-jwt-secret-troque-em-producao-0123456789
+  # chaves de teste públicas da Cloudflare (sempre aprovam)
+  TURNSTILE_SECRET: 1x0000000000000000000000000000000AA
+  TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+  WHATSAPP_ENABLED: "false"
+
+services:
+  mongo-local:
+    image: mongodb/mongodb-atlas-local:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-local-data:/data/db
+    networks: [dev]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1})"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  api:
+    build: { context: .., dockerfile: ops/api.Dockerfile }
+    command: ["node", "dist/server.js"]
+    environment: *dev-env
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    networks: [dev]
+    depends_on:
+      mongo-local: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "dist/health.js"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  worker:
+    build: { context: .., dockerfile: ops/api.Dockerfile }
+    command: ["node", "dist/worker.js"]
+    environment: *dev-env
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    networks: [dev]
+    depends_on:
+      mongo-local: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "dist/health.js", "worker"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  web:
+    build: { context: .., dockerfile: ops/web.Dockerfile }
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    ports:
+      - "8080:8080"
+    networks: [dev]
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+networks:
+  dev: {}
+
+volumes:
+  mongo-local-data:

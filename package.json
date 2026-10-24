@@ -1,0 +1,33 @@
+{
+  "name": "techwoman-mentoria",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aplicação de mentoria Tech Woman (monorepo)",
+  "type": "module",
+  "workspaces": [
+    "src/shared",
+    "src/db",
+    "src/api",
+    "src/web",
+    "tests"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:api dev:web",
+    "dev:api": "npm run -w @tw/api dev",
+    "dev:web": "npm run -w @tw/web dev",
+    "build": "npm run -w @tw/shared build && npm run -w @tw/db build && npm run -w @tw/api build && npm run -w @tw/web build",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run -w @tw/tests test",
+    "test:integration": "npm run -w @tw/tests test:integration",
+    "test:e2e": "npm run -w @tw/tests test:e2e",
+    "db:indexes": "npm run -w @tw/db indexes",
+    "db:seed": "npm run -w @tw/db seed",
+    "stack:dev": "docker compose -f ops/compose.dev.yaml up --build",
+    "stack:dev:down": "docker compose -f ops/compose.dev.yaml down",
+    "mongo:up": "docker compose -f ops/compose.dev.yaml up -d mongo-local"
+  },
+  "devDependencies": {
+    "npm-run-all2": "^7.0.0",
+    "typescript": "^5.9.0"
+  }
+}

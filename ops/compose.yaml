@@ -1,0 +1,106 @@
+# Produção (VM própria, exposta só via Cloudflare Tunnel). Segredos em ops/secrets/<nome> (gitignored).
+# Subir: docker compose -f ops/compose.yaml up -d --build [--scale api=4]
+# A app lê VAR ou VAR_FILE; aqui só os *_FILE (nunca valores) entram no ambiente.
+x-hardening: &hardening
+  read_only: true
+  tmpfs: ["/tmp"]
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  restart: unless-stopped
+
+x-app-env: &app-env
+  NODE_ENV: production
+  PORT: "3000"
+  EVENT_ID: ${EVENT_ID:?defina EVENT_ID}
+  PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?defina PUBLIC_BASE_URL}
+  MONGODB_DB: ${MONGODB_DB:-techwoman}
+  MONGODB_URI_FILE: /run/secrets/mongo_uri
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN_FILE: /run/secrets/cf_tunnel_token
+    secrets: [cf_tunnel_token]
+    networks: [edge]
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "--metrics", "127.0.0.1:2000", "ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      web: { condition: service_healthy }
+    deploy: { resources: { limits: { cpus: "0.5", memory: 128M } } }
+
+  web:
+    build: { context: .., dockerfile: ops/web.Dockerfile }
+    <<: *hardening
+    tmpfs: ["/tmp"]
+    networks: [edge, app]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      api: { condition: service_healthy }
+    deploy: { resources: { limits: { cpus: "1.0", memory: 256M } } }
+
+  api:
+    build: { context: .., dockerfile: ops/api.Dockerfile }
+    command: ["node", "dist/server.js"]
+    <<: *hardening
+    environment:
+      <<: *app-env
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      TURNSTILE_SECRET_FILE: /run/secrets/turnstile_secret
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+    secrets: [mongo_uri, jwt_secret, turnstile_secret]
+    networks: [app, egress]
+    healthcheck:
+      test: ["CMD", "node", "dist/health.js"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy: { resources: { limits: { cpus: "1.5", memory: 768M } } }
+
+  worker:
+    build: { context: .., dockerfile: ops/api.Dockerfile }
+    command: ["node", "dist/worker.js"]
+    <<: *hardening
+    environment:
+      <<: *app-env
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_API_KEY_FILE: /run/secrets/email_api_key
+      WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_TOKEN_FILE: /run/secrets/whatsapp_token
+    secrets: [mongo_uri, email_api_key, whatsapp_token]
+    networks: [egress]
+    healthcheck:
+      test: ["CMD", "node", "dist/health.js", "worker"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy: { resources: { limits: { cpus: "0.5", memory: 384M } } }
+
+networks:
+  edge: {}
+  app: { internal: true }
+  egress: {}
+
+secrets:
+  mongo_uri: { file: ./secrets/mongo_uri }
+  jwt_secret: { file: ./secrets/jwt_secret }
+  turnstile_secret: { file: ./secrets/turnstile_secret }
+  email_api_key: { file: ./secrets/email_api_key }
+  whatsapp_token: { file: ./secrets/whatsapp_token }
+  cf_tunnel_token: { file: ./secrets/cf_tunnel_token }
