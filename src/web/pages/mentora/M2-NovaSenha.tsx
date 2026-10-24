@@ -15,9 +15,9 @@ export default function M2NovaSenha() {
   const [confirm, setConfirm] = useState('');
   const [touched, setTouched] = useState(false);
   const [name, setName] = useState(user?.name ?? '');
-  const [linkedin, setLinkedin] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [areas, setAreas] = useState<Set<string> | null>(null);
+  const [linkedin, setLinkedin] = useState(user?.linkedin ?? '');
+  const [photoUrl, setPhotoUrl] = useState(user?.photoUrl ?? '');
+  const [areas, setAreas] = useState<Set<string> | null>(user ? new Set(user.areas) : null);
   const [profileTouched, setProfileTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -84,7 +84,11 @@ export default function P6MinhaMentoria() {
 
   const token = params.get('t');
   useEffect(() => {
-    if (token) setMenteeToken(token);
+    if (token) {
+      setMenteeToken(token);
+      // Tira o token da barra de endereço (histórico, capturas de tela); ele fica só na sessão.
+      window.history.replaceState(window.history.state, '', window.location.pathname);
+    }
   }, [token]);
 
   const load = useCallback(async (silent: boolean) => {

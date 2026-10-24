@@ -26,18 +26,17 @@ export function loadJourney(): Journey | null {
   }
 }
 
-/** Link pessoal de P6 (E02 201), lido por P5. */
+/** Link pessoal de P6 (E02 201), lido por P5. Contém o token (credencial): só sessionStorage. */
 export function savePersonalPath(path: string): void {
   try {
     sessionStorage.setItem(PERSONAL_KEY, path);
-    localStorage.setItem(PERSONAL_KEY, path);
   } catch {
     /* ignora */
   }
 }
 export function loadPersonalPath(): string | null {
   try {
-    return sessionStorage.getItem(PERSONAL_KEY) ?? localStorage.getItem(PERSONAL_KEY);
+    return sessionStorage.getItem(PERSONAL_KEY);
   } catch {
     return null;
   }

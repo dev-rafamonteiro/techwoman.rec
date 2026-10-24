@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom';
 import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E22Response, type MenteeStaffView, type MentorStreamEvent, type PreferredPeriod } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, ConnectionBar, EmptyState, ErrorState, MenteeCard, PERIOD_LABELS, SelectField, SkeletonList,
-  TextField, call, formatTime, useEventStream, useQuery,
+  TextField, call, formatTime, useAuth, useEventStream, usePolling, useQuery,
 } from '../../ui';
 import { FALLBACK_AREAS } from '../public/lib/areas';
 import { M5ScheduleDrawer } from './M5ScheduleDrawer';
 import '../public/public.css';
 
 const LEAVE_MS = 350;
+/** Frames de controle do E27: `degraded` = cair para polling de 10 s; `resync` = recarregar tudo. */
+type ControlEvent = { type: 'degraded' | 'resync'; data: unknown };
 const sortQueue = (a: MenteeStaffView, b: MenteeStaffView) =>
   Number(b.priority) - Number(a.priority) || new Date(a.queuedAt).getTime() - new Date(b.queuedAt).getTime();
 
@@ -19,7 +21,9 @@ export default function M4Aguardando() {
   const areas = event.status === 'success' && event.data.areas.length ? event.data.areas : FALLBACK_AREAS;
   const areaLabel = useCallback((key: string) => areas.find((a) => a.key === key)?.label ?? key, [areas]);
 
-  const [areaFilter, setAreaFilter] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
+  const [areaFilter, setAreaFilter] = useState<Set<string>>(() => new Set(user?.areas ?? []));
+  const [degraded, setDegraded] = useState(false);
   const [period, setPeriod] = useState<PreferredPeriod | ''>('');
   const [onlyPriority, setOnlyPriority] = useState(false);
   const [search, setSearch] = useState('');
@@ -96,10 +100,16 @@ export default function M4Aguardando() {
     setTimeout(() => setNotices((p) => p.filter((n) => n.id !== id)), 6000);
   };
 
-  const onEvent = (ev: MentorStreamEvent) => {
+  const onEvent = (ev: MentorStreamEvent | ControlEvent) => {
+    if (ev.type === 'degraded') { setDegraded(true); return; }
+    if (ev.type === 'resync') { void loadFirst(); void agenda.refetch(); return; }
     if (ev.type === 'queue.added') {
       const m = ev.data.mentee;
-      if (matches(m)) setItems((p) => (p.some((x) => x.id === m.id) ? p : [...p, m].sort(sortQueue)));
+      // queue.added é upsert: reaparece quando prioridade ou preferência mudam.
+      setItems((p) => {
+        const rest = p.filter((x) => x.id !== m.id);
+        return matches(m) ? [...rest, m].sort(sortQueue) : rest;
+      });
       setMeta((p) => p);
     } else if (ev.type === 'queue.removed') {
       const d = ev.data;
@@ -119,10 +129,12 @@ export default function M4Aguardando() {
     }
   };
 
-  const stream = useEventStream<MentorStreamEvent>({
-    endpoint: ENDPOINTS.E27, eventTypes: MENTOR_STREAM_EVENT_TYPES, onEvent,
+  const stream = useEventStream<MentorStreamEvent | ControlEvent>({
+    endpoint: ENDPOINTS.E27, eventTypes: [...MENTOR_STREAM_EVENT_TYPES, 'degraded', 'resync'], onEvent,
     refetch: () => Promise.all([loadFirst(), agenda.refetch()]),
   });
+
+  usePolling(() => Promise.all([loadFirst(), agenda.refetch()]), 10000, degraded);
 
   async function more() {
     if (!nextCursor) return;

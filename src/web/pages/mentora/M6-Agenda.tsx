@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E25Response, type E26Body, type MentorAppointmentView, type MentorStreamEvent } from '@tw/shared';
 import {
   ApiError, AreaBadge, Button, Card, ConnectionBar, Countdown, EmptyState, ErrorState, Overlay, SkeletonList, StatusBadge, TextArea,
-  call, formatDayShort, formatRange, formatTime, LinkButton, useEventStream, useQuery, useToast,
+  call, formatDayShort, formatRange, formatTime, LinkButton, useEventStream, usePolling, useQuery, useToast,
 } from '../../ui';
 import { FALLBACK_AREAS } from '../public/lib/areas';
 import { noShowAllowed, startsSoon } from './lib/format';
@@ -40,9 +40,13 @@ export default function M6Agenda() {
   }, []);
   useEffect(() => { void load(); }, [load]);
 
-  const stream = useEventStream<MentorStreamEvent>({
-    endpoint: ENDPOINTS.E27, eventTypes: MENTOR_STREAM_EVENT_TYPES, refetch: load,
+  const [degraded, setDegraded] = useState(false);
+  usePolling(load, 10000, degraded);
+  const stream = useEventStream<MentorStreamEvent | { type: 'degraded' | 'resync'; data: unknown }>({
+    endpoint: ENDPOINTS.E27, eventTypes: [...MENTOR_STREAM_EVENT_TYPES, 'degraded', 'resync'], refetch: load,
     onEvent: (ev) => {
+      if (ev.type === 'degraded') { setDegraded(true); return; }
+      if (ev.type === 'resync') { void load(); return; }
       if (ev.type !== 'appointment.updated') return;
       const ap = ev.data.appointment;
       setData((p) => p && {

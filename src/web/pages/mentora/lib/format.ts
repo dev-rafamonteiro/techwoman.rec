@@ -6,7 +6,7 @@ export function startsSoon(startAtIso: string, nowMs: number): boolean {
   return left > 0 && left <= 5 * 60000;
 }
 
-/** "Não compareceu" só 10 min após o início (E26, RN10). */
+/** "Não compareceu" só 10 min após o início (E26, RN09). */
 export function noShowAllowed(startAtIso: string, nowMs: number): boolean {
   return nowMs >= new Date(startAtIso).getTime() + 10 * 60000;
 }
