@@ -65,6 +65,14 @@ export function onSessionExpired(fn: Listener): () => void {
   return () => sessionExpiredListeners.delete(fn);
 }
 
+type Listener2 = () => void;
+const passwordChangeListeners = new Set<Listener2>();
+/** 403 PASSWORD_CHANGE_REQUIRED em qualquer chamada autenticada: o AuthProvider leva a M2 (/entrar/nova-senha). */
+export function onPasswordChangeRequired(fn: Listener2): () => void {
+  passwordChangeListeners.add(fn);
+  return () => passwordChangeListeners.delete(fn);
+}
+
 // --- Chamada tipada ---------------------------------------------------------
 export interface CallOptions<E extends EndpointDef> {
   params?: ParamsOf<E>;
@@ -135,6 +143,7 @@ async function send<E extends EndpointDef>(ep: E, opts: CallOptions<E>): Promise
     }
     const err = new ApiError(res.status, code, message, details);
     if (ep.auth === 'staff' && err.code === 'UNAUTHENTICATED') sessionExpiredListeners.forEach((fn) => fn());
+    if (ep.auth === 'staff' && err.code === 'PASSWORD_CHANGE_REQUIRED') passwordChangeListeners.forEach((fn) => fn());
     throw err;
   }
   return res;

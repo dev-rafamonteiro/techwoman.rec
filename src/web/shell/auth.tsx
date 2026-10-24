@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ENDPOINTS, type E10Body, type Role, type SessionUser } from '@tw/shared';
-import { ApiError, call, onSessionExpired } from '../net/client';
+import { ApiError, call, onPasswordChangeRequired, onSessionExpired } from '../net/client';
 import { NoPermission, SkeletonList } from '../ui/components/States';
 
 interface AuthValue {
@@ -62,6 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!here.startsWith('/entrar')) navigate(loginUrl(here), { replace: true });
   }), [navigate]);
 
+  // Senha provisória exigida no meio do uso (sessão mudou): vai para M2 com a rota de retorno (?next=, validada).
+  useEffect(() => onPasswordChangeRequired(() => {
+    setUser((u) => (u ? { ...u, mustChangePassword: true } : u));
+    const here = window.location.pathname + window.location.search;
+    if (!here.startsWith('/entrar')) {
+      const n = safeNext(here);
+      navigate(n && n !== '/' ? `/entrar/nova-senha?next=${encodeURIComponent(n)}` : '/entrar/nova-senha', { replace: true });
+    }
+  }), [navigate]);
+
   const value = useMemo<AuthValue>(() => ({
     user,
     loading,
@@ -95,7 +105,7 @@ export function RequireRole({ roles, children, allowPasswordChange }: { roles?: 
   const loc = useLocation();
   if (loading) return <div style={{ padding: 16 }}><SkeletonList rows={3} /></div>;
   if (!user) return <Navigate to={loginUrl(loc.pathname + loc.search)} replace />;
-  if (user.mustChangePassword && !allowPasswordChange) return <Navigate to="/entrar/nova-senha" replace />;
+  if (user.mustChangePassword && !allowPasswordChange) return <Navigate to={loc.pathname === '/' ? '/entrar/nova-senha' : `/entrar/nova-senha?next=${encodeURIComponent(safeNext(loc.pathname + loc.search) ?? '/')}`} replace />;
   if (roles && !roles.some((r) => user.roles.includes(r))) return <NoPermission homePath={user.homePath} />;
   return <>{children}</>;
 }
