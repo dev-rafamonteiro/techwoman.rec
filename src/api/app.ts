@@ -5,14 +5,17 @@ import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 import type { MongoClient, Db } from 'mongodb';
 import { API_PREFIX, SESSION_COOKIE } from '@tw/shared';
-import type { Config } from './config.js';
+import { loadConfig, type Config } from './config.js';
+import type { Notifier } from './worker/notifier.js';
 import { makeContext, type AppContext } from './ctx.js';
 import { AppError } from './lib/errors.js';
 import { StreamHub } from './lib/stream-hub.js';
 import { registerRoutes } from './routes/index.js';
 
 export interface BuildAppOptions {
-  config: Config;
+  /** Sobrescreve a configuração lida do ambiente (testes: { turnstileMode: 'test', rateLimitEnabled: false }). */
+  config?: Partial<Config>;
+  notifier?: Notifier;
   client: MongoClient;
   db: Db;
   /** false desliga o logger (testes). */
@@ -39,7 +42,7 @@ function rateKey(req: { ip: string; cookies?: Record<string, string | undefined>
 }
 
 export async function buildApp(opts: BuildAppOptions): Promise<{ app: FastifyInstance; ctx: AppContext }> {
-  const { config } = opts;
+  const config: Config = { ...loadConfig(), ...opts.config };
   const app = Fastify({
     logger: opts.logger === false
       ? false
@@ -70,6 +73,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<{ app: FastifyIns
   await app.register(cookie);
   await app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024, files: 1, fields: 5 } });
   await app.register(rateLimit, {
+    global: config.rateLimitEnabled,
     max: 600,
     timeWindow: '1 minute',
     keyGenerator: (req) => rateKey(req as never),

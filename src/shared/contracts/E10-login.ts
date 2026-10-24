@@ -10,6 +10,11 @@ export const SessionUserSchema = z.object({
   mustChangePassword: z.boolean(),
   /** Rota sugerida pelo perfil: mentora → /mentora/aguardando; admin → /admin. */
   homePath: z.string(),
+  /** Perfil atual (M2 confere; M4 usa `areas` no filtro padrão). */
+  linkedin: z.string().nullable(),
+  photoUrl: z.string().nullable(),
+  areas: z.array(z.string()),
+  bio: z.string().nullable(),
 });
 export type SessionUser = z.infer<typeof SessionUserSchema>;
 

@@ -12,6 +12,11 @@ export interface Config {
   allowedOrigins: string[];
   /** Segredo de assinatura do JWT e de derivação do token da participante. */
   jwtSecret: string;
+  /** Segredo próprio do token da participante (HMAC); separado do JWT. */
+  menteeTokenSecret: string;
+  /** 'test': aceita só o token "test-ok" (nunca em produção). */
+  turnstileMode: 'live' | 'test';
+  rateLimitEnabled: boolean;
   turnstileSecret: string | null;
   /** Em dev/test sem segredo, o Turnstile aceita qualquer token. */
   turnstileEnabled: boolean;
@@ -31,12 +36,17 @@ export interface Config {
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const nodeEnv = (env['NODE_ENV'] === 'production' ? 'production' : env['NODE_ENV'] === 'test' ? 'test' : 'development') as Config['env'];
   const isProd = nodeEnv === 'production';
-  const jwtSecret = readEnv('JWT_SECRET', env) ?? (isProd ? '' : 'dev-only-secret-change-me-dev-only-secret');
-  if (!jwtSecret || jwtSecret.length < 32) {
-    throw new Error('JWT_SECRET (ou JWT_SECRET_FILE) ausente ou curto demais (mínimo 32 caracteres)');
+  const devSecret = (n: string) => `dev-only-${n}-secret-change-me-dev-only`;
+  const jwtSecret = readEnv('JWT_SECRET', env) ?? (isProd ? '' : devSecret('jwt'));
+  const menteeTokenSecret = readEnv('MENTEE_TOKEN_SECRET', env) ?? (isProd ? '' : devSecret('mentee'));
+  for (const [name, v] of [['JWT_SECRET', jwtSecret], ['MENTEE_TOKEN_SECRET', menteeTokenSecret]] as const) {
+    if (!v || v.length < 32) throw new Error(`${name} (ou ${name}_FILE) ausente ou curto demais (mínimo 32 caracteres)`);
   }
+  const turnstileMode = env['TURNSTILE_MODE'] === 'test' ? 'test' : 'live';
+  if (isProd && turnstileMode === 'test') throw new Error('TURNSTILE_MODE=test não é permitido em produção');
   const publicBaseUrl = (env['PUBLIC_BASE_URL'] || (isProd ? 'https://techwoman.dev' : 'http://localhost:5173')).replace(/\/$/, '');
   const turnstileSecret = readEnv('TURNSTILE_SECRET', env) ?? null;
+  if (isProd && !turnstileSecret) throw new Error('TURNSTILE_SECRET (ou TURNSTILE_SECRET_FILE) é obrigatório em produção');
   return {
     env: nodeEnv,
     isProd,
@@ -47,7 +57,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     allowedOrigins: [publicBaseUrl, ...(env['ALLOWED_ORIGINS'] ?? '').split(',').map((s) => s.trim()).filter(Boolean)],
     jwtSecret,
     turnstileSecret,
-    turnstileEnabled: isProd ? true : turnstileSecret !== null,
+    turnstileEnabled: true,
+    turnstileMode,
+    menteeTokenSecret,
+    rateLimitEnabled: bool(env['RATE_LIMIT'], true),
     whatsappEnabled: bool(env['WHATSAPP_ENABLED'], false),
     cookieSecure: bool(env['COOKIE_SECURE'], isProd),
     validateResponses: bool(env['VALIDATE_RESPONSES'], !isProd),

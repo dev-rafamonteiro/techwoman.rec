@@ -23,7 +23,7 @@
   "dependencies": {
     "@tw/shared": "*",
     "argon2": "^0.44.0",
-    "csv-parse": "^6.1.0",
+    "csv-parse": "^7.0.2",
     "mongodb": "^6.20.0"
   },
   "devDependencies": {

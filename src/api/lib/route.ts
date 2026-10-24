@@ -74,7 +74,7 @@ export function route<E extends EndpointDef>(
   app.route({
     method: e.method,
     url: API_PREFIX + e.path,
-    config: opts.rateLimit ? { rateLimit: opts.rateLimit } : {},
+    config: opts.rateLimit && ctx.config.rateLimitEnabled ? { rateLimit: opts.rateLimit } : {},
     handler: async (req, reply) => {
       let user: UserDoc | undefined;
       let mentee: MenteeDoc | undefined;

@@ -3,10 +3,11 @@ import { AppError } from './errors.js';
 
 /** Verificação do Cloudflare Turnstile (plugável: sem segredo em dev/test aceita qualquer token). */
 export async function verifyTurnstile(config: Config, token: string, ip: string | undefined, fetchImpl: typeof fetch = fetch): Promise<void> {
-  if (!config.turnstileEnabled || !config.turnstileSecret) {
-    if (config.isProd) throw new AppError('TURNSTILE_FAILED', 'Verificação anti-robô indisponível.');
-    return;
+  if (config.turnstileMode === 'test') {
+    if (token === 'test-ok') return;
+    throw new AppError('TURNSTILE_FAILED', 'Verificação anti-robô inválida.');
   }
+  if (!config.turnstileSecret) throw new AppError('TURNSTILE_FAILED', 'Verificação anti-robô indisponível.');
   const body = new URLSearchParams({ secret: config.turnstileSecret, response: token });
   if (ip) body.set('remoteip', ip);
   try {

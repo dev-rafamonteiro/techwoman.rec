@@ -21,6 +21,10 @@ export function toSessionUser(u: UserDoc): SessionUser {
     roles: u.roles,
     mustChangePassword: u.mustChangePassword,
     homePath: homePathFor(u),
+    linkedin: u.linkedin,
+    photoUrl: u.photoUrl,
+    areas: u.areas,
+    bio: u.bio,
   };
 }
 

@@ -64,10 +64,10 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
   const now = opts.now ?? new Date();
   const onExisting = opts.onExisting ?? 'skip';
 
-  let records: Record<string, string>[];
+  const KNOWN = ['nome', 'email', 'linkedin', 'organizacao', 'areas', 'disponibilidade'] as const;
+  let table: string[][];
   try {
-    records = parse(csvText, {
-      columns: (header: string[]) => header.map(normHeader),
+    table = parse(csvText, {
       bom: true,
       skip_empty_lines: true,
       trim: true,
@@ -77,12 +77,19 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
   } catch (err) {
     throw new ImportFormatError(`CSV inválido: ${(err as Error).message}`);
   }
-  if (records.length > 0) {
-    const cols = Object.keys(records[0]!);
-    for (const required of ['nome', 'email']) {
-      if (!cols.includes(required)) throw new ImportFormatError(`Coluna obrigatória ausente: ${required}`);
-    }
+  // colunas fixas: nomes do cabeçalho do arquivo nunca viram chaves de objeto (evita prototype pollution)
+  const header = (table[0] ?? []).map(normHeader);
+  for (const required of ['nome', 'email']) {
+    if (!header.includes(required)) throw new ImportFormatError(`Coluna obrigatória ausente: ${required}`);
   }
+  const records: Record<string, string>[] = table.slice(1).map((cells) => {
+    const r: Record<string, string> = Object.create(null) as Record<string, string>;
+    for (const k of KNOWN) {
+      const i = header.indexOf(k);
+      r[k] = i >= 0 ? (cells[i] ?? '') : '';
+    }
+    return r;
+  });
   if (records.length > 500) throw new ImportFormatError('Máximo de 500 linhas por importação.');
 
   const emails = records.map((r) => (r['email'] ?? '').toLowerCase());

@@ -125,13 +125,13 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
           if (again) return resend(again);
           throw new AppError('CONFLICT', 'Tente novamente.');
         }
-        const token = menteeToken(ctx.config.jwtSecret, updated._id, updated.tokenVersion);
+        const token = menteeToken(ctx.config.menteeTokenSecret, updated._id, updated.tokenVersion);
         return respond(201, { status: 'created' as const, token, personalPath: personalPath(token) });
       }
 
       // create
       const _id = new ObjectId();
-      const token = menteeToken(ctx.config.jwtSecret, _id, 1);
+      const token = menteeToken(ctx.config.menteeTokenSecret, _id, 1);
       const doc: MenteeDoc = {
         _id,
         eventId: ctx.config.eventId,
