@@ -120,9 +120,9 @@ function CellDetail({ a, slots, tables, appts, onDone, onConflict }: {
       <p style={{ margin: 0 }} className="adm-sub">{formatRange(a.startAt, a.endAt)}{a.table.location ? ` · ${a.table.location}` : ''}</p>
       {canAct && !moving && (
         <div className="tw-stack" style={{ gap: 8 }}>
-          <Button variant="secondary" block disabled={busy} onClick={() => setMoving(true)}>Mover para outra mesa ou horário</Button>
+          {a.status === 'confirmed' && <Button variant="secondary" block disabled={busy} onClick={() => setMoving(true)}>Mover para outra mesa ou horário</Button>}
           {a.status === 'invited' && <Button variant="mint" block disabled={busy} onClick={() => void run({ action: 'confirm_in_person' }, 'Presença confirmada.')}>Confirmar presencialmente</Button>}
-          {(a.status === 'confirmed' || a.status === 'in_progress') && <Button variant="secondary" block disabled={busy} onClick={() => { if (window.confirm('Marcar como não compareceu?')) void run({ action: 'no_show' }, 'Marcada como não compareceu.'); }}>Marcar não compareceu</Button>}
+          {a.status === 'confirmed' && <Button variant="secondary" block disabled={busy || Date.now() < new Date(a.startAt).getTime() + 10 * 60000} title={Date.now() < new Date(a.startAt).getTime() + 10 * 60000 ? 'Disponível 10 min depois do início.' : undefined} onClick={() => { if (window.confirm('Marcar como não compareceu?')) void run({ action: 'no_show' }, 'Marcada como não compareceu.'); }}>Marcar não compareceu</Button>}
           <Button variant="danger-link" block disabled={busy} onClick={() => { if (window.confirm('Cancelar esta mentoria? A participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Mentoria cancelada.'); }}>Cancelar</Button>
         </div>
       )}
