@@ -1,5 +1,21 @@
 # Exportações e rascunhos do Claude Design (referência local, não vão para o site)
-design/
+design/*
+!design/source/
+!design/screens/
+
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+secrets/
+ops/secrets/
+
+# Node / build
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
 
 # macOS
 .DS_Store
