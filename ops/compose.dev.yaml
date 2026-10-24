@@ -30,7 +30,7 @@ services:
     # `stop`/`start` preserva os dados, `down` zera o banco de dev.
     networks: [dev]
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand({ping:1}); quit(db.hello().isWritablePrimary ? 0 : 1)'"]
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'quit(db.runCommand({ping:1}).ok === 1 && db.hello().isWritablePrimary ? 0 : 1)'"]
       interval: 5s
       timeout: 5s
       retries: 20

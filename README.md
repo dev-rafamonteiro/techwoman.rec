@@ -17,11 +17,20 @@ cp .env.example .env        # preencha localmente; nunca commite
 npm install
 npm run mongo:up            # sobe só o mongo-local (replica set) em localhost:27017
 npm run db:indexes          # cria índices
-npm run db:seed             # dados iniciais / super admin
+npm run db:seed             # evento, mesas e super admin (se SUPER_ADMIN_EMAIL definido)
 npm run dev                 # api + web com reload
 ```
 
 Use `MONGODB_URI=mongodb://localhost:27017/?directConnection=true` (e `MONGODB_URI_TEST` igual) no `.env` local.
+Para índices e seed sem gravar nada no `.env`, exporte as variáveis só no shell:
+
+```sh
+MONGODB_URI='mongodb://localhost:27017/?directConnection=true' MONGODB_DB=techwoman_dev \
+  SUPER_ADMIN_EMAIL=admin@dev.local SUPER_ADMIN_PASSWORD='<senha-de-dev-com-12+-caracteres>' \
+  npm run db:seed
+```
+
+Para os testes de integração use `MONGODB_URI_TEST` (mesma URI) com bancos próprios (ex. `tw_e2e`).
 O mongo-local é necessário porque transações e Change Streams (SSE, E38) exigem replica set.
 
 ## Testes
