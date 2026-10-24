@@ -1,0 +1,16 @@
+/* Área da mentora (M3, M4, M6): cabeçalho escuro, faixa "Atualizado" e chips, no visual da agenda */
+.mt-hero { margin: calc(var(--space-5) * -1) calc(var(--page-gutter) * -1) 0; background: var(--tw-plum-950); color: var(--tw-white); padding: var(--space-4) var(--page-gutter) var(--space-4); display: flex; flex-direction: column; gap: 4px; }
+.mt-hero__when { font-size: var(--text-sm); font-weight: 700; color: var(--tw-lilac-400); }
+.mt-hero__title { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: var(--text-4xl); line-height: 1.1; color: var(--tw-lilac-75); }
+.mt-hero__counts { font-size: var(--text-base-sm); color: var(--tw-lilac-150); }
+.mt-live { margin: 0 calc(var(--page-gutter) * -1); background: var(--tw-mint-200); color: var(--tw-mint-900); font-weight: 700; padding: 6px var(--page-gutter); }
+.mt-live .tw-conn { color: var(--tw-mint-900); }
+.mt-live .tw-conn--reconnecting { margin: 0; background: transparent; padding: 0; color: var(--tw-orange-900); }
+.mt-hero__next { align-self: flex-start; margin-top: 6px; background: var(--tw-plum-800); color: var(--tw-lilac-75); font-weight: 700; font-size: var(--text-sm); padding: 6px 12px; border-radius: var(--radius-pill); }
+.mt-hero__next b { color: var(--tw-mint-200); }
+.mt-section { margin-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+.mt-hint { margin: 0; font-size: var(--text-sm); color: var(--color-ink-muted); }
+.mt-chips { display: flex; gap: var(--space-2); overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.mt-chips::-webkit-scrollbar { display: none; }
+.mt-chips .tw-chip { flex: 0 0 auto; }
+.mt-chips .tw-chip { min-height: 38px; padding: 0 var(--space-3); font-size: var(--text-sm); }

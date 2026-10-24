@@ -1,0 +1,166 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, importar mentoras</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,input,select{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · Super admin</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<a href="AdminMentoras.dc.html" style="font-weight: 700; font-size: 14px; padding: 6px 0">← Mentoras</a>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Importar lista de mentoras</h1>
+</div>
+
+<ol aria-label="Etapas" style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px">
+<sc-for list="{{passos}}" as="p" hint-placeholder-count="4">
+<li aria-current="{{p.current}}" style="background: {{p.bg}}; color: {{p.fg}}; border-radius: 14px; padding: 12px 14px; display: flex; gap: 10px; align-items: center">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: {{p.numBg}}; color: {{p.numFg}}; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: 0 0 auto">{{p.num}}</span>
+<span style="font-weight: 700; font-size: 14px">{{p.label}}</span>
+</li>
+</sc-for>
+</ol>
+
+<sc-if value="{{p1}}" hint-placeholder-val="{{ false }}">
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">1. Baixe o modelo</h2>
+<p style="margin: 0; color: #5E3A66">Preencha uma linha por mentora. Áreas e horários separados por ponto e vírgula.</p>
+<pre style="margin: 0; background: #2A0730; color: #F6E4F8; border-radius: 14px; padding: 14px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; overflow-x: auto">nome,email,linkedin,organizacao,areas,disponibilidade
+Ana Ribeiro,ana@email.com,linkedin.com/in/ana,Empresa A,backend;cloud,9h00;9h45;13h30</pre>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 18px">Baixar modelo CSV</button>
+<button type="button" sc-camel-on-click="{{ir2}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 20px">Próximo</button>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{p2}}" hint-placeholder-val="{{ false }}">
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">2. Envie o arquivo</h2>
+<button type="button" sc-camel-on-click="{{ir3}}" style="cursor: pointer; min-height: 160px; border: 2px dashed #D98CE6; border-radius: 18px; background: #FBF3FC; color: #3D0A45; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+<svg aria-hidden="true" width="32" height="32" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8A1F96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg>
+<span style="font-weight: 800">Arraste o CSV aqui ou clique para escolher</span>
+<span style="font-size: 13px; color: #5E3A66">Até 500 linhas · UTF-8</span>
+</button>
+</section>
+</sc-if>
+
+<sc-if value="{{p3}}" hint-placeholder-val="{{ true }}">
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: baseline">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">3. Prévia · mentoras.csv</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; font-weight: 800">
+<span style="background: #C9F4EE; color: #1F4A44; padding: 4px 10px; border-radius: 999px">✓ 46 válidas</span>
+<span style="background: #FBDADA; color: #8A1C1C; padding: 4px 10px; border-radius: 999px">⚠ 2 com erro</span>
+<span style="background: #EFE8F0; color: #3D0A45; padding: 4px 10px; border-radius: 999px">↻ 2 já existem</span>
+</div>
+</div>
+<div style="overflow-x: auto; border: 1px solid #F6EEF7; border-radius: 14px">
+<sc-raw-table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: 14px">
+<sc-raw-thead><sc-raw-tr style="text-align: left; color: #5E3A66; font-size: 13px">
+<sc-raw-th scope="col" style="padding: 10px 12px; border-bottom: 1px solid #EBCFF0">Linha</sc-raw-th><sc-raw-th scope="col" style="padding: 10px 12px; border-bottom: 1px solid #EBCFF0">Nome</sc-raw-th><sc-raw-th scope="col" style="padding: 10px 12px; border-bottom: 1px solid #EBCFF0">E-mail</sc-raw-th><sc-raw-th scope="col" style="padding: 10px 12px; border-bottom: 1px solid #EBCFF0">Áreas</sc-raw-th><sc-raw-th scope="col" style="padding: 10px 12px; border-bottom: 1px solid #EBCFF0">Resultado</sc-raw-th><sc-raw-th scope="col" style="padding: 10px 12px; border-bottom: 1px solid #EBCFF0">O que fazer</sc-raw-th>
+</sc-raw-tr></sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{linhas}}" as="r" hint-placeholder-count="7">
+<sc-raw-tr style="border-bottom: 1px solid #F6EEF7; background: {{r.fundo}}">
+<sc-raw-td style="padding: 8px 12px; color: #5E3A66">{{r.n}}</sc-raw-td><sc-raw-td style="padding: 8px 12px; font-weight: 700">{{r.nome}}</sc-raw-td><sc-raw-td style="padding: 8px 12px">{{r.email}}</sc-raw-td><sc-raw-td style="padding: 8px 12px">{{r.areas}}</sc-raw-td>
+<sc-raw-td style="padding: 8px 12px"><span style="background: {{r.bg}}; color: {{r.fg}}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px; white-space: nowrap">{{r.res}}</span></sc-raw-td>
+<sc-raw-td style="padding: 8px 12px; font-size: 13px">
+<sc-if value="{{r.existe}}" hint-placeholder-val="{{ false }}">
+<label style="position: absolute; left: -9999px" for="{{r.selId}}">Ação para {{r.nome}}</label>
+<sc-raw-select id="{{r.selId}}" style="min-height: 36px; border: 2px solid #EBCFF0; border-radius: 10px; padding: 0 8px; background: #FFFFFF; color: #3D0A45"><option>Atualizar dados</option><option>Ignorar</option></sc-raw-select>
+</sc-if>
+<sc-if value="{{r.temDica}}" hint-placeholder-val="{{ false }}"><span style="color: #8A1C1C">{{r.dica}}</span></sc-if>
+</sc-raw-td>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+<span style="font-size: 13px; color: #5E3A66">Linhas com erro não serão importadas. Corrija no arquivo e envie de novo, se quiser.</span>
+<div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end">
+<button type="button" sc-camel-on-click="{{ir2}}" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 18px">Enviar outro arquivo</button>
+<button type="button" sc-camel-on-click="{{ir4}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 20px">Importar 48 mentoras</button>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{p4}}" hint-placeholder-val="{{ false }}">
+<section style="background: #3D0A45; color: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-size: 20px; font-weight: 800; color: #C9F4EE">4. Importação concluída</h2>
+<span style="color: #F1D9F5">46 mentoras criadas · 2 atualizadas · 2 ignoradas por erro.</span>
+<span style="background: #5B1466; border-radius: 12px; padding: 12px 14px; font-weight: 700">O arquivo com as senhas provisórias só pode ser baixado agora. Guarde em local seguro.</span>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<button type="button" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 20px">Baixar CSV com senhas provisórias</button>
+<a href="AdminMentoras.dc.html" style="text-decoration: none; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; border: 2px solid #D98CE6; border-radius: 999px; color: #FFFFFF; font-weight: 800; padding: 0 18px">Ver mentoras</a>
+</div>
+</section>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;passo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;3&quot;,&quot;options&quot;:[&quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1200}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminParticipantes.dc.html'], ['Mapa de mesas', 'AdminMapa.dc.html'], ['Mentoras', 'AdminMentoras.dc.html'], ['Mesas', 'AdminMesas.dc.html'], ['Evento', 'AdminEvento.dc.html'], ['Administradores', 'AdminUsuarios.dc.html'], ['Logs', 'AdminLogs.dc.html']];
+function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var PASSOS = ['Baixar modelo', 'Enviar arquivo', 'Conferir prévia', 'Confirmar'];
+var LINHAS = [
+  [2, 'Ana Ribeiro', 'ana.ribeiro@email.com', 'backend; cloud', 'existe', ''],
+  [3, 'Bruna Carvalho', 'bruna.c@email.com', 'dados', 'ok', ''],
+  [4, 'Carla Nogueira', 'carla.n@email', 'frontend', 'erro', 'E-mail em formato inválido'],
+  [5, 'Daniela Moura', 'dani.moura@email.com', 'cloud', 'existe', ''],
+  [6, 'Elisa Tavares', 'elisa.t@email.com', 'ux; frontend', 'ok', ''],
+  [7, 'Elisa T.', 'elisa.t@email.com', 'ux', 'erro', 'E-mail duplicado (linha 6)'],
+  [8, 'Fernanda Lopes', 'fe.lopes@email.com', 'dados; produto', 'ok', '']
+];
+var RES = { ok: ['Válida', '#C9F4EE', '#1F4A44', '#FFFFFF'], erro: ['Com erro', '#FBDADA', '#8A1C1C', '#FFF7F7'], existe: ['Já existe', '#EFE8F0', '#3D0A45', '#FFFFFF'] };
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { passo: parseInt(props.passo || '3', 10) }; }
+  componentDidUpdate(prev) { if (prev.passo !== this.props.passo) this.setState({ passo: parseInt(this.props.passo || '3', 10) }); }
+  renderVals() {
+    var self = this, p = this.state.passo;
+    function ir(n) { return function () { self.setState({ passo: n }); }; }
+    return {
+      menu: menu('Mentoras'),
+      passos: PASSOS.map(function (l, i) { var n = i + 1, at = n === p, feito = n < p;
+        return { num: feito ? '✓' : n, label: l, current: at ? 'step' : 'false', bg: at ? '#3D0A45' : (feito ? '#F6E4F8' : '#FFFFFF'), fg: at ? '#FFFFFF' : '#3D0A45',
+          numBg: at ? '#F26430' : (feito ? '#8A1F96' : '#EFE8F0'), numFg: at ? '#3D0A45' : (feito ? '#FFFFFF' : '#5E3A66') }; }),
+      p1: p === 1, p2: p === 2, p3: p === 3, p4: p === 4,
+      ir2: ir(2), ir3: ir(3), ir4: ir(4),
+      linhas: LINHAS.map(function (l) { var r = RES[l[4]];
+        return { n: l[0], nome: l[1], email: l[2], areas: l[3], res: r[0], bg: r[1], fg: r[2], fundo: r[3], existe: l[4] === 'existe', temDica: !!l[5], dica: l[5], selId: 'acao-' + l[0] }; })
+    };
+  }
+}
+</script>
+
+
+</body></html>

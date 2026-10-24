@@ -1,0 +1,169 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, mapa de mesas</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,select{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · Super admin</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Mapa de mesas</h1>
+<span style="color: #5E3A66">20 mesas × 12 horários · agora 13h25 · {{ocupacao}}</span>
+</div>
+<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+<span role="status" style="background: #E8F7F3; color: #1F4A44; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px; display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2E9C84"></span>Atualizado agora</span>
+<div role="radiogroup" aria-label="Período exibido" style="display: flex; background: #FFFFFF; border: 2px solid #EBCFF0; border-radius: 999px; padding: 3px">
+<button type="button" role="radio" aria-checked="{{agoraOn}}" sc-camel-on-click="{{verAgora}}" style="cursor: pointer; min-height: 40px; border: 0; border-radius: 999px; background: {{agoraBg}}; color: {{agoraFg}}; font-weight: 800; padding: 0 16px">Agora</button>
+<button type="button" role="radio" aria-checked="{{diaOn}}" sc-camel-on-click="{{verDia}}" style="cursor: pointer; min-height: 40px; border: 0; border-radius: 999px; background: {{diaBg}}; color: {{diaFg}}; font-weight: 800; padding: 0 16px">Dia inteiro</button>
+</div>
+</div>
+</div>
+
+<div aria-label="Legenda" style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; font-weight: 800">
+<span style="background: #FFE1D3; color: #8A3210; padding: 4px 10px; border-radius: 999px">Horário proposto</span>
+<span style="background: #C9F4EE; color: #1F4A44; padding: 4px 10px; border-radius: 999px">Confirmada</span>
+<span style="background: #E6E3E7; color: #4A4550; padding: 4px 10px; border-radius: 999px">Concluída</span>
+<span style="background: #FBDADA; color: #8A1C1C; padding: 4px 10px; border-radius: 999px">Não compareceu</span>
+<span style="background: #FFFFFF; color: #5E3A66; padding: 4px 10px; border-radius: 999px; border: 1px dashed #D9C6DC">Livre</span>
+</div>
+
+<sc-if value="{{temSel}}" hint-placeholder-val="{{ true }}">
+<section aria-label="Detalhe da mesa" style="background: #FFFFFF; border: 2px solid #3D0A45; border-radius: 18px; padding: 18px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center">
+<div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 18px">Mesa {{sel.mesa}} · {{sel.hora}}</span>
+<span>{{sel.mentora}} com {{sel.part}}</span>
+<span style="align-self: flex-start; background: {{sel.bg}}; color: {{sel.fg}}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px">{{sel.status}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+<label for="mv-mesa" style="font-weight: 700; font-size: 13px">Mover para</label>
+<sc-raw-select id="mv-mesa" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 10px; padding: 0 8px; background: #FFFFFF; color: #3D0A45"><option>Mesa 7</option><option>Mesa 2 (livre)</option><option>Mesa 9 (livre)</option></sc-raw-select>
+<sc-raw-select aria-label="Horário" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 10px; padding: 0 8px; background: #FFFFFF; color: #3D0A45"><option>{{sel.hora}}</option><option>15h00</option><option>15h45</option></sc-raw-select>
+<button type="button" sc-camel-on-click="{{acao}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #3D0A45; color: #FFFFFF; font-weight: 800; padding: 0 14px">Mover</button>
+<button type="button" sc-camel-on-click="{{acao}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 14px">Confirmar presencialmente</button>
+<button type="button" sc-camel-on-click="{{acao}}" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 14px">Não compareceu</button>
+<button type="button" sc-camel-on-click="{{acao}}" style="cursor: pointer; min-height: 44px; border: 2px solid #F3C2C2; border-radius: 999px; background: #FFFFFF; color: #8A1C1C; font-weight: 800; padding: 0 14px">Cancelar</button>
+<button type="button" sc-camel-on-click="{{fechar}}" aria-label="Fechar detalhe" style="cursor: pointer; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #F6E4F8; color: #3D0A45; font-size: 18px; font-weight: 800">×</button>
+</div>
+</section>
+</sc-if>
+
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 18px; overflow-x: auto">
+<sc-raw-table style="border-collapse: separate; border-spacing: 4px; font-size: 12px; min-width: 2460px">
+<sc-raw-thead><sc-raw-tr>
+<sc-raw-th scope="col" style="position: sticky; left: 0; background: #FFFFFF; padding: 8px; text-align: left; color: #5E3A66; min-width: 64px">Horário</sc-raw-th>
+<sc-for list="{{colunas}}" as="c" hint-placeholder-count="20"><sc-raw-th scope="col" style="padding: 8px 4px; color: #3D0A45; font-weight: 800; min-width: 112px">Mesa {{c}}</sc-raw-th></sc-for>
+</sc-raw-tr></sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{linhas}}" as="l" hint-placeholder-count="12">
+<sc-raw-tr>
+<sc-raw-th scope="row" style="position: sticky; left: 0; background: {{l.thBg}}; color: {{l.thFg}}; padding: 8px; text-align: left; font-weight: 800; border-radius: 8px; white-space: nowrap">{{l.hora}}<span style="display: block; font-size: 10px; font-weight: 700">{{l.agora}}</span></sc-raw-th>
+<sc-for list="{{l.celulas}}" as="c" hint-placeholder-count="20">
+<sc-raw-td style="padding: 0">
+<button type="button" sc-camel-on-click="{{c.abrir}}" aria-label="{{c.aria}}" style="cursor: pointer; width: 100%; min-height: 58px; border-radius: 10px; border: {{c.borda}}; background: {{c.bg}}; color: {{c.fg}}; padding: 6px 8px; text-align: left; display: flex; flex-direction: column; gap: 1px; font-size: 12px; line-height: 1.25; outline-offset: 2px; box-shadow: {{c.sombra}}">
+<span style="font-weight: 800">{{c.l1}}</span><span>{{c.l2}}</span><span style="font-size: 10px; font-weight: 800">{{c.l3}}</span>
+</button>
+</sc-raw-td>
+</sc-for>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1250}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminParticipantes.dc.html'], ['Mapa de mesas', 'AdminMapa.dc.html'], ['Mentoras', 'AdminMentoras.dc.html'], ['Mesas', 'AdminMesas.dc.html'], ['Evento', 'AdminEvento.dc.html'], ['Administradores', 'AdminUsuarios.dc.html'], ['Logs', 'AdminLogs.dc.html']];
+function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var HORAS = ['9h00', '9h45', '10h30', '11h15', '12h00', '12h45', '13h30', '14h15', '15h00', '15h45', '16h30', '17h15'];
+var AGORA = 6;
+var MENTORAS = ['Ana', 'Bruna', 'Camila', 'Daniela', 'Fernanda', 'Gabriela', 'Júlia', 'Karen', 'Luana', 'Marta', 'Nádia', 'Olga', 'Paula', 'Quésia', 'Rita', 'Sara', 'Tânia', 'Úrsula', 'Vera', 'Wanda'];
+var PARTS = ['Alice', 'Bianca', 'Cecília', 'Débora', 'Eduarda', 'Flávia', 'Giovana', 'Heloísa', 'Iara', 'Jéssica', 'Kátia', 'Lívia', 'Manu', 'Nicole', 'Olívia', 'Pietra', 'Raquel', 'Sofia', 'Talita', 'Vitória'];
+var ST = { proposto: ['Horário proposto', '#FFE1D3', '#8A3210'], confirmada: ['Confirmada', '#C9F4EE', '#1F4A44'], concluida: ['Concluída', '#E6E3E7', '#4A4550'], falta: ['Não compareceu', '#FBDADA', '#8A1C1C'] };
+var ANA = { 0: ['Carolina', 'concluida'], 1: ['Priscila', 'concluida'], 3: ['Mirela', 'falta'], 5: ['Tainá', 'concluida'], 6: ['Carla', 'confirmada'], 7: ['Joana', 'proposto'] };
+function celula(r, m) {
+  if (m === 6) return ANA[r] ? { mentora: 'Ana', part: ANA[r][0], st: ANA[r][1] } : null;
+  var h = (r * 13 + m * 7) % 10;
+  var ocup = r < AGORA ? h < 8 : (r === AGORA ? h < 7 : (r === AGORA + 1 ? h < 6 : h < 3));
+  if (!ocup) return null;
+  var st = r < AGORA ? (h === 0 ? 'falta' : 'concluida') : (r === AGORA ? 'confirmada' : (h % 3 === 0 ? 'proposto' : 'confirmada'));
+  return { mentora: MENTORAS[(m + r) % 20], part: PARTS[(m * 3 + r) % 20], st: st };
+}
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { modo: 'dia', sel: [6, 6] }; }
+  renderVals() {
+    var self = this, st = this.state;
+    var ini = st.modo === 'agora' ? AGORA : 0, fim = st.modo === 'agora' ? AGORA + 2 : 12;
+    var ocupAgora = 0;
+    for (var m = 0; m < 20; m++) if (celula(AGORA, m)) ocupAgora++;
+    var linhas = [];
+    for (var r = ini; r < fim; r++) {
+      (function (row) {
+        var cel = [];
+        for (var mm = 0; mm < 20; mm++) {
+          (function (mesa) {
+            var c = celula(row, mesa), sel = st.sel && st.sel[0] === row && st.sel[1] === mesa;
+            if (!c) { cel.push({ l1: 'Livre', l2: '', l3: '', bg: '#FFFFFF', fg: '#9C8AA0', borda: '1px dashed #D9C6DC', sombra: 'none', aria: 'Mesa ' + (mesa + 1) + ', ' + HORAS[row] + ', livre', abrir: function () {} }); return; }
+            var s = ST[c.st];
+            cel.push({ l1: c.mentora, l2: '→ ' + c.part, l3: s[0], bg: s[1], fg: s[2], borda: sel ? '2px solid #3D0A45' : '1px solid transparent', sombra: sel ? '0 0 0 2px #FFFFFF, 0 0 0 4px #3D0A45' : 'none',
+              aria: 'Mesa ' + (mesa + 1) + ', ' + HORAS[row] + ', ' + c.mentora + ' com ' + c.part + ', ' + s[0],
+              abrir: function () { self.setState({ sel: [row, mesa] }); } });
+          })(mm);
+        }
+        var atual = row === AGORA;
+        linhas.push({ hora: HORAS[row], agora: atual ? 'AGORA' : '', thBg: atual ? '#F26430' : '#FFFFFF', thFg: '#3D0A45', celulas: cel });
+      })(r);
+    }
+    var sc = st.sel ? celula(st.sel[0], st.sel[1]) : null;
+    var ss = sc ? ST[sc.st] : ST.confirmada;
+    var cols = []; for (var i = 1; i <= 20; i++) cols.push(i);
+    return {
+      menu: menu('Mapa de mesas'),
+      ocupacao: 'ocupação agora ' + ocupAgora + '/20',
+      agoraOn: st.modo === 'agora' ? 'true' : 'false', diaOn: st.modo === 'dia' ? 'true' : 'false',
+      agoraBg: st.modo === 'agora' ? '#3D0A45' : 'transparent', agoraFg: st.modo === 'agora' ? '#FFFFFF' : '#3D0A45',
+      diaBg: st.modo === 'dia' ? '#3D0A45' : 'transparent', diaFg: st.modo === 'dia' ? '#FFFFFF' : '#3D0A45',
+      verAgora: function () { self.setState({ modo: 'agora' }); }, verDia: function () { self.setState({ modo: 'dia' }); },
+      colunas: cols, linhas: linhas,
+      temSel: !!sc,
+      sel: sc ? { mesa: st.sel[1] + 1, hora: HORAS[st.sel[0]], mentora: sc.mentora, part: sc.part, status: ss[0], bg: ss[1], fg: ss[2] } : { mesa: '', hora: '', mentora: '', part: '', status: '', bg: '', fg: '' },
+      fechar: function () { self.setState({ sel: null }); },
+      acao: function () {}
+    };
+  }
+}
+</script>
+
+
+</body></html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — jornada de perfil</title>
+<script src="321562d2-c70a-4e36-aa98-7c9e97d11e77"></script>
+</head>
+<body>
+<x-dc>
+
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 17px; line-height: 1.55">
+
+<header style="background: #3D0A45">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" aria-label="Tech Woman — voltar ao início" style="display: flex; flex-direction: column; text-decoration: none; line-height: 0.95">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.04em; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 24px; color: #FFFFFF">WOMAN</span>
+</a>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+<span style="background: {{accent}}; color: #3D0A45; font-weight: 800; font-size: 14px; padding: 8px 14px; border-radius: 999px">{{xp}} XP</span>
+<a href="Main.dc.html" style="font-weight: 600; font-size: 15px; padding: 10px 0; color: #C9F4EE">Voltar ao início</a>
+</div>
+</div>
+</header>
+
+<div style="background: linear-gradient(180deg, #6E1A78 0%, #B85BC4 100%)">
+<main style="max-width: 1040px; margin: 0 auto; padding: 56px 24px 88px; display: flex; flex-direction: column; gap: 28px">
+
+<sc-if value="{{isIntro}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 24px; color: #FFFFFF">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 18px; color: {{accent}}">GAMIFICAÇÃO</span>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: clamp(34px, 4.8vw, 58px); line-height: 1.05; color: #C9F4EE">Descubra sua aptidão na tecnologia.</h1>
+<p style="margin: 0; font-size: 19px; color: #FBEAFD; max-width: 640px">Responda algumas perguntas e encare desafios rápidos. No final, você recebe um resumo da sua aptidão e pode se inscrever na mentoria da sua área.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+<div style="background: #3D0A45; border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px; color: {{accent}}">{{total}} etapas</span>
+<span style="color: #F1D9F5; font-size: 15px">Perguntas e desafios</span>
+</div>
+<div style="background: #D98CE6; border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px; color: #3D0A45">Aptidão</span>
+<span style="color: #3D0A45; font-size: 15px">Área, nível e perfil</span>
+</div>
+<div style="background: #C9F4EE; border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px; color: #3D0A45">Mentoria</span>
+<span style="color: #3D0A45; font-size: 15px">Inscreva-se na sua área</span>
+</div>
+</div>
+<div>
+<button type="button" sc-camel-on-click="{{start}}" style="border: 0; cursor: pointer; color: #3D0A45; background: {{accent}}; font-weight: 800; font-size: 17px; padding: 18px 34px; border-radius: 999px">Começar jornada</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isQuiz}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<span style="font-weight: 700; font-size: 15px; color: #FFFFFF">Etapa {{num}} de {{total}}</span>
+<span style="background: {{tipoBg}}; color: #3D0A45; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; padding: 7px 14px; border-radius: 999px">{{tipo}}</span>
+</div>
+<div role="progressbar" aria-label="Progresso da jornada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{progressNum}}" style="height: 10px; border-radius: 999px; background: #3D0A45; overflow: hidden">
+<div style="height: 10px; border-radius: 999px; background: {{accent}}; width: {{progressW}}"></div>
+</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 32px; padding: 44px 40px; display: flex; flex-direction: column; gap: 28px">
+<h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: clamp(22px, 2.6vw, 32px); line-height: 1.2">{{pergunta}}</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px">
+<sc-for list="{{opcoes}}" as="o" hint-placeholder-count="4">
+<button type="button" sc-camel-on-click="{{o.pick}}" aria-pressed="{{o.pressed}}" style="cursor: pointer; text-align: left; display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 16px 18px; border-radius: 18px; border: 2px solid {{o.border}}; background: {{o.bg}}; color: #3D0A45; font-size: 16px; font-weight: 600; line-height: 1.35">
+<span style="flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: {{o.badgeBg}}; color: {{o.badgeFg}}; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center">{{o.letra}}</span>
+<span>{{o.label}}</span>
+</button>
+</sc-for>
+</div>
+<sc-if value="{{showFeedback}}" hint-placeholder-val="{{ false }}">
+<div style="background: {{feedbackBg}}; border-radius: 16px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-weight: 800; color: #3D0A45">{{feedbackTitulo}}</span>
+<span style="color: #4A1F52; font-size: 15px">{{feedbackTexto}}</span>
+</div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px">
+<button type="button" sc-camel-on-click="{{back}}" style="cursor: pointer; background: #FFFFFF; color: #8A1F96; border: 2px solid #EBCFF0; font-weight: 700; font-size: 16px; padding: 14px 24px; border-radius: 999px">Voltar</button>
+<button type="button" sc-camel-on-click="{{next}}" disabled="{{noSel}}" style="cursor: pointer; border: 0; color: #3D0A45; background: {{accent}}; opacity: {{nextOpacity}}; font-weight: 800; font-size: 16px; padding: 16px 28px; border-radius: 999px">{{nextLabel}}</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isResult}}" hint-placeholder-val="{{ false }}">
+<div style="background: #3D0A45; color: #FFFFFF; border-radius: 32px; padding: 48px 44px; display: flex; flex-direction: column; gap: 22px; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: #8A2A94"></div>
+<div aria-hidden="true" style="position: absolute; right: 60px; top: 40px; width: 70px; height: 35px; border-radius: 0 0 70px 70px; background: {{accent}}"></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; position: relative">
+<span style="font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #D98CE6">Seu resultado</span>
+<span style="background: {{accent}}; color: #3D0A45; font-weight: 800; font-size: 14px; padding: 8px 14px; border-radius: 999px">{{xp}} XP conquistados</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; position: relative">
+<span style="font-size: 18px; color: #F1D9F5">Você tem aptidão para</span>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: clamp(36px, 5.2vw, 62px); line-height: 1.04; color: #C9F4EE">{{topNome}}</h1>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; position: relative">
+<div style="background: #5B1466; border-radius: 20px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 14px; font-weight: 700; color: #D98CE6; text-transform: uppercase; letter-spacing: 0.06em">Nível de aptidão</span>
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; color: {{accent}}">{{nivel}}</span>
+<div role="img" aria-label="Nível {{nivel}} de 5" style="display: flex; gap: 6px">
+<sc-for list="{{nivelDots}}" as="d" hint-placeholder-count="5">
+<span style="width: 18px; height: 18px; border-radius: 50%; background: {{d.bg}}"></span>
+</sc-for>
+</div>
+<span style="color: #F1D9F5; font-size: 15px">de 5</span>
+</div>
+</div>
+<div style="background: #5B1466; border-radius: 20px; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 700; color: #D98CE6; text-transform: uppercase; letter-spacing: 0.06em">Seu perfil</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px; color: #FFFFFF">{{perfilNome}}</span>
+<span style="color: #F1D9F5; font-size: 15px">{{perfilDesc}}</span>
+</div>
+</div>
+<p style="margin: 0; font-size: 19px; color: #FBEAFD; max-width: 720px; position: relative">{{resumo}}</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{traits}}" as="t" hint-placeholder-count="3">
+<span style="background: #D98CE6; color: #3D0A45; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px">{{t.label}}</span>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 16px; color: #F1D9F5">Também combina com você: <strong style="color: #C9F4EE">{{secondNome}}</strong></p>
+</div>
+
+<div style="background: {{accent}}; border-radius: 28px; padding: 36px 40px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 32px">
+<div style="flex: 1 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2; color: #3D0A45">Inscreva-se na nossa mentoria para te ajudarmos.</h2>
+<p style="margin: 0; color: #3D0A45; font-weight: 500">A área {{topNome}} já vai preenchida. Uma mentora da área escolhe sua inscrição e propõe horário e mesa; você confirma pelo celular.</p>
+</div>
+<a href="Inscricao.dc.html" style="text-decoration: none; color: #FFFFFF; background: #3D0A45; font-weight: 800; font-size: 16px; padding: 18px 28px; border-radius: 999px">Quero uma mentoria nessa área</a>
+</div>
+
+<div style="background: #FFFFFF; border-radius: 28px; padding: 36px 40px; display: flex; flex-direction: column; gap: 18px">
+<h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 22px">Suas áreas de afinidade</h2>
+<sc-for list="{{barras}}" as="b" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; gap: 12px">
+<span style="font-weight: 600; font-size: 15px">{{b.nome}}</span>
+<span style="font-weight: 700; font-size: 14px; color: #5E3A66">nível {{b.nivel}}</span>
+</div>
+<div style="height: 12px; border-radius: 999px; background: #F6E4F8; overflow: hidden">
+<div style="height: 12px; border-radius: 999px; background: {{b.cor}}; width: {{b.w}}"></div>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+<button type="button" sc-camel-on-click="{{restart}}" style="cursor: pointer; background: transparent; color: #FFFFFF; border: 0; text-decoration: underline; font-weight: 700; font-size: 16px; padding: 12px 0">Refazer a jornada</button>
+<span style="color: #FBEAFD; font-size: 15px">A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</span>
+</div>
+</sc-if>
+
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#F26430&quot;,&quot;options&quot;:[&quot;#F26430&quot;,&quot;#FF7A45&quot;,&quot;#E8552A&quot;,&quot;#FFA04D&quot;]},&quot;tela&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;fluxo&quot;,&quot;options&quot;:[&quot;fluxo&quot;,&quot;resultado&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:980}}">
+var AREAS = {
+  backend: 'Backend',
+  frontend: 'Frontend',
+  dados: 'Dados',
+  ux: 'UX & Design',
+  produto: 'Produto',
+  cloud: 'Cloud & Infraestrutura'
+};
+
+var PERFIS = {
+  analitica: { nome: 'Analista', desc: 'Curiosa, enxerga padrões e gosta de números.' },
+  construtora: { nome: 'Construtora', desc: 'Mão na massa: gosta de fazer as coisas funcionarem.' },
+  criativa: { nome: 'Criativa', desc: 'Visual e empática, pensa sempre nas pessoas.' },
+  estrategista: { nome: 'Estrategista', desc: 'Organizada, com visão de negócio e prioridades claras.' },
+  guardia: { nome: 'Guardiã', desc: 'Detalhista, garante que nada saia do ar.' }
+};
+
+var TRACOS = {
+  analitica: { grupo: 'analitica', frase: 'perfil analítico', chip: 'Analítica' },
+  numeros: { grupo: 'analitica', frase: 'interesse por números', chip: 'Números' },
+  logica: { grupo: 'construtora', frase: 'raciocínio lógico', chip: 'Lógica' },
+  construtora: { grupo: 'construtora', frase: 'gosto por colocar a mão na massa', chip: 'Mão na massa' },
+  criativa: { grupo: 'criativa', frase: 'criatividade', chip: 'Criativa' },
+  empatia: { grupo: 'criativa', frase: 'empatia', chip: 'Empática' },
+  estrategista: { grupo: 'estrategista', frase: 'visão estratégica', chip: 'Estratégica' },
+  guardia: { grupo: 'guardia', frase: 'atenção a detalhes', chip: 'Detalhista' }
+};
+
+var PERGUNTAS = [
+  { tipo: 'pergunta', texto: 'Num projeto em grupo, qual papel você assume naturalmente?', opcoes: [
+    { label: 'Analiso as informações e encontro padrões', s: { dados: 3 }, t: ['analitica'] },
+    { label: 'Construo a lógica que faz tudo funcionar por trás', s: { backend: 3 }, t: ['construtora'] },
+    { label: 'Cuido do visual e da experiência de quem vai usar', s: { frontend: 2, ux: 1 }, t: ['criativa'] },
+    { label: 'Organizo o time e defino as prioridades', s: { produto: 3 }, t: ['estrategista'] }
+  ]},
+  { tipo: 'desafio', texto: 'Desafio relâmpago: qual é o próximo número da sequência 2, 6, 12, 20, ?', correta: 1,
+    explica: 'As diferenças crescem de 2 em 2 (4, 6, 8…), então o próximo salto é 10: 20 + 10 = 30.', opcoes: [
+    { label: '28', s: {}, t: [] },
+    { label: '30', s: { dados: 2, backend: 1 }, t: ['numeros', 'logica'] },
+    { label: '32', s: {}, t: [] },
+    { label: '24', s: {}, t: [] }
+  ]},
+  { tipo: 'pergunta', texto: 'O que mais faz seus olhos brilharem?', opcoes: [
+    { label: 'Descobrir respostas escondidas nos números', s: { dados: 3 }, t: ['numeros'] },
+    { label: 'Uma tela bonita e fluida funcionando no celular', s: { frontend: 3 }, t: ['criativa'] },
+    { label: 'Uma API rápida que aguenta milhões de acessos', s: { backend: 3 }, t: ['construtora'] },
+    { label: 'Ver uma ideia virar produto no mercado', s: { produto: 3 }, t: ['estrategista'] }
+  ]},
+  { tipo: 'desafio', texto: 'Desafio: as clientes de um app dizem que é difícil achar o botão de pagar. O que você faz primeiro?', opcoes: [
+    { label: 'Levanto os dados de uso para ver onde as pessoas desistem', s: { dados: 2, produto: 1 }, t: ['analitica'] },
+    { label: 'Converso com usuárias e redesenho a tela', s: { ux: 3 }, t: ['empatia', 'criativa'] },
+    { label: 'Ajusto a tela no código e publico uma nova versão', s: { frontend: 3 }, t: ['construtora'] },
+    { label: 'Meço o impacto no faturamento e priorizo com o time', s: { produto: 3 }, t: ['estrategista'] }
+  ]},
+  { tipo: 'pergunta', texto: 'Qual ferramenta você levaria para uma ilha deserta?', opcoes: [
+    { label: 'Uma planilha poderosa', s: { dados: 2 }, t: ['numeros'] },
+    { label: 'Um caderno de esboços', s: { ux: 3 }, t: ['criativa'] },
+    { label: 'Um notebook com terminal', s: { backend: 2 }, t: ['logica'] },
+    { label: 'Um servidor que nunca cai', s: { cloud: 3 }, t: ['guardia'] }
+  ]},
+  { tipo: 'desafio', texto: 'Desafio: o site do evento vai receber 10 vezes mais acessos no dia da abertura. Qual é a sua jogada?', opcoes: [
+    { label: 'Escalo a infraestrutura na nuvem antes do pico', s: { cloud: 3 }, t: ['guardia'] },
+    { label: 'Monto um painel para acompanhar os acessos em tempo real', s: { dados: 2 }, t: ['analitica'] },
+    { label: 'Otimizo as consultas e o cache da API', s: { backend: 3 }, t: ['construtora'] },
+    { label: 'Aviso o público sobre os horários de menor movimento', s: { produto: 2 }, t: ['estrategista'] }
+  ]},
+  { tipo: 'desafio', texto: 'Desafio: o que você corrigiria primeiro no site de inscrições?', opcoes: [
+    { label: 'O botão de inscrição some quando abro no celular', s: { frontend: 3 }, t: ['criativa'] },
+    { label: 'O formulário grava inscrições duplicadas no banco', s: { backend: 3 }, t: ['logica'] },
+    { label: 'Ninguém sabe quantas pessoas se inscrevem por dia', s: { dados: 2 }, t: ['analitica'] },
+    { label: 'O site fica fora do ar durante a madrugada', s: { cloud: 3 }, t: ['guardia'] }
+  ]}
+];
+
+var DEMO_RESPOSTAS = { 0: 1, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 1 };
+var BAR_CORES = ['#F26430', '#8A1F96', '#B85BC4', '#D98CE6', '#E3B3EC', '#EBC2F1'];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.estadoInicial(props.tela || 'fluxo');
+  }
+
+  componentDidUpdate(prev) {
+    if (prev.tela !== this.props.tela) this.setState(this.estadoInicial(this.props.tela || 'fluxo'));
+  }
+
+  estadoInicial(tela) {
+    if (tela === 'resultado') return { step: 'result', i: PERGUNTAS.length - 1, answers: Object.assign({}, DEMO_RESPOSTAS) };
+    return { step: 'intro', i: 0, answers: {} };
+  }
+
+  pick(k) {
+    var a = Object.assign({}, this.state.answers);
+    a[this.state.i] = k;
+    this.setState({ answers: a });
+  }
+
+  calcXp(answers) {
+    var xp = 0;
+    PERGUNTAS.forEach(function (q, idx) {
+      var a = answers[idx];
+      if (a == null) return;
+      xp += 10;
+      if (q.correta != null && a === q.correta) xp += 20;
+    });
+    return xp;
+  }
+
+  resultado(answers) {
+    var score = {}, maxPos = {};
+    Object.keys(AREAS).forEach(function (k) { score[k] = 0; maxPos[k] = 0; });
+    var count = {}, ordem = [], grupos = {};
+    PERGUNTAS.forEach(function (q, idx) {
+      Object.keys(AREAS).forEach(function (k) {
+        var best = 0;
+        q.opcoes.forEach(function (o) { if ((o.s[k] || 0) > best) best = o.s[k]; });
+        maxPos[k] += best;
+      });
+      var a = answers[idx];
+      if (a == null) return;
+      var o = q.opcoes[a];
+      Object.keys(o.s).forEach(function (k) { score[k] += o.s[k]; });
+      o.t.forEach(function (t) {
+        if (!(t in count)) { count[t] = 0; ordem.push(t); }
+        count[t] += 1;
+        var g = TRACOS[t].grupo;
+        grupos[g] = (grupos[g] || 0) + 1;
+      });
+    });
+    var ranking = Object.keys(AREAS).sort(function (x, y) {
+      return (score[y] / maxPos[y]) - (score[x] / maxPos[x]) || score[y] - score[x];
+    });
+    var nivelDe = function (k) {
+      return Math.max(1, Math.min(5, Math.round((score[k] / (maxPos[k] || 1)) * 5)));
+    };
+    var tracos = ordem.slice().sort(function (x, y) { return count[y] - count[x]; }).slice(0, 3);
+    ['analitica', 'criativa', 'construtora'].forEach(function (t) {
+      if (tracos.length < 3 && tracos.indexOf(t) < 0) tracos.push(t);
+    });
+    var perfil = Object.keys(grupos).sort(function (x, y) { return grupos[y] - grupos[x]; })[0] || 'construtora';
+    return { score: score, maxPos: maxPos, ranking: ranking, nivelDe: nivelDe, tracos: tracos, perfil: perfil };
+  }
+
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var accent = this.props.accent ?? '#F26430';
+    var total = PERGUNTAS.length;
+    var i = st.i;
+    var q = PERGUNTAS[i];
+    var sel = st.answers[i];
+    var hasSel = sel != null;
+    var xp = this.calcXp(st.answers);
+
+    var opcoes = q.opcoes.map(function (o, k) {
+      var on = sel === k;
+      return {
+        label: o.label,
+        letra: 'ABCD'.charAt(k),
+        pressed: on ? 'true' : 'false',
+        border: on ? '#8A1F96' : '#EBCFF0',
+        bg: on ? '#F6E4F8' : '#FFFFFF',
+        badgeBg: on ? '#8A1F96' : '#F6E4F8',
+        badgeFg: on ? '#FFFFFF' : '#8A1F96',
+        pick: function () { self.pick(k); }
+      };
+    });
+
+    var tipoMap = { pergunta: 'Pergunta', desafio: 'Desafio' };
+    var tipoBgMap = { pergunta: '#D98CE6', desafio: accent };
+    var acertou = hasSel && sel === q.correta;
+
+    var r = this.resultado(st.answers);
+    var top = r.ranking[0];
+    var second = r.ranking[1];
+    var nivel = r.nivelDe(top);
+
+    var barras = r.ranking.map(function (k, idx) {
+      var pct = Math.max(6, Math.round((r.score[k] / (r.maxPos[k] || 1)) * 100));
+      return { nome: AREAS[k], nivel: r.nivelDe(k), w: pct + '%', cor: idx === 0 ? accent : BAR_CORES[idx] };
+    });
+    var nivelDots = [1, 2, 3, 4, 5].map(function (n) { return { bg: n <= nivel ? accent : '#8A2A94' }; });
+
+    var f = r.tracos.map(function (t) { return TRACOS[t].frase; });
+    var perfilInfo = PERFIS[r.perfil];
+    var resumo = 'Você tem aptidão nível ' + nivel + ' para ' + AREAS[top] + ', com perfil ' + perfilInfo.nome + ': demonstra ' + f[0] + ', ' + f[1] + ' e ' + f[2] + '.';
+
+    return {
+      accent: accent,
+      total: total,
+      xp: xp,
+      isIntro: st.step === 'intro',
+      isQuiz: st.step === 'quiz',
+      isResult: st.step === 'result',
+      num: i + 1,
+      tipo: tipoMap[q.tipo],
+      tipoBg: tipoBgMap[q.tipo],
+      progressNum: Math.round(((i + (hasSel ? 1 : 0)) / total) * 100),
+      progressW: Math.round(((i + (hasSel ? 1 : 0)) / total) * 100) + '%',
+      pergunta: q.texto,
+      opcoes: opcoes,
+      showFeedback: hasSel && q.correta != null,
+      feedbackBg: acertou ? '#C9F4EE' : '#FFE1D3',
+      feedbackTitulo: acertou ? 'Mandou bem! +20 XP de bônus' : 'Quase! A resposta certa é 30.',
+      feedbackTexto: q.explica || '',
+      noSel: !hasSel,
+      nextOpacity: hasSel ? '1' : '0.45',
+      nextLabel: i === total - 1 ? 'Ver meu resultado' : 'Próxima',
+      start: function () { self.setState({ step: 'quiz', i: 0 }); },
+      back: function () {
+        if (self.state.i === 0) self.setState({ step: 'intro' });
+        else self.setState({ i: self.state.i - 1 });
+      },
+      next: function () {
+        if (self.state.answers[self.state.i] == null) return;
+        if (self.state.i >= total - 1) self.setState({ step: 'result' });
+        else self.setState({ i: self.state.i + 1 });
+      },
+      restart: function () { self.setState({ step: 'intro', i: 0, answers: {} }); },
+      topNome: AREAS[top],
+      secondNome: AREAS[second],
+      nivel: nivel,
+      nivelDots: nivelDots,
+      perfilNome: perfilInfo.nome,
+      perfilDesc: perfilInfo.desc,
+      resumo: resumo,
+      traits: r.tracos.map(function (t) { return { label: TRACOS[t].chip }; }),
+      barras: barras
+    };
+  }
+}
+</script>
+
+
+</body></html>

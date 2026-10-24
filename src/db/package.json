@@ -1,0 +1,33 @@
+{
+  "name": "@tw/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "indexes": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/indexes.js",
+    "seed": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/seed.js",
+    "seed:super-admin": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/seed-super-admin.js",
+    "seed:demo": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/seed-demo.js",
+    "import:mentoras": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/import-mentoras.js"
+  },
+  "dependencies": {
+    "@tw/shared": "*",
+    "argon2": "^0.44.0",
+    "csv-parse": "^7.0.2",
+    "mongodb": "^6.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0"
+  }
+}

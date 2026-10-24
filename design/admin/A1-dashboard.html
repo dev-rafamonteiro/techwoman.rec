@@ -1,0 +1,169 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, dashboard</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · {{perfilNome}}</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Dashboard</h1>
+<span style="color: #5E3A66">Sábado, 14/11 · agora 13h25 (horário de Recife) · dados de exemplo</span>
+</div>
+<span role="status" style="background: #E8F7F3; color: #1F4A44; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px; display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2E9C84"></span>Atualiza a cada 15 s · há {{segs}} s</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px">
+<sc-for list="{{kpis}}" as="k" hint-placeholder-count="9">
+<div style="background: {{k.bg}}; color: {{k.fg}}; border: 1px solid {{k.borda}}; border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 700; color: {{k.labelCor}}">{{k.label}}</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 30px; line-height: 1.1">{{k.valor}}</span>
+<span style="font-size: 12px; color: {{k.labelCor}}">{{k.nota}}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<section aria-labelledby="g1" style="flex: 1 1 380px; min-width: 0; background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+<h2 id="g1" style="margin: 0; font-size: 17px; font-weight: 800">Inscritas por área</h2>
+<button type="button" sc-camel-on-click="{{toggleTabela}}" aria-pressed="{{tabelaPressed}}" style="cursor: pointer; min-height: 36px; border: 1px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 700; font-size: 13px; padding: 0 12px">{{tabelaLabel}}</button>
+</div>
+<sc-if value="{{grafico}}" hint-placeholder-val="{{ true }}">
+<div role="img" aria-label="Barras: inscritas por área" style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{areas}}" as="a" hint-placeholder-count="6">
+<div title="{{a.nome}}: {{a.valor}} inscritas" style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 40px; gap: 10px; align-items: center">
+<span style="font-size: 14px; color: #3D0A45">{{a.nome}}</span>
+<div style="height: 18px; background: #F6EEF7; border-radius: 4px; overflow: hidden"><div style="height: 18px; width: {{a.w}}; background: #8A1F96; border-radius: 0 4px 4px 0"></div></div>
+<span style="font-size: 14px; font-weight: 800; text-align: right">{{a.valor}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{tabela}}" hint-placeholder-val="{{ false }}">
+<sc-raw-table style="width: 100%; border-collapse: collapse; font-size: 14px">
+<sc-raw-thead><sc-raw-tr><sc-raw-th scope="col" style="text-align: left; padding: 6px 0; border-bottom: 1px solid #EBCFF0">Área</sc-raw-th><sc-raw-th scope="col" style="text-align: right; padding: 6px 0; border-bottom: 1px solid #EBCFF0">Inscritas</sc-raw-th></sc-raw-tr></sc-raw-thead>
+<sc-raw-tbody><sc-for list="{{areas}}" as="a" hint-placeholder-count="6"><sc-raw-tr><sc-raw-td style="padding: 6px 0; border-bottom: 1px solid #F6EEF7">{{a.nome}}</sc-raw-td><sc-raw-td style="padding: 6px 0; text-align: right; border-bottom: 1px solid #F6EEF7; font-weight: 700">{{a.valor}}</sc-raw-td></sc-raw-tr></sc-for></sc-raw-tbody>
+</sc-raw-table>
+</sc-if>
+</section>
+
+<section aria-labelledby="g2" style="flex: 1 1 380px; min-width: 0; background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<h2 id="g2" style="margin: 0; font-size: 17px; font-weight: 800">Inscrições por hora</h2>
+<span style="font-size: 13px; color: #5E3A66">{{hoverTxt}}</span>
+</div>
+<svg role="img" aria-label="Linha: inscrições por hora, das 8h às 13h" sc-camel-view-box="0 0 400 200" style="width: 100%; height: auto; overflow: visible">
+<g stroke="#F1E6F3" stroke-width="1"><line x1="36" y1="20" x2="390" y2="20"></line><line x1="36" y1="70" x2="390" y2="70"></line><line x1="36" y1="120" x2="390" y2="120"></line><line x1="36" y1="170" x2="390" y2="170"></line></g>
+<g fill="#5E3A66" font-size="11" font-family="Manrope, sans-serif"><text x="28" y="24" text-anchor="end">60</text><text x="28" y="74" text-anchor="end">40</text><text x="28" y="124" text-anchor="end">20</text><text x="28" y="174" text-anchor="end">0</text></g>
+<polyline points="{{linha}}" fill="none" stroke="#8A1F96" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
+<sc-if value="{{temHover}}" hint-placeholder-val="{{ false }}"><line x1="{{hx}}" y1="20" x2="{{hx}}" y2="170" stroke="#D98CE6" stroke-width="1" stroke-dasharray="3 3"></line></sc-if>
+<sc-for list="{{pontos}}" as="p" hint-placeholder-count="6">
+<circle cx="{{p.x}}" cy="{{p.y}}" r="5" fill="#8A1F96" stroke="#FFFFFF" stroke-width="2"></circle>
+<rect x="{{p.hitX}}" y="10" width="60" height="170" fill="transparent" sc-camel-on-mouse-enter="{{p.enter}}" sc-camel-on-mouse-leave="{{p.leave}}"></rect>
+<text x="{{p.x}}" y="190" text-anchor="middle" fill="#5E3A66" font-size="11" font-family="Manrope, sans-serif">{{p.label}}</text>
+</sc-for>
+</svg>
+</section>
+</div>
+
+<section aria-labelledby="g3" style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="g3" style="margin: 0; font-size: 17px; font-weight: 800">Precisa de atenção</h2>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{atencao}}" as="t" hint-placeholder-count="4">
+<li style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border-radius: 14px; background: #FBF3FC">
+<span style="flex: 0 0 auto; background: {{t.bg}}; color: {{t.fg}}; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 999px">{{t.tipo}}</span>
+<span style="flex: 1 1 320px; min-width: 0; font-weight: 600">{{t.texto}}</span>
+<a href="{{t.href}}" style="font-weight: 800; font-size: 14px; padding: 10px 0">{{t.acao}}</a>
+</li>
+</sc-for>
+</ul>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;perfil&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;super&quot;,&quot;options&quot;:[&quot;super&quot;,&quot;admin&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1300}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html', 0], ['Participantes', 'AdminParticipantes.dc.html', 0], ['Mapa de mesas', 'AdminMapa.dc.html', 0], ['Mentoras', 'AdminMentoras.dc.html', 0], ['Mesas', 'AdminMesas.dc.html', 1], ['Evento', 'AdminEvento.dc.html', 1], ['Administradores', 'AdminUsuarios.dc.html', 1], ['Logs', 'AdminLogs.dc.html', 0]];
+function menu(ativo, perfil) {
+  return MENU.filter(function (m) { return perfil === 'super' || !m[2]; }).map(function (m) {
+    var on = m[0] === ativo;
+    return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' };
+  });
+}
+var KPIS = [
+  ['Inscritas', '184', 'desde 9h00', 'n'], ['Aguardando', '47', '6 com prioridade', 'n'], ['Convites pendentes', '9', '2 expiram em < 3 min', 'o'],
+  ['Confirmadas', '38', 'próximas 2 horas', 'm'], ['Concluídas', '52', '', 'g'], ['Não compareceu', '6', '', 'r'],
+  ['Mesas ocupadas agora', '14/20', 'sessão das 13h30', 'p'], ['Sessões livres hoje', '126', 'capacidade restante', 'n'], ['Mentoras com login', '41/50', '9 nunca acessaram', 'n']
+];
+var TONS = { n: ['#FFFFFF', '#3D0A45', '#EBCFF0', '#5E3A66'], o: ['#FFE1D3', '#8A3210', '#FFE1D3', '#8A3210'], m: ['#C9F4EE', '#1F4A44', '#C9F4EE', '#1F4A44'],
+  g: ['#E6E3E7', '#4A4550', '#E6E3E7', '#4A4550'], r: ['#FBDADA', '#8A1C1C', '#FBDADA', '#8A1C1C'], p: ['#3D0A45', '#FFFFFF', '#3D0A45', '#D98CE6'] };
+var AREAS = [['Backend', 52], ['Dados', 41], ['UX & Design', 29], ['Frontend', 27], ['Produto', 21], ['Cloud & Infraestrutura', 14]];
+var HORAS = [['8h', 6], ['9h', 38], ['10h', 51], ['11h', 33], ['12h', 22], ['13h', 34]];
+var ATENCAO = [
+  ['Convite expirando', '#FFE1D3', '#8A3210', 'Convite de Ana para Joana Lima (14h15, Mesa 7) expira em 2 min', 'Ver no mapa', 'AdminMapa.dc.html'],
+  ['Convite expirando', '#FFE1D3', '#8A3210', 'Convite de Bruna para Lívia Prado (14h15, Mesa 3) expira em 3 min', 'Ver no mapa', 'AdminMapa.dc.html'],
+  ['Mentoria atrasada', '#FBDADA', '#8A1C1C', 'Mesa 12 às 13h30: mentora ainda não iniciou a sessão', 'Ver no mapa', 'AdminMapa.dc.html'],
+  ['Prioridade na fila', '#5B1466', '#FFFFFF', 'Beatriz Nunes (Backend) está com prioridade há 42 min', 'Agendar manualmente', 'AdminParticipantes.dc.html']
+];
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tabela: false, hover: null, segs: 3 }; }
+  componentDidMount() { var s = this; this.t = setInterval(function () { s.setState({ segs: (s.state.segs + 1) % 15 }); }, 1000); }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    var self = this, st = this.state, perfil = this.props.perfil || 'super';
+    var max = 60;
+    var pts = HORAS.map(function (h, i) { var x = 60 + i * 64; var y = 170 - (h[1] / max) * 150; return { x: x, y: Math.round(y), label: h[0], v: h[1] }; });
+    var hv = st.hover != null ? pts[st.hover] : null;
+    return {
+      menu: menu('Dashboard', perfil),
+      perfilNome: perfil === 'super' ? 'Super admin' : 'Admin',
+      segs: st.segs,
+      kpis: KPIS.map(function (k) { var t = TONS[k[3]]; return { label: k[0], valor: k[1], nota: k[2], bg: t[0], fg: t[1], borda: t[2], labelCor: t[3] }; }),
+      areas: AREAS.map(function (a) { return { nome: a[0], valor: a[1], w: Math.round(a[1] / 52 * 100) + '%' }; }),
+      grafico: !st.tabela, tabela: st.tabela,
+      tabelaLabel: st.tabela ? 'Ver gráfico' : 'Ver tabela', tabelaPressed: st.tabela ? 'true' : 'false',
+      toggleTabela: function () { self.setState({ tabela: !self.state.tabela }); },
+      linha: pts.map(function (p) { return p.x + ',' + p.y; }).join(' '),
+      pontos: pts.map(function (p, i) { return { x: p.x, y: p.y, label: p.label, hitX: p.x - 30,
+        enter: function () { self.setState({ hover: i }); }, leave: function () { self.setState({ hover: null }); } }; }),
+      temHover: !!hv, hx: hv ? hv.x : 0,
+      hoverTxt: hv ? hv.label + ': ' + hv.v + ' inscrições' : 'Passe o mouse sobre a linha',
+      atencao: ATENCAO.map(function (a) { return { tipo: a[0], bg: a[1], fg: a[2], texto: a[3], acao: a[4], href: a[5] }; })
+    };
+  }
+}
+</script>
+
+
+</body></html>

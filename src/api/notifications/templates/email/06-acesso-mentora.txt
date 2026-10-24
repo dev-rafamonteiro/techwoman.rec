@@ -1,0 +1,25 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[PARA MENTORAS]
+
+Boas-vindas, {{mentora_nome}}!
+
+Obrigada por mentorar no Tech Woman. Este é o seu acesso à área da mentora, onde você monta sua disponibilidade e escolhe quem vai mentorar.
+
+LOGIN: {{email_login}}
+SENHA PROVISÓRIA: {{senha_provisoria}}
+
+No primeiro acesso você cria uma senha nova. A senha vale {{validade_senha}}.
+
+Entrar na área da mentora: {{link_login}}
+
+Esqueceu a senha? Procure a organização no balcão de apoio.
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_login}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

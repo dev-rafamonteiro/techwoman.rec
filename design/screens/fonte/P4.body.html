@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — inscrição na mentoria</title>
+<script src="dacbe79c-3aa0-489f-921b-78480e66922b"></script>
+</head>
+<body>
+<x-dc>
+
+<div style="width: 375px; min-height: 812px; box-sizing: border-box; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 16px; line-height: 1.5; display: flex; flex-direction: column">
+
+<header style="background: #3D0A45; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<a href="Main.dc.html" aria-label="Tech Woman — início" style="display: flex; flex-direction: column; text-decoration: none; line-height: 0.95">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 11px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 18px; color: #FFFFFF">WOMAN</span>
+</a>
+<span style="color: #C9F4EE; font-weight: 700; font-size: 14px">Mentoria · 14/11</span>
+</header>
+
+<div style="background: linear-gradient(180deg, #6E1A78 0%, #B85BC4 100%); padding: 24px 16px 28px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 13px; color: #F26430">INSCRIÇÃO</span>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.12; color: #C9F4EE">Quero uma mentoria</h1>
+<p style="margin: 0; color: #FBEAFD; font-size: 15px">Leva 1 minuto. Uma mentora da sua área vai propor horário e mesa.</p>
+</div>
+
+<form aria-label="Inscrição na mentoria" style="padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 18px">
+
+<sc-if value="{{jaInscrita}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="background: #C9F4EE; border-radius: 16px; padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start">
+<svg aria-hidden="true" width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="#1F4A44" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: 0 0 auto; margin-top: 2px"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>
+<span style="color: #1F4A44; font-size: 15px; font-weight: 600">Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail.</span>
+</div>
+</sc-if>
+<sc-if value="{{semRede}}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="background: #FBDADA; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+<span style="color: #8A1C1C; font-weight: 800; font-size: 15px">Não conseguimos enviar agora</span>
+<span style="color: #8A1C1C; font-size: 14px">Seus dados continuam preenchidos. Confira a conexão e toque em enviar de novo.</span>
+</div>
+</sc-if>
+
+<sc-for list="{{campos}}" as="c" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="{{c.id}}" style="font-weight: 700; font-size: 15px">{{c.label}} <span style="font-weight: 500; color: #5E3A66">{{c.opc}}</span></label>
+<input id="{{c.id}}" type="{{c.type}}" inputmode="{{c.mode}}" autocomplete="{{c.auto}}" placeholder="{{c.ph}}" value="{{c.value}}" sc-camel-on-change="{{c.onChange}}" sc-camel-on-blur="{{c.onBlur}}" aria-invalid="{{c.invalid}}" aria-describedby="{{c.msgId}}" style="min-height: 48px; box-sizing: border-box; border: 2px solid {{c.border}}; border-radius: 14px; padding: 12px 14px; font-size: 16px; font-family: inherit; color: #3D0A45; background: #FFFFFF; width: 100%">
+<span id="{{c.msgId}}" style="font-size: 13px; font-weight: 600; color: {{c.msgCor}}">{{c.msg}}</span>
+</div>
+</sc-for>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f-area" style="font-weight: 700; font-size: 15px">Área de interesse</label>
+<sc-raw-select id="f-area" value="{{area}}" sc-camel-on-change="{{onArea}}" style="min-height: 48px; border: 2px solid #EBCFF0; border-radius: 14px; padding: 10px 12px; font-size: 16px; font-family: inherit; color: #3D0A45; background: #FFFFFF">
+<sc-for list="{{areas}}" as="a" hint-placeholder-count="6">
+<option value="{{a.id}}">{{a.nome}}</option>
+</sc-for>
+</sc-raw-select>
+<span style="font-size: 13px; color: #5E3A66">Preenchida com o resultado da sua jornada. Pode trocar.</span>
+</div>
+
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="font-weight: 700; font-size: 15px; padding: 0; margin-bottom: 8px">Período preferido</legend>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{periodos}}" as="p" hint-placeholder-count="4">
+<label style="min-height: 48px; box-sizing: border-box; border: 2px solid {{p.border}}; background: {{p.bg}}; border-radius: 14px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 15px">
+<input type="radio" name="periodo" value="{{p.id}}" checked="{{p.checked}}" sc-camel-on-change="{{p.pick}}" style="width: 18px; height: 18px; accent-color: #8A1F96; margin: 0">
+{{p.nome}}
+</label>
+</sc-for>
+</div>
+<span style="font-size: 13px; color: {{periodoMsgCor}}; font-weight: 600">{{periodoMsg}}</span>
+</fieldset>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f-coment" style="font-weight: 700; font-size: 15px">O que você quer conversar? <span style="font-weight: 500; color: #5E3A66">(opcional)</span></label>
+<textarea id="f-coment" maxlength="280" rows="3" placeholder="Ex.: como migrar de suporte para backend" value="{{comentario}}" sc-camel-on-change="{{onComentario}}" style="box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 14px; padding: 12px 14px; font-size: 16px; font-family: inherit; color: #3D0A45; background: #FFFFFF; resize: vertical; width: 100%"></textarea>
+<span style="font-size: 13px; color: #5E3A66; text-align: right">{{contador}}/280</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer; font-size: 15px; min-height: 44px">
+<input type="checkbox" checked="{{lgpd}}" sc-camel-on-change="{{onLgpd}}" aria-invalid="{{lgpdInvalid}}" style="width: 22px; height: 22px; accent-color: #8A1F96; margin: 2px 0 0; flex: 0 0 auto">
+<span>Concordo com o uso dos meus dados para organizar a mentoria, conforme o <a href="#privacidade" style="color: #8A1F96; font-weight: 700">aviso de privacidade</a>.</span>
+</label>
+<span style="font-size: 13px; font-weight: 600; color: #A3262A">{{lgpdMsg}}</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E3A66">
+<svg aria-hidden="true" width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#5E3A66" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"></path><path d="M9 12l2 2 4-4"></path></svg>
+Verificação de segurança automática ativa
+</div>
+
+<sc-if value="{{valido}}" hint-placeholder-val="{{ false }}">
+<a href="InscricaoOk.dc.html" style="text-decoration: none; text-align: center; color: #3D0A45; background: #F26430; font-weight: 800; font-size: 17px; padding: 16px 20px; border-radius: 999px; min-height: 52px; box-sizing: border-box">Quero ser mentorada</a>
+</sc-if>
+<sc-if value="{{invalido}}" hint-placeholder-val="{{ true }}">
+<button type="button" sc-camel-on-click="{{mostrarErros}}" style="cursor: pointer; border: 0; color: #3D0A45; background: #F26430; font-family: inherit; font-weight: 800; font-size: 17px; padding: 16px 20px; border-radius: 999px; min-height: 52px">Quero ser mentorada</button>
+</sc-if>
+<p style="margin: 0; font-size: 13px; color: #5E3A66; text-align: center">A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</p>
+</form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;estado&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;normal&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;erros&quot;,&quot;ja-inscrita&quot;,&quot;sem-rede&quot;]},&quot;$preview&quot;:{&quot;width&quot;:375,&quot;height&quot;:1560}}">
+var AREAS = [
+  { id: 'backend', nome: 'Backend' }, { id: 'frontend', nome: 'Frontend' }, { id: 'dados', nome: 'Dados' },
+  { id: 'ux', nome: 'UX & Design' }, { id: 'produto', nome: 'Produto' }, { id: 'cloud', nome: 'Cloud & Infraestrutura' }
+];
+var PERIODOS = [
+  { id: 'manha', nome: 'Manhã' }, { id: 'inicio-tarde', nome: 'Início da tarde' },
+  { id: 'fim-tarde', nome: 'Fim da tarde' }, { id: 'qualquer', nome: 'Qualquer horário' }
+];
+function mascaraFone(v) {
+  var d = (v || '').replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d.length ? '(' + d : '';
+  if (d.length <= 7) return '(' + d.slice(0, 2) + ') ' + d.slice(2);
+  return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+}
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.inicial(props.estado || 'normal');
+  }
+  componentDidUpdate(prev) {
+    if (prev.estado !== this.props.estado) this.setState(this.inicial(this.props.estado || 'normal'));
+  }
+  inicial(estado) {
+    var s = { nome: '', email: '', whats: '', linkedin: '', area: 'backend', periodo: null, comentario: '', lgpd: false, tocado: {}, todos: false };
+    if (estado === 'erros') { s.nome = 'Joana'; s.email = 'joana@'; s.whats = '(81) 9123'; s.todos = true; }
+    if (estado === 'ja-inscrita' || estado === 'sem-rede') {
+      s.nome = 'Joana Lima'; s.email = 'joana@email.com'; s.whats = '(81) 91234-5678'; s.linkedin = 'joanalima';
+      s.periodo = 'inicio-tarde'; s.lgpd = true;
+    }
+    return s;
+  }
+  set(campo) {
+    var self = this;
+    return function (e) {
+      var v = e.target.value;
+      if (campo === 'whats') v = mascaraFone(v);
+      var u = {}; u[campo] = v;
+      self.setState(u);
+    };
+  }
+  tocar(campo) {
+    var self = this;
+    return function () { var t = Object.assign({}, self.state.tocado); t[campo] = true; self.setState({ tocado: t }); };
+  }
+  renderVals() {
+    var self = this, st = this.state, estado = this.props.estado || 'normal';
+    var erros = {
+      nome: st.nome.trim().split(/\s+/).length < 2 ? 'Informe nome e sobrenome.' : '',
+      email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(st.email) ? '' : 'Digite um e-mail válido.',
+      whats: st.whats.replace(/\D/g, '').length === 11 ? '' : 'Use DDD + número: (00) 00000-0000.',
+      linkedin: !st.linkedin || /^([a-z0-9-]{3,100}|(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-z0-9-]{3,100}\/?)$/i.test(st.linkedin.trim()) ? '' : 'Use seu usuário ou o link completo do perfil.'
+    };
+    var defs = [
+      { k: 'nome', id: 'f-nome', label: 'Nome completo', opc: '', type: 'text', mode: 'text', auto: 'name', ph: 'Como você quer ser chamada', ok: 'Tudo certo' },
+      { k: 'email', id: 'f-email', label: 'E-mail', opc: '', type: 'email', mode: 'email', auto: 'email', ph: 'voce@email.com', ok: 'Uma inscrição por e-mail' },
+      { k: 'whats', id: 'f-whats', label: 'WhatsApp', opc: '', type: 'tel', mode: 'tel', auto: 'tel', ph: '(00) 00000-0000', ok: 'Vamos avisar o convite por aqui' },
+      { k: 'linkedin', id: 'f-linkedin', label: 'LinkedIn', opc: '(opcional)', type: 'text', mode: 'url', auto: 'url', ph: 'seu-usuario ou link do perfil', ok: 'A mentora verá seu perfil' }
+    ];
+    var campos = defs.map(function (d) {
+      var mostrar = (st.tocado[d.k] || st.todos) && erros[d.k];
+      var preenchido = !!st[d.k] && !erros[d.k];
+      return {
+        id: d.id, label: d.label, opc: d.opc, type: d.type, mode: d.mode, auto: d.auto, ph: d.ph,
+        value: st[d.k], msgId: d.id + '-msg',
+        onChange: self.set(d.k), onBlur: self.tocar(d.k),
+        invalid: mostrar ? 'true' : 'false',
+        border: mostrar ? '#A3262A' : (preenchido ? '#8A1F96' : '#EBCFF0'),
+        msg: mostrar ? '⚠ ' + erros[d.k] : (preenchido ? '✓ ' + d.ok : ''),
+        msgCor: mostrar ? '#A3262A' : '#1F6B5C'
+      };
+    });
+    var periodoErro = st.todos && !st.periodo;
+    var valido = !erros.nome && !erros.email && !erros.whats && !erros.linkedin && st.periodo && st.lgpd;
+    return {
+      jaInscrita: estado === 'ja-inscrita',
+      semRede: estado === 'sem-rede',
+      campos: campos,
+      areas: AREAS,
+      area: st.area,
+      onArea: function (e) { self.setState({ area: e.target.value }); },
+      periodos: PERIODOS.map(function (p) {
+        var on = st.periodo === p.id;
+        return { id: p.id, nome: p.nome, checked: on, border: on ? '#8A1F96' : '#EBCFF0', bg: on ? '#F6E4F8' : '#FFFFFF',
+          pick: function () { self.setState({ periodo: p.id }); } };
+      }),
+      periodoMsg: periodoErro ? '⚠ Escolha um período.' : 'É só uma preferência. O horário final é definido pela mentora e você confirma.',
+      periodoMsgCor: periodoErro ? '#A3262A' : '#5E3A66',
+      comentario: st.comentario,
+      contador: st.comentario.length,
+      onComentario: function (e) { self.setState({ comentario: e.target.value.slice(0, 280) }); },
+      lgpd: st.lgpd,
+      lgpdInvalid: st.todos && !st.lgpd ? 'true' : 'false',
+      lgpdMsg: st.todos && !st.lgpd ? '⚠ Precisamos do seu consentimento para continuar.' : '',
+      onLgpd: function (e) { self.setState({ lgpd: e.target.checked }); },
+      valido: !!valido && estado !== 'sem-rede',
+      invalido: !valido || estado === 'sem-rede',
+      mostrarErros: function () { self.setState({ todos: true }); }
+    };
+  }
+}
+</script>
+
+
+</body></html>

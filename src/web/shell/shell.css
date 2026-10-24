@@ -1,0 +1,64 @@
+/* Layouts: participante, mentora, admin. */
+.tw-app { min-height: 100dvh; display: flex; flex-direction: column; background: var(--color-bg); }
+.tw-topbar { position: sticky; top: 0; z-index: var(--z-header); background: var(--tw-plum-950); min-height: var(--header-h); padding: var(--space-3) var(--page-gutter); display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.tw-topbar__title { color: var(--tw-mint-200); font-weight: 700; font-size: var(--text-base-sm); }
+.tw-topbar__right { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.tw-main { flex: 1; width: 100%; }
+
+/* Participante: coluna estreita centralizada */
+.tw-app--participant .tw-main { width: 100%; max-width: 480px; margin: 0 auto; background: var(--color-bg); }
+@media (min-width: 768px) { .tw-app--participant { background: var(--tw-lilac-100); } .tw-app--participant .tw-main { box-shadow: 0 0 0 1px var(--color-border); } }
+
+/* Seletor de área (admin/mentora) */
+.tw-areaswitch { min-height: var(--touch-target); border-radius: var(--radius-pill); border: 2px solid var(--tw-plum-600); background: var(--tw-plum-900); color: var(--tw-white); font-family: inherit; font-weight: 700; font-size: var(--text-base-sm); padding: 0 var(--space-3); }
+
+/* Mentora: barra inferior no celular, navegação no topo a partir de 768 */
+.tw-tabbar { position: fixed; z-index: var(--z-header); left: 0; right: 0; bottom: 0; height: var(--tabbar-h); background: var(--tw-white); border-top: 1px solid var(--color-border); display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); }
+.tw-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: var(--touch-target); border: 0; background: none; color: var(--color-ink-muted); font-family: inherit; font-weight: 700; font-size: var(--text-xs); text-decoration: none; cursor: pointer; }
+.tw-tab[aria-current='page'] { color: var(--color-link); box-shadow: inset 0 3px 0 var(--color-link); }
+.tw-tab svg { width: 24px; height: 24px; }
+.tw-app--mentor .tw-main { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); --tabbar-offset: var(--tabbar-h); }
+.tw-topnav { display: none; }
+@media (min-width: 768px) {
+  .tw-tabbar { display: none; }
+  .tw-app--mentor .tw-main { padding-bottom: 0; }
+  .tw-topnav { display: flex; gap: var(--space-2); }
+  .tw-topnav a, .tw-topnav button { min-height: var(--touch-target); display: inline-flex; align-items: center; padding: 0 var(--space-4); border-radius: var(--radius-pill); border: 0; background: transparent; color: var(--tw-white); font-family: inherit; font-weight: 700; font-size: var(--text-md); text-decoration: none; cursor: pointer; }
+  .tw-topnav a[aria-current='page'] { background: var(--tw-plum-800); box-shadow: inset 0 -3px 0 var(--tw-orange-500); }
+}
+
+/* Admin: menu lateral (>=1024), gaveta no menor. Visual do design (design/admin/A1-dashboard.html). */
+.tw-admin { display: flex; min-height: 100dvh; background: var(--color-bg); font-size: 15px; line-height: 1.5; }
+.tw-sidebar { display: none; }
+.tw-admin__col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tw-navlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.tw-navlist a { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 0; background: transparent; color: var(--tw-lilac-150); font-family: inherit; font-weight: 700; font-size: 15px; text-decoration: none; text-align: left; cursor: pointer; }
+.tw-navlist__dot { width: 8px; height: 8px; border-radius: 2px; background: var(--tw-plum-600); flex: none; }
+.tw-navlist a[aria-current='page'] { background: var(--tw-orange-500); color: var(--tw-plum-950); }
+.tw-navlist a[aria-current='page'] .tw-navlist__dot { background: var(--tw-plum-950); }
+.tw-navlist a:not([aria-current='page']):hover { background: var(--tw-plum-900); color: var(--tw-white); }
+.tw-sidebar__brand { display: flex; flex-direction: column; padding: 0 8px; }
+.tw-sidebar__brand .tw-brand__tech { font-size: 12px; }
+.tw-sidebar__brand .tw-brand__woman { font-size: 22px; }
+.tw-sidebar__brand > span { font-size: 12px; font-weight: 700; color: var(--tw-lilac-150); margin-top: 6px; }
+.tw-sidebar__foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px; }
+.tw-sidebar__switch { color: var(--tw-mint-200); font-weight: 700; font-size: 14px; }
+.tw-sidebar__who { font-size: 13px; color: var(--tw-lilac-150); }
+.tw-sidebar__logout { align-self: flex-start; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--tw-plum-600); background: transparent; color: var(--tw-lilac-150); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
+.tw-sidebar__logout:hover { background: var(--tw-plum-900); color: var(--tw-white); }
+.tw-menubtn { min-height: var(--touch-target); min-width: var(--touch-target); border: 0; border-radius: var(--radius-md); background: var(--tw-plum-800); color: var(--tw-white); font-size: 22px; cursor: pointer; }
+.tw-drawer-nav { background: var(--tw-plum-950); border-radius: var(--radius-lg); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-4); }
+.tw-admin .tw-page { max-width: none; padding: 28px 32px 48px; }
+.tw-admin .tw-page.tw-stack { gap: 24px; }
+@media (max-width: 767px) { .tw-admin .tw-page { padding: 20px var(--page-gutter) 40px; } }
+@media (min-width: 1024px) {
+  .tw-sidebar { display: flex; flex-direction: column; gap: 20px; width: 232px; flex: none; background: var(--tw-plum-950); padding: 20px 14px; position: sticky; top: 0; height: 100dvh; overflow: auto; }
+  .tw-menubtn { display: none; }
+  /* No desktop o menu lateral já tem marca e navegação: sem barra no topo (como no design). */
+  .tw-admin .tw-topbar { display: none; }
+}
+
+@media (max-width: 767px) {
+  /* O título da seção já aparece no h1 da página; evita corte no topo estreito. */
+  .tw-admin .tw-topbar__title { display: none; }
+}

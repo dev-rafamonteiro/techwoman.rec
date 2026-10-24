@@ -1,0 +1,61 @@
+/* P1 · tipografia do design (design/source/techwoman.html, "página inicial"): texto base Manrope 17px/1.55,
+   títulos Unbounded 800, sobretítulos Unbounded 700 14px em maiúsculas espaçadas. Só vale na home. */
+.tw-p1 { font-size: 17px; line-height: 1.55; }
+.tw-p1 p { font-size: 17px; }
+
+/* Cabeçalho: logo 14/24, menu Manrope 600 15px, botão 700 15px; nunca quebra linha a partir do tablet */
+.tw-p1 .tw-pub__head { padding: 14px max(var(--page-gutter), calc((100% - 1200px) / 2 + 24px)); }
+.tw-p1 .tw-brand { line-height: 0.95; }
+.tw-p1 .tw-brand__tech { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; }
+.tw-p1 .tw-brand__woman { font-size: 24px; font-weight: 800; }
+.tw-p1 .tw-pub__nav { gap: 24px; margin-left: auto; }
+.tw-p1 .tw-pub__nav a { font-size: 15px; font-weight: 600; padding: 10px 0; }
+.tw-p1 .tw-pub__head .tw-btn { font-size: 15px; font-weight: 700; min-height: 44px; padding: 0 20px; }
+@media (min-width: 768px) { .tw-p1 .tw-pub__head { flex-wrap: nowrap; gap: 24px; } }
+
+/* Botões da página: 700 17px (o kit usa 800) */
+.tw-p1 .tw-btn { font-weight: 700; }
+.tw-p1 .tw-btn--lg { font-size: 17px; }
+.tw-p1 .tw-p1__hero .tw-btn--sm, .tw-p1 section .tw-btn--sm { font-size: 17px; }
+
+/* Hero */
+.tw-p1 .tw-p1__hero .tw-pub__eyebrow { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: 0.02em; }
+.tw-p1 .tw-p1__hero h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 5vw, 66px); letter-spacing: -0.01em; line-height: 1.04; }
+.tw-p1 .tw-p1__where { font-size: 20px; font-weight: 600; }
+.tw-p1 .tw-p1__hero p:not(.tw-p1__where) { font-size: 19px; }
+
+/* Sobretítulos de seção */
+.tw-p1 section:not(.tw-p1__hero) .tw-pub__eyebrow,
+.tw-p1 section:not(.tw-p1__hero) .tw-p1__eyebrow { font-family: var(--font-display); font-weight: 700; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* Títulos de seção */
+.tw-p1 section h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 3.2vw, 42px); line-height: 1.12; }
+.tw-p1 section .tw-p1__band h2 { font-size: clamp(26px, 3vw, 40px); }
+.tw-p1 .tw-p1__band p { font-weight: 500; }
+
+/* Cards "O evento": título Manrope 700 18px */
+.tw-p1 .tw-p1__cards h3 { font-family: var(--font-body); font-weight: 700; font-size: 18px; margin: 0 0 2px; }
+
+/* Passos de "Como funciona" */
+.tw-p1 .tw-p1__step strong { font-size: 20px; font-weight: 700; }
+
+/* Convite de exemplo */
+.tw-p1 section .tw-p1__invite .tw-p1__eyebrow { font-size: 12px; letter-spacing: 0.08em; }
+.tw-p1 .tw-p1__invite h3 { font-family: var(--font-display); font-weight: 800; font-size: 30px; line-height: 1.1; }
+.tw-p1 .tw-p1__invite p { font-size: 15px; }
+.tw-p1 .tw-p1__invite .tw-badge { font-size: 13px; font-weight: 700; }
+.tw-p1 .tw-p1__invite .tw-btn { font-size: 15px; }
+.tw-p1 .tw-p1__invite .tw-btn--primary { font-weight: 800; }
+
+/* Números da mentoria */
+.tw-p1 .tw-p1__stat strong { font-size: 34px; }
+.tw-p1 .tw-p1__stat b { font-size: 17px; font-weight: 700; }
+.tw-p1 .tw-p1__stat p { font-size: 15px; }
+.tw-p1 .tw-pub__muted { font-size: 15px; }
+
+/* Rodapé */
+.tw-p1 .tw-p1__foot { font-size: 14px; }
+.tw-p1 .tw-p1__foot a { font-size: 14px; font-weight: 400; }
+
+/* Âncoras do menu: a seção não fica escondida atrás do cabeçalho fixo */
+.tw-p1 section[id] { scroll-margin-top: 80px; }

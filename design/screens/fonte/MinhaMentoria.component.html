@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Tech Woman — minha mentoria</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 375px; min-height: 812px; box-sizing: border-box; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 16px; line-height: 1.5; display: flex; flex-direction: column">
+
+<header style="background: #3D0A45; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; flex-direction: column; line-height: 0.95">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 11px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 18px; color: #FFFFFF">WOMAN</span>
+</div>
+<span style="color: #C9F4EE; font-weight: 700; font-size: 14px">Minha mentoria</span>
+</header>
+
+<sc-if value="{{temInscricao}}" hint-placeholder-val="{{ true }}">
+<div style="background: linear-gradient(180deg, #6E1A78 0%, #B85BC4 100%); padding: 22px 16px 24px; display: flex; flex-direction: column; gap: 10px">
+<span style="color: #FBEAFD; font-size: 15px">Oi, Joana!</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="background: {{badgeBg}}; color: {{badgeFg}}; font-weight: 800; font-size: 13px; padding: 6px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{badgeDot}}"></span>{{badgeTexto}}</span>
+<sc-if value="{{prioridade}}" hint-placeholder-val="{{ false }}">
+<span style="background: #3D0A45; color: #FFFFFF; font-weight: 800; font-size: 13px; padding: 6px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="#D98CE6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"></path></svg>Prioridade</span>
+</sc-if>
+</div>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.15; color: #C9F4EE">{{titulo}}</h1>
+</div>
+</sc-if>
+
+<main style="padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 16px; flex: 1">
+
+<sc-if value="{{isAguardando}}" hint-placeholder-val="{{ true }}">
+<p style="margin: 0; font-size: 16px">{{textoAguardando}}</p>
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; gap: 12px"><span style="color: #5E3A66">Área</span><span style="font-weight: 800">Backend</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; align-items: center"><span style="color: #5E3A66">Período preferido</span><span style="font-weight: 800">{{periodoNome}}</span></div>
+<sc-if value="{{editando}}" hint-placeholder-val="{{ false }}">
+<div role="radiogroup" aria-label="Novo período preferido" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{periodos}}" as="p" hint-placeholder-count="4">
+<button type="button" role="radio" aria-checked="{{p.on}}" onClick="{{p.pick}}" style="cursor: pointer; min-height: 44px; border-radius: 12px; border: 2px solid {{p.border}}; background: {{p.bg}}; color: #3D0A45; font-family: inherit; font-weight: 700; font-size: 14px">{{p.nome}}</button>
+</sc-for>
+</div>
+</sc-if>
+<button type="button" onClick="{{toggleEditar}}" style="cursor: pointer; min-height: 44px; border-radius: 999px; border: 2px solid #EBCFF0; background: #FFFFFF; color: #8A1F96; font-family: inherit; font-weight: 800; font-size: 15px">{{editarLabel}}</button>
+</div>
+<sc-if value="{{podeCancelar}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{pedirCancelar}}" style="cursor: pointer; min-height: 44px; border: 0; background: transparent; color: #A3262A; font-family: inherit; font-weight: 700; font-size: 15px; text-decoration: underline">Cancelar inscrição</button>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{isProposto}}" hint-placeholder-val="{{ false }}">
+<div style="background: #FFFFFF; border: 2px solid #F26430; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px">
+<span aria-hidden="true" style="width: 52px; height: 52px; border-radius: 50%; background: #D98CE6; color: #3D0A45; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 20px; display: flex; align-items: center; justify-content: center">A</span>
+<div style="display: flex; flex-direction: column">
+<span style="font-weight: 800; font-size: 18px">Ana Ribeiro</span>
+<a href="#linkedin" style="color: #8A1F96; font-weight: 700; font-size: 14px">Ver LinkedIn</a>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<div style="background: #3D0A45; color: #FFFFFF; border-radius: 14px; padding: 12px"><span style="display: block; font-size: 12px; color: #D98CE6; font-weight: 700">MESA</span><span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px">7</span></div>
+<div style="background: #3D0A45; color: #FFFFFF; border-radius: 14px; padding: 12px"><span style="display: block; font-size: 12px; color: #D98CE6; font-weight: 700">HORÁRIO</span><span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px">14h15</span></div>
+</div>
+<span style="font-size: 14px; color: #5E3A66">Sessão de 40 min (14h15 às 14h55) · horário de Recife</span>
+<div role="timer" aria-live="off" style="background: {{contBg}}; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px">
+<span style="font-weight: 700; color: {{contFg}}; font-size: 15px">Responda até 14h05</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; color: {{contFg}}; font-size: 20px">{{contador}}</span>
+</div>
+<sc-if value="{{naoRecusando}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 8px">
+<button type="button" onClick="{{aceitar}}" style="flex: 1; cursor: pointer; min-height: 52px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-family: inherit; font-weight: 800; font-size: 17px">Aceitar</button>
+<button type="button" onClick="{{abrirRecusa}}" style="flex: 1; cursor: pointer; min-height: 52px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-family: inherit; font-weight: 800; font-size: 17px">Recusar</button>
+</div>
+</sc-if>
+<sc-if value="{{recusando}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-weight: 800">Por que você vai recusar?</span>
+<button type="button" onClick="{{recusarHorario}}" style="cursor: pointer; min-height: 48px; text-align: left; padding: 0 14px; border: 2px solid #EBCFF0; border-radius: 14px; background: #FFFFFF; color: #3D0A45; font-family: inherit; font-weight: 700; font-size: 15px">Horário não serve</button>
+<button type="button" onClick="{{recusarInteresse}}" style="cursor: pointer; min-height: 48px; text-align: left; padding: 0 14px; border: 2px solid #EBCFF0; border-radius: 14px; background: #FFFFFF; color: #3D0A45; font-family: inherit; font-weight: 700; font-size: 15px">Não tenho mais interesse</button>
+<button type="button" onClick="{{fecharRecusa}}" style="cursor: pointer; min-height: 44px; border: 0; background: transparent; color: #8A1F96; font-family: inherit; font-weight: 700; font-size: 15px">Voltar</button>
+</div>
+</sc-if>
+</div>
+<p style="margin: 0; font-size: 14px; color: #5E3A66">Se você não responder até 14h05, o horário é liberado e você continua na fila.</p>
+</sc-if>
+
+<sc-if value="{{isConfirmada}}" hint-placeholder-val="{{ false }}">
+<div style="background: #3D0A45; color: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; right: -30px; top: -30px; width: 110px; height: 110px; border-radius: 50%; background: #8A2A94"></div>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.15; color: #C9F4EE; position: relative">Mesa 7 · 14h15 · com Ana</span>
+<span style="color: #F1D9F5; position: relative">Sábado, 14/11 · 40 min · horário de Recife</span>
+<span style="background: #F26430; color: #3D0A45; font-weight: 800; font-size: 15px; padding: 10px 14px; border-radius: 12px; position: relative">Chegue 5 minutos antes</span>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 12px">
+<span aria-hidden="true" style="width: 44px; height: 44px; border-radius: 50%; background: #D98CE6; color: #3D0A45; font-family: 'Unbounded', sans-serif; font-weight: 800; display: flex; align-items: center; justify-content: center">A</span>
+<div style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 800">Ana Ribeiro</span><span style="font-size: 14px; color: #5E3A66">Backend · Tech Lead</span></div>
+<a href="#linkedin" style="margin-left: auto; color: #8A1F96; font-weight: 700; font-size: 14px; padding: 12px 0">LinkedIn</a>
+</div>
+<a href="#ics" style="text-decoration: none; text-align: center; color: #3D0A45; background: #C9F4EE; font-weight: 800; font-size: 16px; padding: 14px 20px; border-radius: 999px; min-height: 48px; box-sizing: border-box">Adicionar à agenda (.ics)</a>
+<button type="button" onClick="{{pedirCancelar}}" style="cursor: pointer; min-height: 44px; border: 0; background: transparent; color: #A3262A; font-family: inherit; font-weight: 700; font-size: 15px; text-decoration: underline">Cancelar mentoria</button>
+</sc-if>
+
+<sc-if value="{{confirmandoCancelar}}" hint-placeholder-val="{{ false }}">
+<div role="alertdialog" aria-label="Confirmar cancelamento" style="background: #FBDADA; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-weight: 800; color: #8A1C1C">Cancelar mesmo?</span>
+<span style="font-size: 14px; color: #8A1C1C">Sua inscrição sai da fila e a mentora é avisada.</span>
+<div style="display: flex; gap: 8px">
+<button type="button" onClick="{{cancelar}}" style="flex: 1; cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #8A1C1C; color: #FFFFFF; font-family: inherit; font-weight: 800">Sim, cancelar</button>
+<button type="button" onClick="{{naoCancelar}}" style="flex: 1; cursor: pointer; min-height: 44px; border: 2px solid #8A1C1C; border-radius: 999px; background: transparent; color: #8A1C1C; font-family: inherit; font-weight: 800">Manter</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isFinal}}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; font-size: 16px">{{textoFinal}}</p>
+<sc-if value="{{temAcaoFinal}}" hint-placeholder-val="{{ false }}">
+<a href="{{acaoFinalHref}}" style="text-decoration: none; text-align: center; color: #3D0A45; background: #F26430; font-weight: 800; font-size: 16px; padding: 14px 20px; border-radius: 999px; min-height: 48px; box-sizing: border-box">{{acaoFinal}}</a>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{isInvalido}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 14px; padding-top: 24px">
+<span aria-hidden="true" style="width: 64px; height: 64px; border-radius: 50%; background: #F6E4F8; display: flex; align-items: center; justify-content: center; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px; color: #8A1F96">?</span>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 24px">Não encontramos sua inscrição</h1>
+<p style="margin: 0; color: #5E3A66">O link pode estar incompleto. Informe seu e-mail e enviamos o link certo.</p>
+<label for="f-reenvio" style="font-weight: 700; font-size: 15px">E-mail da inscrição</label>
+<input id="f-reenvio" type="email" placeholder="voce@email.com" style="min-height: 48px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 14px; padding: 12px 14px; font-size: 16px; font-family: inherit; width: 100%">
+<button type="button" onClick="{{reenviar}}" style="cursor: pointer; min-height: 52px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-family: inherit; font-weight: 800; font-size: 16px">{{reenviarLabel}}</button>
+</div>
+</sc-if>
+
+<span style="margin-top: auto; font-size: 13px; color: #5E3A66; display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2E9C84"></span>Atualizado agora · esta página se atualiza sozinha</span>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"status":{"editor":"enum","default":"aguardando","options":["aguardando","proposto","confirmada","recusada","expirada","concluida","cancelada","invalido"]},"$preview":{"width":375,"height":900}}'>
+var PERIODOS = [
+  { id: 'manha', nome: 'Manhã' }, { id: 'inicio-tarde', nome: 'Início da tarde' },
+  { id: 'fim-tarde', nome: 'Fim da tarde' }, { id: 'qualquer', nome: 'Qualquer horário' }
+];
+var BADGES = {
+  aguardando: ['Aguardando mentora', '#EFE8F0', '#3D0A45', '#8C7391'],
+  recusada: ['Aguardando mentora', '#EFE8F0', '#3D0A45', '#8C7391'],
+  proposto: ['Horário proposto', '#FFE1D3', '#8A3210', '#F26430'],
+  confirmada: ['Confirmada', '#C9F4EE', '#1F4A44', '#2E9C84'],
+  concluida: ['Concluída', '#E6E3E7', '#4A4550', '#8A8590'],
+  expirada: ['Expirada', '#FBDADA', '#8A1C1C', '#C0392B'],
+  cancelada: ['Cancelada', '#FBDADA', '#8A1C1C', '#C0392B']
+};
+var TITULOS = {
+  aguardando: 'Sua inscrição está ativa',
+  recusada: 'Tudo bem! Você continua na fila',
+  proposto: 'Uma mentora quer te mentorar!',
+  confirmada: 'Mentoria confirmada',
+  expirada: 'O prazo para responder terminou',
+  concluida: 'Obrigada por participar!',
+  cancelada: 'Sua inscrição foi cancelada'
+};
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.inicial(props.status || 'aguardando');
+  }
+  inicial(status) {
+    return { status: status, periodo: 'inicio-tarde', editando: false, recusando: false, confirmandoCancelar: false, seg: 9 * 60 + 42, reenviado: false };
+  }
+  componentDidMount() {
+    var self = this;
+    this.timer = setInterval(function () {
+      if (self.state.status === 'proposto' && self.state.seg > 0) self.setState({ seg: self.state.seg - 1 });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  componentDidUpdate(prev) {
+    if (prev.status !== this.props.status) this.setState(this.inicial(this.props.status || 'aguardando'));
+  }
+  renderVals() {
+    var self = this, st = this.state, s = st.status;
+    var b = BADGES[s] || BADGES.aguardando;
+    var mm = Math.floor(st.seg / 60), ss = st.seg % 60;
+    var final3 = st.seg <= 180;
+    var periodoNome = PERIODOS.filter(function (p) { return p.id === st.periodo; })[0].nome;
+    var finais = {
+      expirada: ['O prazo para responder terminou e o horário foi liberado. Você continua na fila.', '', ''],
+      concluida: ['Esperamos que a conversa tenha aberto caminhos. Conte como foi para nós.', 'Avaliar a mentoria', '#avaliacao'],
+      cancelada: ['Sua inscrição não está mais na fila. Se o evento ainda estiver aberto, você pode se inscrever de novo.', 'Fazer nova inscrição', 'Inscricao.dc.html']
+    };
+    var fin = finais[s] || ['', '', ''];
+    return {
+      temInscricao: s !== 'invalido',
+      badgeTexto: b[0], badgeBg: b[1], badgeFg: b[2], badgeDot: b[3],
+      prioridade: s === 'recusada',
+      titulo: TITULOS[s] || '',
+      isAguardando: s === 'aguardando' || s === 'recusada',
+      textoAguardando: s === 'recusada' ? 'Tudo bem! Sua inscrição continua ativa e com prioridade. Se quiser, ajuste o período preferido.' : 'Assim que uma mentora escolher você, avisamos por e-mail e WhatsApp e o convite aparece aqui.',
+      periodoNome: periodoNome,
+      editando: st.editando,
+      editarLabel: st.editando ? 'Salvar período' : 'Editar período preferido',
+      toggleEditar: function () { self.setState({ editando: !self.state.editando }); },
+      periodos: PERIODOS.map(function (p) {
+        var on = st.periodo === p.id;
+        return { nome: p.nome, on: on ? 'true' : 'false', border: on ? '#8A1F96' : '#EBCFF0', bg: on ? '#F6E4F8' : '#FFFFFF', pick: function () { self.setState({ periodo: p.id }); } };
+      }),
+      podeCancelar: !st.confirmandoCancelar,
+      isProposto: s === 'proposto',
+      contador: (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss,
+      contBg: final3 ? '#FBDADA' : '#FFE1D3',
+      contFg: final3 ? '#8A1C1C' : '#8A3210',
+      recusando: st.recusando,
+      naoRecusando: !st.recusando,
+      aceitar: function () { self.setState({ status: 'confirmada' }); },
+      abrirRecusa: function () { self.setState({ recusando: true }); },
+      fecharRecusa: function () { self.setState({ recusando: false }); },
+      recusarHorario: function () { self.setState({ status: 'recusada', recusando: false }); },
+      recusarInteresse: function () { self.setState({ status: 'cancelada', recusando: false }); },
+      isConfirmada: s === 'confirmada' && !st.confirmandoCancelar,
+      confirmandoCancelar: st.confirmandoCancelar,
+      pedirCancelar: function () { self.setState({ confirmandoCancelar: true }); },
+      naoCancelar: function () { self.setState({ confirmandoCancelar: false }); },
+      cancelar: function () { self.setState({ status: 'cancelada', confirmandoCancelar: false }); },
+      isFinal: s === 'expirada' || s === 'concluida' || s === 'cancelada',
+      textoFinal: fin[0],
+      temAcaoFinal: !!fin[1],
+      acaoFinal: fin[1],
+      acaoFinalHref: fin[2] || '#',
+      isInvalido: s === 'invalido',
+      reenviarLabel: st.reenviado ? 'Link enviado ✓ Confira seu e-mail' : 'Reenviar link por e-mail',
+      reenviar: function () { self.setState({ reenviado: true }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

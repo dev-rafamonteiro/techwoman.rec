@@ -1,0 +1,134 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, mesas</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · {{perfilNome}}</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 18px">
+<sc-if value="{{semAcesso}}" hint-placeholder-val="{{ false }}">
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 40px 28px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; max-width: 560px">
+<span aria-hidden="true" style="width: 56px; height: 56px; border-radius: 16px; background: #F6E4F8; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8A1F96" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></span>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">Você não tem acesso a esta área</h1>
+<p style="margin: 0; color: #5E3A66">Mesas, evento e administradores são configurados pelo super admin.</p>
+<a href="AdminDashboard.dc.html" style="font-weight: 800; padding: 10px 0">Voltar ao dashboard</a>
+</div>
+</sc-if>
+
+<sc-if value="{{comAcesso}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Mesas</h1>
+<span style="color: #5E3A66">{{resumo}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+<label for="gerar-n" style="font-weight: 700; font-size: 14px">Gerar mesas de 1 a</label>
+<input id="gerar-n" type="number" min="1" max="99" value="20" style="width: 72px; min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; font-size: 15px; color: #3D0A45">
+<button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 16px">Gerar</button>
+<button type="button" sc-camel-on-click="{{adicionar}}" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 18px">+ Adicionar mesa</button>
+</div>
+</div>
+
+<sc-if value="{{temAviso}}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="background: #FFE1D3; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-weight: 800; color: #8A3210">Mesa 12 tem 3 mentorias futuras. Realoque antes de desativar:</span>
+<ul style="margin: 0; padding-left: 18px; color: #8A3210; font-size: 14px">
+<li>14h15 · Karen com Cecília · Confirmada</li><li>15h00 · Karen com Débora · Horário proposto</li><li>16h30 · Luana com Iara · Confirmada</li>
+</ul>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<a href="AdminMapa.dc.html" style="text-decoration: none; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; border-radius: 999px; background: #3D0A45; color: #FFFFFF; font-weight: 800; padding: 0 16px">Realocar no mapa de mesas</a>
+<button type="button" sc-camel-on-click="{{fecharAviso}}" style="cursor: pointer; min-height: 44px; border: 2px solid #8A3210; border-radius: 999px; background: transparent; color: #8A3210; font-weight: 800; padding: 0 16px">Manter ativa</button>
+</div>
+</div>
+</sc-if>
+
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 18px; overflow-x: auto">
+<sc-raw-table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px">
+<sc-raw-thead><sc-raw-tr style="text-align: left; color: #5E3A66; font-size: 13px">
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Mesa</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Localização</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Cadeiras</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Mentorias futuras</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Situação</sc-raw-th>
+</sc-raw-tr></sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{mesas}}" as="m" hint-placeholder-count="12">
+<sc-raw-tr style="border-bottom: 1px solid #F6EEF7">
+<sc-raw-td style="padding: 8px 14px; font-weight: 800">Mesa {{m.n}}</sc-raw-td>
+<sc-raw-td style="padding: 8px 14px"><label style="position: absolute; left: -9999px" for="{{m.locId}}">Localização da mesa {{m.n}}</label><input id="{{m.locId}}" type="text" value="{{m.loc}}" placeholder="Opcional, ex.: Área B" style="min-height: 40px; box-sizing: border-box; border: 2px solid #F3E6F4; border-radius: 10px; padding: 0 10px; font-size: 14px; color: #3D0A45; width: 200px"></sc-raw-td>
+<sc-raw-td style="padding: 8px 14px">2</sc-raw-td>
+<sc-raw-td style="padding: 8px 14px">{{m.futuras}}</sc-raw-td>
+<sc-raw-td style="padding: 8px 14px">
+<button type="button" role="switch" aria-checked="{{m.on}}" sc-camel-on-click="{{m.toggle}}" style="cursor: pointer; min-height: 44px; border: 0; background: transparent; display: flex; align-items: center; gap: 10px; color: #3D0A45; font-weight: 700; font-size: 14px; padding: 0">
+<span aria-hidden="true" style="width: 44px; height: 26px; border-radius: 999px; background: {{m.trilho}}; position: relative; display: inline-block"><span style="position: absolute; top: 3px; left: {{m.knob}}; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF"></span></span>{{m.txt}}
+</button>
+</sc-raw-td>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;perfil&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;super&quot;,&quot;options&quot;:[&quot;super&quot;,&quot;admin&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1100}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html', 0], ['Participantes', 'AdminParticipantes.dc.html', 0], ['Mapa de mesas', 'AdminMapa.dc.html', 0], ['Mentoras', 'AdminMentoras.dc.html', 0], ['Mesas', 'AdminMesas.dc.html', 1], ['Evento', 'AdminEvento.dc.html', 1], ['Administradores', 'AdminUsuarios.dc.html', 1], ['Logs', 'AdminLogs.dc.html', 0]];
+function menu(ativo, perfil) { return MENU.filter(function (m) { return perfil === 'super' || !m[2]; }).map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var LOC = { 1: 'Área A', 2: 'Área A', 3: 'Área A', 4: 'Área A', 5: 'Área A', 6: 'Área B', 7: 'Área B', 8: 'Área B', 9: 'Área B', 10: 'Área B' };
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { total: 20, off: { 18: true }, aviso: false }; }
+  renderVals() {
+    var self = this, st = this.state, perfil = this.props.perfil || 'super';
+    var mesas = [], ativas = 0;
+    for (var i = 1; i <= st.total; i++) {
+      (function (n) {
+        var on = !st.off[n]; if (on) ativas++;
+        var fut = on ? (n * 5) % 4 + (n === 12 ? 3 - ((n * 5) % 4) : 0) : 0;
+        mesas.push({ n: n, loc: LOC[n] || '', locId: 'loc-' + n, futuras: fut, on: on ? 'true' : 'false', trilho: on ? '#2E9C84' : '#C9B8CD', knob: on ? '21px' : '3px', txt: on ? 'Ativa' : 'Inativa',
+          toggle: function () {
+            if (on && n === 12) { self.setState({ aviso: true }); return; }
+            var o = Object.assign({}, self.state.off); o[n] = on; self.setState({ off: o });
+          } });
+      })(i);
+    }
+    return {
+      menu: menu('Mesas', perfil), perfilNome: perfil === 'super' ? 'Super admin' : 'Admin',
+      semAcesso: perfil !== 'super', comAcesso: perfil === 'super',
+      resumo: ativas + ' ativas de ' + st.total + ' · 2 cadeiras cada · desative a Mesa 12 para ver o aviso de realocação',
+      mesas: mesas,
+      temAviso: st.aviso, fecharAviso: function () { self.setState({ aviso: false }); },
+      adicionar: function () { self.setState({ total: self.state.total + 1 }); }
+    };
+  }
+}
+</script>
+
+
+</body></html>

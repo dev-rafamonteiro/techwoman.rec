@@ -1,0 +1,26 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[HORÁRIO PROPOSTO]
+
+Uma mentora quer te mentorar!
+
+Oi, {{nome}}! {{mentora_nome}} ({{mentora_linkedin}}) escolheu sua inscrição e propôs uma conversa de 40 minutos aqui no evento.
+
+MESA: {{mesa}}
+HORÁRIO: {{horario}}
+MENTORA: {{mentora_nome}}
+
+Confirme até {{prazo}} (horário de Recife). Depois disso, o horário é liberado.
+
+Ver convite e confirmar: {{link_minha_mentoria}}
+
+Se o horário não servir, recuse pela sua página: você volta para a fila com prioridade.
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_minha_mentoria}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

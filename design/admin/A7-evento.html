@@ -1,0 +1,177 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, configurações do evento</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,input,select,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · Super admin</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Configurações do evento</h1>
+<span style="color: #5E3A66">Só o super admin vê esta área.</span>
+</div>
+<button type="button" sc-camel-on-click="{{salvar}}" style="cursor: pointer; min-height: 48px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 24px">{{salvarLabel}}</button>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Evento</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+<sc-for list="{{camposEvento}}" as="c" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="{{c.id}}" style="font-weight: 700; font-size: 14px">{{c.label}}</label><input id="{{c.id}}" type="text" value="{{c.v}}" style="min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 12px; font-size: 15px; color: #3D0A45; width: 100%"></div>
+</sc-for>
+</div>
+<label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; background: {{inscBg}}; border-radius: 14px; padding: 0 14px; cursor: pointer">
+<span style="display: flex; flex-direction: column"><span style="font-weight: 800">Inscrições {{inscTxt}}</span><span style="font-size: 13px; color: #5E3A66">Fechadas, o formulário mostra um aviso e não aceita novas inscrições.</span></span>
+<button type="button" role="switch" aria-checked="{{inscOn}}" aria-label="Inscrições abertas" sc-camel-on-click="{{toggleInsc}}" style="cursor: pointer; border: 0; background: transparent; padding: 0; min-height: 44px"><span aria-hidden="true" style="width: 52px; height: 30px; border-radius: 999px; background: {{inscTrilho}}; position: relative; display: inline-block"><span style="position: absolute; top: 3px; left: {{inscKnob}}; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF"></span></span></button>
+</label>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; align-items: baseline">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Grade de sessões</h2>
+<span style="font-size: 13px; color: #5E3A66">Fuso America/Recife</span>
+</div>
+<sc-if value="{{bloqueada}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="background: #FFE1D3; color: #8A3210; border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: 14px; display: flex; gap: 8px; align-items: center"><svg aria-hidden="true" width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8A3210" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Há 92 mentorias marcadas. A grade fica bloqueada para alteração.</div>
+</sc-if>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px">
+<sc-for list="{{camposGrade}}" as="c" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="{{c.id}}" style="font-weight: 700; font-size: 14px">{{c.label}}</label><input id="{{c.id}}" type="number" value="{{c.v}}" sc-camel-on-change="{{c.on}}" disabled="{{bloqueada}}" style="min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 12px; font-size: 15px; color: #3D0A45; width: 100%; background: {{campoBg}}"></div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-weight: 800; font-size: 14px">Prévia: {{qtdSessoes}} sessões no dia</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{grade}}" as="g" hint-placeholder-count="12"><span style="background: #F6E4F8; color: #3D0A45; font-weight: 700; font-size: 13px; padding: 6px 10px; border-radius: 10px">{{g}}</span></sc-for>
+</div>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Convites</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="c-prazo" style="font-weight: 700; font-size: 14px">Prazo para a participante responder (min)</label><input id="c-prazo" type="number" value="15" style="min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 12px; font-size: 15px; color: #3D0A45; width: 100%"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="c-antec" style="font-weight: 700; font-size: 14px">Antecedência mínima do convite (min)</label><input id="c-antec" type="number" value="10" style="min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 12px; font-size: 15px; color: #3D0A45; width: 100%"></div>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Áreas disponíveis</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{areas}}" as="a" hint-placeholder-count="6">
+<span style="display: inline-flex; align-items: center; gap: 4px; background: #F6E4F8; color: #3D0A45; font-weight: 700; font-size: 14px; padding: 0 4px 0 12px; border-radius: 999px; min-height: 40px">{{a.nome}}<button type="button" sc-camel-on-click="{{a.remover}}" aria-label="Remover {{a.nome}}" style="cursor: pointer; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: #8A1F96; font-size: 16px; font-weight: 800">×</button></span>
+</sc-for>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<label for="nova-area" style="position: absolute; left: -9999px">Nova área</label>
+<input id="nova-area" type="text" placeholder="Nova área" value="{{novaArea}}" sc-camel-on-change="{{onNovaArea}}" style="flex: 1 1 200px; min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 12px; font-size: 15px; color: #3D0A45">
+<button type="button" sc-camel-on-click="{{addArea}}" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; padding: 0 16px">Adicionar</button>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">Mensagens</h2>
+<span style="font-size: 13px; color: #5E3A66">Variáveis: {nome} {mentora} {mesa} {horario} {prazo} {link}</span>
+</div>
+<sc-for list="{{mensagens}}" as="m" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="{{m.id}}" style="font-weight: 700; font-size: 14px">{{m.label}} <span style="font-weight: 500; color: #5E3A66">· {{m.canal}}</span></label>
+<textarea id="{{m.id}}" rows="2" value="{{m.texto}}" style="box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 10px 12px; font-size: 14px; color: #3D0A45; resize: vertical; width: 100%"></textarea>
+</div>
+</sc-for>
+</section>
+</div>
+
+<section style="flex: 1 1 300px; min-width: 0; background: #3D0A45; color: #FFFFFF; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+<h2 style="margin: 0; font-size: 17px; font-weight: 800">QR Code da inscrição</h2>
+<div style="background: #FFFFFF; border-radius: 18px; padding: 16px; align-self: stretch; display: flex; justify-content: center">
+<svg role="img" aria-label="QR Code para techwoman.dev/cadastro" width="220" height="220" sc-camel-view-box="-2 -2 33 33" shape-rendering="crispEdges"><rect x="-2" y="-2" width="33" height="33" fill="#FFFFFF"></rect><path d="{{qr}}" fill="#3D0A45"></path></svg>
+</div>
+<span style="font-weight: 700">techwoman.dev/cadastro</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button type="button" style="cursor: pointer; min-height: 44px; border: 0; border-radius: 999px; background: #F26430; color: #3D0A45; font-weight: 800; padding: 0 16px">Baixar PNG</button>
+<button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #D98CE6; border-radius: 999px; background: transparent; color: #FFFFFF; font-weight: 800; padding: 0 16px">Baixar SVG</button>
+</div>
+<a href="CartazQR.dc.html" style="color: #C9F4EE; font-weight: 700">Ver cartaz para impressão</a>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;gradeBloqueada&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1900}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminParticipantes.dc.html'], ['Mapa de mesas', 'AdminMapa.dc.html'], ['Mentoras', 'AdminMentoras.dc.html'], ['Mesas', 'AdminMesas.dc.html'], ['Evento', 'AdminEvento.dc.html'], ['Administradores', 'AdminUsuarios.dc.html'], ['Logs', 'AdminLogs.dc.html']];
+function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var QR = 'M0 0h7v1h-7zM9 0h1v1h-1zM11 0h2v1h-2zM14 0h1v1h-1zM18 0h2v1h-2zM22 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h2v1h-2zM11 1h1v1h-1zM13 1h1v1h-1zM17 1h1v1h-1zM19 1h2v1h-2zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM9 2h4v1h-4zM15 2h1v1h-1zM19 2h2v1h-2zM22 2h1v1h-1zM24 2h3v1h-3zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM12 3h2v1h-2zM16 3h1v1h-1zM18 3h2v1h-2zM22 3h1v1h-1zM24 3h3v1h-3zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM8 4h2v1h-2zM11 4h1v1h-1zM13 4h1v1h-1zM16 4h1v1h-1zM18 4h2v1h-2zM22 4h1v1h-1zM24 4h3v1h-3zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM14 5h7v1h-7zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h7v1h-7zM9 7h2v1h-2zM12 7h1v1h-1zM15 7h1v1h-1zM17 7h1v1h-1zM20 7h1v1h-1zM0 8h1v1h-1zM2 8h1v1h-1zM4 8h1v1h-1zM6 8h1v1h-1zM10 8h2v1h-2zM16 8h2v1h-2zM19 8h2v1h-2zM24 8h1v1h-1zM27 8h1v1h-1zM1 9h2v1h-2zM7 9h2v1h-2zM12 9h2v1h-2zM15 9h3v1h-3zM21 9h2v1h-2zM25 9h1v1h-1zM28 9h1v1h-1zM1 10h1v1h-1zM6 10h1v1h-1zM11 10h2v1h-2zM14 10h3v1h-3zM18 10h1v1h-1zM20 10h2v1h-2zM23 10h1v1h-1zM26 10h3v1h-3zM0 11h1v1h-1zM2 11h1v1h-1zM5 11h1v1h-1zM8 11h2v1h-2zM12 11h3v1h-3zM16 11h3v1h-3zM20 11h1v1h-1zM22 11h1v1h-1zM25 11h1v1h-1zM27 11h1v1h-1zM0 12h2v1h-2zM6 12h2v1h-2zM14 12h2v1h-2zM17 12h1v1h-1zM21 12h3v1h-3zM25 12h1v1h-1zM27 12h2v1h-2zM0 13h1v1h-1zM2 13h4v1h-4zM7 13h1v1h-1zM10 13h2v1h-2zM14 13h2v1h-2zM17 13h2v1h-2zM20 13h3v1h-3zM25 13h2v1h-2zM28 13h1v1h-1zM6 14h2v1h-2zM11 14h3v1h-3zM17 14h2v1h-2zM21 14h1v1h-1zM24 14h1v1h-1zM27 14h2v1h-2zM0 15h4v1h-4zM5 15h1v1h-1zM7 15h2v1h-2zM11 15h1v1h-1zM15 15h1v1h-1zM17 15h4v1h-4zM23 15h3v1h-3zM27 15h1v1h-1zM2 16h1v1h-1zM5 16h4v1h-4zM16 16h2v1h-2zM20 16h3v1h-3zM27 16h2v1h-2zM1 17h1v1h-1zM3 17h2v1h-2zM8 17h1v1h-1zM10 17h2v1h-2zM13 17h1v1h-1zM15 17h4v1h-4zM20 17h3v1h-3zM26 17h1v1h-1zM28 17h1v1h-1zM0 18h1v1h-1zM2 18h1v1h-1zM5 18h3v1h-3zM9 18h1v1h-1zM12 18h1v1h-1zM14 18h3v1h-3zM20 18h1v1h-1zM22 18h2v1h-2zM25 18h1v1h-1zM27 18h2v1h-2zM1 19h3v1h-3zM5 19h1v1h-1zM11 19h1v1h-1zM13 19h2v1h-2zM16 19h2v1h-2zM19 19h2v1h-2zM23 19h1v1h-1zM25 19h1v1h-1zM27 19h1v1h-1zM0 20h1v1h-1zM3 20h1v1h-1zM6 20h1v1h-1zM9 20h2v1h-2zM14 20h2v1h-2zM17 20h1v1h-1zM20 20h5v1h-5zM8 21h3v1h-3zM12 21h1v1h-1zM14 21h2v1h-2zM17 21h4v1h-4zM24 21h1v1h-1zM26 21h3v1h-3zM0 22h7v1h-7zM10 22h1v1h-1zM13 22h1v1h-1zM17 22h4v1h-4zM22 22h1v1h-1zM24 22h2v1h-2zM27 22h2v1h-2zM0 23h1v1h-1zM6 23h1v1h-1zM9 23h1v1h-1zM11 23h2v1h-2zM15 23h1v1h-1zM17 23h1v1h-1zM20 23h1v1h-1zM24 23h1v1h-1zM0 24h1v1h-1zM2 24h3v1h-3zM6 24h1v1h-1zM8 24h1v1h-1zM10 24h1v1h-1zM16 24h2v1h-2zM20 24h6v1h-6zM27 24h1v1h-1zM0 25h1v1h-1zM2 25h3v1h-3zM6 25h1v1h-1zM9 25h1v1h-1zM13 25h1v1h-1zM15 25h2v1h-2zM19 25h2v1h-2zM23 25h2v1h-2zM0 26h1v1h-1zM2 26h3v1h-3zM6 26h1v1h-1zM8 26h1v1h-1zM10 26h2v1h-2zM15 26h3v1h-3zM19 26h1v1h-1zM23 26h2v1h-2zM26 26h1v1h-1zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM11 27h4v1h-4zM16 27h5v1h-5zM22 27h1v1h-1zM27 27h1v1h-1zM0 28h7v1h-7zM8 28h2v1h-2zM11 28h2v1h-2zM14 28h3v1h-3zM18 28h1v1h-1zM20 28h1v1h-1zM23 28h2v1h-2zM27 28h2v1h-2z';
+var MSGS = [
+  ['Inscrição recebida', 'E-mail + WhatsApp', 'Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}'],
+  ['Convite de horário', 'E-mail + WhatsApp', '{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}'],
+  ['Confirmação', 'E-mail + WhatsApp', 'Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes.'],
+  ['Lembrete (15 min antes)', 'WhatsApp', 'Sua mentoria começa às {horario} na {mesa}. Te esperamos!'],
+  ['Convite expirado', 'E-mail', 'O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa.'],
+  ['Cancelamento pela mentora', 'E-mail + WhatsApp', 'Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade.']
+];
+function fmt(min) { var h = Math.floor(min / 60), m = min % 60; return h + 'h' + (m < 10 ? '0' : '') + m; }
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { ini: 9, fim: 18, dur: 40, int: 5, insc: true, areas: ['Backend', 'Frontend', 'Dados', 'UX & Design', 'Produto', 'Cloud & Infraestrutura'], nova: '', salvo: false }; }
+  renderVals() {
+    var self = this, st = this.state, bloq = !!this.props.gradeBloqueada;
+    var grade = [], t = st.ini * 60, passo = Math.max(1, (+st.dur || 0) + (+st.int || 0));
+    while (t + (+st.dur || 0) <= st.fim * 60 && grade.length < 40) { grade.push(fmt(t)); t += passo; }
+    function campo(id, label, k) { return { id: id, label: label, v: st[k], on: function (e) { var u = {}; u[k] = parseInt(e.target.value || '0', 10); self.setState(u); } }; }
+    return {
+      menu: menu('Evento'), qr: QR,
+      camposEvento: [{ id: 'e-nome', label: 'Nome', v: 'Tech Woman' }, { id: 'e-data', label: 'Data', v: 'Sábado, 14/11/2026' }, { id: 'e-local', label: 'Local', v: 'Recife · [endereço]' }, { id: 'e-fuso', label: 'Fuso', v: 'America/Recife' }],
+      inscOn: st.insc ? 'true' : 'false', inscTxt: st.insc ? 'abertas' : 'fechadas', inscBg: st.insc ? '#E8F7F3' : '#FBDADA',
+      inscTrilho: st.insc ? '#2E9C84' : '#C9B8CD', inscKnob: st.insc ? '25px' : '3px',
+      toggleInsc: function () { self.setState({ insc: !self.state.insc }); },
+      bloqueada: bloq, campoBg: bloq ? '#F3EEF4' : '#FFFFFF',
+      camposGrade: [campo('g-ini', 'Início (hora)', 'ini'), campo('g-fim', 'Fim (hora)', 'fim'), campo('g-dur', 'Duração da sessão (min)', 'dur'), campo('g-int', 'Intervalo (min)', 'int')],
+      grade: grade, qtdSessoes: grade.length,
+      areas: st.areas.map(function (a) { return { nome: a, remover: function () { self.setState({ areas: self.state.areas.filter(function (x) { return x !== a; }) }); } }; }),
+      novaArea: st.nova, onNovaArea: function (e) { self.setState({ nova: e.target.value }); },
+      addArea: function () { if (self.state.nova.trim()) self.setState({ areas: self.state.areas.concat([self.state.nova.trim()]), nova: '' }); },
+      mensagens: MSGS.map(function (m, i) { return { id: 'msg-' + i, label: m[0], canal: m[1], texto: m[2] }; }),
+      salvarLabel: st.salvo ? 'Salvo ✓' : 'Salvar alterações',
+      salvar: function () { self.setState({ salvo: true }); }
+    };
+  }
+}
+</script>
+
+
+</body></html>

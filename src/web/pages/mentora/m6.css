@@ -1,0 +1,39 @@
+/* M6 · Minha agenda: cabeçalho escuro + linha do tempo (hora à esquerda, card à direita) */
+
+.m6-timeline { list-style: none; margin: var(--space-4) 0 0; padding: 0; position: relative; }
+.m6-timeline::before { content: ''; position: absolute; left: 31px; top: 6px; bottom: 6px; width: 2px; background: var(--tw-lilac-200); }
+.m6-row { display: grid; grid-template-columns: 52px 1fr; gap: var(--space-3); align-items: start; margin-bottom: var(--space-3); }
+.m6-time { position: relative; z-index: 1; justify-self: start; background: var(--color-bg); padding: 10px 0; font-weight: 800; font-size: var(--text-base-sm); color: var(--tw-plum-950); }
+.m6-row--past .m6-time { color: var(--tw-gray-400); }
+
+.m6-card { background: var(--tw-white); border: 1.5px solid var(--tw-lilac-200); border-radius: var(--radius-md); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.m6-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); }
+.m6-card__name { font-weight: 800; font-size: var(--text-md); line-height: 1.3; overflow-wrap: anywhere; }
+.m6-card__tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.m6-card__note { margin: 0; font-size: var(--text-base-sm); color: var(--tw-plum-950); line-height: 1.45; }
+.m6-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.m6-card__actions .tw-btn { min-height: 40px; font-size: var(--text-base-sm); padding: 0 var(--space-4); }
+.m6-card__hint { font-size: var(--text-xs); color: var(--color-ink-muted); }
+.m6-card .tw-badge { padding: 4px 10px; font-size: var(--text-xs); }
+
+/* Mesa: pílula escura; LinkedIn com seta */
+.m6-table { display: inline-flex; align-items: center; background: var(--tw-plum-950); color: var(--tw-white); font-weight: 800; font-size: var(--text-xs); padding: 4px 10px; border-radius: var(--radius-pill); }
+.m6-li { color: var(--color-link); font-weight: 700; font-size: var(--text-sm); text-decoration: underline; }
+
+/* Estados */
+.m6-card--empty { background: var(--tw-lilac-75); border-color: var(--tw-lilac-150); flex-direction: row; justify-content: space-between; align-items: center; color: var(--tw-plum-950); font-size: var(--text-base-sm); }
+.m6-card--off { background: var(--tw-gray-100); border-color: var(--tw-gray-150); color: var(--color-ink-muted); }
+.m6-card--soon { border: 2px solid var(--tw-orange-500); box-shadow: 0 6px 18px rgba(242, 100, 48, 0.14); }
+.m6-card--invited { border: 2px solid var(--tw-orange-100); }
+.m6-soon { align-self: flex-start; background: var(--tw-orange-500); color: var(--tw-plum-950); font-weight: 800; font-size: var(--text-xs); padding: 4px 10px; border-radius: var(--radius-pill); }
+.m6-wait { background: var(--tw-orange-100); color: var(--tw-orange-900); font-weight: 800; font-size: var(--text-sm); border-radius: var(--radius-sm); padding: 8px 12px; }
+.m6-wait .tw-countdown, .m6-wait * { color: inherit; }
+.m6-btn-outline-danger { color: var(--color-danger) !important; border-color: var(--tw-lilac-200) !important; }
+.m6-wait .tw-countdown { display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; margin: 0; font-size: inherit; }
+.m6-wait .tw-countdown__label::after { content: ' ·'; }
+.m6-card--free { background: var(--tw-lilac-75); border-color: var(--tw-lilac-150); color: var(--tw-plum-950); font-size: var(--text-base-sm); }
+.m6-card--free .m6-card__head { align-items: center; }
+.m6-pickbtn { align-self: flex-start; min-height: 38px !important; font-size: var(--text-sm) !important; padding: 0 var(--space-4) !important; border-style: dashed !important; border-color: var(--tw-purple-600) !important; }
+.m6-wait .tw-countdown { justify-content: flex-start; flex-wrap: nowrap; }
+.m6-wait .tw-countdown__label { font-size: inherit; font-weight: 800; }
+.m6-wait .tw-countdown__value { font-family: var(--font-body); font-size: inherit; font-weight: 800; }

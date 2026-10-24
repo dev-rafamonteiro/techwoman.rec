@@ -1,0 +1,27 @@
+name: ci
+on:
+  push:
+    branches: [main, app-mentoria]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongodb/mongodb-atlas-local:8
+        ports: ["27017:27017"]
+    env:
+      MONGODB_URI_TEST: mongodb://localhost:27017/?directConnection=true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # build antes: o typecheck dos testes lê os .d.ts de @tw/shared, @tw/db e @tw/api
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:integration

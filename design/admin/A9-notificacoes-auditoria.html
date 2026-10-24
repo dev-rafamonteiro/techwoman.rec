@@ -1,0 +1,149 @@
+<!-- Referência do Claude Design (export de 24/10/2026): markup com estilos inline e dados de exemplo no script. Não é código de produção. -->
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Tech Woman — painel, notificações e auditoria</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+body{margin:0;background:#FBF3FC}
+a{color:#8A1F96}a:hover{color:#5B1466}
+button,input,select{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; background: #FBF3FC; color: #3D0A45; font-family: 'Manrope', system-ui, sans-serif; font-size: 15px; line-height: 1.5; display: flex; flex-wrap: wrap">
+
+<aside style="flex: 1 1 232px; box-sizing: border-box; background: #3D0A45; color: #FFFFFF; padding: 20px 14px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; line-height: 0.95; padding: 0 8px">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 12px; color: #D98CE6">TECH</span>
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 22px">WOMAN</span>
+<span style="font-size: 12px; color: #F1D9F5; margin-top: 6px; font-weight: 700">Painel da mentoria</span>
+</div>
+<nav aria-label="Menu do painel">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<li><a href="{{m.href}}" aria-current="{{m.current}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; color: {{m.fg}}; background: {{m.bg}}; font-weight: 700"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: {{m.dot}}"></span>{{m.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px">
+<a href="Aguardando.dc.html" style="color: #C9F4EE; font-weight: 700; font-size: 14px">Ir para a Área da mentora →</a>
+<span style="font-size: 13px; color: #F1D9F5">Felipe · Super admin</span>
+</div>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 28px">Notificações e auditoria</h1>
+<span style="color: #5E3A66">Dados de exemplo</span>
+</div>
+
+<div role="tablist" aria-label="Tipo de registro" style="display: flex; gap: 6px; border-bottom: 2px solid #EBCFF0">
+<button type="button" role="tab" aria-selected="{{abaN}}" sc-camel-on-click="{{verN}}" style="cursor: pointer; min-height: 48px; border: 0; border-bottom: 3px solid {{abaNBorda}}; margin-bottom: -2px; background: transparent; color: #3D0A45; font-weight: 800; font-size: 15px; padding: 0 16px">Notificações <span style="background: #FBDADA; color: #8A1C1C; font-size: 12px; padding: 2px 8px; border-radius: 999px">2 falharam</span></button>
+<button type="button" role="tab" aria-selected="{{abaA}}" sc-camel-on-click="{{verA}}" style="cursor: pointer; min-height: 48px; border: 0; border-bottom: 3px solid {{abaABorda}}; margin-bottom: -2px; background: transparent; color: #3D0A45; font-weight: 800; font-size: 15px; padding: 0 16px">Auditoria</button>
+</div>
+
+<sc-if value="{{isN}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<sc-raw-select aria-label="Canal" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option>Todos os canais</option><option>E-mail</option><option>WhatsApp</option></sc-raw-select>
+<sc-raw-select aria-label="Status" value="{{fN}}" sc-camel-on-change="{{onFN}}" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option value="todos">Todos os status</option><option value="Na fila">Na fila</option><option value="Enviada">Enviada</option><option value="Falhou">Falhou</option></sc-raw-select>
+<input type="search" aria-label="Buscar destinatária" placeholder="Buscar destinatária" style="flex: 1 1 220px; min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 14px; font-size: 15px; background: #FFFFFF; color: #3D0A45">
+<button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; background: #FFFFFF; color: #8A1F96; font-weight: 700; padding: 0 14px">Exportar CSV</button>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 18px; overflow-x: auto">
+<sc-raw-table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 14px">
+<sc-raw-thead><sc-raw-tr style="text-align: left; color: #5E3A66; font-size: 13px">
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Horário</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Canal</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Destinatária</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Modelo</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Status</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0; text-align: right">Tentativas</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0"><span style="position: absolute; left: -9999px">Ações</span></sc-raw-th>
+</sc-raw-tr></sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{notifs}}" as="n" hint-placeholder-count="8">
+<sc-raw-tr style="border-bottom: 1px solid #F6EEF7">
+<sc-raw-td style="padding: 8px 14px; color: #5E3A66">{{n.h}}</sc-raw-td><sc-raw-td style="padding: 8px 14px">{{n.canal}}</sc-raw-td><sc-raw-td style="padding: 8px 14px; font-weight: 700">{{n.dest}}</sc-raw-td><sc-raw-td style="padding: 8px 14px">{{n.modelo}}</sc-raw-td>
+<sc-raw-td style="padding: 8px 14px"><span style="background: {{n.bg}}; color: {{n.fg}}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px">{{n.status}}</span></sc-raw-td>
+<sc-raw-td style="padding: 8px 14px; text-align: right">{{n.tent}}</sc-raw-td>
+<sc-raw-td style="padding: 4px 14px"><sc-if value="{{n.podeReenviar}}" hint-placeholder-val="{{ false }}"><button type="button" sc-camel-on-click="{{n.reenviar}}" style="cursor: pointer; min-height: 40px; border: 2px solid #EBCFF0; border-radius: 999px; background: #FFFFFF; color: #8A1F96; font-weight: 800; font-size: 13px; padding: 0 12px">Reenviar</button></sc-if></sc-raw-td>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+</sc-if>
+
+<sc-if value="{{isA}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<sc-raw-select aria-label="Usuário" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option>Todos os usuários</option><option>Felipe</option><option>Marina Costa</option><option>Ana Ribeiro</option><option>Sistema</option></sc-raw-select>
+<sc-raw-select aria-label="Ação" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option>Todas as ações</option><option>Login</option><option>Cadastro de mentora</option><option>Convite</option><option>Cancelamento</option><option>Override do admin</option></sc-raw-select>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 18px; overflow-x: auto">
+<sc-raw-table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: 14px">
+<sc-raw-thead><sc-raw-tr style="text-align: left; color: #5E3A66; font-size: 13px">
+<sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Quando</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Quem</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Ação</sc-raw-th><sc-raw-th scope="col" style="padding: 12px 14px; border-bottom: 1px solid #EBCFF0">Detalhe</sc-raw-th>
+</sc-raw-tr></sc-raw-thead>
+<sc-raw-tbody>
+<sc-for list="{{auditoria}}" as="a" hint-placeholder-count="8">
+<sc-raw-tr style="border-bottom: 1px solid #F6EEF7">
+<sc-raw-td style="padding: 8px 14px; color: #5E3A66; white-space: nowrap">{{a.h}}</sc-raw-td><sc-raw-td style="padding: 8px 14px; font-weight: 700">{{a.quem}}</sc-raw-td>
+<sc-raw-td style="padding: 8px 14px"><span style="background: {{a.bg}}; color: {{a.fg}}; font-weight: 800; font-size: 12px; padding: 3px 9px; border-radius: 999px; white-space: nowrap">{{a.acao}}</span></sc-raw-td>
+<sc-raw-td style="padding: 8px 14px">{{a.det}}</sc-raw-td>
+</sc-raw-tr>
+</sc-for>
+</sc-raw-tbody>
+</sc-raw-table>
+</div>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1100}}">
+var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminParticipantes.dc.html'], ['Mapa de mesas', 'AdminMapa.dc.html'], ['Mentoras', 'AdminMentoras.dc.html'], ['Mesas', 'AdminMesas.dc.html'], ['Evento', 'AdminEvento.dc.html'], ['Administradores', 'AdminUsuarios.dc.html'], ['Logs', 'AdminLogs.dc.html']];
+function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
+var NST = { 'Na fila': ['#EFE8F0', '#3D0A45'], 'Enviada': ['#C9F4EE', '#1F4A44'], 'Falhou': ['#FBDADA', '#8A1C1C'] };
+var N = [
+  ['13h24', 'WhatsApp', 'Carla Souza', 'Lembrete (15 min antes)', 'Na fila', 0],
+  ['13h21', 'E-mail', 'Joana Lima', 'Convite de horário', 'Enviada', 1],
+  ['13h21', 'WhatsApp', 'Joana Lima', 'Convite de horário', 'Enviada', 1],
+  ['13h19', 'E-mail', 'Renata Alves', 'Inscrição recebida', 'Enviada', 1],
+  ['13h19', 'WhatsApp', 'Renata Alves', 'Inscrição recebida', 'Falhou', 3],
+  ['12h58', 'WhatsApp', 'Beatriz Nunes', 'Convite de horário', 'Falhou', 3],
+  ['12h58', 'E-mail', 'Beatriz Nunes', 'Convite de horário', 'Enviada', 1],
+  ['12h40', 'E-mail', 'Mirela Santos', 'Convite expirado', 'Enviada', 1]
+];
+var AST = { 'Login': ['#EFE8F0', '#3D0A45'], 'Convite': ['#FFE1D3', '#8A3210'], 'Cancelamento': ['#FBDADA', '#8A1C1C'], 'Override do admin': ['#5B1466', '#FFFFFF'], 'Cadastro de mentora': ['#F6E4F8', '#8A1F96'], 'Confirmação': ['#C9F4EE', '#1F4A44'] };
+var A = [
+  ['14/11 13h24', 'Felipe', 'Override do admin', 'Moveu Bianca (14h15) da Mesa 12 para a Mesa 2'],
+  ['14/11 13h21', 'Ana Ribeiro', 'Convite', 'Convidou Joana Lima · 14h15 · Mesa 7'],
+  ['14/11 13h20', 'Ana Ribeiro', 'Login', 'Entrou pelo celular'],
+  ['14/11 13h05', 'Sistema', 'Cancelamento', 'Convite de Camila para Paula Costa expirou (15 min)'],
+  ['14/11 13h01', 'Beatriz Nunes', 'Cancelamento', 'Recusou o convite: horário não serve · voltou com prioridade'],
+  ['14/11 12h47', 'Tainá Rocha', 'Confirmação', 'Aceitou 12h45 · Mesa 7 com Ana'],
+  ['13/11 18h10', 'Marina Costa', 'Cadastro de mentora', 'Importou 46 mentoras via CSV'],
+  ['13/11 18h02', 'Marina Costa', 'Login', 'Entrou pelo desktop']
+];
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { aba: 'n', fN: 'todos', reenviadas: {} }; }
+  renderVals() {
+    var self = this, st = this.state;
+    return {
+      menu: menu('Logs'),
+      abaN: st.aba === 'n' ? 'true' : 'false', abaA: st.aba === 'a' ? 'true' : 'false',
+      abaNBorda: st.aba === 'n' ? '#F26430' : 'transparent', abaABorda: st.aba === 'a' ? '#F26430' : 'transparent',
+      verN: function () { self.setState({ aba: 'n' }); }, verA: function () { self.setState({ aba: 'a' }); },
+      isN: st.aba === 'n', isA: st.aba === 'a',
+      fN: st.fN, onFN: function (e) { self.setState({ fN: e.target.value }); },
+      notifs: N.map(function (n, i) { var status = st.reenviadas[i] ? 'Na fila' : n[4]; return { i: i, n: n, status: status }; })
+        .filter(function (x) { return st.fN === 'todos' || x.status === st.fN; })
+        .map(function (x) { var n = x.n, s = NST[x.status];
+          return { h: n[0], canal: n[1], dest: n[2], modelo: n[3], status: x.status, bg: s[0], fg: s[1], tent: st.reenviadas[x.i] ? n[5] + 1 : n[5],
+            podeReenviar: x.status === 'Falhou' || x.status === 'Enviada',
+            reenviar: function () { var r = Object.assign({}, self.state.reenviadas); r[x.i] = true; self.setState({ reenviadas: r }); } }; }),
+      auditoria: A.map(function (a) { var s = AST[a[2]]; return { h: a[0], quem: a[1], acao: a[2], det: a[3], bg: s[0], fg: s[1] }; })
+    };
+  }
+}
+</script>
+
+
+</body></html>
