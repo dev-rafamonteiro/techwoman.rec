@@ -175,4 +175,3 @@
 .tw-p3__intro h1 { color: var(--tw-mint-200); font-size: clamp(32px, 7vw, 56px); }
 .tw-mosaic { display: block; }
 .tw-mosaic svg { width: 100%; height: auto; display: block; }
-.tw-hero p { color: var(--tw-lilac-75); font-size: 15px; margin: 0; }

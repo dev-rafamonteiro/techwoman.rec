@@ -1,13 +1,17 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
 import { ApiError, Button, TextField, call, useAuth, useQuery, useToast } from '../../ui';
+import { safeNext } from '../../shell/auth';
 import '../public/public.css';
 
 /** M2 · Primeiro acesso / troca de senha (E13) + conferência do perfil (E28) */
 export default function M2NovaSenha() {
   const { user, refresh } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // Perfil (E28) só existe para quem tem o papel de mentora; admin só troca a senha (E13).
+  const isMentor = !!user?.roles.includes('mentor');
   const toast = useToast();
   const event = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
   const [current, setCurrent] = useState('');
@@ -26,7 +30,7 @@ export default function M2NovaSenha() {
     current: current ? undefined : 'Informe a senha provisória.',
     pw: pw.length >= PASSWORD_MIN_LENGTH ? undefined : `Use pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`,
     confirm: confirm === pw ? undefined : 'As senhas não são iguais.',
-    name: name.trim().length >= 2 ? undefined : 'Informe seu nome.',
+    name: !isMentor || name.trim().length >= 2 ? undefined : 'Informe seu nome.',
     photo: !photoUrl || /^https:\/\/\S+$/.test(photoUrl) ? undefined : 'Use um endereço https://',
   }), [current, pw, confirm, name, photoUrl]);
   const valid = !errors.current && !errors.pw && !errors.confirm && !errors.name && !errors.photo;
@@ -41,7 +45,7 @@ export default function M2NovaSenha() {
     setSubmitting(true);
     try {
       await call(ENDPOINTS.E13, { body: { currentPassword: current, newPassword: pw } });
-      if (profileTouched) {
+      if (isMentor && profileTouched) {
         try {
           await call(ENDPOINTS.E28, {
             body: {
@@ -56,7 +60,7 @@ export default function M2NovaSenha() {
         }
       }
       const u = await refresh();
-      navigate(u?.homePath ?? '/mentora/aguardando', { replace: true });
+      navigate(safeNext(params.get('next')) ?? u?.homePath ?? '/mentora/aguardando', { replace: true });
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
       if (ae?.code === 'INVALID_CREDENTIALS') setError('A senha atual não confere.');
@@ -90,6 +94,7 @@ export default function M2NovaSenha() {
         <TextField label="Confirmar senha" type="password" autoComplete="new-password" value={confirm} error={shown('confirm')} hint={<>{confirm && confirm === pw ? '✓' : '✗'} Confirmação igual à nova senha</>}
           onChange={(e) => setConfirm(e.target.value)} data-testid="m2-confirm" />
 
+        {isMentor && (<>
         <h2 className="tw-ptitle" style={{ fontSize: 17 }}>Seu perfil</h2>
         <TextField label="Nome completo" autoComplete="name" value={name} error={shown('name')}
           onChange={(e) => { setName(e.target.value); setProfileTouched(true); }} data-testid="m2-name" />
@@ -107,6 +112,7 @@ export default function M2NovaSenha() {
             </div>
           </fieldset>
         )}
+        </>)}
         <Button type="submit" size="lg" block loading={submitting} data-testid="m2-submit">Salvar e continuar</Button>
       </form>
     </div>

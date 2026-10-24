@@ -32,6 +32,15 @@ export interface ScheduleDrawerProps {
   helpText?: string;
 }
 
+/** Mensagem curta por details.reason de SLOT_UNAVAILABLE (RN04). */
+const UNAVAILABLE_TEXT: Record<string, string> = {
+  lead_time: 'Esse horário está muito próximo para enviar o convite.',
+  not_available: 'Você não está disponível nesse horário.',
+  not_in_event: 'Esse horário não faz parte do evento.',
+  mentor_inactive: 'Sua conta não pode enviar convites agora.',
+  table_inactive: 'Essa mesa não está ativa.',
+};
+
 const defaultSubmit = ({ menteeId, slotId, tableId }: { menteeId: string; slotId: string; tableId: string }) => call(ENDPOINTS.E24, { body: { menteeId, slotId, tableId } });
 
 export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions, onSubmit = defaultSubmit, mentorId, mentorPicker, warnings, onDone, submitLabel = 'Enviar convite', helpText = 'Ela tem até 15 min para confirmar; se não confirmar, o horário volta a ficar livre.' }: ScheduleDrawerProps) {
@@ -97,8 +106,12 @@ export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions
       } else if (ae.code === 'MENTOR_BUSY') {
         toast.conflict(`Você já tem uma mentoria às ${when}`, () => void load());
         void load();
+      } else if (ae.code === 'SLOT_UNAVAILABLE') {
+        const reason = (ae.details as { reason?: string } | undefined)?.reason;
+        toast.conflict(UNAVAILABLE_TEXT[reason ?? ''] ?? 'Esse horário não está mais disponível.', () => void load());
+        void load();
       } else if (ae.isConflict) {
-        toast.conflict(ae.message || 'Esse horário não está mais disponível.', () => void load());
+        toast.conflict(ae.message || 'Não foi possível agendar. Atualize e tente de novo.', () => void load());
         void load();
       } else toast.error(ae.message || 'Não foi possível enviar o convite. Tente de novo.');
     } finally {

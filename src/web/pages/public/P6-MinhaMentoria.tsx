@@ -127,7 +127,10 @@ export default function P6MinhaMentoria() {
       if (ok) toast.success(ok);
     } catch (e) {
       const ae = e as ApiError;
-      if (ae.isConflict) {
+      if (ae.code === 'INVITE_EXPIRED') {
+        // O convite expirou: recarrega e a tela mostra "O prazo para responder terminou" (você continua na fila).
+        void load(true);
+      } else if (ae.isConflict) {
         toast.conflict(ae.message, () => void load(true));
         void load(true);
       } else toast.error(ae.message || 'Não foi possível concluir agora. Tente de novo.');
@@ -293,7 +296,7 @@ export default function P6MinhaMentoria() {
       <div className="tw-hero" data-testid="p6-hero">
         <span className="tw-greet">Oi, {first}!</span>
         <div className="tw-row">{badge}</div>
-        <h1 className="tw-title" data-testid="p6-title">{title}</h1>
+        <h1 className="tw-title tw-title--sm" data-testid="p6-title">{title}</h1>
       </div>
       {body}
       {fresh}
