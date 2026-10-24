@@ -14,19 +14,21 @@ export default function A8Administradores() {
   const [creating, setCreating] = useState(false);
   const [secret, setSecret] = useState<{ title: string; password: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', email: '', role: 'admin' as 'admin' | 'super_admin', sendPasswordByEmail: false });
+  const [lastSuper, setLastSuper] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', role: 'admin' as 'admin' | 'super_admin', sendPasswordByEmail: true });
   const [formErr, setFormErr] = useState('');
   const [saving, setSaving] = useState(false);
 
   const patch = async (u: UserView, body: E43PatchBody, ok: string) => {
     setBusy(u.id);
+    setLastSuper(false);
     try {
       const r = await call(ENDPOINTS.E43Patch, { params: { id: u.id }, body });
       if (r.provisionalPassword) setSecret({ title: `Nova senha de ${u.name}`, password: r.provisionalPassword });
       else toast.success(ok);
       await q.refetch();
     } catch (e) {
-      if (e instanceof ApiError && e.code === 'LAST_SUPER_ADMIN') toast.error('Precisa existir pelo menos um super admin ativo. Promova outra pessoa antes.');
+      if (e instanceof ApiError && e.code === 'LAST_SUPER_ADMIN') setLastSuper(true);
       else toast.error(errMsg(e));
     } finally { setBusy(null); }
   };
@@ -39,7 +41,7 @@ export default function A8Administradores() {
     try {
       const r = await call(ENDPOINTS.E43Create, { body: { name: form.name.trim(), email: form.email.trim(), roles: [form.role], sendPasswordByEmail: form.sendPasswordByEmail } });
       setCreating(false);
-      setForm({ name: '', email: '', role: 'admin', sendPasswordByEmail: false });
+      setForm({ name: '', email: '', role: 'admin', sendPasswordByEmail: true });
       setSecret({ title: `Senha de ${r.user.name}`, password: r.provisionalPassword });
       await q.refetch();
     } catch (e) {
@@ -74,6 +76,7 @@ export default function A8Administradores() {
   return (
     <div className="tw-page">
       <PageHead title="Administradores" sub="Só super admin."><Button onClick={() => setCreating(true)}>Novo administrador</Button></PageHead>
+      {lastSuper && <div className="adm-note" role="alert" data-testid="last-super-admin">Precisa existir pelo menos um super admin ativo. Promova outra pessoa antes de fazer esta alteração.</div>}
       {q.status === 'loading' && <SkeletonList rows={4} height={56} />}
       {q.status === 'error' && <ErrorState error={q.error} onRetry={q.reload} />}
       {q.status === 'success' && <DataTable caption="Administradores" columns={columns} rows={q.data.items} rowKey={(u) => u.id} exportName="administradores.csv" emptyTitle="Nenhum administrador" emptyText="Crie o primeiro com “Novo administrador”." />}
@@ -85,7 +88,7 @@ export default function A8Administradores() {
           <SelectField label="Papel" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as 'admin' | 'super_admin' })}>
             <option value="admin">Admin</option><option value="super_admin">Super admin</option>
           </SelectField>
-          <CheckboxField label="Enviar a senha provisória por e-mail" checked={form.sendPasswordByEmail} onChange={(e) => setForm({ ...form, sendPasswordByEmail: e.target.checked })} />
+          <CheckboxField label="Enviar a senha provisória por e-mail ao salvar" checked={form.sendPasswordByEmail} onChange={(e) => setForm({ ...form, sendPasswordByEmail: e.target.checked })} />
           <Button loading={saving} onClick={() => void create()}>Criar</Button>
         </div>
       </Overlay>

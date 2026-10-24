@@ -9,6 +9,9 @@ import { PageHead, errMsg, useAreas, useDebounced, useTitle } from './lib/common
 
 const phoneFmt = (p: string | null) => (p ? maskPhone(p.replace(/^\+55/, '')) : '—');
 
+const NOTIF_TYPE: Record<string, string> = { registered: 'Inscrição recebida', invite: 'Convite', confirmed: 'Confirmação', reminder: 'Lembrete', expired: 'Convite expirado', cancelled: 'Cancelamento', moved: 'Mudança de horário', staff_password: 'Senha provisória' };
+const NOTIF_STATUS: Record<string, string> = { pending: 'na fila', sending: 'enviando', sent: 'enviada', failed: 'falhou', skipped: 'ignorada' };
+
 const STATUS_BADGE: Record<MenteeStatus, Parameters<typeof StatusBadge>[0]['status']> = {
   waiting: 'waiting', invited: 'invited', confirmed: 'confirmed', done: 'done', no_show: 'no_show', cancelled: 'cancelled',
 };
@@ -150,12 +153,12 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string | null; onCl
             </div>
             <section><h3>Linha do tempo</h3>
               {d.data.timeline.length === 0 ? <p>Sem eventos ainda.</p> : (
-                <ul className="adm-list">{d.data.timeline.map((t, i) => <li key={i}><span>{t.label}</span><span>{formatDateTime(t.at)}</span></li>)}</ul>
+                <ul className="adm-list">{d.data.timeline.map((t, i) => <li key={i}><span>{formatTime(t.at)} · {t.label}</span></li>)}</ul>
               )}
             </section>
             <section><h3>Notificações enviadas</h3>
               {d.data.notifications.length === 0 ? <p>Nenhuma notificação.</p> : (
-                <ul className="adm-list">{d.data.notifications.map((n) => <li key={n.id}><span>{n.type} · {n.channel === 'email' ? 'e-mail' : 'WhatsApp'}</span><span>{n.status} ({n.attempts}) · {formatDateTime(n.at)}</span></li>)}</ul>
+                <ul className="adm-list">{d.data.notifications.map((n) => <li key={n.id}><span>{n.channel === 'email' ? 'E-mail' : 'WhatsApp'} · {NOTIF_TYPE[n.type] ?? n.type} · {NOTIF_STATUS[n.status] ?? n.status}{n.attempts > 1 ? ` (${n.attempts} tentativas)` : ''}</span></li>)}</ul>
               )}
             </section>
           </div>

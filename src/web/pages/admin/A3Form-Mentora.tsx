@@ -11,7 +11,7 @@ interface FormState {
   name: string; email: string; linkedin: string; organization: string; areas: string[]; bio: string; photoUrl: string;
   availability: Set<string>; alsoAdmin: boolean; sendPasswordByEmail: boolean;
 }
-const EMPTY: FormState = { name: '', email: '', linkedin: '', organization: '', areas: [], bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: false };
+const EMPTY: FormState = { name: '', email: '', linkedin: '', organization: '', areas: [], bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
 
 const fromUser = (u: UserView): FormState => ({
   name: u.name, email: u.email, linkedin: u.linkedin ?? '', organization: u.organization ?? '', areas: u.areas, bio: u.bio ?? '',
@@ -118,7 +118,7 @@ export default function A3FormMentora() {
           )}
         </div>
         {isSuper && <CheckboxField label="Também é admin" checked={f.alsoAdmin} onChange={(e) => set('alsoAdmin', e.target.checked)} />}
-        {!editing && <CheckboxField label="Enviar a senha provisória por e-mail" checked={f.sendPasswordByEmail} onChange={(e) => set('sendPasswordByEmail', e.target.checked)} />}
+        {!editing && <CheckboxField label="Enviar a senha provisória por e-mail ao salvar" checked={f.sendPasswordByEmail} onChange={(e) => set('sendPasswordByEmail', e.target.checked)} />}
         <div className="tw-row adm-wide">
           <Button type="submit" loading={saving}>{editing ? 'Salvar alterações' : 'Cadastrar mentora'}</Button>
           <Button variant="ghost" onClick={() => nav('/admin/mentoras')}>Cancelar</Button>

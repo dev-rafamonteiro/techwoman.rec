@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ENDPOINTS, type E41PutBody, type EventConfig } from '@tw/shared';
 import { ApiError, Button, ErrorState, SkeletonList, Card, SlotToggleGrid, TextArea, TextField, call, callBlob, endpointUrl, saveBlob, useQuery, useToast } from '../../ui';
 import { PageHead, Switch, errMsg, useTitle } from './lib/common';
@@ -30,6 +30,8 @@ export default function A7Configuracoes() {
   const [d, setD] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const [gridError, setGridError] = useState('');
+  const lockRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (gridError) lockRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, [gridError]);
 
   useEffect(() => {
     if (q.status === 'success') { const { id: _i, slots: _s, ...rest } = q.data.event; setD(rest); }
@@ -64,7 +66,7 @@ export default function A7Configuracoes() {
   return (
     <div className="tw-page tw-stack">
       <PageHead title="Configurações do evento" sub="Só super admin." />
-      {gridError && <div className="adm-note" role="alert" data-testid="grid-locked">{gridError}</div>}
+      {gridError && <div className="adm-note" role="alert" data-testid="grid-locked" ref={lockRef} tabIndex={-1}>{gridError}</div>}
       {hasActive && <div className="adm-note">Há mentorias ativas: horário, duração e intervalo ficam bloqueados.</div>}
 
       <Card className="tw-stack"><b>Evento</b><div className="adm-form">

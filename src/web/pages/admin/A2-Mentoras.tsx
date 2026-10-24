@@ -45,7 +45,7 @@ export default function A2Mentoras() {
   };
 
   const [resetFor, setResetFor] = useState<MentorListItem | null>(null);
-  const [sendByEmail, setSendByEmail] = useState(false);
+  const [sendByEmail, setSendByEmail] = useState(true);
   const reset = async () => {
     const m = resetFor;
     if (!m) return;
@@ -72,7 +72,7 @@ export default function A2Mentoras() {
       render: (m) => (
         <div className="tw-row" style={{ flexWrap: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
           <LinkButton to={`/admin/mentoras/${m.id}`} variant="secondary" size="sm">Editar</LinkButton>
-          <Button variant="secondary" size="sm" disabled={busy === m.id} onClick={() => { setSendByEmail(false); setResetFor(m); }}>Redefinir senha</Button>
+          <Button variant="secondary" size="sm" disabled={busy === m.id} onClick={() => { setSendByEmail(true); setResetFor(m); }}>Redefinir senha</Button>
           <Button variant={m.status === 'active' ? 'danger' : 'mint'} size="sm" disabled={busy === m.id} onClick={() => void toggle(m)}>{m.status === 'active' ? 'Desativar' : 'Ativar'}</Button>
           <Link to={`/admin/mapa?mentora=${m.id}`} className="tw-btn tw-btn--ghost tw-btn--sm">Ver agenda</Link>
         </div>

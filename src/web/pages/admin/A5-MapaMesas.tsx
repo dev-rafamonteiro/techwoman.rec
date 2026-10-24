@@ -83,7 +83,7 @@ export default function A5MapaMesas() {
           </table>
         </div>
       )}
-      <Overlay title={sel ? `${sel.mentee.name} · mesa ${sel.table.number}` : 'Mentoria'} open={!!sel} onClose={() => setSelected(null)}>
+      <Overlay title={sel ? `Mesa ${sel.table.number} · ${formatTime(sel.startAt)}` : 'Mentoria'} open={!!sel} onClose={() => setSelected(null)}>
         {sel && <CellDetail a={sel} slots={slots} tables={activeTables} appts={appts} onDone={async () => { setSelected(null); await q.refetch(); }} onConflict={(m) => toast.conflict(m, q.refetch)} />}
       </Overlay>
     </div>
@@ -116,19 +116,14 @@ function CellDetail({ a, slots, tables, appts, onDone, onConflict }: {
 
   return (
     <div className="tw-stack" data-testid="cell-detail">
-      <div className="tw-row"><StatusBadge status={a.status} />{a.mentee.priority && <PriorityBadge />}</div>
-      <dl className="adm-dl">
-        <dt>Mentora</dt><dd>{a.mentor.name}</dd>
-        <dt>Participante</dt><dd>{a.mentee.name}</dd>
-        <dt>Horário</dt><dd>{formatRange(a.startAt, a.endAt)}</dd>
-        <dt>Mesa</dt><dd>{a.table.number}{a.table.location ? ` · ${a.table.location}` : ''}</dd>
-      </dl>
+      <p style={{ margin: 0 }}>{a.mentor.name} com {a.mentee.name} <StatusBadge status={a.status} />{a.mentee.priority && <> <PriorityBadge /></>}</p>
+      <p style={{ margin: 0 }} className="adm-sub">{formatRange(a.startAt, a.endAt)}{a.table.location ? ` · ${a.table.location}` : ''}</p>
       {canAct && !moving && (
-        <div className="tw-row">
-          {a.status === 'invited' && <Button size="sm" variant="mint" disabled={busy} onClick={() => void run({ action: 'confirm_in_person' }, 'Presença confirmada.')}>Confirmar presencialmente</Button>}
-          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setMoving(true)}>Mover</Button>
-          {(a.status === 'confirmed' || a.status === 'in_progress') && <Button size="sm" variant="secondary" disabled={busy} onClick={() => { if (window.confirm('Marcar como não compareceu?')) void run({ action: 'no_show' }, 'Marcada como não compareceu.'); }}>Não compareceu</Button>}
-          <Button size="sm" variant="danger" disabled={busy} onClick={() => { if (window.confirm('Cancelar esta mentoria? A participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Mentoria cancelada.'); }}>Cancelar</Button>
+        <div className="tw-stack" style={{ gap: 8 }}>
+          <Button variant="secondary" block disabled={busy} onClick={() => setMoving(true)}>Mover para outra mesa ou horário</Button>
+          {a.status === 'invited' && <Button variant="mint" block disabled={busy} onClick={() => void run({ action: 'confirm_in_person' }, 'Presença confirmada.')}>Confirmar presencialmente</Button>}
+          {(a.status === 'confirmed' || a.status === 'in_progress') && <Button variant="secondary" block disabled={busy} onClick={() => { if (window.confirm('Marcar como não compareceu?')) void run({ action: 'no_show' }, 'Marcada como não compareceu.'); }}>Marcar não compareceu</Button>}
+          <Button variant="danger-link" block disabled={busy} onClick={() => { if (window.confirm('Cancelar esta mentoria? A participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Mentoria cancelada.'); }}>Cancelar</Button>
         </div>
       )}
       {moving && (
