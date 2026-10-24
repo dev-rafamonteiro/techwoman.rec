@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blockedAvailabilityRemovals, checkAvailabilityUpdate, mentorDisableBlockers } from "@tw/api/domain";
+import { mentorDisableBlockers } from "@tw/api/domain";
 import { S, min } from "./_util.js";
 
 const all = ["s01", "s02", "s03", "s04"];

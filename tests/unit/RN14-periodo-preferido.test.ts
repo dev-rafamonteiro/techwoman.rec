@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchesPeriod, periodOfStart, reminderSendAt, shouldSendReminder, suggestTable } from "@tw/api/domain";
+import { canUpdatePreferredPeriod, matchesPeriod, periodOfStart } from "@tw/api/domain";
 import { S, min, recife } from "./_util.js";
 
 const TZ = "America/Recife";

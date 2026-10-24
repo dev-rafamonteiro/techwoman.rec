@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isRuleError, planTransition, type TransitionAction } from "@tw/api/domain";
+import { type TransitionAction, isRuleError, planTransition } from "@tw/api/domain";
 import type { AppointmentStatus } from "@tw/shared";
 import { S, min } from "./_util.js";
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canUpdatePreferredPeriod, isRegistrationOpen, normalizeEmail, registrationOutcome } from "@tw/api/domain";
+import { isRegistrationOpen } from "@tw/api/domain";
 import { S, min } from "./_util.js";
 
 describe("RN02 janela de inscrição", () => {

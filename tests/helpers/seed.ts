@@ -64,6 +64,7 @@ export function menteeDoc(i: number, over: Partial<MenteeDoc> = {}): { token: st
       lastOutcome: null,
       tokenHash: sha256(token),
       linkSendCount: 1,
+      tokenVersion: 1,
       anonymizedAt: null,
       version: 1,
       createdAt: now,

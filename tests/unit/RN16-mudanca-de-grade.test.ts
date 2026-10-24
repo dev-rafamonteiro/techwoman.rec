@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAuditEntry, checkGridChange, checkSuperAdminInvariant } from "@tw/api/domain";
+import { checkGridChange } from "@tw/api/domain";
 
 const grid = { date: "2026-11-14", timezone: "America/Recife", startTime: "09:00", endTime: "18:00", slotMinutes: 40, gapMinutes: 5 };
 
