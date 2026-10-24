@@ -33,3 +33,5 @@
 .tw-dots { display: flex; gap: 6px; }
 .tw-dots span { width: 14px; height: 14px; border-radius: 50%; background: var(--tw-lilac-200); }
 .tw-dots span.on { background: var(--tw-orange-500); }
+.tw-pub .tw-card { color: var(--color-ink); }
+.tw-pub__head { flex-wrap: wrap; }
