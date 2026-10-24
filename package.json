@@ -20,12 +20,12 @@
     "test": "npm run -w @tw/tests test",
     "test:integration": "npm run -w @tw/tests test:integration",
     "test:e2e": "npm run -w @tw/tests test:e2e",
-    "db:indexes": "npm run -w @tw/db indexes",
+    "db:indexes": "npm run -w @tw/db indexes --",
     "db:seed": "npm run -w @tw/db seed",
     "db:seed:demo": "npm run -w @tw/db seed:demo --",
-    "stack:dev": "docker compose -f ops/compose.dev.yaml up --build",
+    "stack:dev": "docker compose -f ops/compose.dev.yaml --profile dev up --build",
     "stack:dev:down": "docker compose -f ops/compose.dev.yaml down",
-    "mongo:up": "docker compose -f ops/compose.dev.yaml up -d mongo-local"
+    "mongo:up": "docker compose -f ops/compose.dev.yaml --profile test up -d mongo-local"
   },
   "devDependencies": {
     "npm-run-all2": "^7.0.0",

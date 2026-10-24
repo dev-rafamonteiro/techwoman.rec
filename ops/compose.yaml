@@ -70,7 +70,8 @@ services:
       MENTEE_TOKEN_SECRET_FILE: /run/secrets/mentee_token_secret
       TURNSTILE_SECRET_FILE: /run/secrets/turnstile_secret
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
-    secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret]
+      OUTBOX_KEY_FILE: /run/secrets/outbox_key
+    secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret, outbox_key]
     networks: [app, egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js"]
@@ -94,7 +95,8 @@ services:
       WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
       WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
       WHATSAPP_TOKEN_FILE: /run/secrets/whatsapp_token
-    secrets: [mongo_uri, mentee_token_secret, email_api_key, whatsapp_token]
+      OUTBOX_KEY_FILE: /run/secrets/outbox_key
+    secrets: [mongo_uri, mentee_token_secret, email_api_key, whatsapp_token, outbox_key]
     networks: [egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js", "worker"]
@@ -115,5 +117,6 @@ secrets:
   mentee_token_secret: { file: ./secrets/mentee_token_secret }
   turnstile_secret: { file: ./secrets/turnstile_secret }
   email_api_key: { file: ./secrets/email_api_key }
+  outbox_key: { file: ./secrets/outbox_key }
   whatsapp_token: { file: ./secrets/whatsapp_token }
   cf_tunnel_token: { file: ./secrets/cf_tunnel_token }

@@ -1,7 +1,9 @@
 # Ambiente local completo, sem cloudflared:
-#   docker compose -f ops/compose.dev.yaml up --build     (web em http://localhost:8080)
-#   docker compose -f ops/compose.dev.yaml up -d mongo-local   (só o banco, p/ rodar api/testes no host)
-# mongo-local: replica set (transações e Change Streams do SSE, E38) via mongodb-atlas-local.
+#   docker compose -f ops/compose.dev.yaml --profile dev up --build     (web em http://localhost:8080)
+#   docker compose -f ops/compose.dev.yaml --profile test up -d mongo-local   (só p/ os testes de integração: MONGODB_URI_TEST)
+#   docker compose -f ops/compose.dev.yaml --profile dev up -d mailpit   (caixa de e-mail de dev: http://127.0.0.1:8025)
+# Banco da aplicação: sempre o Atlas (MONGODB_URI do .env da raiz, via env_file). Nenhum banco local é criado para api/worker.
+# mongo-local (perfil test): replica set via mongodb-atlas-local, usado só pelos testes de integração.
 # Valores abaixo são só de desenvolvimento local; nada aqui é segredo real.
 x-dev-env: &dev-env
   NODE_ENV: development
@@ -9,7 +11,6 @@ x-dev-env: &dev-env
   EVENT_ID: ${EVENT_ID:-dev}
   PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
   MONGODB_DB: ${MONGODB_DB:-techwoman}
-  MONGODB_URI: mongodb://mongo-local:27017/?directConnection=true
   LOG_LEVEL: info
   TRUST_PROXY: "true"
   COOKIE_SECURE: "false"
@@ -20,10 +21,17 @@ x-dev-env: &dev-env
   TURNSTILE_SITE_KEY: 1x00000000000000000000AA
   # EMAIL_PROVIDER, EMAIL_API_KEY e EMAIL_FROM vêm do .env da raiz (Resend); sem eles, o worker só registra em log.
   WHATSAPP_ENABLED: "false"
+  # Mailpit (perfil dev, rede egress): SMTP sem auth/TLS. `environment` vence o .env da raiz (nunca usa o Resend em dev).
+  EMAIL_TRANSPORT: smtp
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+  # chave AES-256 da outbox (senha provisória cifrada, 32 bytes em base64); só de dev, em produção é o secret outbox_key
+  OUTBOX_KEY: ${OUTBOX_KEY:-1wb7LU18bDiW4H+NzUXjK7hZzlliuxBqoCQ4itcE0IA=}
 
 services:
   mongo-local:
     image: mongodb/mongodb-atlas-local:8
+    profiles: [test]
     ports:
       - "27017:27017"
     # sem volume de propósito: atlas-local não reinicia limpo sobre dados de um container anterior (RSGhost);
@@ -47,9 +55,7 @@ services:
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
-    networks: [dev]
-    depends_on:
-      mongo-local: { condition: service_healthy }
+    networks: [dev, egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js"]
       interval: 10s
@@ -68,15 +74,27 @@ services:
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
-    networks: [dev]
-    depends_on:
-      mongo-local: { condition: service_healthy }
+    networks: [dev, egress]
     healthcheck:
       test: ["CMD", "node", "dist/health.js", "worker"]
       interval: 15s
       timeout: 5s
       retries: 6
       start_period: 15s
+
+  # Recebe todo e-mail de dev (nada sai para fora). SMTP: mailpit:1025 nos containers, 127.0.0.1:1025 no host.
+  mailpit:
+    image: axllent/mailpit:latest
+    profiles: [dev]
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    networks: [egress]
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   web:
     build:
@@ -100,3 +118,4 @@ services:
 
 networks:
   dev: {}
+  egress: {}

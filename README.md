@@ -3,7 +3,6 @@ O Tech Woman Recife 2026 é um evento que visa ajudar mulheres a descobrir carre
 
 ## Estrutura
 
-- `index.html`, `jornada.html`, `css/`, `js/`, `assets/`: site estático original (intacto).
 - `docs/PLAN.md` (backend, regras RN, endpoints E) e `docs/UI-SPEC.md` (telas P, M, A): especificações.
 - `src/shared` (`@tw/shared`), `src/db` (`@tw/db`), `src/api` (`@tw/api`: server, worker, health), `src/web` (`@tw/web`), `tests` (`@tw/tests`): monorepo npm workspaces.
 - `ops/`: Dockerfiles, `nginx.conf`, `compose.yaml` (produção) e `compose.dev.yaml` (local).
@@ -15,28 +14,25 @@ Requisitos: Node 24 (imagens usam `node:24-alpine`; Node mais novo funciona loca
 ```sh
 cp .env.example .env        # preencha localmente; nunca commite
 npm install
-npm run mongo:up            # sobe só o mongo-local (replica set) em localhost:27017
-npm run db:indexes          # cria índices
+npm run db:indexes -- --wait # índices, validadores e Atlas Search no banco do MONGODB_URI (Atlas)
 npm run db:seed             # evento, mesas e super admin (se SUPER_ADMIN_EMAIL definido)
 npm run dev                 # api + web com reload
 ```
 
-Use `MONGODB_URI=mongodb://localhost:27017/?directConnection=true` (e `MONGODB_URI_TEST` igual) no `.env` local.
-Para índices e seed sem gravar nada no `.env`, exporte as variáveis só no shell:
+O banco da aplicação é sempre o Atlas: `MONGODB_URI` no `.env` aponta para o cluster (banco `techwoman`), tanto no
+host quanto nos containers (`env_file`); o compose não cria banco local para api e worker. O usuário do banco só tem
+`readWrite`: a API não roda `collMod` quando o validador já está igual; se um validador mudar, aplique com um usuário
+dbAdmin (`npm run db:indexes`).
 
-```sh
-MONGODB_URI='mongodb://localhost:27017/?directConnection=true' MONGODB_DB=techwoman_dev \
-  SUPER_ADMIN_EMAIL=admin@dev.local SUPER_ADMIN_PASSWORD='<senha-de-dev-com-12+-caracteres>' \
-  npm run db:seed
-```
-
-Para os testes de integração use `MONGODB_URI_TEST` (mesma URI) com bancos próprios (ex. `tw_e2e`).
-O mongo-local é necessário porque transações e Change Streams (SSE, E38) exigem replica set.
+O mongo-local existe só para os testes de integração (`MONGODB_URI_TEST`; `tests/helpers/env.ts` recusa Atlas):
+`npm run mongo:up` o sobe no perfil `test`. Transações e Change Streams (SSE, E38) exigem replica set, por isso
+mongodb-atlas-local.
 
 ## Testes
 
 ```sh
 npm test                    # unitários
+npm run mongo:up            # mongo-local (perfil test) em localhost:27017
 npm run test:integration    # integração, usa MONGODB_URI_TEST (mongo-local no ar)
 npm run test:e2e            # Playwright (API :3100, vite :5180, banco tw_e2e; E2E_API_PORT/E2E_WEB_PORT mudam; E2E_BASE_URL usa stack já no ar)
 ```
@@ -44,7 +40,7 @@ npm run test:e2e            # Playwright (API :3100, vite :5180, banco tw_e2e; E
 ## Stack completa com containers
 
 ```sh
-docker compose -f ops/compose.dev.yaml up --build   # mongo-local + api + worker + web
+docker compose -f ops/compose.dev.yaml --profile dev up --build   # api + worker (Atlas) + web + mailpit
 # front em http://localhost:8080, API em http://localhost:8080/api/
 docker compose -f ops/compose.dev.yaml down
 ```
@@ -72,9 +68,24 @@ Os e-mails da massa são `delivered+tw-demo-<nome>@resend.dev` (endereços de te
 Para receber de verdade, use `DEMO_EMAIL_TEMPLATE='voce+{slug}@seu-dominio'`. Os convites pendentes vencem em
 15 minutos (RN da janela de resposta); recarregue com `--reset` antes da apresentação.
 
+### E-mail de dev (Mailpit) e chave da outbox
+
+- **Mailpit** (`axllent/mailpit`, perfil `dev`, rede `egress`): recebe todo e-mail de dev; nada sai para fora. Suba só ele com
+  `docker compose -f ops/compose.dev.yaml --profile dev up -d mailpit`. Interface web em http://127.0.0.1:8025 (só loopback).
+  SMTP sem autenticação nem TLS: **containers** (`api`, `worker`) usam `SMTP_HOST=mailpit` `SMTP_PORT=1025` (já definidos no compose);
+  **host** (worker ou testes rodando fora do compose) usa `SMTP_HOST=127.0.0.1` `SMTP_PORT=1025`. No `.env` da raiz (processos no host) use `EMAIL_TRANSPORT=smtp`; nos containers o compose já força `smtp`.
+  Limpar a caixa: `curl -X DELETE http://127.0.0.1:8025/api/v1/messages`; listar: `GET /api/v1/messages`.
+- **`outbox_key`**: Docker secret com a chave AES-256-GCM da senha provisória na `outbox` (32 bytes aleatórios em base64, sem quebra de linha).
+  Produção: arquivo `ops/secrets/outbox_key` (gitignored; gere com `head -c 32 /dev/urandom | base64 | tr -d '\n' > ops/secrets/outbox_key`),
+  lido via `OUTBOX_KEY_FILE=/run/secrets/outbox_key` em `api` e `worker`. Dev: `OUTBOX_KEY` fixo em `ops/compose.dev.yaml`
+  (só de dev). No host, exporte `OUTBOX_KEY` (ou `OUTBOX_KEY_FILE=ops/secrets/outbox_key`).
+- **Variáveis novas** (`.env.example`, sem valores): `EMAIL_TRANSPORT`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`/`SMTP_PASS_FILE`, `SMTP_SECURE`, `AWS_REGION`,
+  `EMAIL_FROM`, `EMAIL_REPLY_TO`, `OUTBOX_KEY`/`OUTBOX_KEY_FILE`, `PUBLIC_BASE_URL`.
+- Nota histórica: `autoEmbed` (voyage-4) não funciona no `mongodb-atlas-local` (8.3.4 e 8.3.13: `voyage-4 not registered yet`); a busca é só full text (`$search`).
+
 Produção (`ops/compose.yaml`): `cloudflared`, `web`, `api`, `worker`; redes `edge`, `app` (`internal: true`) e `egress`;
 nenhuma porta publicada. Segredos em arquivos `ops/secrets/<nome>` (gitignored): `mongo_uri`, `jwt_secret`,
-`turnstile_secret`, `email_api_key`, `whatsapp_token`, `cf_tunnel_token`. A aplicação lê `VAR` ou `VAR_FILE`.
+`turnstile_secret`, `email_api_key`, `outbox_key`, `whatsapp_token`, `cf_tunnel_token`. A aplicação lê `VAR` ou `VAR_FILE`.
 
 ```sh
 EVENT_ID=... PUBLIC_BASE_URL=https://techwoman.dev docker compose -f ops/compose.yaml up -d --build --scale api=4

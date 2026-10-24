@@ -2,6 +2,8 @@
 design/*
 !design/source/
 !design/screens/
+!design/email/
+!design/admin/
 
 # Segredos e ambiente
 .env
