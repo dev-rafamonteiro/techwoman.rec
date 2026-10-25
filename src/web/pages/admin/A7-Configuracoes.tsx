@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_REMINDERS, ENDPOINTS, MAX_REMINDERS, type E41PutBody, type EventConfig, type ReminderRule } from '@tw/shared';
+import { DEFAULT_REMINDERS, DEFAULT_WHATSAPP_LISTS, ENDPOINTS, MAX_REMINDERS, WHATSAPP_LIST_VARS, invalidWhatsappListVariable, type E41PutBody, type EventConfig, type ReminderRule, type WhatsappListKind } from '@tw/shared';
 import { ApiError, ErrorState, SkeletonList, Overlay, SelectField, TextArea, TextField, call, callBlob, endpointUrl, saveBlob, useQuery, useToast } from '../../ui';
 import { PageHead, Switch, errMsg, useTitle } from './lib/common';
 import './lib/a7-a9.css';
@@ -15,6 +15,19 @@ const TEMPLATE_LABELS: [keyof EventConfig['templates'], string][] = [
   ['registered', 'Inscrição recebida'], ['invite', 'Convite de horário'], ['confirmed', 'Confirmação'],
   ['reminder', 'Lembrete'], ['expired', 'Convite expirado'], ['cancelled', 'Cancelamento pela mentora'],
 ];
+/** Quando o texto editável ainda é usado, já que o convite e o primeiro lembrete vão como menu pelo WhatsApp. */
+const TEMPLATE_HINTS: Partial<Record<keyof EventConfig['templates'], string>> = {
+  invite: 'Usado quando o WhatsApp sai em texto simples (sem menu).',
+  reminder: 'Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença.',
+};
+/** Menus do WhatsApp (RN18, RN20): só título e texto mudam; rodapé, botão e opções são fixos. */
+const LIST_BLOCKS: { kind: WhatsappListKind; label: string; options: [string, string] }[] = [
+  { kind: 'invite', label: 'Convite (menu do WhatsApp)', options: ['Aceito', 'Não posso'] },
+  { kind: 'presence', label: 'Confirmação de presença (menu do WhatsApp)', options: ['Sim, confirmo', 'Não poderei ir'] },
+];
+const LIST_SAMPLE: Record<string, string> = { nome: 'Ana', mentora: 'Tatiana Barros', horario: '9h00', mesa: 'Mesa 5', prazo: '8h50', minutos: '15', link: 'https://techwoman.dev/l/IEO31Kd' };
+const fillSample = (t: string) => t.replace(/\{(\w+)\}/g, (m, k: string) => LIST_SAMPLE[k] ?? m);
+
 const toMin = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); return (h ?? 0) * 60 + (m ?? 0); };
 const fmt = (min: number) => `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
 const slug = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
@@ -84,6 +97,13 @@ export default function A7Configuracoes() {
       : reminders.some((r) => r.channels.length === 0) ? 'Escolha ao menos um canal em cada lembrete.' : '';
   const reminderSummary = [...reminders].sort((a, b) => b.minutesBefore - a.minutesBefore).map((r) => `${r.minutesBefore} min`).join(', ');
 
+  const lists = d.whatsappLists ?? DEFAULT_WHATSAPP_LISTS;
+  const setList = (kind: WhatsappListKind, f: 'title' | 'description', v: string) => set('whatsappLists', { ...lists, [kind]: { ...lists[kind], [f]: v } });
+  const badListVar = invalidWhatsappListVariable(lists);
+  const listError = (kind: WhatsappListKind, f: 'title' | 'description') =>
+    !lists[kind][f].trim() ? 'Preencha este campo.' : badListVar?.field === `whatsappLists.${kind}.${f}` ? `{${badListVar.variable}} não existe nesta mensagem.` : undefined;
+  const listsInvalid = LIST_BLOCKS.some(({ kind }) => !!listError(kind, 'title') || !!listError(kind, 'description'));
+
   const save = async () => {
     setSaving(true); setGridError('');
     const body: E41PutBody = { ...d, areas: d.areas.map((a) => ({ key: a.key || slug(a.label), label: a.label.trim() })) };
@@ -112,7 +132,7 @@ export default function A7Configuracoes() {
   return (
     <div className="tw-page tw-stack a79 a7">
       <PageHead title="Configurações do evento" sub="Só o super admin vê esta área.">
-        <button type="button" className="a79-btn a79-btn--o a79-btn--lg" disabled={saving || timesInvalid || d.areas.length === 0 || !!reminderError} aria-busy={saving || undefined} onClick={() => void save()}>
+        <button type="button" className="a79-btn a79-btn--o a79-btn--lg" disabled={saving || timesInvalid || d.areas.length === 0 || !!reminderError || listsInvalid} aria-busy={saving || undefined} onClick={() => void save()}>
           {saving && <span className="tw-spinner" aria-hidden="true" />}Salvar configurações
         </button>
       </PageHead>
@@ -218,11 +238,35 @@ export default function A7Configuracoes() {
             <div><button type="button" className="a79-btn a79-btn--line" onClick={() => setPreviewOpen(true)} data-testid="email-preview-open">Prévia dos e-mails</button></div>
           </section>
 
+          <section className="a7-sec" aria-labelledby="a7-lists" data-testid="a7-lists">
+            <div className="a7-sec__head"><h2 id="a7-lists">Menus do WhatsApp</h2><span className="a79-hint">As opções e o rodapé são fixos: as respostas da participante dependem deles.</span></div>
+            {LIST_BLOCKS.map(({ kind, label, options }) => (
+              <div key={kind} className="a7-list" data-testid={`a7-list-${kind}`}>
+                <div className="a7-list__fields">
+                  <h3>{label}</h3>
+                  <TextField label="Título" maxLength={60} value={lists[kind].title} onChange={(e) => setList(kind, 'title', e.target.value)} error={listError(kind, 'title')} />
+                  <TextArea label="Texto" rows={4} maxLength={1000} value={lists[kind].description} onChange={(e) => setList(kind, 'description', e.target.value)} error={listError(kind, 'description')}
+                    hint={`Variáveis: ${WHATSAPP_LIST_VARS[kind].map((v) => `{${v}}`).join(' ')}`} />
+                </div>
+                <div className="a7-wa" aria-label={`Prévia: ${label}`}>
+                  <div className="a7-wa__bubble">
+                    <strong>{fillSample(lists[kind].title)}</strong>
+                    <p>{fillSample(kind === 'invite' && !lists[kind].description.includes('{link}') ? `${lists[kind].description}\nDetalhes: {link}` : lists[kind].description)}</p>
+                    <small>Se preferir, responda SIM ou NÃO</small>
+                    <span className="a7-wa__btn">☰ Responder</span>
+                  </div>
+                  <ul className="a7-wa__opts" aria-label="Opções fixas">{options.map((o) => <li key={o}><span aria-hidden="true">○</span>{o}</li>)}</ul>
+                  <small className="tw-field__hint">Prévia com dados de exemplo.</small>
+                </div>
+              </div>
+            ))}
+          </section>
+
           <section className="a7-sec" aria-labelledby="a7-msgs">
             <div className="a7-sec__head"><h2 id="a7-msgs">Textos do WhatsApp</h2><span className="a79-hint">Variáveis: {'{nome}'} {'{mentora}'} {'{mesa}'} {'{horario}'}</span></div>
             <div className="a7-msgs">
               {TEMPLATE_LABELS.map(([k, label]) => (
-                <TextArea key={k} label={label} rows={2} maxLength={1000} value={d.templates[k]} onChange={(e) => set('templates', { ...d.templates, [k]: e.target.value })} />
+                <TextArea key={k} label={label} rows={2} maxLength={1000} hint={TEMPLATE_HINTS[k]} value={d.templates[k]} onChange={(e) => set('templates', { ...d.templates, [k]: e.target.value })} />
               ))}
             </div>
           </section>

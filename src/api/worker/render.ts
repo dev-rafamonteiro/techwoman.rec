@@ -1,4 +1,4 @@
-import { formatTimeBR } from '@tw/shared';
+import { DEFAULT_WHATSAPP_LISTS, formatTimeBR } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, UserDoc, TableDoc } from '@tw/db';
 import { inviteRowId, presenceMinutes, presenceRowId } from '../domain/index.js';
 import type { NotifierList } from './notifier.js';
@@ -31,21 +31,12 @@ const FIXED: Record<string, string> = {
   invite_unclear: 'Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO.',
 };
 
-/** List Message de presença (RN18, texto fixo): primeiro lembrete pelo WhatsApp. */
-const PRESENCE_LIST = {
-  title: 'Oi, {nome}!',
-  description: 'Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?',
-  footer: 'Se preferir, responda SIM ou NÃO',
-  button: 'Responder',
-};
-
-/** List Message do convite (RN20, texto fixo): item `whatsapp` do `invite`. */
-const INVITE_LIST = {
-  title: 'Oi, {nome}!',
-  description: '{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}',
-  footer: 'Se preferir, responda SIM ou NÃO',
-  button: 'Responder',
-};
+/**
+ * List Messages (RN18 presença, RN20 convite): título e texto vêm de `events.whatsappLists` (A7); rodapé, botão e
+ * opções ficam fixos, porque E47 decide pelo `rowId` e pelas palavras SIM/NÃO.
+ */
+const LIST_FOOTER = 'Se preferir, responda SIM ou NÃO';
+const LIST_BUTTON = 'Responder';
 
 export interface RenderInput {
   item: OutboxDoc;
@@ -80,12 +71,15 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
     link: i.links?.personal ?? '',
   };
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
+  const lists = event.whatsappLists ?? DEFAULT_WHATSAPP_LISTS;
   if (i.list === 'invite' && a) {
+    // sem {link} no texto editado, o link da página vai numa linha nova (PLAN, events.whatsappLists)
+    const desc = lists.invite.description.includes('{link}') || !vars['link'] ? lists.invite.description : `${lists.invite.description}\nDetalhes: {link}`;
     const list: NotifierList = {
-      title: fill(INVITE_LIST.title),
-      description: fill(INVITE_LIST.description),
-      footer: INVITE_LIST.footer,
-      button: INVITE_LIST.button,
+      title: fill(lists.invite.title),
+      description: fill(desc),
+      footer: LIST_FOOTER,
+      button: LIST_BUTTON,
       sections: [{
         title: 'Convite',
         rows: [
@@ -98,10 +92,10 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
   }
   if (i.list === 'presence' && a) {
     const list: NotifierList = {
-      title: fill(PRESENCE_LIST.title),
-      description: fill(PRESENCE_LIST.description),
-      footer: PRESENCE_LIST.footer,
-      button: PRESENCE_LIST.button,
+      title: fill(lists.presence.title),
+      description: fill(lists.presence.description),
+      footer: LIST_FOOTER,
+      button: LIST_BUTTON,
       sections: [{
         title: 'Confirmação',
         rows: [

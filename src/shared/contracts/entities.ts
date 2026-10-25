@@ -198,6 +198,33 @@ export type ReminderRule = z.infer<typeof ReminderRuleSchema>;
 /** Padrão (RN15): 15 min antes, pelo WhatsApp (e-mail se não houver WhatsApp). */
 export const DEFAULT_REMINDERS: ReminderRule[] = [{ minutesBefore: 15, channels: ['whatsapp'] }];
 
+/** Título e texto editáveis (A7) das List Messages do WhatsApp; rodapé, botão e opções são fixos (RN18, RN20). */
+export const WhatsappListTextSchema = z.object({ title: z.string().trim().min(1).max(60), description: z.string().trim().min(1).max(1000) }).strict();
+export const WhatsappListsSchema = z.object({ invite: WhatsappListTextSchema, presence: WhatsappListTextSchema }).strict();
+export type WhatsappLists = z.infer<typeof WhatsappListsSchema>;
+export type WhatsappListKind = keyof WhatsappLists;
+/** Padrão (UI-SPEC, Mensagens enviadas). */
+export const DEFAULT_WHATSAPP_LISTS: WhatsappLists = {
+  invite: { title: 'Oi, {nome}!', description: '{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}' },
+  presence: { title: 'Oi, {nome}!', description: 'Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?' },
+};
+/** Variáveis aceitas em cada lista (E41 recusa as outras). */
+export const WHATSAPP_LIST_VARS: Record<WhatsappListKind, readonly string[]> = {
+  invite: ['nome', 'mentora', 'horario', 'mesa', 'prazo', 'link'],
+  presence: ['nome', 'mentora', 'horario', 'mesa', 'minutos', 'link'],
+};
+/** Primeira variável desconhecida das listas, ou null. */
+export function invalidWhatsappListVariable(lists: WhatsappLists): { field: string; variable: string } | null {
+  for (const kind of ['invite', 'presence'] as const) {
+    for (const f of ['title', 'description'] as const) {
+      for (const m of lists[kind][f].matchAll(/\{(\w+)\}/g)) {
+        if (!WHATSAPP_LIST_VARS[kind].includes(m[1]!)) return { field: `whatsappLists.${kind}.${f}`, variable: m[1]! };
+      }
+    }
+  }
+  return null;
+}
+
 export const EventConfigSchema = z.object({
   id: z.string(),
   name: z.string().min(1).max(120),
@@ -231,6 +258,8 @@ export const EventConfigSchema = z.object({
     .max(MAX_REMINDERS)
     .refine((r) => new Set(r.map((x) => x.minutesBefore)).size === r.length, { message: 'Cada lembrete precisa de um tempo diferente.' })
     .optional(),
+  /** Título e texto das List Messages; ausente = DEFAULT_WHATSAPP_LISTS. */
+  whatsappLists: WhatsappListsSchema.optional(),
   version: z.number().int(),
 });
 export type EventConfig = z.infer<typeof EventConfigSchema>;

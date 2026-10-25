@@ -46,6 +46,8 @@ export interface EventDoc {
   emailSubjects?: Partial<Record<string, string>>;
   /** Lembretes antes de cada mentoria (A7); ausente = um lembrete 15 min antes pelo WhatsApp (RN15). */
   reminders?: { minutesBefore: number; channels: ('email' | 'whatsapp')[] }[];
+  /** Título e texto das List Messages do WhatsApp (A7); ausente = padrão de `@tw/shared` (RN18, RN20). */
+  whatsappLists?: { invite: { title: string; description: string }; presence: { title: string; description: string } };
   consentVersion: string;
   version: number;
   updatedAt: Date;
