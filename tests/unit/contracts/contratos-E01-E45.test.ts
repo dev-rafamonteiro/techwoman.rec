@@ -8,6 +8,7 @@ import {
   SCHEDULE_CONFLICT_CODES,
   E02BodySchema,
   E04BodySchema,
+  E08BodySchema,
   E10BodySchema,
   E21BodySchema,
   E24BodySchema,
@@ -19,11 +20,11 @@ import {
 } from "@tw/shared";
 
 const PLAN_CODES = [
-  "E01", "E02", "E03", "E04", "E05",
+  "E01", "E02", "E03", "E04", "E05", "E07", "E08",
   "E10", "E11", "E12", "E13",
   "E20", "E21", "E22", "E23", "E24", "E25", "E26", "E27", "E28",
   "E30", "E31", "E32", "E33", "E34", "E35", "E36", "E37", "E38", "E39",
-  "E40", "E41", "E42", "E43", "E44", "E45",
+  "E40", "E41", "E42", "E43", "E44", "E45", "E47", "E48",
 ];
 
 /** Todo objeto Zod do corpo precisa ser .strict() (PLAN: segurança, "Zod com strict() em todo corpo"). */
@@ -46,7 +47,7 @@ function nonStrictObjects(schema: z.ZodType, path = "$"): string[] {
   return bad;
 }
 
-describe("contratos: catálogo E01–E45", () => {
+describe("contratos: catálogo E01–E48", () => {
   it("todo código do PLAN aparece em ENDPOINTS", () => {
     const codes = new Set(ENDPOINT_LIST.map((e) => e.code));
     for (const c of PLAN_CODES) expect(codes.has(c), `falta ${c}`).toBe(true);
@@ -61,11 +62,22 @@ describe("contratos: catálogo E01–E45", () => {
     }
   });
 
-  it("E04, E24, E26 aceitam Idempotency-Key; E02 exige Turnstile", () => {
+  it("E04, E08, E24, E26 aceitam Idempotency-Key; E02 exige Turnstile; E47 sem CSRF", () => {
     expect(ENDPOINTS.E04.idempotent).toBe(true);
+    expect(ENDPOINTS.E08.idempotent).toBe(true);
+    expect(ENDPOINTS.E47.auth).toBe("public");
+    expect(ENDPOINTS.E47.csrf).toBe(false);
     expect(ENDPOINTS.E24.idempotent).toBe(true);
     expect(ENDPOINTS.E26.idempotent).toBe(true);
     expect(ENDPOINTS.E02.turnstile).toBe(true);
+  });
+
+  it("E48: público, GET /l/:code; código fora do formato não dá 422 (vira '')", () => {
+    expect(ENDPOINTS.E48.auth).toBe("public");
+    expect([ENDPOINTS.E48.method, ENDPOINTS.E48.path]).toEqual(["GET", "/l/:code"]);
+    const p = ENDPOINTS.E48.params as z.ZodType;
+    expect(p.parse({ code: "IEO31Kd" })).toEqual({ code: "IEO31Kd" });
+    expect(p.parse({ code: "x".repeat(65) })).toEqual({ code: "" });
   });
 
   it("buildPath/fullPath", () => {
@@ -121,6 +133,13 @@ describe("contratos: aceita/rejeita (E02, E04, E10, E21, E24, E26, E39)", () => 
     expect(E04BodySchema.safeParse({ action: "update_preference", preferredPeriod: "morning" }).success).toBe(true);
     expect(E04BodySchema.safeParse({ action: "update_preference" }).success).toBe(false);
     expect(E04BodySchema.safeParse({ action: "hack" }).success).toBe(false);
+    expect(E04BodySchema.safeParse({ action: "reschedule" }).success).toBe(true);
+    expect(E04BodySchema.safeParse({ action: "reschedule", reason: "schedule" }).success).toBe(false);
+  });
+  it("E08: só slotId (RN19)", () => {
+    expect(E08BodySchema.safeParse({ slotId: "s01" }).success).toBe(true);
+    expect(E08BodySchema.safeParse({}).success).toBe(false);
+    expect(E08BodySchema.safeParse({ slotId: "s01", mentorId: "u" }).success).toBe(false);
   });
   it("E10: login", () => {
     expect(E10BodySchema.safeParse({ email: "A@B.com", password: "x" }).success).toBe(true);

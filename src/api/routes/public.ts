@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
-import { E01, E02, E03, E04, E05, E06, type E01Response } from '@tw/shared';
+import { E01, E02, E03, E04, E05, E06, E07, E08, type E01Response } from '@tw/shared';
 import { hashMenteeToken, menteeToken, personalPath } from '../lib/tokens.js';
+import { getOrCreateShortLink, shortLinkExpireAt, shortPath } from '../lib/short-links.js';
 import type { MenteeDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, isDuplicateKey } from '../lib/errors.js';
@@ -13,6 +14,7 @@ import { normalizeLinkedin, normalizePhoneBR } from '../lib/normalize.js';
 import { enqueueMenteeNotifications } from '../lib/outbox.js';
 import { verifyTurnstile } from '../lib/turnstile.js';
 import { buildMenteeState } from '../services/mentee-state.js';
+import { listSelfBookSlots, selfBook } from '../services/self-book.js';
 import { applyTransition } from '../services/transitions.js';
 import { canUpdatePreferredPeriod, isRegistrationOpen, normalizeEmail, registrationOutcome } from '../domain/index.js';
 
@@ -86,6 +88,13 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
 
       if (outcome === 'resend_link' && existing) return resend(existing);
 
+      // 201: o link curto nasce depois do commit da inscrição (duplicate key dentro da transação a abortaria)
+      const created = async (m: MenteeDoc) => {
+        const token = menteeToken(ctx.config.menteeTokenSecret, m._id, m.tokenVersion);
+        const code = await getOrCreateShortLink(ctx.c, m, 'personal', shortLinkExpireAt(event), ctx.now());
+        return respond(201, { status: 'created' as const, token, personalPath: personalPath(token), shortPath: shortPath(code) });
+      };
+
       const fields = {
         name: body.name,
         email: body.email,
@@ -127,8 +136,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
           if (again) return resend(again);
           throw new AppError('CONFLICT', 'Tente novamente.');
         }
-        const token = menteeToken(ctx.config.menteeTokenSecret, updated._id, updated.tokenVersion);
-        return respond(201, { status: 'created' as const, token, personalPath: personalPath(token) });
+        return created(updated);
       }
 
       // create
@@ -167,7 +175,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
         }
         throw err;
       }
-      return respond(201, { status: 'created' as const, token, personalPath: personalPath(token) });
+      return created(doc);
     },
     { rateLimit: { max: 300, timeWindow: '10 minutes' } },
   );
@@ -202,7 +210,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
     { rateLimit: { max: 60, timeWindow: '1 minute' } },
   );
 
-  // E04 · POST /public/me/actions · RN06, RN14
+  // E04 · POST /public/me/actions · RN06, RN14, RN19
   route(app, ctx, E04, async ({ req, mentee, body, idem }) => {
     const actor = { userId: null, role: 'mentee' as const };
     const apptId = mentee.currentAppointmentId;
@@ -237,6 +245,14 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
           }
           break;
         }
+        case 'reschedule': {
+          // RN19 · só de `confirmed`: cancela a mentoria e volta à fila com prioridade
+          if (fresh.status !== 'confirmed' || !fresh.currentAppointmentId) {
+            throw new AppError('INVALID_STATE', 'Só é possível trocar de horário com a mentoria confirmada.');
+          }
+          await applyTransition(ctx, session, { appointmentId: fresh.currentAppointmentId, action: 'mentee_reschedule', actor, scope: { menteeId: fresh._id }, ip: req.ip });
+          break;
+        }
         case 'update_preference': {
           if (!canUpdatePreferredPeriod(fresh.status)) {
             throw new AppError('INVALID_STATE', 'O período só pode ser alterado enquanto você aguarda uma mentora.');
@@ -252,6 +268,19 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
     });
     return result;
   });
+
+  // E07 · GET /public/me/slots · RN19
+  route(app, ctx, E07, async ({ mentee }) => listSelfBookSlots(ctx, mentee));
+
+  // E08 · POST /public/me/book · RN19
+  route(app, ctx, E08, async ({ req, mentee, body, idem }) =>
+    runTxn(ctx, async (session) => {
+      const { mentee: after } = await selfBook(ctx, session, { menteeId: mentee._id, slotId: body.slotId, ip: req.ip });
+      const state = await buildMenteeState(ctx, after, session);
+      await idem?.markDone(session, { status: 200, body: state });
+      return state;
+    }),
+  );
 
   // E05 · POST /public/resend-link · sempre 202 (sem enumeração)
   route(

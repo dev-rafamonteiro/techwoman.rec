@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import QRCode from 'qrcode';
 import {
   E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg, E43Create, E43List, E43Patch, E44List, E44Retry, E45,
-  DEFAULT_REMINDERS, generateSlots, type EventConfig,
+  DEFAULT_REMINDERS, DEFAULT_WHATSAPP_LISTS, generateSlots, invalidWhatsappListVariable, type EventConfig,
 } from '@tw/shared';
 import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, type EventDoc, type UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
@@ -12,6 +12,7 @@ import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
 import { sealSecret } from '../lib/secret-box.js';
 import { invalidSubjectVariable } from '../notifications/render.js';
+import { shortLinkExpireAt } from '../lib/short-links.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { RAW, respond, route } from '../lib/route.js';
 import { iso, toOutboxItemView, toTableView, toUserView } from '../lib/views.js';
@@ -38,6 +39,7 @@ export function toEventConfig(ev: EventDoc): EventConfig {
     templates: ev.templates,
     emailSubjects: ev.emailSubjects ?? {},
     reminders: ev.reminders?.length ? ev.reminders : DEFAULT_REMINDERS,
+    whatsappLists: ev.whatsappLists ?? DEFAULT_WHATSAPP_LISTS,
     version: ev.version,
   };
 }
@@ -111,6 +113,8 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
       if (!check.ok) throw fromRuleError(check);
       const badSubject = invalidSubjectVariable(body.emailSubjects);
       if (badSubject) throw new AppError('VALIDATION_ERROR', `O assunto usa {{${badSubject.variable}}}, que não existe neste e-mail.`, { details: { field: `emailSubjects.${badSubject.layout}` } });
+      const badListVar = body.whatsappLists ? invalidWhatsappListVariable(body.whatsappLists) : null;
+      if (badListVar) throw new AppError('VALIDATION_ERROR', `O menu do WhatsApp usa {${badListVar.variable}}, que não existe nessa mensagem.`, { details: { field: badListVar.field } });
       const areaKeys = new Set(body.areas.map((a) => a.key));
       if (areaKeys.size !== body.areas.length) throw new AppError('VALIDATION_ERROR', 'Áreas com chave repetida.');
       const res = await ctx.c.events.findOneAndUpdate(
@@ -120,7 +124,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
             name: body.name, date: body.date, location: body.location, timezone: body.timezone, startTime: body.startTime, endTime: body.endTime,
             slotMinutes: body.slotMinutes, gapMinutes: body.gapMinutes, slots: slots.map((s) => ({ id: s.id, startAt: s.startAt, endAt: s.endAt })),
             responseWindowMinutes: body.responseWindowMinutes, minLeadMinutes: body.minLeadMinutes, registrationOpen: body.registrationOpen,
-            areas: body.areas, templates: body.templates, ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}), ...(body.reminders ? { reminders: [...body.reminders].sort((x, y) => y.minutesBefore - x.minutesBefore) } : {}), updatedAt: ctx.now(),
+            areas: body.areas, templates: body.templates, ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}), ...(body.reminders ? { reminders: [...body.reminders].sort((x, y) => y.minutesBefore - x.minutesBefore) } : {}), ...(body.whatsappLists ? { whatsappLists: body.whatsappLists } : {}), updatedAt: ctx.now(),
           },
           $inc: { version: 1 },
         },
@@ -130,6 +134,10 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
       // horários mudaram de lugar: a disponibilidade das mentoras só pode conter ids existentes
       const ids = slots.map((s) => s.id);
       await ctx.c.users.updateMany({ roles: 'mentor' }, { $pull: { availability: { $nin: ids } } }, { session });
+      // links curtos valem até o fim do evento + 7 dias: mudou o fim, muda a validade (PLAN, Links curtos)
+      if (cur.date !== res.date || cur.endTime !== res.endTime || cur.timezone !== res.timezone) {
+        await ctx.c.shortLinks.updateMany({}, { $set: { expireAt: shortLinkExpireAt(res) } }, { session });
+      }
       await writeAudit(ctx, session, { actor: actorForRoute(req, 'admin'), action: 'event.update', entity: 'event', entityId: cur._id, before: { version: cur.version, registrationOpen: cur.registrationOpen }, after: { version: res.version, registrationOpen: res.registrationOpen }, ip: req.ip });
       return res;
     });

@@ -22,6 +22,14 @@ export interface Config {
   /** Em dev/test sem segredo, o Turnstile aceita qualquer token. */
   turnstileEnabled: boolean;
   whatsappEnabled: boolean;
+  /** WHATSAPP_TRANSPORT: `waha` (WAHA, envio direto e respostas por E47) ou `cloud` (WhatsApp Business Cloud API). */
+  whatsappTransport: 'waha' | 'cloud';
+  /** WAHA_URL, sem `/` no fim; null sem configuração (em dev, o compose aponta para o WAHA local). */
+  wahaUrl: string | null;
+  /** WAHA_SESSION (padrão `default`). */
+  wahaSession: string;
+  /** WAHA_WEBHOOK_HMAC_KEY(_FILE): assina os eventos de E47; só a API lê. */
+  wahaWebhookHmacKey: string | null;
   /** Cookie Secure (produção). */
   cookieSecure: boolean;
   /** Valida cada resposta contra o schema do contrato (ligado fora de produção). */
@@ -57,6 +65,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, role: 'api' | '
   const publicBaseUrl = (env['PUBLIC_BASE_URL'] || (isProd ? 'https://techwoman.dev' : 'http://localhost:5173')).replace(/\/$/, '');
   const turnstileSecret = readEnv('TURNSTILE_SECRET', env) ?? null;
   if (isProd && role === 'api' && !turnstileSecret) throw new Error('TURNSTILE_SECRET (ou TURNSTILE_SECRET_FILE) é obrigatório em produção');
+  const transportRaw = (env['WHATSAPP_TRANSPORT'] || 'cloud').toLowerCase();
+  if (transportRaw !== 'waha' && transportRaw !== 'cloud') throw new Error('WHATSAPP_TRANSPORT deve ser "waha" ou "cloud"');
+  const whatsappTransport = transportRaw;
+  const wahaUrl = (env['WAHA_URL'] ?? '').replace(/\/$/, '') || null;
+  const wahaWebhookHmacKey = readEnv('WAHA_WEBHOOK_HMAC_KEY', env) ?? null;
+  // sem a chave, E47 recusa tudo (401); em produção com WAHA ligado, falha já no start
+  if (isProd && role === 'api' && whatsappTransport === 'waha' && bool(env['WHATSAPP_ENABLED'], false) && !wahaWebhookHmacKey) {
+    throw new Error('WAHA_WEBHOOK_HMAC_KEY (ou WAHA_WEBHOOK_HMAC_KEY_FILE) é obrigatório em produção com WHATSAPP_TRANSPORT=waha');
+  }
   return {
     env: nodeEnv,
     isProd,
@@ -72,6 +89,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, role: 'api' | '
     menteeTokenSecret,
     rateLimitEnabled: bool(env['RATE_LIMIT'], true),
     whatsappEnabled: bool(env['WHATSAPP_ENABLED'], false),
+    whatsappTransport,
+    wahaUrl,
+    wahaSession: env['WAHA_SESSION'] || 'default',
+    wahaWebhookHmacKey,
     cookieSecure: bool(env['COOKIE_SECURE'], isProd),
     validateResponses: bool(env['VALIDATE_RESPONSES'], !isProd),
     trustProxy: bool(env['TRUST_PROXY'], true),
@@ -82,4 +103,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, role: 'api' | '
     outboxKey,
     tempPasswordHours: TEMP_PASSWORD_TTL_HOURS,
   };
+}
+
+/** WAHA_API_KEY(_FILE): só o worker lê (envio pelo WAHA); nunca vai para log nem para o `Config` da API. */
+export function wahaApiKeyFromEnv(env: NodeJS.ProcessEnv = process.env): string | null {
+  return readEnv('WAHA_API_KEY', env) ?? null;
 }

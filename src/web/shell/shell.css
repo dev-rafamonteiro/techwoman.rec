@@ -38,9 +38,7 @@
 .tw-navlist a[aria-current='page'] .tw-navlist__dot { background: var(--tw-plum-950); }
 .tw-navlist a:not([aria-current='page']):hover { background: var(--tw-plum-900); color: var(--tw-white); }
 .tw-sidebar__brand { display: flex; flex-direction: column; padding: 0 8px; }
-.tw-sidebar__brand .tw-brand__tech { font-size: 12px; }
-.tw-sidebar__brand .tw-brand__woman { font-size: 22px; }
-.tw-sidebar__brand > span { font-size: 12px; font-weight: 700; color: var(--tw-lilac-150); margin-top: 6px; }
+.tw-sidebar__brand > span { font-size: 12px; font-weight: 700; color: var(--tw-lilac-150); margin-top: 12px; }
 .tw-sidebar__foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 8px; }
 .tw-sidebar__switch { color: var(--tw-mint-200); font-weight: 700; font-size: 14px; }
 .tw-sidebar__who { font-size: 13px; color: var(--tw-lilac-150); }

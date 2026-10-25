@@ -75,6 +75,16 @@ const INDEXES: Record<string, IndexDescription[]> = {
   ],
   // chaves de idempotência: TTL de 10 min (PLAN)
   [COLLECTIONS.idempotencyKeys]: [{ key: { createdAt: 1 }, name: 'idem_ttl', expireAfterSeconds: 600 }],
+  // RN18: resposta digitada procura o `pending` mais recente do telefone
+  [COLLECTIONS.presenceChecks]: [{ key: { phone: 1, status: 1, sentAt: -1 }, name: 'presence_phone_status_sent' }],
+  // mensagens recebidas do WAHA: some em `expireAt` (7 dias)
+  [COLLECTIONS.whatsappInbound]: [{ key: { expireAt: 1 }, name: 'wa_inbound_ttl', expireAfterSeconds: 0 }],
+  // links curtos (E48): um por participante, tipo e versão do token; também serve ao deleteMany por menteeId
+  // e somem em `expireAt` (fim do evento + 7 dias)
+  [COLLECTIONS.shortLinks]: [
+    { key: { menteeId: 1, kind: 1, tokenVersion: 1 }, name: 'short_link_mentee_kind_version', unique: true },
+    { key: { expireAt: 1 }, name: 'short_link_ttl', expireAfterSeconds: 0 },
+  ],
 };
 
 /**

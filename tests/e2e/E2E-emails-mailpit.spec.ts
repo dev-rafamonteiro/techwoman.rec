@@ -47,8 +47,9 @@ test("inscrição -> convite -> aceite: e-mails 1, 2 e 3 chegam ao Mailpit", asy
   const [m1] = await waitForMessages(MENTEE_EMAIL, 1);
   expect(m1!.Subject).toBe("Recebemos sua inscrição na mentoria do Tech Woman");
   const full1 = await getMessage(m1!.ID);
-  expect(full1.HTML).toContain("/mentoria/minha?t=");
-  expect(full1.Text).toContain("/mentoria/minha?t=");
+  // links saem curtos (PLAN, Links curtos)
+  expect(full1.HTML).toMatch(/\/l\/[0-9A-Za-z]{7}/);
+  expect(full1.Text).toMatch(/\/l\/[0-9A-Za-z]{7}/);
   expect(full1.HTML + full1.Text).not.toMatch(/\{\{|\}\}/);
   expect(full1.From.Address).toBe("mentoria@techwoman.dev");
 
@@ -62,7 +63,7 @@ test("inscrição -> convite -> aceite: e-mails 1, 2 e 3 chegam ao Mailpit", asy
   expect(m2!.Subject).toContain("Mentora 1");
   const full2 = await getMessage(m2!.ID);
   expect(full2.HTML).toMatch(/Mesa \d+/);
-  expect(full2.HTML).toContain("/mentoria/minha?t=");
+  expect(full2.HTML).toMatch(/\/l\/[0-9A-Za-z]{7}/);
   expect(full2.HTML + full2.Text).not.toMatch(/\{\{|\}\}/);
 
   // e-mail 3: confirmação, com .ics anexado
@@ -74,7 +75,8 @@ test("inscrição -> convite -> aceite: e-mails 1, 2 e 3 chegam ao Mailpit", asy
   const m3 = three.find((m) => /^Combinado:/.test(m.Subject));
   expect(m3, `assuntos: ${three.map((m) => m.Subject).join(" | ")}`).toBeTruthy();
   const full3 = await getMessage(m3!.ID);
-  expect(full3.HTML).toContain("calendar.ics?t=");
+  // link_agenda curto: outro código, diferente do link pessoal
+  expect(new Set(full3.HTML.match(/\/l\/[0-9A-Za-z]{7}/g)).size).toBeGreaterThanOrEqual(2);
   expect(full3.HTML + full3.Text).not.toMatch(/\{\{|\}\}/);
   const atts = (full3.Attachments ?? []) as { PartID: string; FileName: string; ContentType: string }[];
   const ics = atts.find((a) => /\.ics$/i.test(a.FileName));

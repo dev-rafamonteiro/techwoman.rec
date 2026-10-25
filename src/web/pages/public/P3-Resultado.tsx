@@ -19,7 +19,7 @@ export default function P3Resultado() {
   if (!answers || !r || !top) {
     return (
       <div className="tw-pub">
-        <header className="tw-pub__head"><Brand /><span /><Link className="tw-pub__back" to="/">Voltar ao início</Link></header>
+        <header className="tw-pub__head"><Brand height={44} /><span /><Link className="tw-pub__back" to="/">Voltar ao início</Link></header>
         <div className="tw-page"><EmptyState title="Você ainda não fez a jornada" text="Responda as perguntas para ver seu resultado." action={<LinkButton to="/jornada">Começar jornada</LinkButton>} /></div>
       </div>
     );
@@ -33,7 +33,7 @@ export default function P3Resultado() {
   return (
     <div className="tw-pub tw-p3" data-testid="p3" style={{ minHeight: '100vh' }}>
       <header className="tw-pub__head">
-        <Brand />
+        <Brand height={44} />
         <span className="tw-p3__xp">{xp} XP</span>
         <Link className="tw-pub__back" to="/">Voltar ao início</Link>
       </header>

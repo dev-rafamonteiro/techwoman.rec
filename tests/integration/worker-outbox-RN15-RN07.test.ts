@@ -25,7 +25,9 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier || !api?.expireInvit
     const sent = n.sent.find((m: any) => m.type === "invite");
     expect(sent.channel).toBe("email");
     expect(sent.to).toBe(b.w.mentees[0]!.doc.email);
-    expect(sent.text).toContain("/mentoria/minha"); // link pessoal de P6
+    // link pessoal de P6 sai curto (E48): /l/<código>, não o link longo com o token
+    expect(sent.text).toMatch(/http\S+\/l\/[0-9A-Za-z]{7}/);
+    expect(sent.text).not.toContain("/mentoria/minha?t=");
     const items = await outbox().find({ type: "invite" }).toArray();
     for (const it of items) {
       expect(["sent", "skipped"]).toContain(it.status);

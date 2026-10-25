@@ -18,7 +18,7 @@ export const DEFAULT_TEMPLATES: EventDoc['templates'] = {
   registered: 'Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}',
   invite: '{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}',
   confirmed: 'Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes.',
-  reminder: 'Sua mentoria começa às {horario} na {mesa}. Te esperamos!',
+  reminder: 'Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!',
   expired: 'O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa.',
   cancelled: 'Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade.',
 };

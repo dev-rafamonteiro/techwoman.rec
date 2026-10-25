@@ -25,13 +25,13 @@ Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sába
 | Mesas | 20 mesas, 2 cadeiras cada, quantidade configurável. |
 | Horário da participante | Ela informa só uma preferência; o horário real vem da mentora e precisa da confirmação dela. |
 | Recusa por horário | A participante volta para a fila marcada como prioridade. |
-| Marca | Nenhuma referência ao Bradesco em nenhuma tela. |
+| Marca | Nenhuma referência ao Bradesco em nenhuma tela, exceto o logo de patrocínio no bloco "Quem faz o Tech Woman" da P1. |
 
 **Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M6, A1–A9; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
 
 ## Diretrizes visuais e de experiência
 
-As telas novas seguem a identidade visual da arte do Tech Woman já aplicada no site (roxo, laranja e menta) e não podem conter nome, logo, cor institucional ou domínio do Bradesco.
+As telas novas seguem a identidade visual da arte do Tech Woman já aplicada no site (roxo, laranja e menta) e não podem conter nome, logo, cor institucional ou domínio do Bradesco, exceto o logo de patrocínio no bloco "Quem faz o Tech Woman" da P1.
 
 - **Mobile first para participante e mentora.** A participante chega pelo QR Code no celular; a mentora opera da mesa, provavelmente pelo celular. Largura de referência 375 px; nada pode exigir rolagem horizontal.
 - **Desktop first para o super admin**, mas utilizável em tablet no dia do evento (balcão de apoio).
@@ -61,7 +61,7 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 | P3 | Resultado da gamificação | `/jornada/resultado` | Público | Existe, ajustar CTA |
 | P4 | Inscrição na mentoria | `/mentoria/inscricao` | Público | Nova |
 | P5 | Inscrição recebida | `/mentoria/inscricao/ok` | Público | Nova |
-| P6 | Minha mentoria | `/mentoria/minha?t=<token>` | Participante (link pessoal) | Nova |
+| P6 | Minha mentoria | `/mentoria/minha?t=<token>` (as mensagens e P5 levam para cá pelo link curto `/l/<código>`, E48) | Participante (link pessoal) | Nova |
 | M1 | Login | `/entrar` | Mentora, admin | Nova |
 | M2 | Primeiro acesso / troca de senha | `/entrar/nova-senha` | Mentora, admin | Nova |
 | M3 | Minha disponibilidade | `/mentora/disponibilidade` | Mentora | Nova |
@@ -91,6 +91,13 @@ A jornada é QR Code → gamificação → resultado → inscrição → link pe
 - Incluir o bloco "Mentoria": como funciona em 3 passos (descubra sua área, inscreva-se, aguarde o convite de uma mentora), sessões de 40 min, mesas no local.
 - CTA principal "Começar minha jornada" leva a P2. Texto de apoio: "A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras."
 - Dados de data, local e horário vêm de **E01**.
+- Conteúdo do evento, tirado da página oficial (Jalan, `https://app.jalanlive.com/techwoman26/home`):
+  - Hero: título "Conectar mulheres, tecnologia e futuros possíveis" e o resumo "O Tech Woman é um movimento que nasceu para ampliar a presença feminina no universo da tecnologia e da inovação, fortalecendo a representatividade, o desenvolvimento profissional e as conexões entre mulheres." Link secundário "Garanta seu ingresso" para a página oficial (o ingresso do evento é vendido lá; a inscrição na mentoria é separada e gratuita).
+  - Bloco "O evento": cartões Quando, Onde e Para quem, seguidos das cinco trilhas de conhecimento, cada uma com nome e uma frase: Carreiras, Técnica, Soft Skills, Empreendedorismo, Tecnologia para quem não é da tecnologia.
+  - Faixa final: frase "Você não precisa trabalhar com tecnologia para fazer parte dessa transformação." acima do CTA.
+  - Bloco "Local": nome do local (E01 `location`), endereço "Cais Santa Rita, 156 - São José, Recife - PE" e botão "Ver no mapa" (Google Maps, nova aba). Endereço e link são constantes da página, não vêm da API.
+  - Rodapé: Instagram, LinkedIn, YouTube e o e-mail contato@techwoman.rec.br, além dos links atuais.
+- Bloco "Quem faz o Tech Woman" (`id="quem-faz"`), logo acima do rodapé, fundo roxo escuro #3D0A45: título laranja, sobretítulo "Realização" com o logo da Combogó Eventos sozinho e centralizado, divisor fino e sobretítulo "Patrocínio" com Instituto Claro, Bradesco e MongoDB numa linha centralizada que quebra no celular (espaço de 56 px; 32 px abaixo de 600 px). Arquivos oficiais em off-white em `/brand/patrocinadores/` (sem link, sem recolorir). Alturas desktop / celular: Combogó 72/56, Instituto Claro 64/48, Bradesco 52/40, MongoDB 48/36 px.
 
 ### P2 · Gamificação (existente)
 
@@ -124,7 +131,8 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 ### P5 · Inscrição recebida (nova)
 
 - Mensagem: "Recebemos sua inscrição! Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail e WhatsApp."
-- Botão "Acompanhar minha mentoria" abre P6. Sugestão "Salve este link" com botão copiar.
+- Botão "Acompanhar minha mentoria" abre P6 (navegação interna pelo `personalPath` de **E02**).
+- Sugestão "Salve este link" com botão copiar: mostra e copia o link curto (origem do site + `shortPath` de **E02**, ex.: `https://techwoman.dev/l/IEO31Kd`). `personalPath` e `shortPath` ficam juntos no estado da navegação e no `sessionStorage`, para P5 continuar certa depois de recarregar.
 
 ### P6 · Minha mentoria (nova, link pessoal)
 
@@ -134,8 +142,8 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | --- | --- | --- |
 | Aguardando mentora | Área, período preferido, posição neutra ("Sua inscrição está ativa") | Editar período preferido; Cancelar inscrição (**E04**) |
 | Horário proposto | Card com mentora (nome, foto opcional, LinkedIn), mesa, horário, duração 40 min e contador "Responda até 14h05" | Aceitar; Recusar com motivo: Horário não serve / Não tenho mais interesse (**E04**) |
-| Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**) |
-| Recusada por horário | "Tudo bem! Sua inscrição continua ativa e com prioridade." | Editar período preferido |
+| Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**): abre a escolha "Trocar de horário" (`reschedule`, RN19: cancela esta mentoria, volta à fila com prioridade e mostra os horários livres) ou "Não tenho mais interesse" (`cancel`, encerra a inscrição) |
+| Recusada por horário (inclui quem trocou de horário ou disse "Não poderei ir" no WhatsApp) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
 | Proposta expirada | "O prazo para responder terminou e o horário foi liberado. Você continua na fila." | — |
 | Concluída | Agradecimento e link de avaliação (se houver) | — |
 | Não compareceu / Cancelada | Mensagem neutra | Fazer nova inscrição, se o evento ainda estiver aberto |
@@ -253,7 +261,9 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 - Nome, data, local, fuso (America/Recife), hora de início e de fim, duração da sessão (40 min), intervalo entre sessões (5 min). Prévia ao vivo da grade de horários gerada.
 - Prazo para a participante responder ao convite (15 min) e antecedência mínima para convite (10 min antes do horário).
 - Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min pelo WhatsApp. Sem WhatsApp disponível, vai por e-mail.
-- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario}; botão "Prévia dos e-mails" que abre cada um dos 6 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
+- Menus do WhatsApp (List Message), dois blocos: "Convite (menu do WhatsApp)" e "Confirmação de presença (menu do WhatsApp)". Cada um tem dois campos editáveis, Título e Texto (`events.whatsappLists`), e ao lado uma prévia ao vivo no estilo do WhatsApp com o rodapé "Se preferir, responda SIM ou NÃO", o botão "Responder" e as duas opções, fixos e não editáveis (convite: "Aceito" / "Não posso"; presença: "Sim, confirmo" / "Não poderei ir"), com a nota "As opções e o rodapé são fixos: as respostas da participante dependem deles." Variáveis do convite: {nome} {mentora} {horario} {mesa} {prazo} {link}; da presença: {nome} {mentora} {horario} {mesa} {minutos} {link}. Na prévia, as variáveis aparecem com dados de exemplo.
+- Nos textos do WhatsApp, "Convite de horário" leva a nota "Usado quando o WhatsApp sai em texto simples (sem menu)" e "Lembrete" leva "Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença".
+- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 6 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
 - Alterar a grade com mentorias já marcadas é bloqueado. Dados: **E41**, QR Code: **E42**.
 
@@ -286,14 +296,23 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 **Estados obrigatórios em toda tela com dados:** carregando (esqueleto), vazio (texto + próxima ação), erro (mensagem + tentar de novo), sem permissão ("Você não tem acesso a esta área"), sessão expirada (volta para M1 mantendo a rota de retorno).
 
-**Mensagens enviadas: o e-mail usa os 6 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7:**
+**Mensagens enviadas: o e-mail usa os 6 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos):**
 
 | Momento | Canal | Texto base |
 | --- | --- | --- |
 | Inscrição recebida | E-mail + WhatsApp | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
-| Convite de horário | E-mail + WhatsApp | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
+| Convite de horário | E-mail | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
+| Convite de horário (RN20; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Aceito" e "Não posso" (descrição "Você conta o motivo na sua página") |
+| Resposta ao convite: aceitou | WhatsApp | A mensagem de Confirmação normal |
+| Resposta ao convite: não pode (texto fixo) | WhatsApp | "Tudo bem, {nome}! Para recusar, conte o motivo na sua página: {link}. Se for o horário, você continua na fila com prioridade." |
+| Resposta ao convite: não está mais disponível (texto fixo) | WhatsApp | "Este convite não está mais disponível. Veja como está sua inscrição: {link}" |
+| Resposta ao convite: não entendida (texto fixo) | WhatsApp | "Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO." |
 | Confirmação | E-mail + WhatsApp | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
-| Lembrete (antes da mentoria, tempos e canais configurados em A7; padrão 15 min) | WhatsApp e/ou e-mail | "Sua mentoria começa às {horario} na {mesa}. Te esperamos!" |
+| Lembrete (antes da mentoria, tempos e canais configurados em A7; padrão 15 min) | WhatsApp e/ou e-mail | "Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!" |
+| Primeiro lembrete pelo WhatsApp: confirmação de presença (RN18; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Sim, confirmo" e "Não poderei ir" (descrição "Você poderá escolher outro horário") |
+| Resposta: confirmou (texto fixo) | WhatsApp | "Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}." |
+| Resposta: não poderá ir (texto fixo) | WhatsApp | "Tudo bem, {nome}. Sua mentoria das {horario} foi cancelada e você continua na fila com prioridade. Se quiser, escolha um novo horário aqui: {link}" |
+| Resposta: não entendida (texto fixo) | WhatsApp | "Não entendi. Responda SIM para confirmar ou NÃO para cancelar sua mentoria das {horario}." |
 | Convite expirado | E-mail | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
 | Cancelamento pela mentora | E-mail + WhatsApp | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
 

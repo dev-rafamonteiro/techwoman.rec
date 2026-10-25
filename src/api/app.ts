@@ -28,6 +28,8 @@ export interface BuildAppOptions {
 }
 
 const stripQuery = (url: string) => url.split('?')[0] ?? url;
+/** Código do link curto é credencial (E48): no log vira `/l/***` ou `/api/l/***`. */
+export const logUrl = (url: string) => stripQuery(url).replace(/^((?:\/api)?\/l\/)[^/]*/, '$1***');
 
 /** Chave de rate limit por sessão (cookie) ou, sem sessão, por IP. */
 function rateKey(req: { ip: string; cookies?: Record<string, string | undefined>; headers?: Record<string, unknown> }): string {
@@ -52,10 +54,10 @@ export async function buildApp(opts: BuildAppOptions): Promise<{ app: FastifyIns
       ? false
       : {
           level: process.env['LOG_LEVEL'] ?? 'info',
-          // sem dados pessoais: nada de corpo, cookie ou token; URL sem query
+          // sem dados pessoais: nada de corpo, cookie ou token; URL sem query e sem o código do link curto
           redact: { paths: ['req.headers.cookie', 'req.headers["x-mentee-token"]', 'req.headers.authorization', 'res.headers["set-cookie"]'], remove: true },
           serializers: {
-            req: (req: { method: string; url: string; id: string }) => ({ method: req.method, url: stripQuery(req.url), requestId: req.id }),
+            req: (req: { method: string; url: string; id: string }) => ({ method: req.method, url: logUrl(req.url), requestId: req.id }),
             res: (res: { statusCode: number }) => ({ statusCode: res.statusCode }),
           },
         },

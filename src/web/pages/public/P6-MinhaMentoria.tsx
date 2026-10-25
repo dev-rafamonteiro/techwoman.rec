@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ENDPOINTS, type E03Response, type PreferredPeriod } from '@tw/shared';
+import { ENDPOINTS, type E03Response, type E07Item, type PreferredPeriod } from '@tw/shared';
 import {
-  ApiError, type BodyOf, Button, Card, Countdown, ErrorState, ExternalButton, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList,
-  StatusBadge, PriorityBadge, TextField, call, endpointUrl, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useToast, usePolling,
+  ApiError, type BodyOf, Button, Card, Countdown, EmptyState, ErrorState, ExternalButton, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList, SlotSingleChoice,
+  StatusBadge, PriorityBadge, TextField, call, endpointUrl, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useQuery, useToast, usePolling,
 } from '../../ui';
 import { FALLBACK_AREAS } from './lib/areas';
 import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
@@ -67,7 +67,75 @@ function InvalidLink() {
   );
 }
 
-/** P6 · Minha mentoria (E03, E04) · RN05, RN06, RN07 */
+/** "Escolha um novo horário" (E07, E08) · RN19: só em waiting com lastOutcome = declined_schedule. Erro de E07 fica neste bloco. */
+function ChooseSlot({ onBooked, onStale }: { onBooked: (next: Me) => void; onStale: () => void }) {
+  const toast = useToast();
+  const q = useQuery((signal) => call(ENDPOINTS.E07, { signal }), []);
+  const [pending, setPending] = useState<E07Item | null>(null);
+  const [booking, setBooking] = useState(false);
+  const [taken, setTaken] = useState(false);
+
+  async function book(slot: E07Item) {
+    setBooking(true);
+    try {
+      const next = await call(ENDPOINTS.E08, { body: { slotId: slot.slotId } });
+      setPending(null);
+      onBooked(next);
+    } catch (e) {
+      const ae = e instanceof ApiError ? e : new ApiError(0, 'NETWORK', 'Sem conexão.');
+      setPending(null);
+      if (ae.code === 'SLOT_UNAVAILABLE') {
+        // Outra pessoa pegou o horário entre a lista e o toque: avisa e recarrega a lista.
+        setTaken(true);
+        void q.refetch();
+      } else if (ae.code === 'INVALID_STATE') onStale();
+      else toast.error(ae.message || 'Não foi possível concluir agora. Tente de novo.');
+    } finally {
+      setBooking(false);
+    }
+  }
+
+  let content: JSX.Element;
+  if (q.status === 'loading') content = <SkeletonList rows={3} height={56} />;
+  else if (q.status === 'error') content = <ErrorState error={q.error} onRetry={() => void q.reload()} />;
+  else if (q.data.items.length === 0) content = <EmptyState title="Nenhum horário livre agora" text="Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." />;
+  else if (pending) {
+    content = (
+      <div role="alertdialog" aria-label="Confirmar horário" className="tw-stack" data-testid="p6-book-dialog">
+        <strong>Confirmar mentoria às {formatTime(pending.startAt)}?</strong>
+        <span>{formatRange(pending.startAt, pending.endAt)} · horário de Recife</span>
+        <div className="tw-btnrow">
+          <Button size="sm" loading={booking} onClick={() => void book(pending)} data-testid="p6-book-confirm">Confirmar</Button>
+          <Button variant="secondary" size="sm" disabled={booking} onClick={() => setPending(null)} data-testid="p6-book-back">Voltar</Button>
+        </div>
+      </div>
+    );
+  } else {
+    const items = q.data.items;
+    content = (
+      <>
+        {taken && <p className="tw-slotmsg" role="alert" data-testid="p6-slot-taken">Esse horário acabou de ser ocupado. Escolha outro.</p>}
+        <SlotSingleChoice legend="Horários livres" value={null} preferredLabel="Seu período preferido" testId="p6-slots" itemTestId="p6-slot"
+          slots={items.map((i) => ({ id: i.slotId, label: formatTime(i.startAt), caption: formatRange(i.startAt, i.endAt), preferred: i.matchesPeriod }))}
+          onChange={(id) => {
+            setTaken(false);
+            setPending(items.find((i) => i.slotId === id) ?? null);
+          }} />
+      </>
+    );
+  }
+
+  return (
+    <Card accent>
+      <div className="tw-stack tw-p6-choose" data-testid="p6-choose">
+        <h2>Escolha um novo horário</h2>
+        {content}
+      </div>
+    </Card>
+  );
+}
+
+/** P6 · Minha mentoria (E03, E04, E07, E08) · RN05, RN06, RN07, RN19 */
 export default function P6MinhaMentoria() {
   const [params] = useSearchParams();
   const toast = useToast();
@@ -148,6 +216,20 @@ export default function P6MinhaMentoria() {
   const fresh = <p className="tw-fresh" data-testid="p6-fresh">{(freshAt && Date.now() - freshAt < 60000 ? 'Atualizado agora' : 'Atualizada') + ' · esta página se atualiza sozinha'}</p>;
   const li = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linkedin.com') ? `https://${v}` : `https://www.linkedin.com/in/${v}`);
 
+  // Confirmada: "Cancelar" abre a escolha entre trocar de horário (RN19) e encerrar a inscrição.
+  const cancelChoice = (
+    <div role="alertdialog" aria-label="Cancelar mentoria" className="tw-stack" data-testid="p6-cancel-dialog">
+      <strong>O que você prefere?</strong>
+      <button type="button" className="tw-choice" disabled={busy !== null} onClick={() => void act('reschedule', { action: 'reschedule' }, 'Mentoria cancelada. Escolha um novo horário.')} data-testid="p6-reschedule">
+        Trocar de horário<small>Esta mentoria é cancelada e você volta para a fila com prioridade para escolher outro horário.</small>
+      </button>
+      <button type="button" className="tw-choice" disabled={busy !== null} onClick={() => void act('cancel', { action: 'cancel' })} data-testid="p6-cancel-interest">
+        Não tenho mais interesse<small>Sua inscrição sai da fila e a mentora é avisada.</small>
+      </button>
+      <Button variant="ghost" block onClick={() => setConfirmCancel(false)} data-testid="p6-cancel-no">Voltar</Button>
+    </div>
+  );
+
   const cancelDialog = (
     <div role="alertdialog" aria-label="Confirmar cancelamento" className="tw-dialog" data-testid="p6-cancel-dialog">
       <strong>Cancelar mesmo?</strong>
@@ -208,7 +290,7 @@ export default function P6MinhaMentoria() {
     testid = 'p6-confirmada';
     badge = <StatusBadge status="confirmed" />;
     title = 'Mentoria confirmada';
-    body = confirmCancel ? cancelDialog : (
+    body = confirmCancel ? cancelChoice : (
       <>
         <Card dark className="tw-confirm">
           <div className="tw-stack">
@@ -265,6 +347,12 @@ export default function P6MinhaMentoria() {
     body = confirmCancel ? cancelDialog : (
       <>
         <p data-testid="p6-outcome">{text}</p>
+        {lastOutcome === 'declined_schedule' && (
+          // Remonta ao trocar o período preferido: o destaque (matchesPeriod) vem do servidor.
+          <ChooseSlot key={mentee.preferredPeriod}
+            onBooked={(next) => { setMe(next); setFreshAt(Date.now()); toast.success('Mentoria confirmada!'); }}
+            onStale={() => void load(true)} />
+        )}
         <Card>
           <dl style={{ margin: 0 }}>
             <div className="tw-kv"><dt>Área</dt><dd>{area}</dd></div>

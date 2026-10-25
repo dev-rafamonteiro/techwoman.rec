@@ -43,7 +43,8 @@ export interface HandlerArgs<E extends EndpointDef> {
 export type HandlerResult<E extends EndpointDef> = Out<E['response']> | Respond<Out<E['response']>> | typeof RAW | void;
 
 export interface RouteOptions {
-  rateLimit?: { max: number; timeWindow: string | number };
+  /** `keyGenerator` troca a chave global (sessão/token/IP) por outra, ex.: só o IP em E48. */
+  rateLimit?: { max: number; timeWindow: string | number; keyGenerator?: (req: FastifyRequest) => string };
   /** Rotas que o usuário com `mustChangePassword` ainda pode chamar (E11, E12, E13, E28). */
   allowWhilePasswordChange?: boolean;
   /** Corpo bruto (multipart): não faz parse do `body`. */
@@ -90,8 +91,8 @@ export function route<E extends EndpointDef>(
       } else if (e.auth === 'mentee') {
         const raw = req.headers[HEADERS.menteeToken.toLowerCase()];
         mentee = await findMenteeByToken(ctx, Array.isArray(raw) ? raw[0] : raw);
-      } else if (isWrite && e.code !== 'E02' && e.code !== 'E05') {
-        // E10 (login) é público mas usa cookie: exige o header anti-CSRF
+      } else if (isWrite && e.code !== 'E02' && e.code !== 'E05' && e.csrf !== false) {
+        // E10 (login) é público mas usa cookie: exige o header anti-CSRF (o webhook E47 marca `csrf: false`)
         checkCsrf(req, ctx.config);
       }
 

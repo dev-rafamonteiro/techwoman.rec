@@ -79,6 +79,19 @@
 .a7-addarea { display: flex; flex-wrap: wrap; gap: 8px; }
 .a7-addarea .tw-input { flex: 1 1 200px; width: auto; min-width: 0; }
 .a7-msgs { display: flex; flex-direction: column; gap: 14px; }
+/* Menus do WhatsApp: campos editáveis ao lado da prévia (balão do WhatsApp + opções fixas) */
+.a7-list { display: grid; gap: 16px; padding: 14px; background: var(--tw-lilac-50); border: 1px solid var(--tw-lilac-150); border-radius: 14px; }
+@media (min-width: 900px) { .a7-list { grid-template-columns: 1fr 300px; align-items: start; } }
+.a7-list__fields { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.a7-list h3 { margin: 0; font-size: 15px; font-weight: 800; }
+.a7-wa { background: #e7ddd4; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.a7-wa__bubble { background: #fff; border-radius: 10px; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: #111; }
+.a7-wa__bubble p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.a7-wa__bubble small { color: #667781; font-size: 12px; }
+.a7-wa__btn { border-top: 1px solid #e9edef; margin: 6px -12px 0; padding: 10px; text-align: center; color: #027eb5; font-weight: 600; }
+.a7-wa__opts { list-style: none; margin: 0; padding: 4px 12px; background: #fff; border-radius: 10px; font-size: 14px; color: #111; }
+.a7-wa__opts li { display: flex; gap: 10px; padding: 8px 0; }
+.a7-wa__opts li + li { border-top: 1px solid #e9edef; }
 .a7-subjects { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .a7-qr { flex: 1 1 300px; min-width: 0; background: var(--tw-plum-950); color: var(--tw-white); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
 .a7-qr h2 { margin: 0; font-family: var(--font-body); font-size: 17px; font-weight: 800; color: inherit; }

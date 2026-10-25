@@ -3,11 +3,8 @@
 .tw-p1 { font-size: 17px; line-height: 1.55; }
 .tw-p1 p { font-size: 17px; }
 
-/* Cabeçalho: logo 14/24, menu Manrope 600 15px, botão 700 15px; nunca quebra linha a partir do tablet */
+/* Cabeçalho: logo em imagem (altura em components.css), menu Manrope 600 15px, botão 700 15px; nunca quebra linha a partir do tablet */
 .tw-p1 .tw-pub__head { padding: 14px max(var(--page-gutter), calc((100% - 1200px) / 2 + 24px)); }
-.tw-p1 .tw-brand { line-height: 0.95; }
-.tw-p1 .tw-brand__tech { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; }
-.tw-p1 .tw-brand__woman { font-size: 24px; font-weight: 800; }
 .tw-p1 .tw-pub__nav { gap: 24px; margin-left: auto; }
 .tw-p1 .tw-pub__nav a { font-size: 15px; font-weight: 600; padding: 10px 0; }
 .tw-p1 .tw-pub__head .tw-btn { font-size: 15px; font-weight: 700; min-height: 44px; padding: 0 20px; }
@@ -59,3 +56,10 @@
 
 /* Âncoras do menu: a seção não fica escondida atrás do cabeçalho fixo */
 .tw-p1 section[id] { scroll-margin-top: 80px; }
+
+/* Trilhas (UI-SPEC, P1): título Manrope 700 18px, frase 15px */
+.tw-p1 .tw-p1__trailstitle { font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.tw-p1 .tw-p1__trail h4 { font-family: var(--font-body); font-weight: 700; font-size: 18px; }
+.tw-p1 .tw-p1__trail p { font-size: 15px; }
+.tw-p1 .tw-p1__ticket { font-size: 17px; }
+.tw-p1 .tw-p1__band .tw-p1__quote { font-size: 19px; }

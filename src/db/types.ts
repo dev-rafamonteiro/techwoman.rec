@@ -46,6 +46,8 @@ export interface EventDoc {
   emailSubjects?: Partial<Record<string, string>>;
   /** Lembretes antes de cada mentoria (A7); ausente = um lembrete 15 min antes pelo WhatsApp (RN15). */
   reminders?: { minutesBefore: number; channels: ('email' | 'whatsapp')[] }[];
+  /** Título e texto das List Messages do WhatsApp (A7); ausente = padrão de `@tw/shared` (RN18, RN20). */
+  whatsappLists?: { invite: { title: string; description: string }; presence: { title: string; description: string } };
   consentVersion: string;
   version: number;
   updatedAt: Date;
@@ -207,4 +209,58 @@ export interface IdempotencyDoc {
   state: 'in_progress' | 'done';
   response: { status: number; body: unknown } | null;
   createdAt: Date;
+}
+
+export type PresenceCheckStatus = 'pending' | 'confirmed' | 'cancelled' | 'closed';
+export type PresenceInterpretation = 'confirm' | 'cancel';
+/** `invite` = convite (RN20); `presence` = confirmação de presença (RN18). */
+export type PresenceCheckKind = 'invite' | 'presence';
+
+/**
+ * Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença
+ * (RN18; o lembrete substitui o registro do convite). Sem validador.
+ */
+export interface PresenceCheckDoc {
+  /** = appointmentId */
+  _id: ObjectId;
+  /** Ausente (registros antigos) = `presence`. */
+  kind?: PresenceCheckKind;
+  menteeId: ObjectId;
+  /** Só dígitos, ex.: `5511996604159`. */
+  phone: string;
+  /** Hash final do id da mensagem enviada pelo WAHA (`true_<chatId>_<hash>`). */
+  messageId: string;
+  status: PresenceCheckStatus;
+  sentAt: Date;
+  answeredAt: Date | null;
+  answer: { kind: 'list' | 'text'; text: string | null; interpretation: PresenceInterpretation | null } | null;
+}
+
+/** Mensagem recebida do WAHA já processada (deduplicação do webhook E47). Sem validador; TTL em `expireAt`. */
+export interface WhatsappInboundDoc {
+  /** Hash final do id da mensagem recebida. */
+  _id: string;
+  receivedAt: Date;
+  expireAt: Date;
+  phone: string;
+  result: PresenceInterpretation | 'unclear' | 'ignored';
+}
+
+/** `personal` leva a P6 (`/mentoria/minha?t=`); `calendar` leva ao `.ics` de E06. */
+export type ShortLinkKind = 'personal' | 'calendar';
+
+/**
+ * Link curto `/l/<código>` (E48) para o link com o token da participante. Sem validador e sem TTL; o token não é
+ * gravado (E48 o deriva na hora). Um por participante, tipo e `tokenVersion` (`short_link_mentee_kind_version`).
+ */
+export interface ShortLinkDoc {
+  /** Código de 7 caracteres base62. */
+  _id: string;
+  menteeId: ObjectId;
+  kind: ShortLinkKind;
+  /** `tokenVersion` da participante quando o link foi criado; diferente do atual = revogado. */
+  tokenVersion: number;
+  createdAt: Date;
+  /** Fim do evento + 7 dias (TTL `short_link_ttl`); E48 também confere. */
+  expireAt: Date;
 }

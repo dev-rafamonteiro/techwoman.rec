@@ -50,7 +50,7 @@ export function MentorLayout() {
   return (
     <div className="tw-app tw-app--mentor">
       <header className="tw-topbar">
-        <Brand to="/mentora/aguardando" />
+        <Brand to="/mentora/aguardando" height={36} />
         <nav className="tw-topnav" aria-label="Área da mentora">
           {MENTOR_ITEMS.map((i) => <NavLink key={i.to} to={i.to}>{i.label}</NavLink>)}
           <button type="button" onClick={() => void logout()}>Sair</button>
@@ -121,7 +121,7 @@ export function AdminLayout(): ReactNode {
   return (
     <div className="tw-admin">
       <aside className="tw-sidebar" aria-label="Menu do painel admin">
-        <div className="tw-sidebar__brand"><Brand to="/admin" /><span>Painel da mentoria</span></div>
+        <div className="tw-sidebar__brand"><Brand to="/admin" height={36} /><span>Painel da mentoria</span></div>
         <nav aria-label="Painel admin"><AdminNav /></nav>
         <AdminSideFoot />
       </aside>

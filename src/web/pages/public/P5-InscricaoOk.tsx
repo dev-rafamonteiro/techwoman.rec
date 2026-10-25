@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button, LinkButton } from '../../ui';
-import { loadPersonalPath } from './lib/journey';
+import { loadPersonalPath, type PersonalLinks } from './lib/journey';
 import './public.css';
 
-/** P5 · Inscrição recebida (link pessoal vem de E02 e é guardado por P4) */
+/** P5 · Inscrição recebida (links de E02, guardados por P4) */
 export default function P5InscricaoOk() {
   const location = useLocation();
-  const path = (location.state as { personalPath?: string } | null)?.personalPath ?? loadPersonalPath();
-  const link = path ? `${window.location.origin}${path}` : null;
+  const state = location.state as PersonalLinks | null;
+  const links = state?.personalPath ? state : loadPersonalPath();
+  const path = links?.personalPath ?? null;
+  // mostra e copia o link curto (E48); o botão navega pelo caminho longo, porque /l/ não é rota do React
+  const shown = links?.shortPath ?? path;
+  const link = shown ? `${window.location.origin}${shown}` : null;
   const [copied, setCopied] = useState(false);
 
   async function copy() {

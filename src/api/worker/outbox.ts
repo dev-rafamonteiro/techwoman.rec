@@ -3,9 +3,10 @@ import type { OutboxDoc } from '@tw/db';
 import type { Config } from '../config.js';
 import type { AppContext } from '../ctx.js';
 import { shouldSendReminder } from '../domain/index.js';
-import { NotifierError, type Notifier, type NotifierMessage } from './notifier.js';
+import { NotifierError, type Notifier, type NotifierMessage, type NotifierResult } from './notifier.js';
 import { render } from './render.js';
 import { openSecret } from '../lib/secret-box.js';
+import { getOrCreateShortLink, shortLink, shortLinkExpireAt } from '../lib/short-links.js';
 import { icsIdentity } from '../notifications/ics.js';
 import { buildEmailMessage } from '../notifications/message.js';
 import { RenderError } from '../notifications/render.js';
@@ -79,7 +80,25 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     appt ? c.tables.findOne({ _id: appt.tableId }) : null,
     item.userId ? c.users.findOne({ _id: item.userId }) : null,
   ]);
-  let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments'>;
+  // RN18: o lembrete marcado em `enqueueReminders` vai como List Message de presença; RN20: o convite também vai como
+  // List Message (só o WAHA tem lista e resposta)
+  const listable = item.channel === 'whatsapp' && ctx.config.whatsappTransport === 'waha' && !!appt && !!item.menteeId;
+  const listKind: 'presence' | 'invite' | null = !listable ? null
+    : item.type === 'reminder' && item.payload['presenceCheck'] === true ? 'presence'
+    : item.type === 'invite' ? 'invite'
+    : null;
+  // links curtos (E48), uma vez por item e fora do try do render: erro de banco aqui sobe e o laço devolve o item
+  // à fila (retry normal, não `failed`)
+  const base = ctx.config.publicBaseUrl;
+  const expireAt = shortLinkExpireAt(event);
+  // `link_agenda` só existe no e-mail (layout 3)
+  const links = mentee
+    ? {
+        personal: shortLink(base, await getOrCreateShortLink(c, mentee, 'personal', expireAt, ctx.now())),
+        calendar: item.channel === 'email' && WITH_ICS.has(item.type) ? shortLink(base, await getOrCreateShortLink(c, mentee, 'calendar', expireAt, ctx.now())) : null,
+      }
+    : null;
+  let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments' | 'list'>;
   try {
     if (item.channel === 'email') {
       let provisionalPassword: string | null = null;
@@ -94,22 +113,21 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       const email = buildEmailMessage({
         item, event, mentee, appointment: appt, mentor, table, staffUser, provisionalPassword,
         baseUrl: ctx.config.publicBaseUrl,
-        menteeTokenSecret: ctx.config.menteeTokenSecret,
+        links,
         tempPasswordHours: ctx.config.tempPasswordHours,
         ics: appt && WITH_ICS.has(item.type) ? await icsIdentity(c.appointments, appt) : { uid: '', sequence: 0 },
       });
       message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
     } else {
-      message = render({ item, event, mentee, appointment: appt, mentor, table, baseUrl: ctx.config.publicBaseUrl, menteeTokenSecret: ctx.config.menteeTokenSecret });
+      message = render({ item, event, mentee, appointment: appt, mentor, table, links, now: ctx.now(), ...(listKind ? { list: listKind } : {}) });
     }
   } catch (err) {
     if (err instanceof RenderError) return await fail(`render: ${err.message}`);
     throw err;
   }
+  let sent: NotifierResult | void;
   try {
-    await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
-    await done({ status: 'sent', sentAt: ctx.now(), lastError: null, lockedAt: null, lockedBy: null, payload: {} });
-    res.sent++;
+    sent = await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
   } catch (err) {
     const text = (err instanceof Error ? err.message : String(err)).slice(0, 300);
     const permanent = err instanceof NotifierError && err.permanent;
@@ -125,7 +143,23 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       await done({ status: 'pending', lastError: text, nextAttemptAt: new Date(ctx.now().getTime() + wait), lockedAt: null, lockedBy: null }, false);
       res.retried++;
     }
+    return;
   }
+  if (listKind && message.list) {
+    // a mensagem já saiu: falha ao gravar não pode devolver o item para a fila (sairia de novo). O lembrete de
+    // presença substitui o registro do convite da mesma mentoria (RN20).
+    try {
+      await c.presenceChecks.replaceOne(
+        { _id: appt!._id },
+        { kind: listKind, menteeId: item.menteeId!, phone: item.to.replace(/\D/g, ''), messageId: sent?.providerMessageId ?? '', status: 'pending', sentAt: ctx.now(), answeredAt: null, answer: null },
+        { upsert: true },
+      );
+    } catch (err) {
+      ctx.log.error({ outboxId: String(item._id), err: (err as Error).message }, 'presence_checks não gravado');
+    }
+  }
+  await done({ status: 'sent', sentAt: ctx.now(), lastError: null, lockedAt: null, lockedBy: null, payload: {} });
+  res.sent++;
 }
 
 /**
@@ -143,7 +177,17 @@ export async function processOutboxCtx(ctx: AppContext, opts: { notifier: Notifi
       { sort: { nextAttemptAt: 1 }, returnDocument: 'after' },
     );
     if (!item) break;
-    await handle(ctx, item, opts.notifier, res);
+    try {
+      await handle(ctx, item, opts.notifier, res);
+    } catch (err) {
+      // erro inesperado (ex.: banco ao criar o link curto) não derruba o lote: o item volta para a fila em 30 s
+      ctx.log.error({ outboxId: String(item._id), err: (err as Error).message }, 'outbox: erro ao processar, nova tentativa');
+      await ctx.c.outbox.updateOne(
+        { _id: item._id, status: 'sending' },
+        { $set: { status: 'pending', lockedAt: null, lockedBy: null, nextAttemptAt: new Date(now.getTime() + 30_000), lastError: (err as Error).message.slice(0, 300) } },
+      );
+      res.retried++;
+    }
   }
   return res;
 }

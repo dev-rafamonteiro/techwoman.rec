@@ -124,8 +124,9 @@ export default function P4Inscricao() {
         setAlready(true);
         return;
       }
-      savePersonalPath(res.personalPath);
-      navigate('/mentoria/inscricao/ok', { state: { personalPath: res.personalPath } });
+      const links = { personalPath: res.personalPath, shortPath: res.shortPath };
+      savePersonalPath(links);
+      navigate('/mentoria/inscricao/ok', { state: links });
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
       if (ae?.code === 'NETWORK') setFormError({ network: true, text: '' });

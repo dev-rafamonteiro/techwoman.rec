@@ -79,6 +79,11 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     }
     throw new AppError('INVALID_STATE', 'A mentoria mudou de situação. Atualize a tela.');
   }
+  // RN18/RN20: saiu de `invited` ou de `confirmed` por qualquer caminho, o convite ou o pedido de presença pendente
+  // deixa de valer (senão um texto qualquer dela cairia nele em E47)
+  if ((plan.from === 'invited' || plan.from === 'confirmed') && plan.appointmentTo !== plan.from) {
+    await c.presenceChecks.updateOne({ _id: appt._id, status: 'pending' }, { $set: { status: 'closed' } }, { session });
+  }
 
   const menteeSet: Record<string, unknown> = { status: plan.menteeTo, updatedAt: now };
   if (plan.priority) {
@@ -86,7 +91,7 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     menteeSet['priorityReason'] = plan.priority.reason;
   }
   if (plan.menteeTo === 'waiting') {
-    menteeSet['lastOutcome'] = input.action === 'decline_schedule' ? 'declined_schedule' : input.action === 'expire' ? 'expired' : 'cancelled_by_staff';
+    menteeSet['lastOutcome'] = input.action === 'decline_schedule' || input.action === 'mentee_reschedule' ? 'declined_schedule' : input.action === 'expire' ? 'expired' : 'cancelled_by_staff';
   } else if (input.action === 'accept' || input.action === 'confirm_in_person') {
     menteeSet['lastOutcome'] = null;
   }

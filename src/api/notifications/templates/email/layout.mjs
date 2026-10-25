@@ -15,8 +15,6 @@ td { padding: 0; }
 .canvas { background-color: #F3DDF6; }
 .wrap { width: 100%; max-width: 600px; background-color: #FFFFFF; border-radius: 20px; box-shadow: 0 10px 30px rgba(61,10,69,0.12); }
 .hero { background-color: #6E1A78; background-image: linear-gradient(180deg, #6E1A78 0%, #B85BC4 100%); padding: 28px 32px 26px; border-radius: 20px 20px 0 0; }
-.logo-tech { font-family: ${FONT_DISPLAY}; font-size: 13px; line-height: 13px; font-weight: 700; letter-spacing: 1px; color: #FBEAFD; }
-.logo-woman { font-family: ${FONT_DISPLAY}; font-size: 30px; line-height: 30px; font-weight: 800; color: #FFFFFF; }
 .shape { width: 28px; height: 28px; font-size: 1px; line-height: 1px; }
 .shape-1 { background-color: #F26430; border-radius: 50%; }
 .shape-2 { background-color: #C9F4EE; border-radius: 8px; }
@@ -99,7 +97,7 @@ export function renderHtml(e) {
 <tr><td class="hero" bgcolor="#6E1A78">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr>
-<td valign="middle"><div class="logo-tech">TECH</div><div class="logo-woman">WOMAN</div></td>
+<td valign="middle"><img src="https://techwoman.dev/brand/techwoman-logo-600.png" width="180" height="64" alt="Tech Woman" style="display:block;border:0;outline:none;text-decoration:none;height:64px;width:180px;color:#FFFFFF;font-family:Arial,sans-serif;font-size:24px;font-weight:bold;"></td>
 <td align="right" valign="middle" aria-hidden="true"><table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr><td class="shape shape-1" width="28" height="28" bgcolor="#F26430">&nbsp;</td><td class="gap8" width="8">&nbsp;</td><td class="shape shape-2" width="28" height="28" bgcolor="#C9F4EE">&nbsp;</td><td class="gap8" width="8">&nbsp;</td><td class="shape shape-3" width="28" height="28" bgcolor="#D98CE6">&nbsp;</td></tr></table></td>
 </tr>
 <tr><td colspan="2" class="hero-sub">Mentoria · {{evento_data}} · {{evento_local}}</td></tr>

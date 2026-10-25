@@ -27,11 +27,13 @@ export const E02BodySchema = z
   .strict();
 export type E02Body = z.infer<typeof E02BodySchema>;
 
-/** 201: inscrição criada (ou reativada, RN01). Devolve o token para montar o link pessoal de P6. */
+/** 201: inscrição criada (ou reativada, RN01). Devolve o token, o caminho de P6 e o link curto (E48). */
 export const E02CreatedSchema = z.object({
   status: z.literal('created'),
   token: z.string(),
   personalPath: z.string().describe('/mentoria/minha?t=<token>'),
+  /** Link curto de P6 (E48, `kind = personal`): o que P5 mostra e copia. */
+  shortPath: z.string().describe('/l/<código>'),
 });
 /** 200: e-mail já inscrito e ativo; o link foi reenviado por e-mail (sem token na resposta). */
 export const E02AlreadyRegisteredSchema = z.object({
