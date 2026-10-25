@@ -243,3 +243,22 @@ export interface WhatsappInboundDoc {
   phone: string;
   result: PresenceInterpretation | 'unclear' | 'ignored';
 }
+
+/** `personal` leva a P6 (`/mentoria/minha?t=`); `calendar` leva ao `.ics` de E06. */
+export type ShortLinkKind = 'personal' | 'calendar';
+
+/**
+ * Link curto `/l/<código>` (E48) para o link com o token da participante. Sem validador e sem TTL; o token não é
+ * gravado (E48 o deriva na hora). Um por participante, tipo e `tokenVersion` (`short_link_mentee_kind_version`).
+ */
+export interface ShortLinkDoc {
+  /** Código de 7 caracteres base62. */
+  _id: string;
+  menteeId: ObjectId;
+  kind: ShortLinkKind;
+  /** `tokenVersion` da participante quando o link foi criado; diferente do atual = revogado. */
+  tokenVersion: number;
+  createdAt: Date;
+  /** Fim do evento + 7 dias (TTL `short_link_ttl`); E48 também confere. */
+  expireAt: Date;
+}

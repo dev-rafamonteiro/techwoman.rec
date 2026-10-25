@@ -61,7 +61,7 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 | P3 | Resultado da gamificação | `/jornada/resultado` | Público | Existe, ajustar CTA |
 | P4 | Inscrição na mentoria | `/mentoria/inscricao` | Público | Nova |
 | P5 | Inscrição recebida | `/mentoria/inscricao/ok` | Público | Nova |
-| P6 | Minha mentoria | `/mentoria/minha?t=<token>` | Participante (link pessoal) | Nova |
+| P6 | Minha mentoria | `/mentoria/minha?t=<token>` (as mensagens e P5 levam para cá pelo link curto `/l/<código>`, E48) | Participante (link pessoal) | Nova |
 | M1 | Login | `/entrar` | Mentora, admin | Nova |
 | M2 | Primeiro acesso / troca de senha | `/entrar/nova-senha` | Mentora, admin | Nova |
 | M3 | Minha disponibilidade | `/mentora/disponibilidade` | Mentora | Nova |
@@ -131,7 +131,8 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 ### P5 · Inscrição recebida (nova)
 
 - Mensagem: "Recebemos sua inscrição! Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail e WhatsApp."
-- Botão "Acompanhar minha mentoria" abre P6. Sugestão "Salve este link" com botão copiar.
+- Botão "Acompanhar minha mentoria" abre P6 (navegação interna pelo `personalPath` de **E02**).
+- Sugestão "Salve este link" com botão copiar: mostra e copia o link curto (origem do site + `shortPath` de **E02**, ex.: `https://techwoman.dev/l/IEO31Kd`). `personalPath` e `shortPath` ficam juntos no estado da navegação e no `sessionStorage`, para P5 continuar certa depois de recarregar.
 
 ### P6 · Minha mentoria (nova, link pessoal)
 
@@ -293,7 +294,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 **Estados obrigatórios em toda tela com dados:** carregando (esqueleto), vazio (texto + próxima ação), erro (mensagem + tentar de novo), sem permissão ("Você não tem acesso a esta área"), sessão expirada (volta para M1 mantendo a rota de retorno).
 
-**Mensagens enviadas: o e-mail usa os 6 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7:**
+**Mensagens enviadas: o e-mail usa os 6 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos):**
 
 | Momento | Canal | Texto base |
 | --- | --- | --- |

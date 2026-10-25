@@ -26,17 +26,28 @@ export function loadJourney(): Journey | null {
   }
 }
 
-/** Link pessoal de P6 (E02 201), lido por P5. Contém o token (credencial): só sessionStorage. */
-export function savePersonalPath(path: string): void {
+/** Links de P6 (E02 201): `personalPath` (botão) e `shortPath` (link curto mostrado e copiado). */
+export interface PersonalLinks {
+  personalPath: string;
+  shortPath?: string;
+}
+
+/** Lido por P5. Contém o token (credencial): só sessionStorage. */
+export function savePersonalPath(links: PersonalLinks): void {
   try {
-    sessionStorage.setItem(PERSONAL_KEY, path);
+    sessionStorage.setItem(PERSONAL_KEY, JSON.stringify(links));
   } catch {
     /* ignora */
   }
 }
-export function loadPersonalPath(): string | null {
+export function loadPersonalPath(): PersonalLinks | null {
   try {
-    return sessionStorage.getItem(PERSONAL_KEY);
+    const raw = sessionStorage.getItem(PERSONAL_KEY);
+    if (!raw) return null;
+    // versão anterior guardava só o caminho em texto
+    if (raw.startsWith('/')) return { personalPath: raw };
+    const v = JSON.parse(raw) as PersonalLinks;
+    return typeof v.personalPath === 'string' ? v : null;
   } catch {
     return null;
   }

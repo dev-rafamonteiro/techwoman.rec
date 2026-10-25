@@ -12,6 +12,7 @@ import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
 import { sealSecret } from '../lib/secret-box.js';
 import { invalidSubjectVariable } from '../notifications/render.js';
+import { shortLinkExpireAt } from '../lib/short-links.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { RAW, respond, route } from '../lib/route.js';
 import { iso, toOutboxItemView, toTableView, toUserView } from '../lib/views.js';
@@ -130,6 +131,10 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
       // horários mudaram de lugar: a disponibilidade das mentoras só pode conter ids existentes
       const ids = slots.map((s) => s.id);
       await ctx.c.users.updateMany({ roles: 'mentor' }, { $pull: { availability: { $nin: ids } } }, { session });
+      // links curtos valem até o fim do evento + 7 dias: mudou o fim, muda a validade (PLAN, Links curtos)
+      if (cur.date !== res.date || cur.endTime !== res.endTime || cur.timezone !== res.timezone) {
+        await ctx.c.shortLinks.updateMany({}, { $set: { expireAt: shortLinkExpireAt(res) } }, { session });
+      }
       await writeAudit(ctx, session, { actor: actorForRoute(req, 'admin'), action: 'event.update', entity: 'event', entityId: cur._id, before: { version: cur.version, registrationOpen: cur.registrationOpen }, after: { version: res.version, registrationOpen: res.registrationOpen }, ip: req.ip });
       return res;
     });

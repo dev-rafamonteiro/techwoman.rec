@@ -79,6 +79,12 @@ const INDEXES: Record<string, IndexDescription[]> = {
   [COLLECTIONS.presenceChecks]: [{ key: { phone: 1, status: 1, sentAt: -1 }, name: 'presence_phone_status_sent' }],
   // mensagens recebidas do WAHA: some em `expireAt` (7 dias)
   [COLLECTIONS.whatsappInbound]: [{ key: { expireAt: 1 }, name: 'wa_inbound_ttl', expireAfterSeconds: 0 }],
+  // links curtos (E48): um por participante, tipo e versão do token; também serve ao deleteMany por menteeId
+  // e somem em `expireAt` (fim do evento + 7 dias)
+  [COLLECTIONS.shortLinks]: [
+    { key: { menteeId: 1, kind: 1, tokenVersion: 1 }, name: 'short_link_mentee_kind_version', unique: true },
+    { key: { expireAt: 1 }, name: 'short_link_ttl', expireAfterSeconds: 0 },
+  ],
 };
 
 /**

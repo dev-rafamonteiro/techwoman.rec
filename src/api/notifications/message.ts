@@ -1,6 +1,5 @@
-import { API_PREFIX, formatTimeBR, type OutboxType } from '@tw/shared';
+import { formatTimeBR, type OutboxType } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, TableDoc, UserDoc } from '@tw/db';
-import { menteeToken, personalLink } from '../lib/tokens.js';
 import type { NotifierAttachment } from '../worker/notifier.js';
 import { buildIcs, ICS_FILENAME, tableLabel } from './ics.js';
 import { renderEmail, RenderError, type RenderedEmail } from './render.js';
@@ -19,7 +18,11 @@ export interface EmailMessageInput {
   /** Senha provisória já decifrada (layout 6). */
   provisionalPassword: string | null;
   baseUrl: string;
-  menteeTokenSecret: string;
+  /**
+   * Links curtos já resolvidos no worker (E48): `personal` = `link_minha_mentoria`, `calendar` = `link_agenda`
+   * (só confirmed, moved e reminder). null sem participante.
+   */
+  links: { personal: string; calendar: string | null } | null;
   tempPasswordHours: number;
   /** UID e SEQUENCE do `.ics` anexado (`icsIdentity`). */
   ics: { uid: string; sequence: number };
@@ -51,11 +54,10 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
     link_privacidade: `${i.baseUrl}/privacidade`,
     ano: event.date.slice(0, 4),
   };
-  if (mentee) {
-    const token = menteeToken(i.menteeTokenSecret, mentee._id, mentee.tokenVersion);
-    vars['nome'] = mentee.name;
-    vars['link_minha_mentoria'] = personalLink(i.baseUrl, token);
-    vars['link_agenda'] = `${i.baseUrl}${API_PREFIX}/public/calendar.ics?t=${token}`;
+  if (mentee) vars['nome'] = mentee.name;
+  if (i.links) {
+    vars['link_minha_mentoria'] = i.links.personal;
+    if (i.links.calendar) vars['link_agenda'] = i.links.calendar;
   }
   if (a) {
     vars['horario'] = formatTimeBR(a.startAt, tz);

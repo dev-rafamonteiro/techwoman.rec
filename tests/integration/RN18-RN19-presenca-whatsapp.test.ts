@@ -180,7 +180,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
       const canc = n.sent.find((m: any) => m.type === "presence_cancelled");
       expect(canc.channel).toBe("whatsapp");
       expect(canc.text).toContain("foi cancelada e você continua na fila com prioridade");
-      expect(canc.text).toContain("/mentoria/minha?t=");
+      expect(canc.text).toMatch(/\/l\/[0-9A-Za-z]{7}/);
 
       await api!.processOutbox!(b.t.db, { notifier: n, now: min(start, -4), config: WORKER_CONFIG });
       const rem1 = await c.outbox.find({ type: "reminder", menteeId: mentee(1).doc._id }).sort({ nextAttemptAt: 1 }).toArray();

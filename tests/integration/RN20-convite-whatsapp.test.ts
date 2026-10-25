@@ -87,7 +87,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN20 convite pelo 
     const appt = await apptOf(0);
     const msg = wa.find((m: any) => m.to === mentee(0).doc.phone);
     expect(msg.list).toMatchObject({ title: "Oi, Participante 1!", footer: "Se preferir, responda SIM ou NÃO", button: "Responder" });
-    expect(msg.list.description).toMatch(/^Mentora 1 quer te mentorar às \d{1,2}h\d{2}, na Mesa 1\. Você aceita\? Responda até \d{1,2}h\d{2}\.\nDetalhes: http\S+\/mentoria\/minha\?t=\S+$/);
+    expect(msg.list.description).toMatch(/^Mentora 1 quer te mentorar às \d{1,2}h\d{2}, na Mesa 1\. Você aceita\? Responda até \d{1,2}h\d{2}\.\nDetalhes: http\S+\/l\/[0-9A-Za-z]{7}$/);
     expect(msg.list.sections[0].rows).toEqual([
       { title: "Aceito", rowId: `aceitar:${appt._id}`, description: null },
       { title: "Não posso", rowId: `recusar:${appt._id}`, description: "Você conta o motivo na sua página" },
@@ -208,9 +208,9 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN20 convite pelo 
     const decline = byType("invite_decline_link");
     expect(decline).toHaveLength(1);
     expect(decline[0].channel).toBe("whatsapp");
-    expect(decline[0].text).toMatch(/^Tudo bem, Participante 1! Para recusar, conte o motivo na sua página: http\S+\/mentoria\/minha\?t=\S+\. Se for o horário, você continua na fila com prioridade\.$/);
+    expect(decline[0].text).toMatch(/^Tudo bem, Participante 1! Para recusar, conte o motivo na sua página: http\S+\/l\/[0-9A-Za-z]{7}\. Se for o horário, você continua na fila com prioridade\.$/);
     expect(byType("invite_closed").map((m: any) => m.text)).toEqual([
-      expect.stringMatching(/^Este convite não está mais disponível\. Veja como está sua inscrição: http\S+\/mentoria\/minha\?t=\S+$/),
+      expect.stringMatching(/^Este convite não está mais disponível\. Veja como está sua inscrição: http\S+\/l\/[0-9A-Za-z]{7}$/),
       expect.stringMatching(/^Este convite não está mais disponível\./),
     ]);
     expect(byType("invite_unclear").map((m: any) => m.text)).toEqual(["Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO."]);

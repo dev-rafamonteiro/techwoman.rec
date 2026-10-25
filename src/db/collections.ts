@@ -8,6 +8,7 @@ import type {
   OutboxDoc,
   PresenceCheckDoc,
   SessionDoc,
+  ShortLinkDoc,
   TableDoc,
   UserDoc,
   WhatsappInboundDoc,
@@ -25,6 +26,7 @@ export const COLLECTIONS = {
   idempotencyKeys: 'idempotency_keys',
   presenceChecks: 'presence_checks',
   whatsappInbound: 'whatsapp_inbound',
+  shortLinks: 'short_links',
 } as const;
 
 export interface Collections {
@@ -39,6 +41,7 @@ export interface Collections {
   idempotencyKeys: Collection<IdempotencyDoc>;
   presenceChecks: Collection<PresenceCheckDoc>;
   whatsappInbound: Collection<WhatsappInboundDoc>;
+  shortLinks: Collection<ShortLinkDoc>;
 }
 
 export function getCollections(db: Db): Collections {
@@ -54,5 +57,6 @@ export function getCollections(db: Db): Collections {
     idempotencyKeys: db.collection<IdempotencyDoc>(COLLECTIONS.idempotencyKeys),
     presenceChecks: db.collection<PresenceCheckDoc>(COLLECTIONS.presenceChecks),
     whatsappInbound: db.collection<WhatsappInboundDoc>(COLLECTIONS.whatsappInbound),
+    shortLinks: db.collection<ShortLinkDoc>(COLLECTIONS.shortLinks),
   };
 }

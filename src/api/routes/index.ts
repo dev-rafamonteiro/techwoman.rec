@@ -9,6 +9,7 @@ import { registerEmailPreviewRoutes } from './email-preview.js';
 import { registerInviteRoutes } from './invite.js';
 import { registerMentorRoutes } from './mentor.js';
 import { registerPublicRoutes } from './public.js';
+import { registerShortLinkRoutes } from './short-links.js';
 import { registerWebhookRoutes } from './webhooks.js';
 
 export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
@@ -22,4 +23,5 @@ export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerAdminConfigRoutes(app, ctx); // E40–E45
   registerEmailPreviewRoutes(app, ctx); // E46
   registerWebhookRoutes(app, ctx); // E47
+  registerShortLinkRoutes(app, ctx); // E48
 }

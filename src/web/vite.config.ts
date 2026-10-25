@@ -17,7 +17,11 @@ export default defineConfig(({ mode }) => {
   },
   server: {
     port: 5173,
-    proxy: { '/api': { target: apiTarget, changeOrigin: true } },
+    proxy: {
+      '/api': { target: apiTarget, changeOrigin: true },
+      // link curto (E48): /l/<código> -> /api/l/<código>. Regex: a chave '/l' casaria com /login, /logo...
+      '^/l/': { target: apiTarget, changeOrigin: true, rewrite: (p) => '/api' + p },
+    },
   },
   build: { outDir: 'dist', sourcemap: true },
 };

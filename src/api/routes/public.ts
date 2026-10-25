@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
 import { E01, E02, E03, E04, E05, E06, E07, E08, type E01Response } from '@tw/shared';
 import { hashMenteeToken, menteeToken, personalPath } from '../lib/tokens.js';
+import { getOrCreateShortLink, shortLinkExpireAt, shortPath } from '../lib/short-links.js';
 import type { MenteeDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, isDuplicateKey } from '../lib/errors.js';
@@ -87,6 +88,13 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
 
       if (outcome === 'resend_link' && existing) return resend(existing);
 
+      // 201: o link curto nasce depois do commit da inscrição (duplicate key dentro da transação a abortaria)
+      const created = async (m: MenteeDoc) => {
+        const token = menteeToken(ctx.config.menteeTokenSecret, m._id, m.tokenVersion);
+        const code = await getOrCreateShortLink(ctx.c, m, 'personal', shortLinkExpireAt(event), ctx.now());
+        return respond(201, { status: 'created' as const, token, personalPath: personalPath(token), shortPath: shortPath(code) });
+      };
+
       const fields = {
         name: body.name,
         email: body.email,
@@ -128,8 +136,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
           if (again) return resend(again);
           throw new AppError('CONFLICT', 'Tente novamente.');
         }
-        const token = menteeToken(ctx.config.menteeTokenSecret, updated._id, updated.tokenVersion);
-        return respond(201, { status: 'created' as const, token, personalPath: personalPath(token) });
+        return created(updated);
       }
 
       // create
@@ -168,7 +175,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
         }
         throw err;
       }
-      return respond(201, { status: 'created' as const, token, personalPath: personalPath(token) });
+      return created(doc);
     },
     { rateLimit: { max: 300, timeWindow: '10 minutes' } },
   );

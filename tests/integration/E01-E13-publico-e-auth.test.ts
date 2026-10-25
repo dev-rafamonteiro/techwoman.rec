@@ -33,6 +33,11 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
     expect(r.status).toBe(201);
     expect(r.body.token).toBeTruthy();
     expect(r.body.personalPath).toContain(r.body.token);
+    // link curto de P5 (E48): short_links não guarda o token
+    expect(r.body.shortPath).toMatch(/^\/l\/[0-9A-Za-z]{7}$/);
+    const sl = (await b.t.db.collection("short_links").findOne({ _id: r.body.shortPath.slice(3) } as never))!;
+    expect(sl).toMatchObject({ kind: "personal", tokenVersion: 1 });
+    expect(JSON.stringify(sl)).not.toContain(r.body.token);
     const doc = (await getCollections(b.t.db).mentees.findOne({}))!;
     expect(doc.emailNorm).toBe("maria@exemplo.test");
     expect(doc.phone).toMatch(/^\+55/);

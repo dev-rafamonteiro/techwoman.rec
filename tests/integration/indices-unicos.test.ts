@@ -101,5 +101,9 @@ describe("índices únicos parciais de appointments (PLAN: Modelo de dados; Conc
     expect((await idx("outbox")).find((i) => i.name === "outbox_dedupe")?.unique).toBe(true);
     expect((await idx("sessions")).find((i) => i.name === "session_ttl")?.expireAfterSeconds).toBe(0);
     expect((await idx("idempotency_keys")).find((i) => i.name === "idem_ttl")?.expireAfterSeconds).toBe(600);
+    // links curtos (E48): um por participante, tipo e versão do token
+    const sl = (await idx("short_links")).find((i) => i.name === "short_link_mentee_kind_version");
+    expect(sl?.unique).toBe(true);
+    expect(sl?.key).toEqual({ menteeId: 1, kind: 1, tokenVersion: 1 });
   });
 });

@@ -43,7 +43,8 @@ export interface HandlerArgs<E extends EndpointDef> {
 export type HandlerResult<E extends EndpointDef> = Out<E['response']> | Respond<Out<E['response']>> | typeof RAW | void;
 
 export interface RouteOptions {
-  rateLimit?: { max: number; timeWindow: string | number };
+  /** `keyGenerator` troca a chave global (sessão/token/IP) por outra, ex.: só o IP em E48. */
+  rateLimit?: { max: number; timeWindow: string | number; keyGenerator?: (req: FastifyRequest) => string };
   /** Rotas que o usuário com `mustChangePassword` ainda pode chamar (E11, E12, E13, E28). */
   allowWhilePasswordChange?: boolean;
   /** Corpo bruto (multipart): não faz parse do `body`. */

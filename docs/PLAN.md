@@ -40,7 +40,7 @@ A requisição entra pelo Cloudflare, atravessa o túnel até o Nginx e chega à
 | Container | Imagem / base | Função | Redes |
 | --- | --- | --- | --- |
 | `cloudflared` | cloudflare/cloudflared | Túnel de saída para o Cloudflare; nenhuma porta publicada no host | `edge` |
-| `web` | nginx:alpine + build do front | Serve a SPA e faz proxy de `/api/*` para a API; cabeçalhos de segurança | `edge`, `app` |
+| `web` | nginx:alpine + build do front | Serve a SPA e faz proxy de `/api/*` e do link curto `/l/*` (E48) para a API; cabeçalhos de segurança | `edge`, `app` |
 | `api` | node:24-alpine (multi-stage, usuário não root) | REST, autenticação, regras de agenda, SSE | `app`, `egress` |
 | `worker` | mesma imagem da API, comando diferente | Consome `outbox`, envia e-mail/WhatsApp, expira convites, dispara lembretes | `egress` |
 | `mongo-local` (só perfil `dev`) | mongodb/mongodb-atlas-local | Banco local com replica set para transações e Change Streams | `app` |
@@ -150,6 +150,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 | `audit_logs` | Trilha de auditoria | A9 |
 | `presence_checks` | Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença (RN18) | P6, A9 |
 | `whatsapp_inbound` | Mensagens recebidas do WAHA já processadas (deduplicação, TTL de 7 dias) | — |
+| `short_links` | Links curtos `/l/<código>` que levam ao link pessoal ou ao `.ics` da participante (E48) | P5, e-mails, WhatsApp |
 
 ### events
 
@@ -175,7 +176,7 @@ Campos: `name`, `email` (minúsculo), `roles`, `passwordHash` (argon2id), `mustC
 
 ### mentees
 
-Campos: `eventId`, `name`, `email`, `emailNorm`, `phone` (E.164), `linkedin`, `area`, `quizScores{}`, `preferredPeriod` (`morning` | `early_afternoon` | `late_afternoon` | `any`), `note`, `consent{version, acceptedAt}`, `status`, `priority`, `priorityReason`, `queuedAt`, `currentAppointmentId`, `tokenHash`, `createdAt`.
+Campos: `eventId`, `name`, `email`, `emailNorm`, `phone` (E.164), `linkedin`, `area`, `quizScores{}`, `preferredPeriod` (`morning` | `early_afternoon` | `late_afternoon` | `any`), `note`, `consent{version, acceptedAt}`, `status`, `priority`, `priorityReason`, `queuedAt`, `currentAppointmentId`, `tokenHash`, `tokenVersion` (versão do token; incrementar revoga o link pessoal e os links curtos), `createdAt`.
 
 ### appointments
 
@@ -195,6 +196,7 @@ As duas travas são campos booleanos mantidos junto com o status:
 - `audit_logs`: `at`, `actorId`, `actorRole`, `action`, `entity`, `entityId`, `before`, `after`, `ip`.
 - `presence_checks` (sem validador; `_id` = `appointmentId`): `kind` (`invite` | `presence`; ausente = `presence`), `menteeId`, `phone` (só dígitos, ex.: `5511996604159`), `messageId` (hash final do id da mensagem no WAHA), `status` (`pending` | `confirmed` | `cancelled` | `closed`), `sentAt`, `answeredAt`, `answer{kind: "list" | "text", text, interpretation: "confirm" | "cancel" | null}`. Índice `{ phone: 1, status: 1, sentAt: -1 }`.
 - `whatsapp_inbound` (sem validador; `_id` = hash final do id da mensagem recebida): `receivedAt`, `expireAt` (TTL), `phone`, `result` (`confirm` | `cancel` | `unclear` | `ignored`). Serve só para descartar o mesmo evento reenviado pelo WAHA.
+- `short_links` (sem validador; `_id` = código de 7 caracteres base62): `menteeId`, `kind` (`personal` | `calendar`), `tokenVersion` (o da participante quando o link foi criado), `createdAt`, `expireAt` (fim do evento + 7 dias; TTL). O token não é gravado: E48 o deriva na hora. Regras em Notificações > Links curtos.
 
 ### Índices
 
@@ -217,6 +219,8 @@ db.sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 })
 db.outbox.createIndex({ status: 1, nextAttemptAt: 1 })
 db.outbox.createIndex({ dedupeKey: 1 }, { unique: true })
 db.audit_logs.createIndex({ eventId: 1, at: -1 })
+db.short_links.createIndex({ menteeId: 1, kind: 1, tokenVersion: 1 }, { unique: true })  // nome: short_link_mentee_kind_version
+db.short_links.createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 })  // nome: short_link_ttl
 ```
 
 Os índices são criados pelo script `create-indexes`, executado no start da API (idempotente). Validação de schema (`$jsonSchema`) em `mentees`, `appointments` e `users` com `validationLevel: "strict"`.
@@ -273,20 +277,21 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
 
 ## API REST ligada às telas
 
-Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as rotas ficam sob `/api`, recebem e devolvem JSON validado por Zod e respondem erros no formato `{ "code": "TABLE_TAKEN", "message": "..." }`.
+Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as rotas ficam sob `/api` (exceção: o link curto público `/l/<código>`, que Nginx e Vite reescrevem para a rota da API `/api/l/<código>`, E48), recebem e devolvem JSON validado por Zod e respondem erros no formato `{ "code": "TABLE_TAKEN", "message": "..." }`.
 
 ### Público e participante
 
 | Código | Método e rota | Telas | Regra / observação |
 | --- | --- | --- | --- |
 | E01 | `GET /public/event` | P1, P4 | Nome, data, local, áreas, períodos, inscrições abertas |
-| E02 | `POST /public/mentees` | P4 | Turnstile obrigatório; RN01, RN02; devolve 201 com link pessoal ou 200 `ALREADY_REGISTERED` (reenvia o link) |
+| E02 | `POST /public/mentees` | P4 | Turnstile obrigatório; RN01, RN02; devolve 201 (inscrição nova ou reativada pela RN01) com `token`, `personalPath` (`/mentoria/minha?t=<token>`, usado no botão de P5) e `shortPath` (`/l/<código>`, `kind = personal`, o link que P5 mostra e copia), ou 200 `ALREADY_REGISTERED` (reenvia o link, sem devolvê-lo). O link curto é criado depois do commit da transação da inscrição |
 | E03 | `GET /public/me` (header `X-Mentee-Token`) | P6 | Status, convite ativo (mentora, mesa, horário, prazo) |
 | E04 | `POST /public/me/actions` | P6 | `{ action: "accept" \| "decline" \| "cancel" \| "reschedule" \| "update_preference", reason?, preferredPeriod? }`; RN06, RN14, RN19 (`reschedule` só de `confirmed`) |
 | E05 | `POST /public/resend-link` | P6 | Sempre 202, exista ou não o e-mail (sem enumeração) |
 | E07 | `GET /public/me/slots` | P6 | RN19; horários livres para ela escolher: `{ items: [{ slotId, startAt, endAt, matchesPeriod }] }`; `INVALID_STATE` (409) fora do estado permitido |
 | E08 | `POST /public/me/book` | P6 | RN19; `{ slotId }` com `Idempotency-Key`; o sistema escolhe mentora e mesa e cria a mentoria já `confirmed`; 409 `SLOT_UNAVAILABLE` se o horário acabou de ser ocupado |
 | E06 | `GET /public/calendar.ics?t=<token>` | P6, e-mail 3 | Só para mentoria confirmada; `text/calendar`; `UID` = id da mentoria raiz da cadeia de moves (estável); 404 em qualquer outro status |
+| E48 | `GET /l/:code` (rota da API `/api/l/:code`; link público `<PUBLIC_BASE_URL>/l/<código>`) | E-mails, WhatsApp, P5 | Público, sem login e sem CSRF; não executa ação. Sempre 302 sem corpo, com `Location` relativo: `kind = personal` → `/mentoria/minha?t=<token>`, `kind = calendar` → `/api/public/calendar.ics?t=<token>`, com o token derivado na hora do `tokenVersion` atual. Código inexistente, formato inválido (o parâmetro aceita qualquer texto de até 64 caracteres, sem 422), revogado (`tokenVersion` do link ≠ atual), vencido (`expireAt` já passou) ou de participante que não existe mais → 302 para `/mentoria/minha` (P6 mostra "Link inválido"), resposta idêntica nos cinco casos. Cabeçalhos `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Rate limit próprio por IP: 600 por minuto. Código E48 escolhido depois de E47 (E09 segue livre). Regras em Notificações > Links curtos |
 
 ### Autenticação
 
@@ -479,9 +484,35 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
   - `waha`: WAHA (WhatsApp HTTP API, engine GOWS), envio direto. Texto por `POST {WAHA_URL}/api/sendText` e a List Message de presença por `POST {WAHA_URL}/api/sendList` (`sendButtons` não existe no GOWS), com `X-Api-Key` = `WAHA_API_KEY`/`WAHA_API_KEY_FILE` e `session` = `WAHA_SESSION` (padrão `default`); `chatId` = telefone só com dígitos + `@c.us`. O envio devolve o id da mensagem (`true_<chatId>_<hash>`); o worker guarda o `<hash>`. Respostas chegam por E47: a sessão do WAHA precisa ter, em `config.webhooks`, a URL pública de E47 com `events: ["message"]` e `hmac.key` = `WAHA_WEBHOOK_HMAC_KEY`/`WAHA_WEBHOOK_HMAC_KEY_FILE` (só a API lê essa chave). Em dev, WAHA local em `http://host.containers.internal:3000`. Erros: 400/401/404 e 501 são permanentes; rede, 5xx, 408 e 429 tentam de novo.
   - `cloud`: WhatsApp Business Cloud API (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`), só texto; exige modelos aprovados.
   - `WHATSAPP_ENABLED=true` liga o canal; desligado, tudo vai por e-mail.
-- Os textos vêm dos modelos de A7 (o lembrete aceita também `{minutos}`); as variáveis são substituídas no worker. As List Messages (convite e presença) e as respostas (`presence_*`, `invite_*`) têm texto fixo no código (UI-SPEC, Mensagens enviadas). Todo link de mensagem aponta para P6 com o token da participante.
+- Os textos vêm dos modelos de A7 (o lembrete aceita também `{minutos}`); as variáveis são substituídas no worker. As List Messages (convite e presença) e as respostas (`presence_*`, `invite_*`) têm texto fixo no código (UI-SPEC, Mensagens enviadas). Todo link de mensagem com o token da participante sai como link curto `<PUBLIC_BASE_URL>/l/<código>` (E48), que redireciona para P6 (ou para E06, no `link_agenda`).
 
 **Arquivo .ics:** gerado pelo endpoint E06 e também anexado ao e-mail de confirmação (detalhes em Layouts de e-mail, abaixo).
+
+### Links curtos
+
+Todo link com o token da participante que o sistema envia ou mostra (e-mails, WhatsApp, P5) sai curto: `<PUBLIC_BASE_URL>/l/<código>`, ex.: `https://techwoman.dev/l/IEO31Kd`. E48 redireciona para o link longo. Links sem token (`link_login`, `link_privacidade`) ficam como estão.
+
+- **Código:** 7 caracteres do alfabeto base62 (`0-9A-Za-z`), sorteados um a um com `crypto.randomInt` (sem viés de módulo); cerca de 3,5 × 10¹² combinações. É credencial equivalente ao token.
+- **Tipos (`kind`):** `personal` leva a P6 (`/mentoria/minha?t=<token>`) e vale para `link_minha_mentoria` e o `{link}` do WhatsApp; `calendar` leva a E06 (`/api/public/calendar.ics?t=<token>`) e vale só para `link_agenda` (layout 3: `confirmed`, `moved`, `reminder`).
+- **Um código por participante, tipo e versão do token:** get-or-create pelo índice único `short_link_mentee_kind_version`. Procura `{ menteeId, kind, tokenVersion }`; se não houver, insere com código novo. Duplicate key nesse índice (corrida da mesma participante) → relê e usa o existente; duplicate key no `_id` (código já usado) → sorteia outro, até 5 tentativas. Reenviar o link devolve o mesmo código.
+- **Onde nasce:** no worker, ao processar cada item da `outbox` (depois da checagem de `skipped` e antes de renderizar; erro de banco aqui segue o retry normal, não vira `failed` de renderização), e em E02, depois do commit da transação da inscrição (nunca dentro dela, onde um duplicate key abortaria a inscrição). As funções que montam o e-mail e o WhatsApp recebem os links prontos.
+- **Revogação:** E48 compara o `tokenVersion` gravado no link com o atual da participante. Mudou (ex.: anonimização em E36) ou a participante não existe mais → link inválido. A versão nova ganha código novo no próximo envio. Links longos já enviados antes desta mudança continuam válidos (sem migração); itens da `outbox` reenviados depois já saem curtos, porque o link é montado no envio.
+- **Validade:** `expireAt` = fim do evento (`date` + `endTime` no `timezone` de `events`) + 7 dias, gravado na criação. O índice TTL `short_link_ttl` apaga o documento depois disso, e E48 também confere `expireAt` (o TTL do MongoDB roda a cada minuto). Quando E41 muda `date`, `endTime` ou `timezone`, a mesma transação recalcula `expireAt` de todos os `short_links`.
+- **Roteamento:** a rota da API é `/api/l/:code`; o caminho público `/l/` não é rota do React.
+  - Nginx: bloco `location /l/` antes de `location /`, com `set $api_upstream http://api:3000;` antes de `rewrite ^/l/(.*)$ /api/l/$1 break;` (o `break` encerra as diretivas de rewrite seguintes, `set` inclusive), `proxy_pass $api_upstream;` e os mesmos `proxy_set_header` (`Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`) de `/api/`, `proxy_hide_header Referrer-Policy` e `proxy_hide_header Cache-Control` (para não duplicar), e `add_header` (todos com `always`) de `Cache-Control "no-store"`, `Referrer-Policy "no-referrer"`, `Strict-Transport-Security`, `X-Content-Type-Options` e `X-Frame-Options` (um `add_header` dentro do `location` descarta os do `server`, por isso eles se repetem). Mudar o `nginx.conf` exige rebuild do container `web`; até lá, o `/l/` não funciona no compose de dev (porta 8080).
+  - Vite (dev, 5173): chave de proxy em regex `'^/l/'` para a API com `rewrite: (p) => '/api' + p`. A chave `'/l'` casaria por prefixo com `/login`, `/logo` etc.
+  - Produção: quem servir o app em `techwoman.dev` também encaminha `/l/` para a API.
+- **Logs:** o serializador de `req.url` troca o código por `***` (`/l/***`, `/api/l/***`), como já tira a query.
+
+**Testes dos links curtos**
+
+- [ ] E48 responde 302 com o `Location` certo para `personal` e `calendar`, com `Cache-Control: no-store` e `Referrer-Policy: no-referrer`.
+- [ ] Código inexistente, formato inválido e `tokenVersion` antigo (depois de E36 anonimizar) dão a mesma resposta.
+- [ ] Get-or-create idempotente: reenviar o mesmo tipo reaproveita o código; corrida em paralelo gera um só documento por `menteeId` + `kind` + `tokenVersion`.
+- [ ] `short_links` não guarda o token; anonimizar em E36 apaga os links da participante.
+- [ ] E-mails e WhatsApp saem com `/l/<código>` no lugar de `/mentoria/minha?t=`.
+- [ ] Rate limit por IP de E48.
+- [ ] `expireAt` = fim do evento + 7 dias; link vencido dá a mesma resposta de inexistente; E41 mudando a data recalcula `expireAt`.
 
 ### Layouts de e-mail
 
@@ -503,8 +534,8 @@ Variáveis comuns a todos: `evento_nome`, `evento_data`, `evento_local`, `link_p
 - **Arquivos:** originais do design em `design/email/source/` (somente leitura). Templates de produção em `src/api/notifications/templates/email/` como `01-inscricao-recebida.html` + `.txt`, e assim por diante até `06-acesso-mentora`; assuntos em `subjects.ts`.
 - **Placeholders:** `{{variavel}}`, sempre com escape de HTML. Todo dado de exemplo fixo no layout (nome, horário, mesa) vira placeholder. Variável faltando é erro de renderização: o item vai para `failed` e nunca sai com `{{...}}` cru.
 - **Compatibilidade com clientes de e-mail:** CSS embutido nos elementos no build (juice), layout em tabela com largura máxima de 600 px, imagens com URL absoluta em `https://techwoman.dev/email/` e texto `alt`, sem JavaScript, com texto de pré-visualização (preheader).
-- **Links nunca executam ação:** botões levam a P6 (`/mentoria/minha?t=<token>`), onde a participante aceita ou recusa. Filtros antispam abrem links automaticamente, então um link que aceita o convite por GET aceitaria sozinho.
-- **Adicionar à agenda (layout 3):** o botão aponta para E06, que devolve `text/calendar` da mentoria confirmada: título, mesa, horário em America/Recife, 40 min, local do evento. O mesmo `.ics` vai anexado (`METHOD:PUBLISH`, `UID` = id da mentoria raiz da cadeia `movedFromId`, que não muda quando a mentoria é movida, e `SEQUENCE` = número de moves, para a agenda atualizar o evento em vez de duplicar).
+- **Links nunca executam ação:** botões levam a P6 pelo link curto (`/l/<código>`, que E48 redireciona para `/mentoria/minha?t=<token>`; o redirect só lê), onde a participante aceita ou recusa. Filtros antispam abrem links automaticamente, então um link que aceita o convite por GET aceitaria sozinho.
+- **Adicionar à agenda (layout 3):** o botão aponta para E06 pelo link curto de `kind = calendar`; E06 devolve `text/calendar` da mentoria confirmada: título, mesa, horário em America/Recife, 40 min, local do evento. O mesmo `.ics` vai anexado (`METHOD:PUBLISH`, `UID` = id da mentoria raiz da cadeia `movedFromId`, que não muda quando a mentoria é movida, e `SEQUENCE` = número de moves, para a agenda atualizar o evento em vez de duplicar).
 - **Senha provisória (layout 6):** nunca fica em texto puro no banco. Na `outbox`, a senha vai cifrada (AES-256-GCM, chave no Docker secret `outbox_key`); o worker decifra só no envio e remove o campo (`$unset`) ao marcar `sent` ou `failed`. Logs e A9 mostram "senha oculta". A senha provisória vale 72 h (`users.tempPasswordExpiresAt`); depois disso o login orienta a pedir nova senha ao admin.
 - **Remetente:** `Tech Woman <mentoria@techwoman.dev>`, com Reply-To configurável. Nenhuma menção ao Bradesco.
 - **Prévia:** E46 renderiza qualquer layout com dados de exemplo; A7 usa isso no botão "Prévia dos e-mails". O HTML é fixo no código; em A7 só se editam os assuntos (`events.emailSubjects`, por id de layout, validados contra as variáveis do layout em E41) e os textos do WhatsApp.
@@ -531,14 +562,15 @@ O sistema guarda nome, e-mail, telefone e LinkedIn de cerca de 2.500 pessoas, en
 
 **Token da participante**
 
-- 32 bytes aleatórios em base64url no link; no banco só o SHA-256 (`tokenHash`). Enviado à API por header, nunca registrado em log.
+- 32 bytes em base64url no link, derivados por HMAC-SHA256 de segredo + `menteeId` + `tokenVersion` (`MENTEE_TOKEN_SECRET`); no banco só o SHA-256 (`tokenHash`). Enviado à API por header, nunca registrado em log.
+- Link curto (`/l/<código>`, E48): credencial equivalente ao token, código aleatório de 7 caracteres base62; rate limit de 600 por minuto por IP em E48, mesma resposta para código inexistente ou revogado (sem enumeração), nunca em log (caminho mascarado); revogado quando `tokenVersion` muda.
 - Link vale até 7 dias após o evento.
 
 **Borda e API**
 
 - Cloudflare: TLS, WAF gerenciado, Turnstile em E02 e E05, rate limit alto por IP (300 requisições de inscrição a cada 10 min), porque o Wi-Fi do evento sai por poucos IPs; a defesa principal contra robôs é o Turnstile.
 - API: `@fastify/rate-limit` por sessão; Zod com `strict()` em todo corpo (rejeita campos extras); limite de 1 MB por requisição, 2 MB no CSV.
-- Nginx: CSP restrita a self e Turnstile, HSTS, `X-Content-Type-Options`, `Referrer-Policy: same-origin`.
+- Nginx: CSP restrita a self e Turnstile, HSTS, `X-Content-Type-Options`, `Referrer-Policy: same-origin` (em `/l/`, `no-referrer`, para o código não vazar no cabeçalho `Referer`).
 - Atlas: usuário de banco só com `readWrite` no banco do evento; Access List só com o IP da VM; backup contínuo ligado.
 - Logs sem dados pessoais: e-mail mascarado (`j***@g***.com`), telefone nunca.
 
@@ -548,8 +580,8 @@ O sistema guarda nome, e-mail, telefone e LinkedIn de cerca de 2.500 pessoas, en
 - Finalidade única: organizar a mentoria do evento. Dados não são usados para outro fim nem compartilhados com patrocinadores.
 - Mentoras não veem e-mail nem telefone (projeção por papel), nem nos resultados de busca.
 - Exportação CSV (E37) registrada na auditoria.
-- Retenção: 30 dias após o evento, um job anonimiza `mentees` (mantém área e status para estatística) e apaga `outbox`. Prazo a validar com a organização.
-- Pedido de exclusão: admin cancela e anonimiza a participante em A4.
+- Retenção: 30 dias após o evento, um job anonimiza `mentees` (mantém área e status para estatística) e apaga `outbox` e `short_links`. Prazo a validar com a organização.
+- Pedido de exclusão: admin cancela e anonimiza a participante em A4 (E36 `anonymize`, que na mesma transação incrementa `tokenVersion` e apaga a `outbox` e os `short_links` dela).
 
 ## Infra do dia do evento, observabilidade e testes
 
@@ -567,7 +599,7 @@ A carga esperada é pequena para o tamanho da máquina; o risco real é conflito
 
 **Observabilidade**
 
-- Logs JSON (pino) em stdout, com `requestId`, rota, status e tempo; rotação pelo driver de log do Docker.
+- Logs JSON (pino) em stdout, com `requestId`, rota, status e tempo; rotação pelo driver de log do Docker. A URL vai sem query e com o código do link curto mascarado (`/l/***`, `/api/l/***`).
 - `GET /health` (processo vivo) e `GET /ready` (ping no Atlas) usados pelo `healthcheck` e pelo monitor externo.
 - Alertas do Atlas: conexões, CPU, latência de operação e falhas de eleição de primário.
 - Monitor externo de uptime em `/ready` a cada 1 min, com alerta no WhatsApp/e-mail do Felipe.
@@ -590,7 +622,7 @@ A carga esperada é pequena para o tamanho da máquina; o risco real é conflito
 3. 14/11, 8h: login de teste com uma mentora em cada mesa; abrir inscrições (A7).
 4. Durante o evento: Felipe ou admin no balcão de apoio com A1, A5 e A9 abertos. A cada hora, exportar a agenda (E37) como contingência; se o site cair, o balcão segue pela última exportação.
 5. 15/11: fechar inscrições, exportar tudo, voltar Atlas e VM ao tamanho normal.
-6. 14/12: job de anonimização (prazo a confirmar).
+6. 14/12: job de anonimização, que também apaga `outbox` e `short_links` (prazo a confirmar).
 
 ## Cronograma até 14/11 e pendências
 

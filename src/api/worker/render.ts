@@ -1,6 +1,5 @@
 import { formatTimeBR } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, UserDoc, TableDoc } from '@tw/db';
-import { menteeToken, personalLink } from '../lib/tokens.js';
 import { inviteRowId, presenceMinutes, presenceRowId } from '../domain/index.js';
 import type { NotifierList } from './notifier.js';
 
@@ -55,8 +54,8 @@ export interface RenderInput {
   appointment: AppointmentDoc | null;
   mentor: UserDoc | null;
   table: TableDoc | null;
-  baseUrl: string;
-  menteeTokenSecret: string;
+  /** Links curtos já resolvidos no worker (E48): `{link}` = `personal`. null sem participante. */
+  links: { personal: string; calendar: string | null } | null;
   /** Hora do envio: `{minutos}` do lembrete é calculado agora (RN18). */
   now: Date;
   /**
@@ -78,7 +77,7 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
     horario: a ? formatTimeBR(a.startAt, event.timezone) : '',
     prazo: a?.expiresAt ? formatTimeBR(a.expiresAt, event.timezone) : '',
     minutos: a ? String(presenceMinutes(a.startAt, i.now)) : '',
-    link: i.mentee ? personalLink(i.baseUrl, menteeToken(i.menteeTokenSecret, i.mentee._id, i.mentee.tokenVersion)) : '',
+    link: i.links?.personal ?? '',
   };
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
   if (i.list === 'invite' && a) {
@@ -114,7 +113,7 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
     return { subject, text: `${list.title} ${list.description}`, list };
   }
   let text = fill(tpl);
-  // todo link aponta para P6 (PLAN): garante que mensagens com agendamento tragam o link
-  if (i.mentee && !text.includes(vars['link']!) && ['invite', 'confirmed', 'moved', 'cancelled', 'expired'].includes(item.type)) text += ` ${vars['link']}`;
+  // todo link aponta para P6 pelo link curto (PLAN): garante que mensagens com agendamento tragam o link
+  if (i.links && !text.includes(vars['link']!) && ['invite', 'confirmed', 'moved', 'cancelled', 'expired'].includes(item.type)) text += ` ${vars['link']}`;
   return { subject, text };
 }
