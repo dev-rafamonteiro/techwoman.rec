@@ -190,3 +190,23 @@
 .tw-p3__intro h1 { color: var(--tw-mint-200); font-size: clamp(32px, 7vw, 56px); }
 .tw-mosaic { display: block; }
 .tw-mosaic svg { width: 100%; height: auto; display: block; }
+
+/* P1 · Quem faz: realização e patrocínio sobre roxo escuro (logos off-white só funcionam em fundo escuro) */
+.tw-p1__quem { background: var(--tw-plum-950); color: #fff; text-align: center; }
+.tw-p1__quem .tw-pub__wrap { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.tw-p1 .tw-p1__quem h2 { color: var(--tw-orange-500); margin: 0 0 8px; }
+.tw-p1 .tw-p1__quem .tw-p1__eyebrow { color: var(--tw-lilac-400); }
+.tw-p1__logos { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 56px; }
+.tw-p1__logos img { display: block; width: auto; max-width: 100%; }
+.tw-p1__logo--combogo { height: 72px; }
+.tw-p1__logo--claro { height: 64px; }
+.tw-p1__logo--bradesco { height: 52px; }
+.tw-p1__logo--mongodb { height: 48px; }
+.tw-p1__quemsep { width: 100%; max-width: 700px; border: 0; border-top: 1px solid rgba(255, 255, 255, .12); margin: 12px 0; }
+@media (max-width: 599px) {
+  .tw-p1__logos { gap: 32px; }
+  .tw-p1__logo--combogo { height: 56px; }
+  .tw-p1__logo--claro { height: 48px; }
+  .tw-p1__logo--bradesco { height: 40px; }
+  .tw-p1__logo--mongodb { height: 36px; }
+}

@@ -139,6 +139,24 @@ export default function P1Home() {
         </div>
       </section>
 
+      {/* Quem faz: logos oficiais em off-white (/brand/patrocinadores/), sem link nem filtro; width/height = altura de desktop x proporção do arquivo */}
+      <section className="tw-p1__quem" id="quem-faz">
+        <div className="tw-pub__wrap">
+          <h2>Quem faz o Tech Woman</h2>
+          <span className="tw-p1__eyebrow">Realização</span>
+          <div className="tw-p1__logos">
+            <img className="tw-p1__logo--combogo" src="/brand/patrocinadores/combogo-branco.png" alt="Combogó Eventos" width={278} height={72} />
+          </div>
+          <hr className="tw-p1__quemsep" />
+          <span className="tw-p1__eyebrow">Patrocínio</span>
+          <div className="tw-p1__logos">
+            <img className="tw-p1__logo--claro" src="/brand/patrocinadores/instituto-claro-branco.png" alt="Instituto Claro" width={197} height={64} />
+            <img className="tw-p1__logo--bradesco" src="/brand/patrocinadores/bradesco-branco.png" alt="Bradesco" width={215} height={52} />
+            <img className="tw-p1__logo--mongodb" src="/brand/patrocinadores/mongodb-branco.svg" alt="MongoDB" width={188} height={48} />
+          </div>
+        </div>
+      </section>
+
       <footer className="tw-p1__foot">
         <div className="tw-pub__wrap tw-row" style={{ justifyContent: 'space-between' }}>
           <span>© 2026 Tech Woman · <a href="mailto:contato@techwoman.rec.br">contato@techwoman.rec.br</a></span>
