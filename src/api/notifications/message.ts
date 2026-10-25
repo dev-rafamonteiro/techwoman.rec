@@ -1,4 +1,4 @@
-import { formatTimeBR, type OutboxType } from '@tw/shared';
+import { formatTimeBR, MENTOR_SLOT_RELEASED_REASONS, type MentorSlotReleasedReason, type OutboxType } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, TableDoc, UserDoc } from '@tw/db';
 import type { NotifierAttachment } from '../worker/notifier.js';
 import { buildIcs, ICS_FILENAME, tableLabel } from './ics.js';
@@ -6,11 +6,13 @@ import { renderEmail, RenderError, type RenderedEmail } from './render.js';
 import { emailSubjectFor, EMAIL_TEMPLATE_BY_OUTBOX_TYPE, type EmailOutboxType } from './templates/email/subjects.js';
 
 export interface EmailMessageInput {
-  item: Pick<OutboxDoc, 'type'>;
+  /** `payload.reason` escolhe o assunto e o `motivo` do layout 9 (aviso à mentora). */
+  item: Pick<OutboxDoc, 'type'> & { payload?: OutboxDoc['payload'] };
   event: EventDoc;
+  /** Participante; no aviso à mentora, a da mentoria (só para `nome`, sem links). */
   mentee: MenteeDoc | null;
   appointment: AppointmentDoc | null;
-  /** Mentora da mentoria (layouts 2 e 3). */
+  /** Mentora da mentoria (layouts 2, 3 e 9). */
   mentor: UserDoc | null;
   table: TableDoc | null;
   /** Destinatária do layout 6. */
@@ -39,6 +41,14 @@ export function formatEventDate(date: string): string {
 }
 
 const isEmailType = (t: OutboxType): t is EmailOutboxType => t in EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
+
+/** Layout 9: frase do motivo (`{{motivo}}`), equivalente ao texto do WhatsApp (UI-SPEC, Mensagens enviadas). */
+const MENTOR_MOTIVO: Record<MentorSlotReleasedReason, (v: { nome: string; horario: string; mesa: string }) => string> = {
+  confirmed_cancelled: (v) => `${v.nome} cancelou a mentoria das ${v.horario} na ${v.mesa}. O horário voltou a ficar livre na sua agenda.`,
+  invite_declined: (v) => `${v.nome} recusou o convite para as ${v.horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila.`,
+  invite_cancelled: (v) => `${v.nome} cancelou a inscrição e o convite para as ${v.horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila.`,
+};
+const isMentorReason = (v: unknown): v is MentorSlotReleasedReason => (MENTOR_SLOT_RELEASED_REASONS as readonly unknown[]).includes(v);
 
 /** Monta assunto, HTML, texto e anexo de um e-mail da outbox. Variável que falta vira `RenderError`. */
 export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
@@ -77,9 +87,22 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
   }
   // layout 7: nova inscrição em P4, sem token (E02 reativa a inscrição cancelada)
   if (layout === '07-inscricao-cancelada') vars['link_inscricao'] = `${i.baseUrl}/mentoria/inscricao`;
-  // assunto editado em A7 vale para o layout; moved e reminder mantêm as variantes próprias do layout 3
-  const custom = type === 'moved' || type === 'reminder' ? undefined : event.emailSubjects?.[layout];
-  const rendered = renderEmail(layout, vars, custom ?? emailSubjectFor(type));
+  // layout 9: painel da mentora (M1, sem token) e a frase do motivo; motivo desconhecido é erro de renderização
+  let reason: MentorSlotReleasedReason | undefined;
+  if (layout === '09-aviso-mentora') {
+    const r = i.item.payload?.['reason'];
+    if (!isMentorReason(r)) throw new RenderError(`motivo desconhecido: ${String(r)}`);
+    reason = r;
+    vars['link_painel'] = `${i.baseUrl}/entrar`;
+    if (vars['nome'] !== undefined && vars['horario'] !== undefined && vars['mesa'] !== undefined) {
+      vars['motivo'] = MENTOR_MOTIVO[r]({ nome: vars['nome'], horario: vars['horario'], mesa: vars['mesa'] });
+    }
+  }
+  // assunto editado em A7 vale para o layout; moved e reminder mantêm as variantes próprias do layout 3 e, no layout 9,
+  // os motivos que não são o padrão (`confirmed_cancelled`) mantêm as variantes próprias
+  const variant = type === 'moved' || type === 'reminder' || (reason !== undefined && reason !== 'confirmed_cancelled');
+  const custom = variant ? undefined : event.emailSubjects?.[layout];
+  const rendered = renderEmail(layout, vars, custom ?? emailSubjectFor(type, reason));
   const attachments: NotifierAttachment[] = [];
   if (layout === '03-confirmacao' && a && i.mentor && i.table) {
     attachments.push({

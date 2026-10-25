@@ -62,6 +62,8 @@ export interface UserDoc {
   mustChangePassword: boolean;
   status: UserStatus;
   linkedin: string | null;
+  /** WhatsApp da mentora (E.164), opcional; ausente em contas antigas = sem telefone (avisos só por e-mail). */
+  phone?: string | null;
   organization: string | null;
   areas: string[];
   bio: string | null;

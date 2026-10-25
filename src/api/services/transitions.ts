@@ -4,7 +4,7 @@ import type { AppointmentDoc, MenteeDoc } from '@tw/db';
 import type { AppContext } from '../ctx.js';
 import { AppError, fromRuleError } from '../lib/errors.js';
 import { writeAudit } from '../lib/audit.js';
-import { enqueueMenteeNotifications, enqueueReminders } from '../lib/outbox.js';
+import { enqueueMenteeNotifications, enqueueMentorNotifications, enqueueReminders } from '../lib/outbox.js';
 import { isRuleError, planTransition, type Actor, type TransitionAction, type TransitionPlan } from '../domain/index.js';
 
 export interface ApplyTransitionInput {
@@ -15,7 +15,10 @@ export interface ApplyTransitionInput {
   scope?: { mentorId?: ObjectId; menteeId?: ObjectId };
   reason?: string | null;
   ip?: string | null;
-  /** Restringe os canais do aviso `plan.notify` (interseção com os disponíveis); RN18 "Não vou": só e-mail. */
+  /**
+   * Restringe os canais do aviso `plan.notify` à participante (interseção com os disponíveis); RN18 "Não vou": só
+   * e-mail. Não vale para o aviso à mentora (`plan.notifyMentor`).
+   */
   notifyChannels?: readonly OutboxChannel[];
 }
 
@@ -115,6 +118,11 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
       ...(plan.notify === 'registration_cancelled' ? { dedupeSuffix: mentee.version } : {}),
       ...(input.notifyChannels ? { channels: input.notifyChannels } : {}),
     });
+  }
+  if (plan.notifyMentor) {
+    // aviso à mentora (PLAN, Notificações > Aviso à mentora): canais dela, sem `notifyChannels`; mentora removida, nada
+    const mentor = await c.users.findOne({ _id: appt.mentorId }, { session, projection: { email: 1, phone: 1 } });
+    if (mentor) await enqueueMentorNotifications(ctx, session, { mentor, appointmentId: appt._id, reason: plan.notifyMentor });
   }
   if (plan.scheduleReminder) {
     await enqueueReminders(ctx, session, mentee, appt);

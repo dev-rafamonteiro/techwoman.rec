@@ -1,5 +1,5 @@
 import type { ClientSession, ObjectId } from 'mongodb';
-import type { OutboxChannel, OutboxType } from '@tw/shared';
+import type { MentorSlotReleasedReason, OutboxChannel, OutboxType } from '@tw/shared';
 import type { MenteeDoc, OutboxDoc, UserDoc } from '@tw/db';
 import { ObjectId as Oid } from 'mongodb';
 import type { AppContext } from '../ctx.js';
@@ -13,9 +13,10 @@ import { sealSecret } from './secret-box.js';
  * Lembrete: canais da regra (e-mail se o WhatsApp não estiver disponível). Senha da mentora: só e-mail. Respostas da
  * presença (RN18) e do convite (RN20): só WhatsApp, e nada sem WhatsApp disponível. Nos demais tipos, `wanted`
  * (quando vem) restringe os canais: interseção com os disponíveis (RN18 "Não vou": `slot_released` só por e-mail).
+ * A destinatária é a participante ou, no `mentor_slot_released`, a mentora (telefone de `users.phone`, opcional).
  */
-export function channelsFor(ctx: AppContext, type: OutboxType, mentee: Pick<MenteeDoc, 'phone'> | null, wanted?: readonly OutboxChannel[]): OutboxChannel[] {
-  const wa = ctx.config.whatsappEnabled && !!mentee?.phone;
+export function channelsFor(ctx: AppContext, type: OutboxType, recipient: { phone?: string | null } | null, wanted?: readonly OutboxChannel[]): OutboxChannel[] {
+  const wa = ctx.config.whatsappEnabled && !!recipient?.phone;
   if (type === 'staff_password') return ['email'];
   if (isPresenceReply(type)) return wa ? ['whatsapp'] : [];
   if (type === 'reminder') {
@@ -50,26 +51,34 @@ const PRESENCE_REPLIES: ReadonlySet<OutboxType> = new Set<PresenceReplyType>([
 ]);
 const isPresenceReply = (t: OutboxType): t is PresenceReplyType => PRESENCE_REPLIES.has(t);
 
-function dedupeBase(i: EnqueueInput): string {
-  if (i.type === 'registered') return `registered:${i.mentee._id}:${i.dedupeSuffix ?? 0}`;
+function dedupeBase(i: Omit<EnqueueInput, 'mentee'>, recipientId: ObjectId): string {
+  if (i.type === 'registered') return `registered:${recipientId}:${i.dedupeSuffix ?? 0}`;
   // `registration_cancelled:<menteeId>:<version da participante depois do cancelamento>` (mesmo vindo de uma mentoria)
-  if (i.type === 'registration_cancelled') return `registration_cancelled:${i.mentee._id}:${i.dedupeSuffix}`;
+  if (i.type === 'registration_cancelled') return `registration_cancelled:${recipientId}:${i.dedupeSuffix}`;
   // uma resposta por mensagem recebida: `presence:<id da mensagem recebida>`
   if (isPresenceReply(i.type)) return `presence:${i.dedupeSuffix}`;
-  return `${i.type}:${i.appointmentId ?? i.mentee._id}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;
+  return `${i.type}:${i.appointmentId ?? recipientId}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;
 }
 
-/** Grava as mensagens na outbox, na mesma transação da mudança de status (padrão outbox). */
-export async function enqueueMenteeNotifications(ctx: AppContext, session: ClientSession | undefined, i: EnqueueInput): Promise<void> {
+/** Destinatária do aviso: participante (`menteeId`) ou mentora (`userId`); o outro id fica null. */
+interface Recipient {
+  menteeId: ObjectId | null;
+  userId: ObjectId | null;
+  email: string;
+  phone?: string | null;
+}
+
+/** Um item por canal disponível, gravados na mesma transação da mudança de status (padrão outbox). */
+async function insertNotifications(ctx: AppContext, session: ClientSession | undefined, i: Omit<EnqueueInput, 'mentee'>, r: Recipient): Promise<void> {
   const now = ctx.now();
-  const docs: OutboxDoc[] = channelsFor(ctx, i.type, i.mentee, i.channels).map((channel) => ({
+  const docs: OutboxDoc[] = channelsFor(ctx, i.type, r, i.channels).map((channel) => ({
     _id: new Oid(),
     eventId: ctx.config.eventId,
     type: i.type,
     channel,
-    to: channel === 'email' ? i.mentee.email : (i.mentee.phone as string),
-    menteeId: i.mentee._id,
-    userId: null,
+    to: channel === 'email' ? r.email : (r.phone as string),
+    menteeId: r.menteeId,
+    userId: r.userId,
     appointmentId: i.appointmentId ?? null,
     payload: { ...i.payload, ...i.channelPayload?.[channel] },
     status: 'pending',
@@ -79,10 +88,33 @@ export async function enqueueMenteeNotifications(ctx: AppContext, session: Clien
     lockedBy: null,
     sentAt: null,
     lastError: null,
-    dedupeKey: `${dedupeBase(i)}:${channel}`,
+    dedupeKey: `${dedupeBase(i, (r.menteeId ?? r.userId)!)}:${channel}`,
     createdAt: now,
   }));
   if (docs.length) await ctx.c.outbox.insertMany(docs, session ? { session } : {});
+}
+
+/** Grava as mensagens à participante na outbox, na mesma transação da mudança de status (padrão outbox). */
+export async function enqueueMenteeNotifications(ctx: AppContext, session: ClientSession | undefined, i: EnqueueInput): Promise<void> {
+  const { mentee, ...rest } = i;
+  await insertNotifications(ctx, session, rest, { menteeId: mentee._id, userId: null, email: mentee.email, phone: mentee.phone });
+}
+
+/**
+ * Aviso à mentora de que a participante liberou o horário (`mentor_slot_released`, PLAN, Notificações > Aviso à
+ * mentora): e-mail, mais WhatsApp se ligado e se ela tiver `phone`. `menteeId` fica null para o worker não pôr links com
+ * o token da participante na mensagem. dedupeKey `mentor_slot_released:<appointmentId>:<canal>`.
+ */
+export async function enqueueMentorNotifications(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { mentor: Pick<UserDoc, '_id' | 'email' | 'phone'>; appointmentId: ObjectId; reason: MentorSlotReleasedReason },
+): Promise<void> {
+  await insertNotifications(
+    ctx, session,
+    { type: 'mentor_slot_released', appointmentId: i.appointmentId, payload: { reason: i.reason } },
+    { menteeId: null, userId: i.mentor._id, email: i.mentor.email, phone: i.mentor.phone ?? null },
+  );
 }
 
 /** dedupeKey de `staff_password`: `pwd:<userId>:<n>` (também é o AAD da cifra). */

@@ -22,6 +22,7 @@ export function toSessionUser(u: UserDoc): SessionUser {
     mustChangePassword: u.mustChangePassword,
     homePath: homePathFor(u),
     linkedin: u.linkedin,
+    phone: u.phone ?? null,
     photoUrl: u.photoUrl,
     areas: u.areas,
     bio: u.bio,

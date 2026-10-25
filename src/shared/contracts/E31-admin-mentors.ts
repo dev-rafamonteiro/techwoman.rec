@@ -5,6 +5,7 @@ import {
   EmailSchema,
   LinkedinInputSchema,
   MENTOR_BIO_MAX,
+  PhoneInputSchema,
   SearchQSchema,
   SlotIdSchema,
   UserStatusSchema,
@@ -29,6 +30,8 @@ export const E31CreateBodySchema = z
     name: z.string().trim().min(2).max(120),
     email: EmailSchema,
     linkedin: LinkedinInputSchema.nullable().optional(),
+    /** WhatsApp (opcional): para o aviso `mentor_slot_released`; a API normaliza para E.164. */
+    phone: PhoneInputSchema.nullable().optional(),
     organization: z.string().trim().max(120).nullable().optional(),
     areas: z.array(AreaKeySchema).max(20).default([]),
     bio: z.string().trim().max(MENTOR_BIO_MAX).nullable().optional(),

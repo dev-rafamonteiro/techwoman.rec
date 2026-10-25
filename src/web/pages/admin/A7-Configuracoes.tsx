@@ -4,13 +4,13 @@ import { ApiError, ErrorState, SkeletonList, Overlay, SelectField, TextArea, Tex
 import { PageHead, Switch, errMsg, useTitle } from './lib/common';
 import './lib/a7-a9.css';
 
-/** `emailSubjects` (assuntos dos 8 layouts) é do contrato de E41 combinado com o backend; ids de src/api/notifications/templates/email/subjects.ts. */
-type EmailLayoutId = '01-inscricao-recebida' | '02-convite-horario' | '03-confirmacao' | '04-convite-expirado' | '05-cancelamento-mentora' | '06-acesso-mentora' | '07-inscricao-cancelada' | '08-horario-liberado';
+/** `emailSubjects` (assuntos dos 9 layouts) é do contrato de E41 combinado com o backend; ids de src/api/notifications/templates/email/subjects.ts. */
+type EmailLayoutId = '01-inscricao-recebida' | '02-convite-horario' | '03-confirmacao' | '04-convite-expirado' | '05-cancelamento-mentora' | '06-acesso-mentora' | '07-inscricao-cancelada' | '08-horario-liberado' | '09-aviso-mentora';
 type Draft = Omit<EventConfig, 'id' | 'slots'> & { emailSubjects?: Partial<Record<EmailLayoutId, string>> };
 const EMAIL_LAYOUTS: [EmailLayoutId, string][] = [
   ['01-inscricao-recebida', 'Inscrição recebida'], ['02-convite-horario', 'Convite de horário'], ['03-confirmacao', 'Confirmação'],
   ['04-convite-expirado', 'Convite expirado'], ['05-cancelamento-mentora', 'Cancelamento pela mentora'], ['06-acesso-mentora', 'Acesso da mentora'],
-  ['07-inscricao-cancelada', 'Inscrição cancelada'], ['08-horario-liberado', 'Horário liberado'],
+  ['07-inscricao-cancelada', 'Inscrição cancelada'], ['08-horario-liberado', 'Horário liberado'], ['09-aviso-mentora', 'Aviso à mentora'],
 ];
 const TEMPLATE_LABELS: [keyof EventConfig['templates'], string][] = [
   ['registered', 'Inscrição recebida'], ['invite', 'Convite de horário'], ['confirmed', 'Confirmação'],

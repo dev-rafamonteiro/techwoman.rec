@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { EMAIL_COMMON_VARS, EMAIL_SUBJECTS, EMAIL_TEMPLATE_IDS, EMAIL_TEMPLATE_VARS, type EmailTemplateId } from "../../src/api/notifications/templates/email/subjects.js";
+import { EMAIL_COMMON_VARS, EMAIL_SUBJECTS, EMAIL_TEMPLATE_IDS, EMAIL_TEMPLATE_VARS, MENTOR_SLOT_RELEASED_SUBJECTS, emailSubjectFor, type EmailTemplateId } from "../../src/api/notifications/templates/email/subjects.js";
 
 /**
- * PLAN, "Testes dos e-mails", caixas 1 e 2: os 8 layouts renderizam com dados de exemplo sem `{{` sobrando
+ * PLAN, "Testes dos e-mails", caixas 1 e 2: os 9 layouts renderizam com dados de exemplo sem `{{` sobrando
  * (snapshot do HTML e do texto) e todos os links são absolutos e nenhum executa ação.
  */
 const DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../src/api/notifications/templates/email");
@@ -24,9 +24,9 @@ function fill(tpl: string, vars: Record<string, string>, html: boolean): string 
 const varsFor = (id: EmailTemplateId) => ({ ...sample.common, ...sample.templates[id]! });
 const placeholders = (s: string) => [...s.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]!);
 
-describe("layouts de e-mail (8): arquivos e variáveis", () => {
-  it("existem os 8 pares .html + .txt com os nomes do PLAN", () => {
-    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora", "07-inscricao-cancelada", "08-horario-liberado"]);
+describe("layouts de e-mail (9): arquivos e variáveis", () => {
+  it("existem os 9 pares .html + .txt com os nomes do PLAN", () => {
+    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora", "07-inscricao-cancelada", "08-horario-liberado", "09-aviso-mentora"]);
     for (const id of EMAIL_TEMPLATE_IDS) {
       expect(read(id, "html").length, id).toBeGreaterThan(500);
       expect(read(id, "txt").length, id).toBeGreaterThan(50);
@@ -134,5 +134,33 @@ describe("layout 8 (horário liberado pela participante)", () => {
     expect(txt).toContain("Tudo bem, Joana. O horário das 14h15 foi liberado, como você pediu.");
     expect(txt).toContain("Você continua na fila com prioridade: as mentoras veem sua inscrição primeiro.");
     expect(EMAIL_SUBJECTS["08-horario-liberado"]).toBe("Seu horário das {{horario}} foi liberado");
+  });
+});
+
+describe("layout 9 (aviso à mentora: a participante liberou o horário)", () => {
+  it("selo PARA MENTORAS, título com o horário, card, botão 'Abrir minha agenda' para o painel (sem token) e a nota", () => {
+    const vars = varsFor("09-aviso-mentora");
+    expect(vars.link_painel).toBe("https://techwoman.dev/entrar");
+    const html = fill(read("09-aviso-mentora", "html"), vars, true);
+    expect(html).toContain("PARA MENTORAS");
+    expect(html).toContain("#D98CE6");
+    expect(html).toContain("Seu horário das 14h15 ficou livre");
+    expect(html).toContain(`href="${vars.link_painel}"`);
+    expect(html).toContain("Abrir minha agenda");
+    expect(html).toContain("O horário já aparece livre no seu painel.");
+    const txt = fill(read("09-aviso-mentora", "txt"), vars, false);
+    expect(txt).toContain("Oi, Ana. Joana cancelou a mentoria das 14h15 na Mesa 7. O horário voltou a ficar livre na sua agenda.");
+    expect(txt).not.toMatch(/\?t=|\/l\//);
+  });
+
+  it("assuntos por motivo (padrão = confirmed_cancelled)", () => {
+    expect(EMAIL_SUBJECTS["09-aviso-mentora"]).toBe("{{nome}} cancelou a mentoria das {{horario}}");
+    expect(MENTOR_SLOT_RELEASED_SUBJECTS).toEqual({
+      confirmed_cancelled: "{{nome}} cancelou a mentoria das {{horario}}",
+      invite_declined: "{{nome}} recusou o convite das {{horario}}",
+      invite_cancelled: "Convite das {{horario}} encerrado",
+    });
+    expect(emailSubjectFor("mentor_slot_released", "invite_declined")).toBe("{{nome}} recusou o convite das {{horario}}");
+    expect(emailSubjectFor("mentor_slot_released")).toBe(EMAIL_SUBJECTS["09-aviso-mentora"]);
   });
 });

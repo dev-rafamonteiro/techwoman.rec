@@ -1,4 +1,4 @@
-// Gera os 8 pares .html (CSS inline via juice) + .txt a partir de emails.mjs e layout.mjs.
+// Gera os 9 pares .html (CSS inline via juice) + .txt a partir de emails.mjs e layout.mjs.
 //   node src/api/notifications/templates/email/build.mjs            -> grava os arquivos aqui
 //   node .../build.mjs --preview <dir>                              -> também renderiza com fixtures/sample-data.json em <dir>
 // Falha se um {{...}} usado não pertencer às variáveis do e-mail (própria + comuns).

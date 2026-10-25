@@ -5,6 +5,7 @@ import {
   IdParamsSchema,
   LinkedinInputSchema,
   MENTOR_BIO_MAX,
+  PhoneInputSchema,
   SlotIdSchema,
   UserStatusSchema,
 } from './common.js';
@@ -19,6 +20,8 @@ export const E32BodySchema = z
   .object({
     name: z.string().trim().min(2).max(120).optional(),
     linkedin: LinkedinInputSchema.nullable().optional(),
+    /** WhatsApp; `null` apaga. */
+    phone: PhoneInputSchema.nullable().optional(),
     organization: z.string().trim().max(120).nullable().optional(),
     areas: z.array(AreaKeySchema).max(20).optional(),
     bio: z.string().trim().max(MENTOR_BIO_MAX).nullable().optional(),

@@ -176,7 +176,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 
 ### users
 
-Campos: `name`, `email` (minúsculo), `roles`, `passwordHash` (argon2id), `mustChangePassword`, `status` (`active` | `disabled`), `linkedin`, `organization` (interno), `areas[]`, `bio`, `photoUrl`, `availability[]` (ids de slot), `lastLoginAt`, `failedLogins`, `lockedUntil`, `createdBy`.
+Campos: `name`, `email` (minúsculo), `roles`, `passwordHash` (argon2id), `mustChangePassword`, `status` (`active` | `disabled`), `linkedin`, `phone` (WhatsApp da mentora, E.164, opcional: mesmo formato e normalização do telefone da participante, `normalizePhoneBR` de `@tw/shared`; ausente ou `null` = sem telefone, os avisos à mentora vão só por e-mail; editável em A3 por E31/E32, na importação E33 pela coluna `whatsapp` e pela própria mentora em M2 por E28; só ela e o admin veem), `organization` (interno), `areas[]`, `bio`, `photoUrl`, `availability[]` (ids de slot), `lastLoginAt`, `failedLogins`, `lockedUntil`, `createdBy`.
 
 ### mentees
 
@@ -227,7 +227,7 @@ db.short_links.createIndex({ menteeId: 1, kind: 1, tokenVersion: 1 }, { unique: 
 db.short_links.createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 })  // nome: short_link_ttl
 ```
 
-Os índices são criados pelo script `create-indexes`, executado no start da API (idempotente). Validação de schema (`$jsonSchema`) em `mentees`, `appointments` e `users` com `validationLevel: "strict"`.
+Os índices são criados pelo script `create-indexes`, executado no start da API (idempotente). Validação de schema (`$jsonSchema`) em `mentees`, `appointments` e `users` com `validationLevel: "strict"`. Campo novo num validador (ex.: `users.phone`) muda o validador gravado: antes de subir a API nova, rode uma vez `npm run db:indexes` com um usuário dbAdmin (o usuário da aplicação só tem `readWrite` e a API não roda `collMod` quando o validador é igual).
 
 ## Regras de negócio e máquina de estados
 
@@ -318,16 +318,16 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E25 | `GET /mentor/appointments` | M6 | Agenda do dia da mentora |
 | E26 | `PATCH /mentor/appointments/:id` | M6 | `{ action: "confirm_in_person" \| "start" \| "finish" \| "no_show" \| "cancel", reason? }`; RN08–RN10 |
 | E27 | `GET /mentor/stream` (SSE) | M4, M6 | Eventos `queue.added`, `queue.removed`, `appointment.updated` |
-| E28 | `PATCH /mentor/profile` | M2 | Nome, LinkedIn, foto, áreas, bio |
+| E28 | `PATCH /mentor/profile` | M2 | Nome, LinkedIn, WhatsApp (`phone`), foto, áreas, bio |
 
 ### Admin e super admin
 
 | Código | Método e rota | Telas | Papel |
 | --- | --- | --- | --- |
 | E30 | `GET /admin/dashboard` | A1 | Admin |
-| E31 | `GET /admin/mentors`, `POST /admin/mentors` | A2, A3 | Admin; POST devolve a senha provisória uma única vez |
-| E32 | `PATCH /admin/mentors/:id` | A3 | Admin; desativar segue RN12; papel admin só por super admin |
-| E33 | `POST /admin/mentors/import` (multipart CSV, `?dryRun=true`) | A3 | Admin; prévia linha a linha, depois confirma |
+| E31 | `GET /admin/mentors`, `POST /admin/mentors` | A2, A3 | Admin; POST devolve a senha provisória uma única vez; `phone` (WhatsApp) opcional |
+| E32 | `PATCH /admin/mentors/:id` | A3 | Admin; desativar segue RN12; papel admin só por super admin; `phone` (WhatsApp) opcional, `null` apaga |
+| E33 | `POST /admin/mentors/import` (multipart CSV, `?dryRun=true`) | A3 | Admin; prévia linha a linha, depois confirma. Colunas: `nome`, `email`, `linkedin`, `organizacao`, `areas`, `disponibilidade` e `whatsapp` (opcional; telefone com DDD, inválido é erro da linha; sem a coluna, o telefone de quem já existe não muda) |
 | E34 | `POST /admin/mentors/:id/reset-password` | A2, A3 | Admin |
 | E35 | `GET /admin/mentees?status=&area=&priority=&q=&cursor=` | A4 | Admin |
 | E36 | `PATCH /admin/mentees/:id` | A4 | Admin; prioridade, cancelar, reenviar link |
@@ -340,7 +340,7 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E43 | `GET/POST/PATCH /admin/users` | A8 | Super admin; mantém ao menos um super admin ativo |
 | E44 | `GET /admin/notifications`, `POST /admin/notifications/:id/retry` | A9 | Admin |
 | E45 | `GET /admin/audit` | A9 | Admin |
-| E46 | `GET /admin/email-preview/:tipo` | A7 | Admin; renderiza um dos 8 layouts de e-mail com dados de exemplo |
+| E46 | `GET /admin/email-preview/:tipo` | A7 | Admin; renderiza um dos 9 layouts de e-mail com dados de exemplo |
 
 ### Webhooks
 
@@ -457,9 +457,11 @@ db.mentees.createSearchIndex("mentees_text", "search", {
 
 ## Notificações
 
-E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os modelos de mensagem forem aprovados a tempo; a página pessoal (P6) funciona mesmo que nenhuma mensagem chegue. Com WhatsApp ligado, todo aviso à participante sai pelos dois canais, para que nenhum dependa só do WhatsApp; a exceção são as respostas a um toque no próprio WhatsApp (`presence_*`, `invite_*`), e o `slot_released` desse mesmo toque, que vai só por e-mail para ela não receber duas mensagens no WhatsApp. `notifyChannels` (entrada opcional de `applyTransition`) restringe os canais do aviso da transição: vale a interseção com os canais disponíveis.
+E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os modelos de mensagem forem aprovados a tempo; a página pessoal (P6) funciona mesmo que nenhuma mensagem chegue. Com WhatsApp ligado, todo aviso à participante sai pelos dois canais, para que nenhum dependa só do WhatsApp; a exceção são as respostas a um toque no próprio WhatsApp (`presence_*`, `invite_*`), e o `slot_released` desse mesmo toque, que vai só por e-mail para ela não receber duas mensagens no WhatsApp. `notifyChannels` (entrada opcional de `applyTransition`) restringe os canais do aviso da transição à participante: vale a interseção com os canais disponíveis. O aviso à mentora (`mentor_slot_released`) segue a mesma regra de canais com o telefone dela (`users.phone`): e-mail, mais WhatsApp se ligado e se ela tiver telefone; `notifyChannels` não vale para ele.
 
 **Fluxo:** a API grava na `outbox` dentro da mesma transação da mudança de status (padrão outbox); o `worker` lê as pendentes, envia e marca o resultado. Nada é enviado direto de dentro da requisição HTTP.
+
+**Aviso à mentora:** o plano da transição (`planTransition`) traz `notifyMentor` (motivo do `mentor_slot_released`, um de `MENTOR_SLOT_RELEASED_REASONS` em `@tw/shared`, ou null), preenchido só com ator participante: `mentee_cancel` de `confirmed` e `mentee_reschedule` → `confirmed_cancelled`; `decline_schedule` e `decline_no_interest` → `invite_declined`; `mentee_cancel` de `invited` → `invite_cancelled`. `applyTransition` lê a mentora da mentoria e grava o aviso com `enqueueMentorNotifications` (`src/api/lib/outbox.ts`), separado do aviso à participante e sem `notifyChannels`. Uma mensagem que chegue pelo WhatsApp do telefone da mentora em E47 não acha `presence_checks` `pending` (eles só existem para a participante) e é ignorada.
 
 | Gatilho | Tipo | Canais | `dedupeKey` |
 | --- | --- | --- | --- |
@@ -471,6 +473,7 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
 | Cancelada pela mentora/admin ou movida | `cancelled` / `moved` | E-mail, WhatsApp | `cancelled:<appointmentId>` |
 | Inscrição cancelada pela própria participante (E04 `cancel`, ou recusa do convite com "Não tenho mais interesse") | `registration_cancelled` | E-mail, WhatsApp | `registration_cancelled:<menteeId>:<version da participante depois do cancelamento>` |
 | Horário liberado pela própria participante, que volta à fila com prioridade (E04 `decline` com motivo `schedule`, E04 `reschedule` de P6, ou "Não vou" no WhatsApp, RN18) | `slot_released` | E-mail, WhatsApp (pelo "Não vou" do WhatsApp, só e-mail: a resposta `presence_cancelled` já vai pelo WhatsApp; E47 passa `notifyChannels: ["email"]` para `applyTransition`) | `slot_released:<appointmentId>` |
+| Horário da mentora liberado pela participante (só quando ela mesma age, nunca mentora/admin nem expiração): mentoria confirmada cancelada por ela (E04 `cancel` ou `reschedule` de P6, "Não vou" no WhatsApp, RN18), convite recusado (E04 `decline`, qualquer motivo) ou inscrição cancelada com convite pendente (E04 `cancel`) | `mentor_slot_released` (para a mentora: `userId` = mentora, `menteeId` = null, `appointmentId` = a mentoria; `payload.reason` = `confirmed_cancelled` \| `invite_declined` \| `invite_cancelled`) | E-mail, WhatsApp (se ligado e `users.phone` preenchido; o "Não vou" do WhatsApp não restringe este aviso) | `mentor_slot_released:<appointmentId>` |
 | Senha provisória enviada pelo admin | `staff_password` | E-mail | `pwd:<userId>:<n>` |
 | Resposta à confirmação de presença (RN18) | `presence_confirmed` / `presence_cancelled` / `presence_unclear` | WhatsApp | `presence:<id da mensagem recebida>` |
 | Resposta ao convite pelo WhatsApp (RN20) | `invite_closed` / `invite_decline_link` / `invite_unclear` | WhatsApp | `presence:<id da mensagem recebida>` |
@@ -478,7 +481,7 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
 **Worker:**
 
 - Laço a cada 2 s: pega até 50 itens com `status: "pending"` e `nextAttemptAt <= agora`, trocando para `sending` com `findOneAndUpdate` (cada item é processado por um só worker, mesmo com mais de uma réplica).
-- Antes de enviar, relê a mentoria; se o status não combina mais com a mensagem (ex.: lembrete de mentoria cancelada), marca `skipped`. `registration_cancelled` só sai se a participante ainda estiver `cancelled` (se ela se inscreveu de novo antes do envio, o item vira `skipped`). `slot_released` só sai se a participante ainda estiver `waiting` (se já recebeu outro convite, foi confirmada ou cancelou antes do envio, o item vira `skipped`).
+- Antes de enviar, relê a mentoria; se o status não combina mais com a mensagem (ex.: lembrete de mentoria cancelada), marca `skipped`. `registration_cancelled` só sai se a participante ainda estiver `cancelled` (se ela se inscreveu de novo antes do envio, o item vira `skipped`). `slot_released` só sai se a participante ainda estiver `waiting` (se já recebeu outro convite, foi confirmada ou cancelou antes do envio, o item vira `skipped`). `mentor_slot_released` só exige que a mentoria exista (sem ela, `skipped`); o worker lê a mentora por `userId` e o nome da participante pelo `menteeId` da mentoria, e como o item não tem `menteeId`, nenhum link com o token da participante entra na mensagem.
 - Falha: até 5 tentativas com espera de 30 s, 1, 2, 4 e 8 min; depois `failed`, visível em A9 com "Reenviar".
 - Itens presos em `sending` há mais de 2 min voltam para `pending`.
 - No mesmo laço roda a expiração de convites (RN07).
@@ -490,13 +493,13 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
   - `waha`: WAHA (WhatsApp HTTP API, engine GOWS), envio direto. Texto por `POST {WAHA_URL}/api/sendText` e a List Message de presença por `POST {WAHA_URL}/api/sendList` (`sendButtons` não existe no GOWS), com `X-Api-Key` = `WAHA_API_KEY`/`WAHA_API_KEY_FILE` e `session` = `WAHA_SESSION` (padrão `default`); `chatId` = telefone só com dígitos + `@c.us`. O envio devolve o id da mensagem (`true_<chatId>_<hash>`); o worker guarda o `<hash>`. Respostas chegam por E47: a sessão do WAHA precisa ter, em `config.webhooks`, a URL pública de E47 com `events: ["message"]` e `hmac.key` = `WAHA_WEBHOOK_HMAC_KEY`/`WAHA_WEBHOOK_HMAC_KEY_FILE` (só a API lê essa chave). Em dev, WAHA local em `http://host.containers.internal:3000`. Erros: 400/401/404 e 501 são permanentes; rede, 5xx, 408 e 429 tentam de novo.
   - `cloud`: WhatsApp Business Cloud API (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`), só texto; exige modelos aprovados.
   - `WHATSAPP_ENABLED=true` liga o canal; desligado, tudo vai por e-mail.
-- Os textos vêm dos modelos de A7 (o lembrete aceita também `{minutos}`); as variáveis são substituídas no worker. As List Messages (convite e presença), as respostas (`presence_*`, `invite_*`) a inscrição cancelada pela participante (`registration_cancelled`) e o horário liberado por ela (`slot_released`) têm texto fixo no código (UI-SPEC, Mensagens enviadas). Todo link de mensagem com o token da participante sai como link curto `<PUBLIC_BASE_URL>/l/<código>` (E48), que redireciona para P6 (ou para E06, no `link_agenda`).
+- Os textos vêm dos modelos de A7 (o lembrete aceita também `{minutos}`); as variáveis são substituídas no worker. As List Messages (convite e presença), as respostas (`presence_*`, `invite_*`) a inscrição cancelada pela participante (`registration_cancelled`), o horário liberado por ela (`slot_released`) e o aviso à mentora (`mentor_slot_released`, um texto por `payload.reason`) têm texto fixo no código (UI-SPEC, Mensagens enviadas). Todo link de mensagem com o token da participante sai como link curto `<PUBLIC_BASE_URL>/l/<código>` (E48), que redireciona para P6 (ou para E06, no `link_agenda`).
 
 **Arquivo .ics:** gerado pelo endpoint E06 e também anexado ao e-mail de confirmação (detalhes em Layouts de e-mail, abaixo).
 
 ### Links curtos
 
-Todo link com o token da participante que o sistema envia ou mostra (e-mails, WhatsApp, P5) sai curto: `<PUBLIC_BASE_URL>/l/<código>`, ex.: `https://techwoman.dev/l/IEO31Kd`. E48 redireciona para o link longo. Links sem token (`link_login`, `link_privacidade`, `link_inscricao`) ficam como estão.
+Todo link com o token da participante que o sistema envia ou mostra (e-mails, WhatsApp, P5) sai curto: `<PUBLIC_BASE_URL>/l/<código>`, ex.: `https://techwoman.dev/l/IEO31Kd`. E48 redireciona para o link longo. Links sem token (`link_login`, `link_painel`, `link_privacidade`, `link_inscricao`) ficam como estão.
 
 - **Código:** 7 caracteres do alfabeto base62 (`0-9A-Za-z`), sorteados um a um com `crypto.randomInt` (sem viés de módulo); cerca de 3,5 × 10¹² combinações. É credencial equivalente ao token.
 - **Tipos (`kind`):** `personal` leva a P6 (`/mentoria/minha?t=<token>`) e vale para `link_minha_mentoria` e o `{link}` do WhatsApp; `calendar` leva a E06 (`/api/public/calendar.ics?t=<token>`) e vale só para `link_agenda` (layout 3: `confirmed`, `moved`, `reminder`).
@@ -522,7 +525,7 @@ Todo link com o token da participante que o sistema envia ou mostra (e-mails, Wh
 
 ### Layouts de e-mail
 
-Os 8 layouts HTML do design substituem o e-mail em texto simples enviado hoje. O worker preenche as variáveis e envia HTML com versão em texto; o WhatsApp continua usando os textos de A7.
+Os 9 layouts HTML do design substituem o e-mail em texto simples enviado hoje. O worker preenche as variáveis e envia HTML com versão em texto; o WhatsApp continua usando os textos de A7.
 
 | # | Layout | Tipo na `outbox` | Disparado por | Assunto | Variáveis próprias |
 | --- | --- | --- | --- | --- | --- |
@@ -534,8 +537,11 @@ Os 8 layouts HTML do design substituem o e-mail em texto simples enviado hoje. O
 | 6 | Acesso da mentora | `staff_password` | A3 "Enviar por e-mail" (E31, E34) e importação (E33) | Seu acesso ao painel de mentoras do Tech Woman | `mentora_nome`, `email_login`, `senha_provisoria`, `link_login`, `validade_senha` |
 | 7 | Inscrição cancelada | `registration_cancelled` | E04 cancel / decline no_interest | Sua inscrição na mentoria do Tech Woman foi cancelada | `nome`, `link_inscricao` |
 | 8 | Horário liberado | `slot_released` | E04 decline schedule / reschedule, "Não vou" no WhatsApp (RN18, só o e-mail) | Seu horário das {{horario}} foi liberado | `nome`, `horario`, `link_minha_mentoria` |
+| 9 | Aviso à mentora | `mentor_slot_released` | Participante cancela a mentoria confirmada, recusa o convite ou cancela a inscrição com convite pendente (E04, "Não vou" no WhatsApp) | Por `payload.reason`: `confirmed_cancelled` "{{nome}} cancelou a mentoria das {{horario}}"; `invite_declined` "{{nome}} recusou o convite das {{horario}}"; `invite_cancelled` "Convite das {{horario}} encerrado" | `mentora_nome`, `nome`, `horario`, `mesa`, `link_painel`, `motivo` |
 
 Variáveis comuns a todos: `evento_nome`, `evento_data`, `evento_local`, `link_privacidade`, `ano`.
+
+Layout 9 (aviso à mentora): `link_painel` = `<PUBLIC_BASE_URL>/entrar` (M1, sem token; com sessão, leva ao painel). `motivo` é a frase do motivo, montada no worker (`message.ts`) a partir de `payload.reason`, com `nome` e `horario` (e `mesa` em `confirmed_cancelled`) já preenchidos; os textos estão na UI-SPEC, Mensagens enviadas. O assunto padrão do layout (`EMAIL_SUBJECTS`) é o de `confirmed_cancelled` e os outros dois motivos usam as variantes `MENTOR_SLOT_RELEASED_SUBJECTS` em `subjects.ts`; como no layout 3, um assunto editado em A7 vale só para o padrão (`confirmed_cancelled`), e as variantes continuam fixas.
 
 Layout 3 (confirmação, mudança e lembrete): além do texto do design, um segundo parágrafo diz "Não vai conseguir ir? Pela sua página você cancela ou troca o horário." O botão "Ver minha mentoria" leva a P6, onde ficam "Cancelar" e "Trocar de horário" (RN19).
 
@@ -543,7 +549,7 @@ Layout 3 (confirmação, mudança e lembrete): além do texto do design, um segu
 
 **Regras de implementação**
 
-- **Arquivos:** originais do design em `design/email/source/` (somente leitura). Templates de produção em `src/api/notifications/templates/email/` como `01-inscricao-recebida.html` + `.txt`, e assim por diante até `08-horario-liberado`; assuntos em `subjects.ts`.
+- **Arquivos:** originais do design em `design/email/source/` (somente leitura). Templates de produção em `src/api/notifications/templates/email/` como `01-inscricao-recebida.html` + `.txt`, e assim por diante até `09-aviso-mentora`; assuntos em `subjects.ts`.
 - **Placeholders:** `{{variavel}}`, sempre com escape de HTML. Todo dado de exemplo fixo no layout (nome, horário, mesa) vira placeholder. Variável faltando é erro de renderização: o item vai para `failed` e nunca sai com `{{...}}` cru.
 - **Compatibilidade com clientes de e-mail:** CSS embutido nos elementos no build (juice), layout em tabela com largura máxima de 600 px, imagens com URL absoluta em `https://techwoman.dev/email/` e texto `alt`, sem JavaScript, com texto de pré-visualização (preheader).
 - **Links nunca executam ação:** botões levam a P6 pelo link curto (`/l/<código>`, que E48 redireciona para `/mentoria/minha?t=<token>`; o redirect só lê), onde a participante aceita ou recusa. Filtros antispam abrem links automaticamente, então um link que aceita o convite por GET aceitaria sozinho.
@@ -555,7 +561,7 @@ Layout 3 (confirmação, mudança e lembrete): além do texto do design, um segu
 
 **Testes dos e-mails**
 
-- [x] Os 8 layouts renderizam com dados de exemplo sem nenhum `{{` sobrando; snapshot do HTML e do texto.
+- [x] Os 9 layouts renderizam com dados de exemplo sem nenhum `{{` sobrando; snapshot do HTML e do texto.
 - [x] Todos os links são absolutos e nenhum executa ação.
 - [x] O `.ics` de E06 e o anexo passam num parser de iCalendar, com horário certo em America/Recife.
 - [x] Depois do envio do layout 6, a senha não aparece na `outbox`, nos logs nem em A9.
@@ -590,7 +596,7 @@ O sistema guarda nome, e-mail, telefone e LinkedIn de cerca de 2.500 pessoas, en
 
 - Consentimento explícito em P4, com versão do texto e data gravadas.
 - Finalidade única: organizar a mentoria do evento. Dados não são usados para outro fim nem compartilhados com patrocinadores.
-- Mentoras não veem e-mail nem telefone (projeção por papel), nem nos resultados de busca.
+- Mentoras não veem e-mail nem telefone das participantes (projeção por papel), nem nos resultados de busca. O WhatsApp da própria mentora (`users.phone`) só aparece para ela (M2) e para o admin (A3).
 - Exportação CSV (E37) registrada na auditoria.
 - Retenção: 30 dias após o evento, um job anonimiza `mentees` (mantém área e status para estatística) e apaga `outbox` e `short_links`. Prazo a validar com a organização.
 - Pedido de exclusão: admin cancela e anonimiza a participante em A4 (E36 `anonymize`, que na mesma transação incrementa `tokenVersion` e apaga a `outbox` e os `short_links` dela).

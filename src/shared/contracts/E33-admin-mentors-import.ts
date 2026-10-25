@@ -3,11 +3,11 @@ import { AreaKeySchema, defineEndpoint, QueryBoolSchema } from './common.js';
 
 /**
  * E33 · POST /admin/mentors/import · A3 · multipart/form-data, campo `file` (CSV, até 2 MB).
- * Colunas do modelo: nome, email, linkedin, organizacao, areas, disponibilidade.
+ * Colunas do modelo: nome, email, linkedin, organizacao, areas, disponibilidade, whatsapp (opcional).
  * Fluxo: `?dryRun=true` devolve a prévia; sem dryRun grava e devolve as senhas provisórias (uma única vez).
  */
 export const MENTOR_IMPORT_FIELD = 'file';
-export const MENTOR_IMPORT_COLUMNS = ['nome', 'email', 'linkedin', 'organizacao', 'areas', 'disponibilidade'] as const;
+export const MENTOR_IMPORT_COLUMNS = ['nome', 'email', 'linkedin', 'organizacao', 'areas', 'disponibilidade', 'whatsapp'] as const;
 export const MENTOR_IMPORT_MAX_BYTES = 2 * 1024 * 1024;
 
 export const E33QuerySchema = z
@@ -27,6 +27,8 @@ export const ImportRowSchema = z.object({
     name: z.string(),
     email: z.string(),
     linkedin: z.string().nullable(),
+    /** WhatsApp em E.164 (coluna `whatsapp`); null se vazio. */
+    phone: z.string().nullable(),
     organization: z.string().nullable(),
     areas: z.array(AreaKeySchema),
     availability: z.array(z.string()),

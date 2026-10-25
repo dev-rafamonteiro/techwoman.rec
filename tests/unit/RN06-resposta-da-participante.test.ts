@@ -85,3 +85,24 @@ describe("mentee não aparece como actor de staff", () => {
     expect(isRuleError(r)).toBe(false);
   });
 });
+
+describe("aviso à mentora mentor_slot_released (PLAN, Notificações > Aviso à mentora)", () => {
+  const run3 = (action: TransitionAction, status: AppointmentStatus, actor: Parameters<typeof planTransition>[0]["actor"]) =>
+    ok(planTransition({ action, appointment: { status, startAt: start, expiresAt: min(start, -5) }, now: during, actor }));
+  it("participante: confirmada cancelada, convite recusado (qualquer motivo) ou inscrição cancelada com convite pendente", () => {
+    expect(run3("mentee_cancel", "confirmed", mentee).notifyMentor).toBe("confirmed_cancelled");
+    expect(run3("mentee_reschedule", "confirmed", mentee).notifyMentor).toBe("confirmed_cancelled");
+    expect(run3("decline_schedule", "invited", mentee).notifyMentor).toBe("invite_declined");
+    expect(run3("decline_no_interest", "invited", mentee).notifyMentor).toBe("invite_declined");
+    expect(run3("mentee_cancel", "invited", mentee).notifyMentor).toBe("invite_cancelled");
+  });
+  it("mentora, admin e expiração não avisam a mentora; aceitar também não", () => {
+    const admin = { userId: "a1", role: "admin" as const };
+    expect(run3("mentee_cancel", "confirmed", admin).notifyMentor).toBeNull();
+    expect(run3("mentee_reschedule", "confirmed", admin).notifyMentor).toBeNull();
+    expect(run3("staff_cancel", "confirmed", staff).notifyMentor).toBeNull();
+    expect(run3("staff_cancel", "invited", admin).notifyMentor).toBeNull();
+    expect(run3("accept", "invited", mentee).notifyMentor).toBeNull();
+    expect(ok(run("expire", "invited", afterExpiry)).notifyMentor).toBeNull();
+  });
+});

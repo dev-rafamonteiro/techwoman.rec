@@ -1,4 +1,4 @@
-import type { AppointmentStatus, MenteeStatus, OutboxType, PriorityReason } from '@tw/shared';
+import type { AppointmentStatus, MenteeStatus, MentorSlotReleasedReason, OutboxType, PriorityReason } from '@tw/shared';
 import { fail, type Actor, type RuleError } from './types.js';
 import { locksFor } from './status.js';
 
@@ -40,6 +40,11 @@ export interface TransitionPlan {
    * `registration_cancelled:<menteeId>:<version>`); null = nenhuma.
    */
   notify: OutboxType | null;
+  /**
+   * Aviso à mentora de que a participante liberou o horário (`mentor_slot_released`, `payload.reason`); só com ator
+   * participante, nunca mentora/admin nem expiração (PLAN, Notificações > Aviso à mentora). null = nenhum.
+   */
+  notifyMentor: MentorSlotReleasedReason | null;
   /** Agenda o lembrete de 15 min antes (RN15). */
   scheduleReminder: boolean;
   /** Registro no histórico e na auditoria. */
@@ -69,6 +74,7 @@ function plan(
     locks: locksFor(appointmentTo),
     menteeTo,
     notify: null,
+    notifyMentor: null,
     scheduleReminder: false,
     reason: null,
     respondedAt: false,
@@ -85,6 +91,7 @@ function plan(
 export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
   const from = i.appointment.status;
   const { now } = i;
+  const byMentee = i.actor.role === 'mentee';
   switch (i.action) {
     case 'accept': {
       if (from !== 'invited') return invalid(from, 'aceitar');
@@ -101,7 +108,8 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       // só a participante recusa (E04); o aviso `slot_released` é para quando ela mesma libera o horário (PLAN, Notificações)
       return plan(from, 'declined', 'waiting', 'appointment.decline', {
         priority: { value: true, reason: 'declined_schedule' },
-        notify: i.actor.role === 'mentee' ? 'slot_released' : null,
+        notify: byMentee ? 'slot_released' : null,
+        notifyMentor: byMentee ? 'invite_declined' : null,
         reason: 'schedule',
         respondedAt: true,
       });
@@ -111,6 +119,7 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       if (isExpiredAt(i.appointment.expiresAt, now)) return fail('INVITE_EXPIRED', 'O prazo para responder terminou.');
       return plan(from, 'declined', 'cancelled', 'appointment.decline', {
         notify: 'registration_cancelled',
+        notifyMentor: byMentee ? 'invite_declined' : null,
         reason: 'no_interest',
         respondedAt: true,
       });
@@ -118,18 +127,24 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
     case 'mentee_cancel': {
       if (from !== 'invited' && from !== 'confirmed') return invalid(from, 'cancelar');
       // E36 (admin cancelando a inscrição) também passa por aqui: o aviso `registration_cancelled` é só para quando a
-      // própria participante cancela (PLAN, Notificações)
-      return plan(from, 'cancelled', 'cancelled', 'appointment.cancel', { notify: i.actor.role === 'mentee' ? 'registration_cancelled' : null, reason: 'mentee_cancelled' });
+      // própria participante cancela (PLAN, Notificações); idem o aviso à mentora (convite encerrado ou mentoria cancelada)
+      return plan(from, 'cancelled', 'cancelled', 'appointment.cancel', {
+        notify: byMentee ? 'registration_cancelled' : null,
+        notifyMentor: byMentee ? (from === 'invited' ? 'invite_cancelled' : 'confirmed_cancelled') : null,
+        reason: 'mentee_cancelled',
+      });
     }
     case 'mentee_reschedule': {
       // RN19 · só `confirmed` e antes do início; mesa e horário livres na hora; volta à fila com prioridade e o
       // `queuedAt` original. Aviso `slot_released` (horário liberado) por e-mail e WhatsApp; pelo "Não vou" do WhatsApp
       // (RN18) E47 restringe ao e-mail (`notifyChannels`), porque a resposta presence_cancelled já vai pelo WhatsApp.
+      // A mentora recebe `mentor_slot_released` (`confirmed_cancelled`) pelos canais dela, sem essa restrição.
       if (from !== 'confirmed') return invalid(from, 'trocar de horário');
       if (now.getTime() >= i.appointment.startAt.getTime()) return fail('INVALID_STATE', 'A mentoria já começou; não é possível trocar de horário.');
       return plan(from, 'cancelled', 'waiting', 'appointment.reschedule', {
         priority: { value: true, reason: 'declined_schedule' },
-        notify: i.actor.role === 'mentee' ? 'slot_released' : null,
+        notify: byMentee ? 'slot_released' : null,
+        notifyMentor: byMentee ? 'confirmed_cancelled' : null,
         reason: 'mentee_reschedule',
       });
     }

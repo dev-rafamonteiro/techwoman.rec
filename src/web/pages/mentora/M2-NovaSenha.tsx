@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
-import { ApiError, Button, TextField, call, useAuth, useQuery, useToast } from '../../ui';
+import { ApiError, Button, TextField, call, maskPhone, useAuth, useQuery, useToast } from '../../ui';
 import { safeNext } from '../../shell/auth';
 import '../public/public.css';
 
@@ -20,6 +20,7 @@ export default function M2NovaSenha() {
   const [touched, setTouched] = useState(false);
   const [name, setName] = useState(user?.name ?? '');
   const [linkedin, setLinkedin] = useState(user?.linkedin ?? '');
+  const [phone, setPhone] = useState(maskPhone((user?.phone ?? '').replace(/^\+55/, '')));
   const [photoUrl, setPhotoUrl] = useState(user?.photoUrl ?? '');
   const [areas, setAreas] = useState<Set<string> | null>(user ? new Set(user.areas) : null);
   const [profileTouched, setProfileTouched] = useState(false);
@@ -32,8 +33,9 @@ export default function M2NovaSenha() {
     confirm: confirm === pw ? undefined : 'As senhas não são iguais.',
     name: !isMentor || name.trim().length >= 2 ? undefined : 'Informe seu nome.',
     photo: !photoUrl || /^https:\/\/\S+$/.test(photoUrl) ? undefined : 'Use um endereço https://',
-  }), [current, pw, confirm, name, photoUrl]);
-  const valid = !errors.current && !errors.pw && !errors.confirm && !errors.name && !errors.photo;
+    phone: [0, 10, 11].includes(phone.replace(/\D/g, '').length) ? undefined : 'Telefone inválido. Informe DDD e número.',
+  }), [current, pw, confirm, name, photoUrl, phone]);
+  const valid = !errors.current && !errors.pw && !errors.confirm && !errors.name && !errors.photo && !errors.phone;
   const shown = <K extends keyof typeof errors>(k: K) => (touched ? errors[k] : undefined);
   const areaList = event.status === 'success' ? event.data.areas : [];
 
@@ -51,6 +53,7 @@ export default function M2NovaSenha() {
             body: {
               name: name.trim(),
               ...(linkedin.trim() ? { linkedin: linkedin.trim() } : {}),
+              phone: phone.trim() || null,
               ...(photoUrl.trim() ? { photoUrl: photoUrl.trim() } : {}),
               ...(areas ? { areas: [...areas] } : {}),
             },
@@ -100,6 +103,9 @@ export default function M2NovaSenha() {
           onChange={(e) => { setName(e.target.value); setProfileTouched(true); }} data-testid="m2-name" />
         <TextField label="LinkedIn" optional value={linkedin} placeholder="seu-usuario ou link do perfil"
           onChange={(e) => { setLinkedin(e.target.value); setProfileTouched(true); }} data-testid="m2-linkedin" />
+        <TextField label="WhatsApp" optional type="tel" inputMode="tel" autoComplete="tel" value={phone} error={shown('phone')} placeholder="(00) 00000-0000"
+          hint="Para avisar quando uma participante liberar seu horário. Sem WhatsApp, o aviso vai só por e-mail."
+          onChange={(e) => { setPhone(maskPhone(e.target.value)); setProfileTouched(true); }} data-testid="m2-phone" />
         <TextField label="Foto" optional type="url" value={photoUrl} error={shown('photo')} placeholder="https://"
           onChange={(e) => { setPhotoUrl(e.target.value); setProfileTouched(true); }} data-testid="m2-photo" />
         {areaList.length > 0 && (

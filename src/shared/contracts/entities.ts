@@ -138,6 +138,8 @@ export const UserViewSchema = z.object({
   roles: z.array(RoleSchema),
   status: UserStatusSchema,
   linkedin: z.string().nullable(),
+  /** WhatsApp da mentora (E.164); só ela e o admin veem. */
+  phone: PhoneE164Schema.nullable(),
   organization: z.string().nullable(),
   areas: z.array(AreaKeySchema),
   bio: z.string().nullable(),

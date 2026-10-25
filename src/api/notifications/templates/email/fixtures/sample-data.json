@@ -52,6 +52,14 @@
       "nome": "Joana",
       "horario": "14h15",
       "link_minha_mentoria": "https://techwoman.dev/mentoria/minha?t=8f3k2q"
+    },
+    "09-aviso-mentora": {
+      "mentora_nome": "Ana",
+      "nome": "Joana",
+      "horario": "14h15",
+      "mesa": "Mesa 7",
+      "link_painel": "https://techwoman.dev/entrar",
+      "motivo": "Joana cancelou a mentoria das 14h15 na Mesa 7. O horário voltou a ficar livre na sua agenda."
     }
   }
 }

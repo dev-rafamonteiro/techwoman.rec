@@ -1,4 +1,4 @@
-// Conteúdo dos 8 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 9 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
 // {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail".
 
@@ -118,5 +118,18 @@ export const EMAILS = [
     ],
     botao: ['Escolher outro horário', 'link_minha_mentoria'],
     linkFallback: 'link_minha_mentoria',
+  },
+  {
+    // aviso à mentora (mentor_slot_released): {{motivo}} é a frase do motivo, montada no worker (message.ts)
+    id: '09-aviso-mentora',
+    vars: ['mentora_nome', 'nome', 'horario', 'mesa', 'link_painel', 'motivo'],
+    preheader: 'O horário já aparece livre no seu painel.',
+    selo: ['PARA MENTORAS', ...SELO.lilas],
+    titulo: 'Seu horário das {{horario}} ficou livre',
+    paragrafos: ['Oi, {{mentora_nome}}. {{motivo}}'],
+    card: [['MESA', '{{mesa}}'], ['HORÁRIO', '{{horario}}'], ['PARTICIPANTE', '{{nome}}']],
+    botao: ['Abrir minha agenda', 'link_painel'],
+    nota: 'O horário já aparece livre no seu painel.',
+    linkFallback: 'link_painel',
   },
 ];

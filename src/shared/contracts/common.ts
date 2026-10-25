@@ -83,6 +83,8 @@ export const OUTBOX_TYPES = [
   'registration_cancelled',
   // horário liberado pela própria participante, que volta à fila com prioridade (E04 decline schedule/reschedule, RN18 "Não vou")
   'slot_released',
+  // aviso à mentora: a participante liberou o horário dela (cancelou a confirmada, recusou ou cancelou com convite pendente)
+  'mentor_slot_released',
   'staff_password',
   // respostas à confirmação de presença pelo WhatsApp (RN18)
   'presence_confirmed',
@@ -95,6 +97,10 @@ export const OUTBOX_TYPES = [
 ] as const;
 export const OutboxTypeSchema = z.enum(OUTBOX_TYPES);
 export type OutboxType = z.infer<typeof OutboxTypeSchema>;
+
+/** `payload.reason` do `mentor_slot_released` (PLAN, Notificações > Aviso à mentora). */
+export const MENTOR_SLOT_RELEASED_REASONS = ['confirmed_cancelled', 'invite_declined', 'invite_cancelled'] as const;
+export type MentorSlotReleasedReason = (typeof MENTOR_SLOT_RELEASED_REASONS)[number];
 
 /** Motivos de recusa em E04 (RN06). */
 export const DECLINE_REASONS = ['schedule', 'no_interest'] as const;
@@ -205,6 +211,17 @@ export const EmailSchema = z.string().trim().toLowerCase().email().max(254);
 /** Telefone brasileiro: aceita máscara; a API normaliza para E.164 (+55...). */
 export const PhoneInputSchema = z.string().trim().min(10).max(20);
 export const PhoneE164Schema = z.string().regex(/^\+[1-9]\d{9,14}$/);
+
+/** Telefone brasileiro (com ou sem máscara/+55) para E.164. Devolve null se inválido. Participante (E02) e mentora (E28, E31–E33). */
+export function normalizePhoneBR(input: string): string | null {
+  let d = input.replace(/\D/g, '');
+  if (d.startsWith('55') && (d.length === 12 || d.length === 13)) d = d.slice(2);
+  if (d.length !== 10 && d.length !== 11) return null;
+  const ddd = Number(d.slice(0, 2));
+  if (ddd < 11 || ddd > 99) return null;
+  if (d.length === 11 && d[2] !== '9') return null;
+  return `+55${d}`;
+}
 export const LinkedinInputSchema = z.string().trim().max(200);
 export const AreaKeySchema = z.string().trim().min(1).max(40);
 export const SlotIdSchema = z.string().min(1).max(16);

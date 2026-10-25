@@ -3,19 +3,19 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ENDPOINTS, MENTOR_BIO_MAX, type UserView } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, ErrorState, LinkButton, SkeletonList, SlotToggleGrid,
-  call, formatTime, useAuth, useQuery, useToast,
+  call, formatTime, maskPhone, useAuth, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useAreas, useTitle } from './lib/common';
 import './lib/a2-a3.css';
 
 interface FormState {
-  name: string; email: string; linkedin: string; organization: string; areas: string[]; bio: string; photoUrl: string;
+  name: string; email: string; linkedin: string; phone: string; organization: string; areas: string[]; bio: string; photoUrl: string;
   availability: Set<string>; alsoAdmin: boolean; sendPasswordByEmail: boolean;
 }
-const EMPTY: FormState = { name: '', email: '', linkedin: '', organization: '', areas: [], bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
+const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
 
 const fromUser = (u: UserView): FormState => ({
-  name: u.name, email: u.email, linkedin: u.linkedin ?? '', organization: u.organization ?? '', areas: u.areas, bio: u.bio ?? '',
+  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: maskPhone((u.phone ?? '').replace(/^\+55/, '')), organization: u.organization ?? '', areas: u.areas, bio: u.bio ?? '',
   photoUrl: u.photoUrl ?? '', availability: new Set(u.availability), alsoAdmin: u.roles.includes('admin'), sendPasswordByEmail: false,
 });
 
@@ -93,6 +93,8 @@ export default function A3FormMentora() {
     const e: Record<string, string> = {};
     if (f.name.trim().length < 2) e.name = 'Informe o nome completo.';
     if (!editing && !/^\S+@\S+\.\S+$/.test(f.email.trim())) e.email = 'Informe um e-mail válido.';
+    const digits = f.phone.replace(/\D/g, '').length;
+    if (digits && digits !== 10 && digits !== 11) e.phone = 'Telefone inválido. Informe DDD e número.';
     if (f.bio.length > MENTOR_BIO_MAX) e.bio = `No máximo ${MENTOR_BIO_MAX} caracteres.`;
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -103,7 +105,7 @@ export default function A3FormMentora() {
     if (!validate()) return;
     setSaving(true);
     const common = {
-      name: f.name.trim(), linkedin: f.linkedin.trim() || null, organization: f.organization.trim() || null,
+      name: f.name.trim(), linkedin: f.linkedin.trim() || null, phone: f.phone.trim() || null, organization: f.organization.trim() || null,
       areas: f.areas, bio: f.bio.trim() || null, photoUrl: f.photoUrl.trim() || null, availability: [...f.availability],
     };
     try {
@@ -119,6 +121,7 @@ export default function A3FormMentora() {
       }
     } catch (e) {
       if (e instanceof ApiError && e.code === 'EMAIL_TAKEN') setErrors({ email: 'Já existe uma conta com este e-mail.' });
+      else if (e instanceof ApiError && e.code === 'VALIDATION_ERROR' && (e.details as { field?: string } | undefined)?.field === 'phone') setErrors({ phone: e.message });
       else if (e instanceof ApiError && e.code === 'VALIDATION_ERROR') setErrors({ form: e.message });
       else toast.error(errMsg(e));
     } finally { setSaving(false); }
@@ -142,6 +145,8 @@ export default function A3FormMentora() {
             <Field label="Nome completo" value={f.name} onChange={(e) => set('name', e.target.value)} error={errors.name} autoComplete="off" />
             <Field label="E-mail" note="(login)" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} error={errors.email} disabled={editing} hint={editing ? 'O e-mail de login não pode ser alterado.' : undefined} />
             <Field label="LinkedIn" note="(opcional)" value={f.linkedin} onChange={(e) => set('linkedin', e.target.value)} />
+            <Field label="WhatsApp" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone}
+              hint="Para avisar a mentora quando uma participante liberar o horário dela. Sem WhatsApp, o aviso vai só por e-mail." data-testid="a3-phone" />
             <Field label="Organização" note="(uso interno, nunca aparece para a participante)" placeholder="Onde ela trabalha" value={f.organization} onChange={(e) => set('organization', e.target.value)} />
             <fieldset className="a3f-areas">
               <legend>Áreas de atuação</legend>

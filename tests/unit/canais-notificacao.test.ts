@@ -31,6 +31,13 @@ describe("canais das notificações", () => {
     expect(channelsFor(ctx(true), "cancelled", { phone: null } as any, ["email", "whatsapp"])).toEqual(["email"]);
   });
 
+  it("aviso à mentora (mentor_slot_released): e-mail + WhatsApp com o telefone dela; sem telefone (ou ausente), só e-mail", () => {
+    expect(channelsFor(ctx(true), "mentor_slot_released", { phone: "+5581988887777" })).toEqual(["email", "whatsapp"]);
+    expect(channelsFor(ctx(false), "mentor_slot_released", { phone: "+5581988887777" })).toEqual(["email"]);
+    expect(channelsFor(ctx(true), "mentor_slot_released", { phone: null })).toEqual(["email"]);
+    expect(channelsFor(ctx(true), "mentor_slot_released", {})).toEqual(["email"]);
+  });
+
   it("senha da mentora só por e-mail; respostas a um toque no WhatsApp só pelo WhatsApp", () => {
     expect(channelsFor(ctx(true), "staff_password", null)).toEqual(["email"]);
     for (const type of replies) {

@@ -163,7 +163,7 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 
 - Aparece obrigatoriamente no primeiro login com senha provisória.
 - Campos: nova senha, confirmar senha; regras visíveis (mínimo 10 caracteres). Envia para **E13**.
-- Na mesma tela, a mentora confere nome, LinkedIn, foto (opcional) e áreas de atuação (**E28**).
+- Na mesma tela, a mentora confere nome, LinkedIn, WhatsApp (opcional, telefone com DDD, máscara (00) 00000-0000, nota "Para avisar quando uma participante liberar seu horário. Sem WhatsApp, o aviso vai só por e-mail."), foto (opcional) e áreas de atuação (**E28**).
 
 ### M3 · Minha disponibilidade
 
@@ -228,12 +228,12 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A3 · Cadastro de mentora e importação
 
-**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
+**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, WhatsApp (opcional, telefone com DDD, máscara (00) 00000-0000, nota "Para avisar a mentora quando uma participante liberar o horário dela. Sem WhatsApp, o aviso vai só por e-mail."; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
 
 - Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail" (layout de e-mail "Acesso da mentora", senha válida por 72 h). A mentora troca no primeiro acesso (M2).
 - **Redefinir senha (E34):** confirma e mostra a nova senha provisória uma única vez.
 
-**Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
+**Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade, whatsapp; a coluna whatsapp é opcional, telefone com DDD); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
 
 ### A4 · Participantes
 
@@ -263,7 +263,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 - Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min por e-mail e WhatsApp. Sem WhatsApp disponível, vai só por e-mail.
 - Menus do WhatsApp (List Message), dois blocos: "Convite (menu do WhatsApp)" e "Confirmação de presença (menu do WhatsApp)". Cada um tem dois campos editáveis, Título e Texto (`events.whatsappLists`), e ao lado uma prévia ao vivo no estilo do WhatsApp com o rodapé "Se preferir, responda SIM ou NÃO", o botão "Responder" e as duas opções, fixos e não editáveis (convite: "Aceito" / "Não posso"; presença: "Sim, confirmo" / "Não poderei ir"), com a nota "As opções e o rodapé são fixos: as respostas da participante dependem deles." Variáveis do convite: {nome} {mentora} {horario} {mesa} {prazo} {link}; da presença: {nome} {mentora} {horario} {mesa} {minutos} {link}. Na prévia, as variáveis aparecem com dados de exemplo.
 - Nos textos do WhatsApp, "Convite de horário" leva a nota "Usado quando o WhatsApp sai em texto simples (sem menu)" e "Lembrete" leva "Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença".
-- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 8 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
+- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 9 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
 - Alterar a grade com mentorias já marcadas é bloqueado. Dados: **E41**, QR Code: **E42**.
 
@@ -296,7 +296,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 **Estados obrigatórios em toda tela com dados:** carregando (esqueleto), vazio (texto + próxima ação), erro (mensagem + tentar de novo), sem permissão ("Você não tem acesso a esta área"), sessão expirada (volta para M1 mantendo a rota de retorno).
 
-**Mensagens enviadas: o e-mail usa os 8 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos). `{link_inscricao}` (e `link_inscricao` no e-mail) é `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token):**
+**Mensagens enviadas: o e-mail usa os 9 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos). `{link_inscricao}` (e `link_inscricao` no e-mail) é `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token). Nos avisos à mentora, `{link_painel}` (e `link_painel` no e-mail) é `<PUBLIC_BASE_URL>/entrar` (M1, sem token) e `{mentora}` é o nome dela:**
 
 | Momento | Canal | Texto base |
 | --- | --- | --- |
@@ -317,6 +317,10 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Cancelamento pela mentora | E-mail + WhatsApp | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
 | Inscrição cancelada pela participante (texto fixo) | E-mail + WhatsApp | "Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}" |
 | Horário liberado pela participante (recusa "Horário não serve", "Trocar de horário" em P6 ou "Não vou" no WhatsApp; texto fixo) | E-mail e WhatsApp (pelo "Não vou" do WhatsApp, só e-mail) | "Tudo bem, {nome}. O horário das {horario} foi liberado e você continua na fila com prioridade. Se quiser, escolha outro horário na sua página: {link}" |
+| Aviso à mentora: participante cancelou a mentoria confirmada ("Cancelar" ou "Trocar de horário" em P6, "Não vou" no WhatsApp; texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda: {link_painel}" |
+| Aviso à mentora: participante recusou o convite (qualquer motivo; texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
+| Aviso à mentora: participante cancelou a inscrição com convite pendente (texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
+| E-mail do aviso à mentora (layout 9; selo "PARA MENTORAS"; título "Seu horário das {horario} ficou livre"; card com Mesa, Horário e Participante; botão "Abrir minha agenda"; nota "O horário já aparece livre no seu painel.") | E-mail | Parágrafo "Oi, {mentora}." seguido de `motivo`: confirmada cancelada "{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda."; convite recusado "{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; inscrição cancelada "{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila." |
 
 ## Pendências de UI
 

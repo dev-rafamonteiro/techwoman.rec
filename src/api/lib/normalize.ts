@@ -1,12 +1,12 @@
-/** Telefone brasileiro (com ou sem máscara/+55) para E.164. Devolve null se inválido. */
-export function normalizePhoneBR(input: string): string | null {
-  let d = input.replace(/\D/g, '');
-  if (d.startsWith('55') && (d.length === 12 || d.length === 13)) d = d.slice(2);
-  if (d.length !== 10 && d.length !== 11) return null;
-  const ddd = Number(d.slice(0, 2));
-  if (ddd < 11 || ddd > 99) return null;
-  if (d.length === 11 && d[2] !== '9') return null;
-  return `+55${d}`;
+// telefone: a regra mora em @tw/shared para a importação de mentoras (@tw/db) usar a mesma
+import { normalizePhoneBR } from '@tw/shared';
+export { normalizePhoneBR };
+
+/** WhatsApp opcional da mentora (E28, E31, E32): null ou vazio = sem telefone; inválido devolve undefined (como o LinkedIn). */
+export function normalizeOptionalPhone(input: string | null | undefined): string | null | undefined {
+  if (input === null || input === undefined) return input;
+  if (!input.trim()) return null;
+  return normalizePhoneBR(input) ?? undefined;
 }
 
 /** LinkedIn: aceita só o usuário, "linkedin.com/in/x" ou a URL completa; guarda a URL completa. Null se vazio ou inválido. */

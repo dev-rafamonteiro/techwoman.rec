@@ -81,6 +81,7 @@ export function toUserView(u: UserDoc): UserView {
     roles: u.roles,
     status: u.status,
     linkedin: u.linkedin,
+    phone: u.phone ?? null,
     organization: u.organization,
     areas: u.areas,
     bio: u.bio,

@@ -1,0 +1,24 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[PARA MENTORAS]
+
+Seu horário das {{horario}} ficou livre
+
+Oi, {{mentora_nome}}. {{motivo}}
+
+MESA: {{mesa}}
+HORÁRIO: {{horario}}
+PARTICIPANTE: {{nome}}
+
+Abrir minha agenda: {{link_painel}}
+
+O horário já aparece livre no seu painel.
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_painel}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

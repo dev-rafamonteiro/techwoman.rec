@@ -1,7 +1,7 @@
 import { parse } from 'csv-parse/sync';
 import { ObjectId, type Db } from 'mongodb';
 import { z } from 'zod';
-import { EmailSchema, zonedParts, type E33Response, type ImportRow } from '@tw/shared';
+import { EmailSchema, normalizePhoneBR, zonedParts, type E33Response, type ImportRow } from '@tw/shared';
 import { getCollections } from './collections.js';
 import { generateProvisionalPassword, hashPassword, tempPasswordExpiry } from './password.js';
 import type { EventDoc, UserDoc } from './types.js';
@@ -56,7 +56,7 @@ const NameSchema = z.string().trim().min(2).max(120);
 
 /**
  * Importa mentoras de um CSV (A3, E33). Colunas: nome, email, linkedin, organizacao, areas, disponibilidade
- * (listas separadas por `;`, `|` ou `,`). Aceita separador `,` ou `;` e BOM. Com `dryRun` só valida (prévia linha a linha).
+ * (listas separadas por `;`, `|` ou `,`) e whatsapp (opcional; sem a coluna, o telefone de quem já existe não muda). Aceita separador `,` ou `;` e BOM. Com `dryRun` só valida (prévia linha a linha).
  * Sem `dryRun` grava e devolve as senhas provisórias (uma única vez).
  */
 export async function importMentors(db: Db, csvText: string, opts: ImportOptions): Promise<E33Response> {
@@ -64,7 +64,7 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
   const now = opts.now ?? new Date();
   const onExisting = opts.onExisting ?? 'skip';
 
-  const KNOWN = ['nome', 'email', 'linkedin', 'organizacao', 'areas', 'disponibilidade'] as const;
+  const KNOWN = ['nome', 'email', 'linkedin', 'organizacao', 'areas', 'disponibilidade', 'whatsapp'] as const;
   let table: string[][];
   try {
     table = parse(csvText, {
@@ -90,6 +90,7 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
     }
     return r;
   });
+  const hasPhone = header.includes('whatsapp');
   if (records.length > 500) throw new ImportFormatError('Máximo de 500 linhas por importação.');
 
   const emails = records.map((r) => (r['email'] ?? '').toLowerCase());
@@ -121,6 +122,10 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
       else errors.push(`Horário inexistente na grade: ${tok}`);
     }
     const linkedin = (r['linkedin'] ?? '').trim();
+    // WhatsApp opcional, mesma regra do telefone da participante (E.164)
+    const phoneRaw = (r['whatsapp'] ?? '').trim();
+    const phone = phoneRaw ? normalizePhoneBR(phoneRaw) : null;
+    if (phoneRaw && !phone) errors.push('WhatsApp inválido. Informe DDD e número.');
     const organization = (r['organizacao'] ?? '').trim();
     const exists = email.success && existingByEmail.has(emailV);
     return {
@@ -131,6 +136,7 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
         name: name.success ? name.data : (r['nome'] ?? ''),
         email: emailV,
         linkedin: linkedin || null,
+        phone,
         organization: organization || null,
         areas: [...new Set(areas)],
         availability: [...new Set(availability)],
@@ -161,6 +167,7 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
             $set: {
               name: d.name,
               linkedin: d.linkedin,
+              ...(hasPhone ? { phone: d.phone } : {}),
               organization: d.organization,
               areas: d.areas,
               availability: d.availability,
@@ -183,6 +190,7 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
           mustChangePassword: true,
           status: 'active',
           linkedin: d.linkedin,
+          phone: d.phone,
           organization: d.organization,
           areas: d.areas,
           bio: null,

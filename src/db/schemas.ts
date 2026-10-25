@@ -39,6 +39,7 @@ export const usersSchema: Schema = strictObject(
     mustChangePassword: bool,
     status: enumOf(USER_STATUSES),
     linkedin: strN,
+    phone: strN,
     organization: strN,
     areas: arrOf(str),
     bio: strN,

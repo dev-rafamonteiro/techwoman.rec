@@ -1,6 +1,8 @@
 // Assuntos dos e-mails (docs/PLAN.md, "Layouts de e-mail"). Placeholders {{variavel}}
 // são preenchidos pelo worker; em A7 só os assuntos são editáveis (sobrescrevem estes padrões).
 
+import type { MentorSlotReleasedReason } from '@tw/shared';
+
 export const EMAIL_TEMPLATE_IDS = [
   '01-inscricao-recebida',
   '02-convite-horario',
@@ -10,6 +12,7 @@ export const EMAIL_TEMPLATE_IDS = [
   '06-acesso-mentora',
   '07-inscricao-cancelada',
   '08-horario-liberado',
+  '09-aviso-mentora',
 ] as const;
 
 export type EmailTemplateId = (typeof EMAIL_TEMPLATE_IDS)[number];
@@ -27,6 +30,7 @@ export const EMAIL_TEMPLATE_VARS = {
   '06-acesso-mentora': ['mentora_nome', 'email_login', 'senha_provisoria', 'link_login', 'validade_senha'],
   '07-inscricao-cancelada': ['nome', 'link_inscricao'],
   '08-horario-liberado': ['nome', 'horario', 'link_minha_mentoria'],
+  '09-aviso-mentora': ['mentora_nome', 'nome', 'horario', 'mesa', 'link_painel', 'motivo'],
 } as const satisfies Record<EmailTemplateId, readonly string[]>;
 
 /** Tipo da `outbox` -> layout. */
@@ -41,6 +45,7 @@ export const EMAIL_TEMPLATE_BY_OUTBOX_TYPE = {
   staff_password: '06-acesso-mentora',
   registration_cancelled: '07-inscricao-cancelada',
   slot_released: '08-horario-liberado',
+  mentor_slot_released: '09-aviso-mentora',
 } as const satisfies Record<string, EmailTemplateId>;
 
 export type EmailOutboxType = keyof typeof EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
@@ -55,6 +60,8 @@ export const EMAIL_SUBJECTS: Record<EmailTemplateId, string> = {
   '06-acesso-mentora': 'Seu acesso ao painel de mentoras do Tech Woman',
   '07-inscricao-cancelada': 'Sua inscrição na mentoria do Tech Woman foi cancelada',
   '08-horario-liberado': 'Seu horário das {{horario}} foi liberado',
+  // padrão = motivo `confirmed_cancelled`; os outros motivos em MENTOR_SLOT_RELEASED_SUBJECTS
+  '09-aviso-mentora': '{{nome}} cancelou a mentoria das {{horario}}',
 };
 
 /** Variantes do layout 3 por tipo da `outbox`. */
@@ -63,8 +70,16 @@ export const EMAIL_SUBJECT_VARIANTS = {
   reminder: 'Sua mentoria começa às {{horario}}',
 } as const;
 
-/** Assunto padrão (com placeholders) para um tipo da `outbox`. */
-export function emailSubjectFor(type: EmailOutboxType): string {
+/** Variantes do layout 9 (aviso à mentora) por `payload.reason`; `confirmed_cancelled` é o assunto padrão do layout. */
+export const MENTOR_SLOT_RELEASED_SUBJECTS = {
+  confirmed_cancelled: EMAIL_SUBJECTS['09-aviso-mentora'],
+  invite_declined: '{{nome}} recusou o convite das {{horario}}',
+  invite_cancelled: 'Convite das {{horario}} encerrado',
+} as const satisfies Record<MentorSlotReleasedReason, string>;
+
+/** Assunto padrão (com placeholders) para um tipo da `outbox`; `reason` = `payload.reason` do aviso à mentora. */
+export function emailSubjectFor(type: EmailOutboxType, reason?: MentorSlotReleasedReason): string {
   if (type === 'moved' || type === 'reminder') return EMAIL_SUBJECT_VARIANTS[type];
+  if (type === 'mentor_slot_released' && reason) return MENTOR_SLOT_RELEASED_SUBJECTS[reason];
   return EMAIL_SUBJECTS[EMAIL_TEMPLATE_BY_OUTBOX_TYPE[type]];
 }

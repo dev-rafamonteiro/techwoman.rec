@@ -15,3 +15,5 @@ exports[`layout 06-acesso-mentora com dados de exemplo > snapshot do HTML, do te
 exports[`layout 07-inscricao-cancelada com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Sua inscrição na mentoria do Tech Woman foi cancelada"`;
 
 exports[`layout 08-horario-liberado com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Seu horário das 14h15 foi liberado"`;
+
+exports[`layout 09-aviso-mentora com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Joana cancelou a mentoria das 14h15"`;

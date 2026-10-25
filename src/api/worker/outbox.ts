@@ -53,6 +53,9 @@ function skipReason(item: OutboxDoc, ctx: AppContext, appt: { status: string; ex
     case 'slot_released':
       // já recebeu outro convite, foi confirmada ou cancelou antes do envio: o aviso de horário liberado não sai
       return menteeStatus === 'waiting' ? null : 'participante não está mais na fila';
+    case 'mentor_slot_released':
+      // aviso à mentora: o horário já foi liberado na transação; só precisa da mentoria para montar o texto
+      return appt ? null : 'mentoria não encontrada';
     default:
       return null;
   }
@@ -81,10 +84,12 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     await done({ status: 'failed', lastError: message.slice(0, 300), lockedAt: null, lockedBy: null });
     res.failed++;
   };
-  const [mentor, table, staffUser] = await Promise.all([
+  const [mentor, table, staffUser, apptMentee] = await Promise.all([
     appt ? c.users.findOne({ _id: appt.mentorId }) : null,
     appt ? c.tables.findOne({ _id: appt.tableId }) : null,
     item.userId ? c.users.findOne({ _id: item.userId }) : null,
+    // aviso à mentora: o item não tem `menteeId` (sem links com o token dela); o nome vem da mentoria
+    item.type === 'mentor_slot_released' && appt ? c.mentees.findOne({ _id: appt.menteeId }, { projection: { name: 1 } }) : null,
   ]);
   // RN18: o lembrete marcado em `enqueueReminders` vai como List Message de presença; RN20: o convite também vai como
   // List Message (só o WAHA tem lista e resposta)
@@ -117,7 +122,7 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
         }
       }
       const email = buildEmailMessage({
-        item, event, mentee, appointment: appt, mentor, table, staffUser, provisionalPassword,
+        item, event, mentee: mentee ?? apptMentee, appointment: appt, mentor, table, staffUser, provisionalPassword,
         baseUrl: ctx.config.publicBaseUrl,
         links,
         tempPasswordHours: ctx.config.tempPasswordHours,
@@ -125,7 +130,7 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       });
       message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
     } else {
-      message = render({ item, event, mentee, appointment: appt, mentor, table, links, baseUrl: ctx.config.publicBaseUrl, now: ctx.now(), ...(listKind ? { list: listKind } : {}) });
+      message = render({ item, event, mentee: mentee ?? apptMentee, appointment: appt, mentor, table, links, baseUrl: ctx.config.publicBaseUrl, now: ctx.now(), ...(listKind ? { list: listKind } : {}) });
     }
   } catch (err) {
     if (err instanceof RenderError) return await fail(`render: ${err.message}`);

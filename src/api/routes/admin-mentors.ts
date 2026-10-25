@@ -6,7 +6,7 @@ import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, isDuplicateKey, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
 
-import { normalizeLinkedin } from '../lib/normalize.js';
+import { normalizeLinkedin, normalizeOptionalPhone } from '../lib/normalize.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
 import { mentorSearchPipeline, runSearch } from '../search/text.js';
 import { respond, route } from '../lib/route.js';
@@ -134,6 +134,8 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     if (body.availability.some((s) => !slotIds.has(s))) throw new AppError('VALIDATION_ERROR', 'Horário inexistente na grade.', { details: { field: 'availability' } });
     const linkedin = normalizeLinkedin(body.linkedin);
     if (linkedin === undefined && body.linkedin !== undefined) throw new AppError('VALIDATION_ERROR', 'LinkedIn inválido.', { details: { field: 'linkedin' } });
+    const phone = normalizeOptionalPhone(body.phone);
+    if (phone === undefined && body.phone !== undefined) throw new AppError('VALIDATION_ERROR', 'Telefone inválido. Informe DDD e número.', { details: { field: 'phone' } });
     const password = generateProvisionalPassword();
     const now = ctx.now();
     const doc: UserDoc = {
@@ -145,6 +147,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       mustChangePassword: true,
       status: 'active',
       linkedin: linkedin ?? null,
+      phone: phone ?? null,
       organization: body.organization ?? null,
       areas: [...new Set(body.areas)],
       bio: body.bio ?? null,
@@ -188,6 +191,11 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         const l = normalizeLinkedin(body.linkedin);
         if (l === undefined) throw new AppError('VALIDATION_ERROR', 'LinkedIn inválido.', { details: { field: 'linkedin' } });
         set['linkedin'] = l;
+      }
+      if (body.phone !== undefined) {
+        const p = normalizeOptionalPhone(body.phone);
+        if (p === undefined) throw new AppError('VALIDATION_ERROR', 'Telefone inválido. Informe DDD e número.', { details: { field: 'phone' } });
+        set['phone'] = p;
       }
       if (body.organization !== undefined) set['organization'] = body.organization;
       if (body.bio !== undefined) set['bio'] = body.bio;
