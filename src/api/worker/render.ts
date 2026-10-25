@@ -12,6 +12,7 @@ const SUBJECTS: Record<string, string> = {
   cancelled: 'Sua mentoria foi cancelada',
   moved: 'Sua mentoria mudou de horário',
   registration_cancelled: 'Sua inscrição na mentoria do Tech Woman foi cancelada',
+  slot_released: 'Seu horário foi liberado',
   presence_confirmed: 'Presença confirmada',
   presence_cancelled: 'Sua mentoria foi cancelada',
   presence_unclear: 'Confirme sua presença',
@@ -23,8 +24,8 @@ const SUBJECTS: Record<string, string> = {
 const MOVED_DEFAULT = 'Sua mentoria foi remarcada: {horario} na {mesa} com {mentora}. Sua confirmação continua valendo.';
 
 /**
- * Respostas à presença (RN18) e ao convite (RN20) e a inscrição cancelada pela participante: texto fixo no código
- * (UI-SPEC, Mensagens enviadas), não editável em A7.
+ * Respostas à presença (RN18) e ao convite (RN20), a inscrição cancelada e o horário liberado pela participante: texto
+ * fixo no código (UI-SPEC, Mensagens enviadas), não editável em A7.
  */
 const FIXED: Record<string, string> = {
   presence_confirmed: 'Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}.',
@@ -34,6 +35,7 @@ const FIXED: Record<string, string> = {
   invite_closed: 'Este convite não está mais disponível. Veja como está sua inscrição: {link}',
   invite_unclear: 'Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO.',
   registration_cancelled: 'Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}',
+  slot_released: 'Tudo bem, {nome}. O horário das {horario} foi liberado e você continua na fila com prioridade. Se quiser, escolha outro horário na sua página: {link}',
 };
 
 /**
@@ -116,6 +118,6 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
   }
   let text = fill(tpl);
   // todo link aponta para P6 pelo link curto (PLAN): garante que mensagens com agendamento tragam o link
-  if (i.links && !text.includes(vars['link']!) && ['invite', 'confirmed', 'moved', 'cancelled', 'expired'].includes(item.type)) text += ` ${vars['link']}`;
+  if (i.links && !text.includes(vars['link']!) && ['invite', 'confirmed', 'moved', 'cancelled', 'expired', 'slot_released'].includes(item.type)) text += ` ${vars['link']}`;
   return { subject, text };
 }

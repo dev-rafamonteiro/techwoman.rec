@@ -47,6 +47,11 @@
     "07-inscricao-cancelada": {
       "nome": "Joana",
       "link_inscricao": "https://techwoman.dev/mentoria/inscricao"
+    },
+    "08-horario-liberado": {
+      "nome": "Joana",
+      "horario": "14h15",
+      "link_minha_mentoria": "https://techwoman.dev/mentoria/minha?t=8f3k2q"
     }
   }
 }

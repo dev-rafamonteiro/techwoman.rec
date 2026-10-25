@@ -149,10 +149,10 @@ describe("RN19 transição mentee_reschedule", () => {
   const start = S(3).startAt;
   const mentee = { userId: null, role: "mentee" as const };
   const run = (status: AppointmentStatus, now: Date) => planTransition({ action: "mentee_reschedule", appointment: { status, startAt: start, expiresAt: null }, now, actor: mentee });
-  it("confirmed antes do início -> cancelled; participante waiting com prioridade declined_schedule; libera travas; sem mensagem", () => {
+  it("confirmed antes do início -> cancelled; participante waiting com prioridade declined_schedule; libera travas; aviso slot_released", () => {
     const p = run("confirmed", min(start, -30));
     if (isRuleError(p)) throw new Error(p.code);
-    expect(p).toMatchObject({ appointmentTo: "cancelled", menteeTo: "waiting", priority: { value: true, reason: "declined_schedule" }, notify: null, scheduleReminder: false });
+    expect(p).toMatchObject({ appointmentTo: "cancelled", menteeTo: "waiting", priority: { value: true, reason: "declined_schedule" }, notify: "slot_released", scheduleReminder: false });
     expect(p.locks).toEqual({ slotLock: false, menteeLock: false });
   });
   it("no horário ou depois -> INVALID_STATE", () => {

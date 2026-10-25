@@ -81,6 +81,8 @@ export const OUTBOX_TYPES = [
   'moved',
   // inscrição cancelada pela própria participante (E04 cancel ou recusa "Não tenho mais interesse")
   'registration_cancelled',
+  // horário liberado pela própria participante, que volta à fila com prioridade (E04 decline schedule/reschedule, RN18 "Não vou")
+  'slot_released',
   'staff_password',
   // respostas à confirmação de presença pelo WhatsApp (RN18)
   'presence_confirmed',

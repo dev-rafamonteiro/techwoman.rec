@@ -137,11 +137,12 @@ export async function handlePresenceReply(ctx: AppContext, p: WahaMessageLike, i
         return finish('confirm');
       }
 
-      // cancelar: RN19 (`mentee_reschedule`), só se ainda não começou; a auditoria vem de applyTransition
+      // cancelar: RN19 (`mentee_reschedule`), só se ainda não começou; a auditoria vem de applyTransition. O aviso
+      // `slot_released` vai só por e-mail: no WhatsApp a resposta é o presence_cancelled (uma mensagem por toque)
       if (appt.startAt.getTime() <= now.getTime()) return close();
       let res;
       try {
-        res = await applyTransition(ctx, session, { appointmentId: appt._id, action: 'mentee_reschedule', actor, scope: { menteeId: mentee._id }, ip });
+        res = await applyTransition(ctx, session, { appointmentId: appt._id, action: 'mentee_reschedule', actor, scope: { menteeId: mentee._id }, ip, notifyChannels: ['email'] });
       } catch (err) {
         // corrida com outra mudança de status: trata como "já não está confirmada"
         if (err instanceof AppError && err.code === 'INVALID_STATE') return close();

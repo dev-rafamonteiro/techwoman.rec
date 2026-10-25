@@ -98,8 +98,10 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
     case 'decline_schedule': {
       if (from !== 'invited') return invalid(from, 'recusar');
       if (isExpiredAt(i.appointment.expiresAt, now)) return fail('INVITE_EXPIRED', 'O prazo para responder terminou.');
+      // só a participante recusa (E04); o aviso `slot_released` é para quando ela mesma libera o horário (PLAN, Notificações)
       return plan(from, 'declined', 'waiting', 'appointment.decline', {
         priority: { value: true, reason: 'declined_schedule' },
+        notify: i.actor.role === 'mentee' ? 'slot_released' : null,
         reason: 'schedule',
         respondedAt: true,
       });
@@ -121,11 +123,13 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
     }
     case 'mentee_reschedule': {
       // RN19 · só `confirmed` e antes do início; mesa e horário livres na hora; volta à fila com prioridade e o
-      // `queuedAt` original. Sem mensagem aqui: a resposta do WhatsApp (presence_cancelled) é enfileirada à parte.
+      // `queuedAt` original. Aviso `slot_released` (horário liberado) por e-mail e WhatsApp; pelo "Não vou" do WhatsApp
+      // (RN18) E47 restringe ao e-mail (`notifyChannels`), porque a resposta presence_cancelled já vai pelo WhatsApp.
       if (from !== 'confirmed') return invalid(from, 'trocar de horário');
       if (now.getTime() >= i.appointment.startAt.getTime()) return fail('INVALID_STATE', 'A mentoria já começou; não é possível trocar de horário.');
       return plan(from, 'cancelled', 'waiting', 'appointment.reschedule', {
         priority: { value: true, reason: 'declined_schedule' },
+        notify: i.actor.role === 'mentee' ? 'slot_released' : null,
         reason: 'mentee_reschedule',
       });
     }

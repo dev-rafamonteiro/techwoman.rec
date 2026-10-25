@@ -1,4 +1,4 @@
-// Conteúdo dos 7 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 8 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
 // {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail".
 
@@ -105,5 +105,18 @@ export const EMAILS = [
     ],
     botao: ['Fazer nova inscrição', 'link_inscricao'],
     linkFallback: 'link_inscricao',
+  },
+  {
+    id: '08-horario-liberado',
+    vars: ['nome', 'horario', 'link_minha_mentoria'],
+    preheader: 'Você continua na fila com prioridade.',
+    selo: ['HORÁRIO LIBERADO', ...SELO.laranja],
+    titulo: 'Seu horário foi liberado',
+    paragrafos: [
+      'Tudo bem, {{nome}}. O horário das {{horario}} foi liberado, como você pediu.',
+      'Você continua na fila com prioridade: as mentoras veem sua inscrição primeiro. Se quiser, escolha outro horário livre pela sua página.',
+    ],
+    botao: ['Escolher outro horário', 'link_minha_mentoria'],
+    linkFallback: 'link_minha_mentoria',
   },
 ];

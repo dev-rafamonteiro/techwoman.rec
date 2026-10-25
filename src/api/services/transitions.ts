@@ -1,4 +1,5 @@
 import { ObjectId, type ClientSession } from 'mongodb';
+import type { OutboxChannel } from '@tw/shared';
 import type { AppointmentDoc, MenteeDoc } from '@tw/db';
 import type { AppContext } from '../ctx.js';
 import { AppError, fromRuleError } from '../lib/errors.js';
@@ -14,6 +15,8 @@ export interface ApplyTransitionInput {
   scope?: { mentorId?: ObjectId; menteeId?: ObjectId };
   reason?: string | null;
   ip?: string | null;
+  /** Restringe os canais do aviso `plan.notify` (interseção com os disponíveis); RN18 "Não vou": só e-mail. */
+  notifyChannels?: readonly OutboxChannel[];
 }
 
 export interface AppliedTransition {
@@ -110,6 +113,7 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
       type: plan.notify, mentee, appointmentId: appt._id,
       // inscrição cancelada pela participante: dedupe pela version dela depois do cancelamento
       ...(plan.notify === 'registration_cancelled' ? { dedupeSuffix: mentee.version } : {}),
+      ...(input.notifyChannels ? { channels: input.notifyChannels } : {}),
     });
   }
   if (plan.scheduleReminder) {

@@ -11,7 +11,8 @@ import { sealSecret } from './secret-box.js';
 /**
  * Canais por tipo (PLAN, "Notificações"): e-mail é o canal obrigatório; WhatsApp só se ligado e houver telefone.
  * Lembrete: canais da regra (e-mail se o WhatsApp não estiver disponível). Senha da mentora: só e-mail. Respostas da
- * presença (RN18) e do convite (RN20): só WhatsApp, e nada sem WhatsApp disponível.
+ * presença (RN18) e do convite (RN20): só WhatsApp, e nada sem WhatsApp disponível. Nos demais tipos, `wanted`
+ * (quando vem) restringe os canais: interseção com os disponíveis (RN18 "Não vou": `slot_released` só por e-mail).
  */
 export function channelsFor(ctx: AppContext, type: OutboxType, mentee: Pick<MenteeDoc, 'phone'> | null, wanted?: readonly OutboxChannel[]): OutboxChannel[] {
   const wa = ctx.config.whatsappEnabled && !!mentee?.phone;
@@ -22,7 +23,8 @@ export function channelsFor(ctx: AppContext, type: OutboxType, mentee: Pick<Ment
     const ok = (wanted ?? ['whatsapp']).filter((c) => c === 'email' || wa);
     return ok.length ? [...new Set(ok)] : ['email'];
   }
-  return wa ? ['email', 'whatsapp'] : ['email'];
+  const all: OutboxChannel[] = wa ? ['email', 'whatsapp'] : ['email'];
+  return wanted ? all.filter((c) => wanted.includes(c)) : all;
 }
 
 export interface EnqueueInput {
@@ -33,7 +35,7 @@ export interface EnqueueInput {
   dedupeSuffix?: string | number;
   sendAt?: Date;
   payload?: Record<string, unknown>;
-  /** Lembrete: canais escolhidos na regra de A7. */
+  /** Lembrete: canais escolhidos na regra de A7. Outros tipos: restringe os canais padrão (`notifyChannels` de applyTransition). */
   channels?: readonly OutboxChannel[];
   /** Campos extras do `payload` só no item daquele canal (RN18: `presenceCheck` só no item `whatsapp`). */
   channelPayload?: Partial<Record<OutboxChannel, Record<string, unknown>>>;

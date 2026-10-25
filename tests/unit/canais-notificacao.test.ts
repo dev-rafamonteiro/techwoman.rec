@@ -23,6 +23,14 @@ describe("canais das notificações", () => {
     expect(channelsFor(ctx(false), "reminder", mentee, DEFAULT_REMINDERS[0]!.channels)).toEqual(["email"]);
   });
 
+  it("canais pedidos restringem o aviso (interseção com os disponíveis): slot_released do 'Não vou' só por e-mail", () => {
+    expect(channelsFor(ctx(true), "slot_released", mentee)).toEqual(["email", "whatsapp"]);
+    expect(channelsFor(ctx(true), "slot_released", mentee, ["email"])).toEqual(["email"]);
+    expect(channelsFor(ctx(true), "slot_released", mentee, ["whatsapp"])).toEqual(["whatsapp"]);
+    expect(channelsFor(ctx(false), "slot_released", mentee, ["whatsapp"])).toEqual([]);
+    expect(channelsFor(ctx(true), "cancelled", { phone: null } as any, ["email", "whatsapp"])).toEqual(["email"]);
+  });
+
   it("senha da mentora só por e-mail; respostas a um toque no WhatsApp só pelo WhatsApp", () => {
     expect(channelsFor(ctx(true), "staff_password", null)).toEqual(["email"]);
     for (const type of replies) {

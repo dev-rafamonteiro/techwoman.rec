@@ -50,6 +50,9 @@ function skipReason(item: OutboxDoc, ctx: AppContext, appt: { status: string; ex
     case 'registration_cancelled':
       // se ela se inscreveu de novo antes do envio, o aviso de cancelamento não sai
       return menteeStatus === 'cancelled' ? null : 'inscrição não está mais cancelada';
+    case 'slot_released':
+      // já recebeu outro convite, foi confirmada ou cancelou antes do envio: o aviso de horário liberado não sai
+      return menteeStatus === 'waiting' ? null : 'participante não está mais na fila';
     default:
       return null;
   }

@@ -59,9 +59,23 @@ describe("RN06 resposta da participante", () => {
     expect(asMentee("mentee_cancel", "invited").notify).toBe("registration_cancelled");
     expect(asMentee("mentee_cancel", "confirmed").notify).toBe("registration_cancelled");
     expect(asMentee("decline_no_interest", "invited").notify).toBe("registration_cancelled");
-    expect(asMentee("mentee_reschedule", "confirmed").notify).toBeNull();
+    expect(asMentee("mentee_reschedule", "confirmed").notify).toBe("slot_released");
     const admin = ok(planTransition({ action: "mentee_cancel", appointment: { status: "confirmed", startAt: start, expiresAt: null }, now: during, actor: { userId: "a1", role: "admin" } }));
     expect(admin.notify).toBeNull();
+  });
+});
+
+describe("aviso slot_released (horário liberado pela participante)", () => {
+  it("recusa 'Horário não serve' e troca de horário pela participante; outro actor não", () => {
+    const run2 = (action: TransitionAction, status: AppointmentStatus, actor: Parameters<typeof planTransition>[0]["actor"]) =>
+      ok(planTransition({ action, appointment: { status, startAt: start, expiresAt: min(start, -5) }, now: during, actor }));
+    expect(run2("decline_schedule", "invited", mentee).notify).toBe("slot_released");
+    expect(run2("mentee_reschedule", "confirmed", mentee).notify).toBe("slot_released");
+    const admin = { userId: "a1", role: "admin" as const };
+    expect(run2("decline_schedule", "invited", admin).notify).toBeNull();
+    expect(run2("mentee_reschedule", "confirmed", admin).notify).toBeNull();
+    // cancelamento pela mentora/admin continua com o próprio aviso
+    expect(run2("staff_cancel", "confirmed", admin).notify).toBe("cancelled");
   });
 });
 
