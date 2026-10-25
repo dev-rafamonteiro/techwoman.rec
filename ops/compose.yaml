@@ -1,5 +1,7 @@
-# Produção (VM própria, exposta só via Cloudflare Tunnel). Segredos em ops/secrets/<nome> (gitignored).
-# Subir: docker compose -f ops/compose.yaml up -d --build [--scale api=4]
+# Produção (VM própria, nenhuma porta publicada no host). Segredos em ops/secrets/<nome> (gitignored).
+# Entrada por Cloudflare Tunnel (serviço cloudflared, profile "tunnel"):
+#   docker compose -f ops/compose.yaml --profile tunnel up -d --build [--scale api=4]
+# Entrada por Nginx Proxy Manager na rede externa npm_network: veja ops/compose.npm.yaml.
 # A app lê VAR ou VAR_FILE; aqui só os *_FILE (nunca valores) entram no ambiente.
 x-hardening: &hardening
   read_only: true
@@ -26,6 +28,7 @@ x-app-env: &app-env
 services:
   cloudflared:
     image: cloudflare/cloudflared:latest
+    profiles: [tunnel]
     command: tunnel --no-autoupdate run
     environment:
       TUNNEL_TOKEN_FILE: /run/secrets/cf_tunnel_token

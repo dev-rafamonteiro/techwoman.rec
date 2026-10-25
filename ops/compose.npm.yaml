@@ -1,0 +1,22 @@
+# Override para servidor com Nginx Proxy Manager (NPM) na rede docker externa npm_network.
+# Subir: docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build
+# Nenhuma porta publicada no host: o NPM termina o TLS e repassa tudo para http://techwoman-web:8080.
+# O nginx do web serve o SPA e repassa /api/ e /l/ para a api (que fica só em app/egress).
+# O worker entra na npm_network para falar com o WAHA em http://waha:3000 (WAHA_URL no .env);
+# o WAHA chama o webhook pelo container: http://techwoman-web:8080/api/webhooks/waha.
+# container_name fixo impede --scale api=N; para escalar, tire o container_name da api.
+services:
+  web:
+    container_name: techwoman-web
+    networks: [edge, app, npm_network]
+
+  api:
+    container_name: techwoman-api
+
+  worker:
+    container_name: techwoman-worker
+    networks: [egress, npm_network]
+
+networks:
+  npm_network:
+    external: true

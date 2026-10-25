@@ -87,14 +87,33 @@ Para receber de verdade, use `DEMO_EMAIL_TEMPLATE='voce+{slug}@seu-dominio'`. Os
   (só o worker), `WAHA_WEBHOOK_HMAC_KEY`/`WAHA_WEBHOOK_HMAC_KEY_FILE` (só a API).
 - Nota histórica: `autoEmbed` (voyage-4) não funciona no `mongodb-atlas-local` (8.3.4 e 8.3.13: `voyage-4 not registered yet`); a busca é só full text (`$search`).
 
-Produção (`ops/compose.yaml`): `cloudflared`, `web`, `api`, `worker`; redes `edge`, `app` (`internal: true`) e `egress`;
+Produção (`ops/compose.yaml`): `cloudflared` (profile `tunnel`), `web`, `api`, `worker`; redes `edge`, `app` (`internal: true`) e `egress`;
 nenhuma porta publicada. Segredos em arquivos `ops/secrets/<nome>` (gitignored): `mongo_uri`, `jwt_secret`,
 `turnstile_secret`, `email_api_key`, `outbox_key`, `whatsapp_token`, `waha_api_key`, `waha_webhook_hmac_key`, `cf_tunnel_token`
 (todos precisam existir, mesmo vazios, para o `up`). A aplicação lê `VAR` ou `VAR_FILE`.
 
+O `cloudflared` está no profile `tunnel` (fora por padrão). Com Cloudflare Tunnel:
+
 ```sh
-EVENT_ID=... PUBLIC_BASE_URL=https://techwoman.dev docker compose -f ops/compose.yaml up -d --build --scale api=4
+EVENT_ID=... PUBLIC_BASE_URL=https://techwoman.dev docker compose -f ops/compose.yaml --profile tunnel up -d --build --scale api=4
 ```
+
+**Variante com Nginx Proxy Manager** (servidor que já tem o NPM na rede docker externa `npm_network`): override `ops/compose.npm.yaml`.
+
+```sh
+docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVENT_ID, PUBLIC_BASE_URL etc. no .env
+```
+
+- Containers: `techwoman-web` (redes `edge`, `app`, `npm_network`), `techwoman-api` (`app`, `egress`, fora da `npm_network`),
+  `techwoman-worker` (`egress`, `npm_network`). Nenhuma porta publicada no host.
+- Fluxo: internet → NPM (TLS de `techwoman.dev`) → `http://techwoman-web:8080` → nginx do projeto → `/api/*` e `/l/*` para `api:3000`.
+  No NPM, o proxy host aponta para `techwoman-web`, porta `8080`, esquema `http`.
+- WhatsApp: o worker fala com o WAHA pelo container (`WAHA_URL=http://waha:3000`) e o WAHA chama o webhook pelo container
+  `http://techwoman-web:8080/api/webhooks/waha` (HMAC no `X-Webhook-Hmac`), sem passar pelo domínio.
+- O nginx do projeto continua necessário: serve o build do SPA, aplica os cabeçalhos de segurança/CSP e faz o `/l/` do
+  encurtador (E48). O NPM só termina o TLS e repassa tudo. O IP real vem de `CF-Connecting-IP`, depois `X-Real-IP` (que o NPM
+  sobrescreve com o IP do cliente) e por fim o peer.
+- O `container_name` fixo impede `--scale api=N`; para escalar, tire o `container_name` da `api` no override.
 
 ## Docker x Podman (encontrado até agora)
 
