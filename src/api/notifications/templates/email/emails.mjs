@@ -46,7 +46,7 @@ export const EMAILS = [
     preheader: 'Chegue 5 minutos antes.',
     selo: ['CONFIRMADA', ...SELO.menta],
     titulo: 'Combinado, {{nome}}!',
-    paragrafos: ['Sua mentoria está confirmada. Chegue 5 minutos antes na mesa indicada.'],
+    paragrafos: ['Sua mentoria está confirmada. Chegue 5 minutos antes na mesa indicada.', 'Não vai conseguir ir? Pela sua página você cancela ou troca o horário.'],
     card: [['MESA', '{{mesa}}'], ['HORÁRIO', '{{horario}}'], ['MENTORA', '{{mentora_nome}}']],
     botao: ['Adicionar à agenda', 'link_agenda'],
     sec: ['Ver minha mentoria', 'link_minha_mentoria'],

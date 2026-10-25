@@ -196,7 +196,7 @@ export const ReminderRuleSchema = z
   .strict();
 export type ReminderRule = z.infer<typeof ReminderRuleSchema>;
 /** Padrão (RN15): 15 min antes, pelo WhatsApp (e-mail se não houver WhatsApp). */
-export const DEFAULT_REMINDERS: ReminderRule[] = [{ minutesBefore: 15, channels: ['whatsapp'] }];
+export const DEFAULT_REMINDERS: ReminderRule[] = [{ minutesBefore: 15, channels: ['whatsapp', 'email'] }];
 
 /** Título e texto editáveis (A7) das List Messages do WhatsApp; rodapé, botão e opções são fixos (RN18, RN20). */
 export const WhatsappListTextSchema = z.object({ title: z.string().trim().min(1).max(60), description: z.string().trim().min(1).max(1000) }).strict();

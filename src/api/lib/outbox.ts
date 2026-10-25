@@ -10,12 +10,12 @@ import { sealSecret } from './secret-box.js';
 
 /**
  * Canais por tipo (PLAN, "Notificações"): e-mail é o canal obrigatório; WhatsApp só se ligado e houver telefone.
- * Lembrete: WhatsApp (e-mail se não houver). Expirado: só e-mail. Respostas da presença (RN18) e do convite (RN20):
- * só WhatsApp, e nada sem WhatsApp disponível.
+ * Lembrete: canais da regra (e-mail se o WhatsApp não estiver disponível). Senha da mentora: só e-mail. Respostas da
+ * presença (RN18) e do convite (RN20): só WhatsApp, e nada sem WhatsApp disponível.
  */
 export function channelsFor(ctx: AppContext, type: OutboxType, mentee: Pick<MenteeDoc, 'phone'> | null, wanted?: readonly OutboxChannel[]): OutboxChannel[] {
   const wa = ctx.config.whatsappEnabled && !!mentee?.phone;
-  if (type === 'expired' || type === 'staff_password') return ['email'];
+  if (type === 'staff_password') return ['email'];
   if (isPresenceReply(type)) return wa ? ['whatsapp'] : [];
   if (type === 'reminder') {
     // canais da regra de A7; WhatsApp indisponível cai para e-mail para o lembrete nunca se perder

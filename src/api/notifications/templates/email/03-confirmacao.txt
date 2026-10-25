@@ -7,6 +7,8 @@ Combinado, {{nome}}!
 
 Sua mentoria está confirmada. Chegue 5 minutos antes na mesa indicada.
 
+Não vai conseguir ir? Pela sua página você cancela ou troca o horário.
+
 MESA: {{mesa}}
 HORÁRIO: {{horario}}
 MENTORA: {{mentora_nome}}

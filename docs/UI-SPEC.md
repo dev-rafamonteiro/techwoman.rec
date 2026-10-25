@@ -260,7 +260,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Nome, data, local, fuso (America/Recife), hora de início e de fim, duração da sessão (40 min), intervalo entre sessões (5 min). Prévia ao vivo da grade de horários gerada.
 - Prazo para a participante responder ao convite (15 min) e antecedência mínima para convite (10 min antes do horário).
-- Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min pelo WhatsApp. Sem WhatsApp disponível, vai por e-mail.
+- Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min por e-mail e WhatsApp. Sem WhatsApp disponível, vai só por e-mail.
 - Menus do WhatsApp (List Message), dois blocos: "Convite (menu do WhatsApp)" e "Confirmação de presença (menu do WhatsApp)". Cada um tem dois campos editáveis, Título e Texto (`events.whatsappLists`), e ao lado uma prévia ao vivo no estilo do WhatsApp com o rodapé "Se preferir, responda SIM ou NÃO", o botão "Responder" e as duas opções, fixos e não editáveis (convite: "Aceito" / "Não posso"; presença: "Sim, confirmo" / "Não poderei ir"), com a nota "As opções e o rodapé são fixos: as respostas da participante dependem deles." Variáveis do convite: {nome} {mentora} {horario} {mesa} {prazo} {link}; da presença: {nome} {mentora} {horario} {mesa} {minutos} {link}. Na prévia, as variáveis aparecem com dados de exemplo.
 - Nos textos do WhatsApp, "Convite de horário" leva a nota "Usado quando o WhatsApp sai em texto simples (sem menu)" e "Lembrete" leva "Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença".
 - Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 7 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
@@ -313,7 +313,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Resposta: confirmou (texto fixo) | WhatsApp | "Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}." |
 | Resposta: não poderá ir (texto fixo) | WhatsApp | "Tudo bem, {nome}. Sua mentoria das {horario} foi cancelada e você continua na fila com prioridade. Se quiser, escolha um novo horário aqui: {link}" |
 | Resposta: não entendida (texto fixo) | WhatsApp | "Não entendi. Responda SIM para confirmar ou NÃO para cancelar sua mentoria das {horario}." |
-| Convite expirado | E-mail | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
+| Convite expirado | E-mail e WhatsApp | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
 | Cancelamento pela mentora | E-mail + WhatsApp | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
 | Inscrição cancelada pela participante (texto fixo) | E-mail + WhatsApp | "Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}" |
 

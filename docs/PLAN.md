@@ -457,7 +457,7 @@ db.mentees.createSearchIndex("mentees_text", "search", {
 
 ## Notificações
 
-E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os modelos de mensagem forem aprovados a tempo; a página pessoal (P6) funciona mesmo que nenhuma mensagem chegue.
+E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os modelos de mensagem forem aprovados a tempo; a página pessoal (P6) funciona mesmo que nenhuma mensagem chegue. Com WhatsApp ligado, todo aviso à participante sai pelos dois canais, para que nenhum dependa só do WhatsApp; a exceção são as respostas a um toque no próprio WhatsApp (`presence_*`, `invite_*`).
 
 **Fluxo:** a API grava na `outbox` dentro da mesma transação da mudança de status (padrão outbox); o `worker` lê as pendentes, envia e marca o resultado. Nada é enviado direto de dentro da requisição HTTP.
 
@@ -466,8 +466,8 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
 | Inscrição criada ou link reenviado | `registered` | E-mail, WhatsApp | `registered:<menteeId>:<n>` |
 | Convite criado (no WhatsApp, List Message com resposta direta, RN20) | `invite` | E-mail, WhatsApp | `invite:<appointmentId>` |
 | Confirmada | `confirmed` | E-mail, WhatsApp | `confirmed:<appointmentId>` |
-| Lembretes antes da mentoria (A7, até 10; padrão 15 min); o primeiro pelo WhatsApp é a List Message de presença (RN18) | `reminder` | Canais da regra (WhatsApp sem telefone ou desligado vira e-mail) | `reminder:<appointmentId>:<minutos>` |
-| Convite expirado | `expired` | E-mail | `expired:<appointmentId>` |
+| Lembretes antes da mentoria (A7, até 10; padrão 15 min por e-mail e WhatsApp); o primeiro pelo WhatsApp é a List Message de presença (RN18) | `reminder` | Canais da regra (WhatsApp sem telefone ou desligado vira e-mail) | `reminder:<appointmentId>:<minutos>` |
+| Convite expirado | `expired` | E-mail, WhatsApp | `expired:<appointmentId>` |
 | Cancelada pela mentora/admin ou movida | `cancelled` / `moved` | E-mail, WhatsApp | `cancelled:<appointmentId>` |
 | Inscrição cancelada pela própria participante (E04 `cancel`, ou recusa do convite com "Não tenho mais interesse") | `registration_cancelled` | E-mail, WhatsApp | `registration_cancelled:<menteeId>:<version da participante depois do cancelamento>` |
 | Senha provisória enviada pelo admin | `staff_password` | E-mail | `pwd:<userId>:<n>` |
@@ -534,6 +534,8 @@ Os 7 layouts HTML do design substituem o e-mail em texto simples enviado hoje. O
 | 7 | Inscrição cancelada | `registration_cancelled` | E04 cancel / decline no_interest | Sua inscrição na mentoria do Tech Woman foi cancelada | `nome`, `link_inscricao` |
 
 Variáveis comuns a todos: `evento_nome`, `evento_data`, `evento_local`, `link_privacidade`, `ano`.
+
+Layout 3 (confirmação, mudança e lembrete): além do texto do design, um segundo parágrafo diz "Não vai conseguir ir? Pela sua página você cancela ou troca o horário." O botão "Ver minha mentoria" leva a P6, onde ficam "Cancelar" e "Trocar de horário" (RN19).
 
 `link_inscricao` (layout 7) = `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token): a participante cancelada faz uma nova inscrição, e E02 reativa a inscrição cancelada.
 
