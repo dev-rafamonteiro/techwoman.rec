@@ -1,12 +1,18 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-/** Logotipo TECH / WOMAN. */
-export function Brand({ to = '/' }: { to?: string }) {
+/** Logotipo Tech Woman (imagem 2,83:1). `height` é a altura padrão do contexto; o CSS ajusta por tela. */
+export function Brand({ to = '/', height = 32 }: { to?: string; height?: 32 | 36 | 44 }) {
   return (
-    <Link to={to} className="tw-brand" aria-label="Tech Woman, ir para o início">
-      <span className="tw-brand__tech">TECH</span>
-      <span className="tw-brand__woman">WOMAN</span>
+    <Link to={to} className="tw-brand">
+      <img
+        src="/brand/techwoman-logo.png"
+        srcSet="/brand/techwoman-logo-600.png 600w, /brand/techwoman-logo-1200.png 1200w, /brand/techwoman-logo.png 2032w"
+        sizes="(max-width: 600px) 160px, 240px"
+        width={Math.round(height * 2.83)}
+        height={height}
+        alt="Tech Woman"
+      />
     </Link>
   );
 }

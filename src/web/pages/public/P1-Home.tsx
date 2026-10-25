@@ -37,7 +37,7 @@ export default function P1Home() {
   return (
     <div className="tw-pub tw-p1" data-testid="p1">
       <header className="tw-pub__head">
-        <Brand />
+        <Brand height={44} />
         <nav className="tw-pub__nav" aria-label="Seções">
           <a href="#evento">O evento</a><a href="#como-funciona">Como funciona</a><a href="#mentoria">Mentoria</a><a href="#local">Local</a>
         </nav>

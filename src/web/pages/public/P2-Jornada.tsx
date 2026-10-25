@@ -28,7 +28,7 @@ export default function P2Jornada() {
   return (
     <div className="tw-pub tw-p3" data-testid="p2" style={{ minHeight: '100vh' }}>
       <header className="tw-pub__head">
-        <Brand />
+        <Brand height={44} />
         <span className="tw-p3__xp" aria-live="polite" data-testid="p2-xp">{calcXp(answers)} XP</span>
         <Link className="tw-pub__back" to="/">Voltar ao início</Link>
       </header>
