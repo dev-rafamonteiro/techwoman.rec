@@ -9,6 +9,9 @@ services:
   web:
     container_name: techwoman-web
     networks: [edge, app, npm_network]
+    environment:
+      # O NPM sobrescreve X-Real-IP com o IP do cliente; CF-Connecting-IP não é aceito (o cliente o forjaria)
+      CLIENT_IP_HEADER: x-real-ip
 
   api:
     container_name: techwoman-api

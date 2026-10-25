@@ -111,8 +111,9 @@ docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVE
 - WhatsApp: o worker fala com o WAHA pelo container (`WAHA_URL=http://waha:3000`) e o WAHA chama o webhook pelo container
   `http://techwoman-web:8080/api/webhooks/waha` (HMAC no `X-Webhook-Hmac`), sem passar pelo domínio.
 - O nginx do projeto continua necessário: serve o build do SPA, aplica os cabeçalhos de segurança/CSP e faz o `/l/` do
-  encurtador (E48). O NPM só termina o TLS e repassa tudo. O IP real vem de `CF-Connecting-IP`, depois `X-Real-IP` (que o NPM
-  sobrescreve com o IP do cliente) e por fim o peer.
+  encurtador (E48). O NPM só termina o TLS e repassa tudo. O IP real vem só do `X-Real-IP` (que o NPM
+  sobrescreve com o IP do cliente; `CLIENT_IP_HEADER=x-real-ip` no override) e, sem ele, do peer. O `CF-Connecting-IP` é
+  ignorado nessa variante porque o cliente o forjaria; no Cloudflare Tunnel (`compose.yaml`) vale `CLIENT_IP_HEADER=cf`.
 - O `container_name` fixo impede `--scale api=N`; para escalar, tire o `container_name` da `api` no override.
 
 ## Docker x Podman (encontrado até agora)

@@ -55,6 +55,9 @@ services:
         VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:?defina VITE_TURNSTILE_SITE_KEY}
     <<: *hardening
     tmpfs: ["/tmp"]
+    environment:
+      # cf: a entrada é o cloudflared (CF-Connecting-IP); o compose.npm.yaml troca para x-real-ip
+      CLIENT_IP_HEADER: cf
     networks: [edge, app]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
