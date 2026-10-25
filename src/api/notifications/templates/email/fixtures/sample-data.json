@@ -43,6 +43,10 @@
       "senha_provisoria": "lilas-mesa-3851",
       "link_login": "https://techwoman.dev/entrar",
       "validade_senha": "72 horas"
+    },
+    "07-inscricao-cancelada": {
+      "nome": "Joana",
+      "link_inscricao": "https://techwoman.dev/mentoria/inscricao"
     }
   }
 }

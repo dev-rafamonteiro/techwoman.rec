@@ -106,7 +106,11 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
   if (!mentee) throw new AppError('INTERNAL', 'Participante da mentoria não encontrada.');
 
   if (plan.notify && input.action !== 'move_cancel') {
-    await enqueueMenteeNotifications(ctx, session, { type: plan.notify, mentee, appointmentId: appt._id });
+    await enqueueMenteeNotifications(ctx, session, {
+      type: plan.notify, mentee, appointmentId: appt._id,
+      // inscrição cancelada pela participante: dedupe pela version dela depois do cancelamento
+      ...(plan.notify === 'registration_cancelled' ? { dedupeSuffix: mentee.version } : {}),
+    });
   }
   if (plan.scheduleReminder) {
     await enqueueReminders(ctx, session, mentee, appt);

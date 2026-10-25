@@ -50,6 +50,8 @@ const isPresenceReply = (t: OutboxType): t is PresenceReplyType => PRESENCE_REPL
 
 function dedupeBase(i: EnqueueInput): string {
   if (i.type === 'registered') return `registered:${i.mentee._id}:${i.dedupeSuffix ?? 0}`;
+  // `registration_cancelled:<menteeId>:<version da participante depois do cancelamento>` (mesmo vindo de uma mentoria)
+  if (i.type === 'registration_cancelled') return `registration_cancelled:${i.mentee._id}:${i.dedupeSuffix}`;
   // uma resposta por mensagem recebida: `presence:<id da mensagem recebida>`
   if (isPresenceReply(i.type)) return `presence:${i.dedupeSuffix}`;
   return `${i.type}:${i.appointmentId ?? i.mentee._id}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;

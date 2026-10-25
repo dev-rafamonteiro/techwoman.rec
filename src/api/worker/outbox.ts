@@ -47,6 +47,9 @@ function skipReason(item: OutboxDoc, ctx: AppContext, appt: { status: string; ex
       return shouldSendReminder(appt?.status ?? null) ? null : 'mentoria não está mais confirmada';
     case 'registered':
       return menteeStatus === 'cancelled' || menteeStatus === 'no_show' ? 'inscrição encerrada' : null;
+    case 'registration_cancelled':
+      // se ela se inscreveu de novo antes do envio, o aviso de cancelamento não sai
+      return menteeStatus === 'cancelled' ? null : 'inscrição não está mais cancelada';
     default:
       return null;
   }
@@ -119,7 +122,7 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       });
       message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
     } else {
-      message = render({ item, event, mentee, appointment: appt, mentor, table, links, now: ctx.now(), ...(listKind ? { list: listKind } : {}) });
+      message = render({ item, event, mentee, appointment: appt, mentor, table, links, baseUrl: ctx.config.publicBaseUrl, now: ctx.now(), ...(listKind ? { list: listKind } : {}) });
     }
   } catch (err) {
     if (err instanceof RenderError) return await fail(`render: ${err.message}`);

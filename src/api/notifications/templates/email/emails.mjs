@@ -1,4 +1,4 @@
-// Conteúdo dos 6 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 7 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
 // {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail".
 
@@ -91,5 +91,19 @@ export const EMAILS = [
     botao: ['Entrar na área da mentora', 'link_login'],
     nota: 'Esqueceu a senha? Procure a organização no balcão de apoio.',
     linkFallback: 'link_login',
+  },
+  {
+    id: '07-inscricao-cancelada',
+    vars: ['nome', 'link_inscricao'],
+    preheader: 'Se mudar de ideia, é só se inscrever de novo.',
+    selo: ['INSCRIÇÃO CANCELADA', ...SELO.neutro],
+    titulo: 'Sua inscrição foi cancelada',
+    paragrafos: [
+      'Tudo certo, {{nome}}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu.',
+      'Se havia um horário marcado, ele foi liberado.',
+      'Se mudar de ideia, é só se inscrever de novo.',
+    ],
+    botao: ['Fazer nova inscrição', 'link_inscricao'],
+    linkFallback: 'link_inscricao',
   },
 ];

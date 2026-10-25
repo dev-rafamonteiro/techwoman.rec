@@ -79,6 +79,8 @@ export const OUTBOX_TYPES = [
   'expired',
   'cancelled',
   'moved',
+  // inscrição cancelada pela própria participante (E04 cancel ou recusa "Não tenho mais interesse")
+  'registration_cancelled',
   'staff_password',
   // respostas à confirmação de presença pelo WhatsApp (RN18)
   'presence_confirmed',

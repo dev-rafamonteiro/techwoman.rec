@@ -238,7 +238,8 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
           if (fresh.currentAppointmentId && (fresh.status === 'invited' || fresh.status === 'confirmed')) {
             await applyTransition(ctx, session, { appointmentId: fresh.currentAppointmentId, action: 'mentee_cancel', actor, scope: { menteeId: fresh._id }, ip: req.ip });
           } else if (fresh.status === 'waiting') {
-            await ctx.c.mentees.updateOne({ _id: fresh._id, status: 'waiting' }, { $set: { status: 'cancelled', updatedAt: ctx.now() }, $inc: { version: 1 } }, { session });
+            const m = await ctx.c.mentees.findOneAndUpdate({ _id: fresh._id, status: 'waiting' }, { $set: { status: 'cancelled', updatedAt: ctx.now() }, $inc: { version: 1 } }, { session, returnDocument: 'after' });
+            if (m) await enqueueMenteeNotifications(ctx, session, { type: 'registration_cancelled', mentee: m, dedupeSuffix: m.version });
             await writeAudit(ctx, session, { actor, action: 'mentee.cancel', entity: 'mentee', entityId: fresh._id, before: { status: 'waiting' }, after: { status: 'cancelled' }, ip: req.ip });
           } else {
             throw new AppError('INVALID_STATE', 'Não é possível cancelar nesta situação.');

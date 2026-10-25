@@ -263,7 +263,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 - Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min pelo WhatsApp. Sem WhatsApp disponível, vai por e-mail.
 - Menus do WhatsApp (List Message), dois blocos: "Convite (menu do WhatsApp)" e "Confirmação de presença (menu do WhatsApp)". Cada um tem dois campos editáveis, Título e Texto (`events.whatsappLists`), e ao lado uma prévia ao vivo no estilo do WhatsApp com o rodapé "Se preferir, responda SIM ou NÃO", o botão "Responder" e as duas opções, fixos e não editáveis (convite: "Aceito" / "Não posso"; presença: "Sim, confirmo" / "Não poderei ir"), com a nota "As opções e o rodapé são fixos: as respostas da participante dependem deles." Variáveis do convite: {nome} {mentora} {horario} {mesa} {prazo} {link}; da presença: {nome} {mentora} {horario} {mesa} {minutos} {link}. Na prévia, as variáveis aparecem com dados de exemplo.
 - Nos textos do WhatsApp, "Convite de horário" leva a nota "Usado quando o WhatsApp sai em texto simples (sem menu)" e "Lembrete" leva "Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença".
-- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 6 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
+- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 7 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
 - Alterar a grade com mentorias já marcadas é bloqueado. Dados: **E41**, QR Code: **E42**.
 
@@ -296,7 +296,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 **Estados obrigatórios em toda tela com dados:** carregando (esqueleto), vazio (texto + próxima ação), erro (mensagem + tentar de novo), sem permissão ("Você não tem acesso a esta área"), sessão expirada (volta para M1 mantendo a rota de retorno).
 
-**Mensagens enviadas: o e-mail usa os 6 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos):**
+**Mensagens enviadas: o e-mail usa os 7 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos). `{link_inscricao}` (e `link_inscricao` no e-mail) é `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token):**
 
 | Momento | Canal | Texto base |
 | --- | --- | --- |
@@ -315,6 +315,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Resposta: não entendida (texto fixo) | WhatsApp | "Não entendi. Responda SIM para confirmar ou NÃO para cancelar sua mentoria das {horario}." |
 | Convite expirado | E-mail | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
 | Cancelamento pela mentora | E-mail + WhatsApp | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
+| Inscrição cancelada pela participante (texto fixo) | E-mail + WhatsApp | "Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}" |
 
 ## Pendências de UI
 

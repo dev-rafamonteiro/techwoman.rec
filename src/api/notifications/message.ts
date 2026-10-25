@@ -75,6 +75,8 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
     vars['link_login'] = `${i.baseUrl}/entrar`;
     vars['validade_senha'] = `${i.tempPasswordHours} horas`;
   }
+  // layout 7: nova inscrição em P4, sem token (E02 reativa a inscrição cancelada)
+  if (layout === '07-inscricao-cancelada') vars['link_inscricao'] = `${i.baseUrl}/mentoria/inscricao`;
   // assunto editado em A7 vale para o layout; moved e reminder mantêm as variantes próprias do layout 3
   const custom = type === 'moved' || type === 'reminder' ? undefined : event.emailSubjects?.[layout];
   const rendered = renderEmail(layout, vars, custom ?? emailSubjectFor(type));

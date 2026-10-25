@@ -35,7 +35,10 @@ export interface TransitionPlan {
   menteeTo: MenteeStatus;
   /** Prioridade da participante: undefined = não mexe; objeto = define (value=false limpa). `queuedAt` nunca é alterado. */
   priority?: { value: boolean; reason: PriorityReason | null };
-  /** Mensagem a enfileirar na outbox (dedupeKey = `${type}:${appointmentId}`); null = nenhuma. */
+  /**
+   * Mensagem a enfileirar na outbox (dedupeKey = `${type}:${appointmentId}`; `registration_cancelled` usa
+   * `registration_cancelled:<menteeId>:<version>`); null = nenhuma.
+   */
   notify: OutboxType | null;
   /** Agenda o lembrete de 15 min antes (RN15). */
   scheduleReminder: boolean;
@@ -105,13 +108,16 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       if (from !== 'invited') return invalid(from, 'recusar');
       if (isExpiredAt(i.appointment.expiresAt, now)) return fail('INVITE_EXPIRED', 'O prazo para responder terminou.');
       return plan(from, 'declined', 'cancelled', 'appointment.decline', {
+        notify: 'registration_cancelled',
         reason: 'no_interest',
         respondedAt: true,
       });
     }
     case 'mentee_cancel': {
       if (from !== 'invited' && from !== 'confirmed') return invalid(from, 'cancelar');
-      return plan(from, 'cancelled', 'cancelled', 'appointment.cancel', { reason: 'mentee_cancelled' });
+      // E36 (admin cancelando a inscrição) também passa por aqui: o aviso `registration_cancelled` é só para quando a
+      // própria participante cancela (PLAN, Notificações)
+      return plan(from, 'cancelled', 'cancelled', 'appointment.cancel', { notify: i.actor.role === 'mentee' ? 'registration_cancelled' : null, reason: 'mentee_cancelled' });
     }
     case 'mentee_reschedule': {
       // RN19 · só `confirmed` e antes do início; mesa e horário livres na hora; volta à fila com prioridade e o

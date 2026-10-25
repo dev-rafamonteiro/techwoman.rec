@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { EMAIL_COMMON_VARS, EMAIL_SUBJECTS, EMAIL_TEMPLATE_IDS, EMAIL_TEMPLATE_VARS, type EmailTemplateId } from "../../src/api/notifications/templates/email/subjects.js";
 
 /**
- * PLAN, "Testes dos e-mails", caixas 1 e 2: os 6 layouts renderizam com dados de exemplo sem `{{` sobrando
+ * PLAN, "Testes dos e-mails", caixas 1 e 2: os 7 layouts renderizam com dados de exemplo sem `{{` sobrando
  * (snapshot do HTML e do texto) e todos os links são absolutos e nenhum executa ação.
  */
 const DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../src/api/notifications/templates/email");
@@ -24,9 +24,9 @@ function fill(tpl: string, vars: Record<string, string>, html: boolean): string 
 const varsFor = (id: EmailTemplateId) => ({ ...sample.common, ...sample.templates[id]! });
 const placeholders = (s: string) => [...s.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]!);
 
-describe("layouts de e-mail (6): arquivos e variáveis", () => {
-  it("existem os 6 pares .html + .txt com os nomes do PLAN", () => {
-    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora"]);
+describe("layouts de e-mail (7): arquivos e variáveis", () => {
+  it("existem os 7 pares .html + .txt com os nomes do PLAN", () => {
+    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora", "07-inscricao-cancelada"]);
     for (const id of EMAIL_TEMPLATE_IDS) {
       expect(read(id, "html").length, id).toBeGreaterThan(500);
       expect(read(id, "txt").length, id).toBeGreaterThan(50);
@@ -103,5 +103,21 @@ describe("layout 3 (confirmação): botão de agenda e links de ação", () => {
     expect(vars.link_agenda).toMatch(/^https:\/\/.+\.ics\?t=/);
     expect(vars.link_minha_mentoria).toMatch(/^https:\/\/.+\/mentoria\/minha\?t=/);
     expect(fill(read("03-confirmacao", "html"), vars, true)).toContain(vars.link_agenda);
+  });
+});
+
+describe("layout 7 (inscrição cancelada pela participante)", () => {
+  it("botão 'Fazer nova inscrição' leva a P4 sem token (link_inscricao) e o texto segue a UI-SPEC", () => {
+    const vars = varsFor("07-inscricao-cancelada");
+    expect(vars.link_inscricao).toBe("https://techwoman.dev/mentoria/inscricao");
+    const html = fill(read("07-inscricao-cancelada", "html"), vars, true);
+    expect(html).toContain(`href="${vars.link_inscricao}"`);
+    expect(html).toContain("Fazer nova inscrição");
+    expect(html).toContain("Sua inscrição foi cancelada");
+    const txt = fill(read("07-inscricao-cancelada", "txt"), vars, false);
+    expect(txt).toContain("Tudo certo, Joana. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu.");
+    expect(txt).toContain("Se havia um horário marcado, ele foi liberado.");
+    expect(txt).not.toMatch(/\?t=/);
+    expect(EMAIL_SUBJECTS["07-inscricao-cancelada"]).toBe("Sua inscrição na mentoria do Tech Woman foi cancelada");
   });
 });

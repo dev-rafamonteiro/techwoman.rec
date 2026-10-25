@@ -16,6 +16,7 @@ const base = (event: ReturnType<typeof buildEvent>, list: "invite" | "presence")
     mentor: { name: "Tatiana Barros" } as never,
     table: { number: 5, name: null } as never,
     links: { personal: "https://techwoman.dev/l/IEO31Kd", calendar: null },
+    baseUrl: "https://techwoman.dev",
     now,
     list,
   });

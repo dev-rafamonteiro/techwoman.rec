@@ -1,0 +1,22 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[INSCRIÇÃO CANCELADA]
+
+Sua inscrição foi cancelada
+
+Tudo certo, {{nome}}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu.
+
+Se havia um horário marcado, ele foi liberado.
+
+Se mudar de ideia, é só se inscrever de novo.
+
+Fazer nova inscrição: {{link_inscricao}}
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_inscricao}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

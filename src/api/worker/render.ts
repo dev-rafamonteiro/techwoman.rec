@@ -11,6 +11,7 @@ const SUBJECTS: Record<string, string> = {
   expired: 'O prazo para confirmar terminou',
   cancelled: 'Sua mentoria foi cancelada',
   moved: 'Sua mentoria mudou de horário',
+  registration_cancelled: 'Sua inscrição na mentoria do Tech Woman foi cancelada',
   presence_confirmed: 'Presença confirmada',
   presence_cancelled: 'Sua mentoria foi cancelada',
   presence_unclear: 'Confirme sua presença',
@@ -21,7 +22,10 @@ const SUBJECTS: Record<string, string> = {
 
 const MOVED_DEFAULT = 'Sua mentoria foi remarcada: {horario} na {mesa} com {mentora}. Sua confirmação continua valendo.';
 
-/** Respostas à presença (RN18) e ao convite (RN20): texto fixo no código (UI-SPEC, Mensagens enviadas), não editável em A7. */
+/**
+ * Respostas à presença (RN18) e ao convite (RN20) e a inscrição cancelada pela participante: texto fixo no código
+ * (UI-SPEC, Mensagens enviadas), não editável em A7.
+ */
 const FIXED: Record<string, string> = {
   presence_confirmed: 'Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}.',
   presence_cancelled: 'Tudo bem, {nome}. Sua mentoria das {horario} foi cancelada e você continua na fila com prioridade. Se quiser, escolha um novo horário aqui: {link}',
@@ -29,6 +33,7 @@ const FIXED: Record<string, string> = {
   invite_decline_link: 'Tudo bem, {nome}! Para recusar, conte o motivo na sua página: {link}. Se for o horário, você continua na fila com prioridade.',
   invite_closed: 'Este convite não está mais disponível. Veja como está sua inscrição: {link}',
   invite_unclear: 'Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO.',
+  registration_cancelled: 'Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}',
 };
 
 /**
@@ -47,6 +52,8 @@ export interface RenderInput {
   table: TableDoc | null;
   /** Links curtos já resolvidos no worker (E48): `{link}` = `personal`. null sem participante. */
   links: { personal: string; calendar: string | null } | null;
+  /** `PUBLIC_BASE_URL`: `{link_inscricao}` = `<baseUrl>/mentoria/inscricao` (sem token). */
+  baseUrl: string;
   /** Hora do envio: `{minutos}` do lembrete é calculado agora (RN18). */
   now: Date;
   /**
@@ -69,6 +76,7 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
     prazo: a?.expiresAt ? formatTimeBR(a.expiresAt, event.timezone) : '',
     minutos: a ? String(presenceMinutes(a.startAt, i.now)) : '',
     link: i.links?.personal ?? '',
+    link_inscricao: `${i.baseUrl}/mentoria/inscricao`,
   };
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
   const lists = event.whatsappLists ?? DEFAULT_WHATSAPP_LISTS;

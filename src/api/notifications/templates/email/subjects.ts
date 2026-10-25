@@ -8,6 +8,7 @@ export const EMAIL_TEMPLATE_IDS = [
   '04-convite-expirado',
   '05-cancelamento-mentora',
   '06-acesso-mentora',
+  '07-inscricao-cancelada',
 ] as const;
 
 export type EmailTemplateId = (typeof EMAIL_TEMPLATE_IDS)[number];
@@ -23,6 +24,7 @@ export const EMAIL_TEMPLATE_VARS = {
   '04-convite-expirado': ['nome', 'link_minha_mentoria'],
   '05-cancelamento-mentora': ['nome', 'horario', 'link_minha_mentoria'],
   '06-acesso-mentora': ['mentora_nome', 'email_login', 'senha_provisoria', 'link_login', 'validade_senha'],
+  '07-inscricao-cancelada': ['nome', 'link_inscricao'],
 } as const satisfies Record<EmailTemplateId, readonly string[]>;
 
 /** Tipo da `outbox` -> layout. */
@@ -35,6 +37,7 @@ export const EMAIL_TEMPLATE_BY_OUTBOX_TYPE = {
   expired: '04-convite-expirado',
   cancelled: '05-cancelamento-mentora',
   staff_password: '06-acesso-mentora',
+  registration_cancelled: '07-inscricao-cancelada',
 } as const satisfies Record<string, EmailTemplateId>;
 
 export type EmailOutboxType = keyof typeof EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
@@ -47,6 +50,7 @@ export const EMAIL_SUBJECTS: Record<EmailTemplateId, string> = {
   '04-convite-expirado': 'O prazo para confirmar sua mentoria terminou',
   '05-cancelamento-mentora': 'Sua mentoria das {{horario}} foi cancelada',
   '06-acesso-mentora': 'Seu acesso ao painel de mentoras do Tech Woman',
+  '07-inscricao-cancelada': 'Sua inscrição na mentoria do Tech Woman foi cancelada',
 };
 
 /** Variantes do layout 3 por tipo da `outbox`. */

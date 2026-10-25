@@ -53,6 +53,16 @@ describe("RN06 resposta da participante", () => {
     }
     expect(code(run("mentee_cancel", "done", during))).toBe("INVALID_STATE");
   });
+  it("aviso registration_cancelled: participante cancelando ou recusando sem interesse; admin cancelando (E36) não", () => {
+    const asMentee = (action: TransitionAction, status: AppointmentStatus) =>
+      ok(planTransition({ action, appointment: { status, startAt: start, expiresAt: min(start, -5) }, now: during, actor: mentee }));
+    expect(asMentee("mentee_cancel", "invited").notify).toBe("registration_cancelled");
+    expect(asMentee("mentee_cancel", "confirmed").notify).toBe("registration_cancelled");
+    expect(asMentee("decline_no_interest", "invited").notify).toBe("registration_cancelled");
+    expect(asMentee("mentee_reschedule", "confirmed").notify).toBeNull();
+    const admin = ok(planTransition({ action: "mentee_cancel", appointment: { status: "confirmed", startAt: start, expiresAt: null }, now: during, actor: { userId: "a1", role: "admin" } }));
+    expect(admin.notify).toBeNull();
+  });
 });
 
 describe("mentee não aparece como actor de staff", () => {
