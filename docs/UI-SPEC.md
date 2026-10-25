@@ -91,6 +91,13 @@ A jornada é QR Code → gamificação → resultado → inscrição → link pe
 - Incluir o bloco "Mentoria": como funciona em 3 passos (descubra sua área, inscreva-se, aguarde o convite de uma mentora), sessões de 40 min, mesas no local.
 - CTA principal "Começar minha jornada" leva a P2. Texto de apoio: "A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras."
 - Dados de data, local e horário vêm de **E01**.
+- Conteúdo do evento, tirado da página oficial (Jalan, `https://app.jalanlive.com/techwoman26/home`):
+  - Hero: título "Conectar mulheres, tecnologia e futuros possíveis" e o resumo "O Tech Woman é um movimento que nasceu para ampliar a presença feminina no universo da tecnologia e da inovação, fortalecendo a representatividade, o desenvolvimento profissional e as conexões entre mulheres." Link secundário "Garanta seu ingresso" para a página oficial (o ingresso do evento é vendido lá; a inscrição na mentoria é separada e gratuita).
+  - Bloco "O evento": cartões Quando, Onde e Para quem, seguidos das cinco trilhas de conhecimento, cada uma com nome e uma frase: Carreiras, Técnica, Soft Skills, Empreendedorismo, Tecnologia para quem não é da tecnologia.
+  - Faixa final: frase "Você não precisa trabalhar com tecnologia para fazer parte dessa transformação." acima do CTA.
+  - Bloco "Local": nome do local (E01 `location`), endereço "Cais Santa Rita, 156 - São José, Recife - PE" e botão "Ver no mapa" (Google Maps, nova aba). Endereço e link são constantes da página, não vêm da API.
+  - Rodapé: Instagram, LinkedIn, YouTube e o e-mail contato@techwoman.rec.br, além dos links atuais.
+- Logos de realização e patrocínio só entram com os arquivos oficiais fornecidos pela organização.
 
 ### P2 · Gamificação (existente)
 

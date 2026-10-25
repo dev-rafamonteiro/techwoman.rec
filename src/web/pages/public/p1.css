@@ -59,3 +59,10 @@
 
 /* Âncoras do menu: a seção não fica escondida atrás do cabeçalho fixo */
 .tw-p1 section[id] { scroll-margin-top: 80px; }
+
+/* Trilhas (UI-SPEC, P1): título Manrope 700 18px, frase 15px */
+.tw-p1 .tw-p1__trailstitle { font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.tw-p1 .tw-p1__trail h4 { font-family: var(--font-body); font-weight: 700; font-size: 18px; }
+.tw-p1 .tw-p1__trail p { font-size: 15px; }
+.tw-p1 .tw-p1__ticket { font-size: 17px; }
+.tw-p1 .tw-p1__band .tw-p1__quote { font-size: 19px; }
