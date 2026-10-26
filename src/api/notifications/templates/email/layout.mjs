@@ -71,6 +71,10 @@ function card(items) {
   return `<tr><td class="card-wrap"><table role="presentation" class="card" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#3D0A45"><tr>${cells}</tr></table></td></tr>`;
 }
 
+// rodapé: por que a pessoa recebe o e-mail; os layouts das mentoras (`paraMentora`) não falam de inscrição
+const motivoEnvio = (e) =>
+  e.paraMentora ? 'Você recebeu este e-mail porque é mentora no evento.' : 'Você recebeu este e-mail porque se inscreveu na mentoria do evento.';
+
 export function renderHtml(e) {
   const [selo, seloBg, seloFg] = e.selo;
   const paras = e.paragrafos
@@ -117,7 +121,7 @@ ${sec}
 ${e.nota ? `<tr><td class="nota">${t(e.nota)}</td></tr>` : ''}
 <tr><td class="fallback">Se o botão não funcionar, copie e cole este link no navegador:<br><a href="{{${e.linkFallback}}}">{{${e.linkFallback}}}</a></td></tr>
 <tr><td class="footer" bgcolor="#3D0A45"><strong>{{evento_nome}}</strong> · {{evento_data}} · {{evento_local}}<br>
-Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.<br>
+${motivoEnvio(e)} Este endereço não recebe respostas.<br>
 <a href="{{link_privacidade}}">Aviso de privacidade</a></td></tr>
 </table>
 </td></tr></table>
@@ -145,7 +149,7 @@ export function renderText(e) {
     '',
     '--',
     '{{evento_nome}} · {{evento_data}} · {{evento_local}}',
-    'Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.',
+    `${motivoEnvio(e)} Este endereço não recebe respostas.`,
     'Aviso de privacidade: {{link_privacidade}}',
     '',
   );

@@ -1,12 +1,17 @@
 // telefone: a regra mora em @tw/shared para a importação de mentoras (@tw/db) usar a mesma
 import { normalizePhoneBR } from '@tw/shared';
+import { AppError } from './errors.js';
 export { normalizePhoneBR };
 
-/** WhatsApp opcional da mentora (E28, E31, E32): null ou vazio = sem telefone; inválido devolve undefined (como o LinkedIn). */
-export function normalizeOptionalPhone(input: string | null | undefined): string | null | undefined {
+/**
+ * WhatsApp opcional da mentora (E28, E31, E32): undefined = não mexe, null = sem telefone, texto = E.164.
+ * Inválido vira VALIDATION_ERROR no campo `phone` (o schema já recusa string vazia).
+ */
+export function parseOptionalPhone(input: string | null | undefined): string | null | undefined {
   if (input === null || input === undefined) return input;
-  if (!input.trim()) return null;
-  return normalizePhoneBR(input) ?? undefined;
+  const phone = normalizePhoneBR(input);
+  if (!phone) throw new AppError('VALIDATION_ERROR', 'Telefone inválido. Informe DDD e número.', { details: { field: 'phone' } });
+  return phone;
 }
 
 /** LinkedIn: aceita só o usuário, "linkedin.com/in/x" ou a URL completa; guarda a URL completa. Null se vazio ou inválido. */

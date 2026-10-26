@@ -62,6 +62,8 @@ describe("RN06 resposta da participante", () => {
     expect(asMentee("mentee_reschedule", "confirmed").notify).toBe("slot_released");
     const admin = ok(planTransition({ action: "mentee_cancel", appointment: { status: "confirmed", startAt: start, expiresAt: null }, now: during, actor: { userId: "a1", role: "admin" } }));
     expect(admin.notify).toBeNull();
+    const adminDecline = ok(planTransition({ action: "decline_no_interest", appointment: { status: "invited", startAt: start, expiresAt: min(start, -5) }, now: during, actor: { userId: "a1", role: "admin" } }));
+    expect(adminDecline.notify).toBeNull();
   });
 });
 

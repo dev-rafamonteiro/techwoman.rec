@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ENDPOINTS, MENTOR_BIO_MAX, type UserView } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, ErrorState, LinkButton, SkeletonList, SlotToggleGrid,
-  call, formatTime, maskPhone, useAuth, useQuery, useToast,
+  call, formatTime, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useAreas, useTitle } from './lib/common';
 import './lib/a2-a3.css';
@@ -15,7 +15,7 @@ interface FormState {
 const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
 
 const fromUser = (u: UserView): FormState => ({
-  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: maskPhone((u.phone ?? '').replace(/^\+55/, '')), organization: u.organization ?? '', areas: u.areas, bio: u.bio ?? '',
+  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, bio: u.bio ?? '',
   photoUrl: u.photoUrl ?? '', availability: new Set(u.availability), alsoAdmin: u.roles.includes('admin'), sendPasswordByEmail: false,
 });
 
@@ -93,8 +93,8 @@ export default function A3FormMentora() {
     const e: Record<string, string> = {};
     if (f.name.trim().length < 2) e.name = 'Informe o nome completo.';
     if (!editing && !/^\S+@\S+\.\S+$/.test(f.email.trim())) e.email = 'Informe um e-mail válido.';
-    const digits = f.phone.replace(/\D/g, '').length;
-    if (digits && digits !== 10 && digits !== 11) e.phone = 'Telefone inválido. Informe DDD e número.';
+    const phoneError = optionalPhoneError(f.phone);
+    if (phoneError) e.phone = phoneError;
     if (f.bio.length > MENTOR_BIO_MAX) e.bio = `No máximo ${MENTOR_BIO_MAX} caracteres.`;
     setErrors(e);
     return Object.keys(e).length === 0;

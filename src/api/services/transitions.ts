@@ -120,8 +120,9 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     });
   }
   if (plan.notifyMentor) {
-    // aviso à mentora (PLAN, Notificações > Aviso à mentora): canais dela, sem `notifyChannels`; mentora removida, nada
-    const mentor = await c.users.findOne({ _id: appt.mentorId }, { session, projection: { email: 1, phone: 1 } });
+    // aviso à mentora (PLAN, Notificações > Aviso à mentora): canais dela, sem `notifyChannels`; mentora removida ou
+    // desativada (sem acesso ao painel do link), nada
+    const mentor = await c.users.findOne({ _id: appt.mentorId, status: 'active' }, { session, projection: { email: 1, phone: 1 } });
     if (mentor) await enqueueMentorNotifications(ctx, session, { mentor, appointmentId: appt._id, reason: plan.notifyMentor });
   }
   if (plan.scheduleReminder) {

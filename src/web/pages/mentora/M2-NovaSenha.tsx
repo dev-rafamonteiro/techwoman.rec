@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
-import { ApiError, Button, TextField, call, maskPhone, useAuth, useQuery, useToast } from '../../ui';
+import { ApiError, Button, TextField, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useQuery, useToast } from '../../ui';
 import { safeNext } from '../../shell/auth';
 import '../public/public.css';
 
@@ -20,7 +20,7 @@ export default function M2NovaSenha() {
   const [touched, setTouched] = useState(false);
   const [name, setName] = useState(user?.name ?? '');
   const [linkedin, setLinkedin] = useState(user?.linkedin ?? '');
-  const [phone, setPhone] = useState(maskPhone((user?.phone ?? '').replace(/^\+55/, '')));
+  const [phone, setPhone] = useState(phoneFromE164(user?.phone));
   const [photoUrl, setPhotoUrl] = useState(user?.photoUrl ?? '');
   const [areas, setAreas] = useState<Set<string> | null>(user ? new Set(user.areas) : null);
   const [profileTouched, setProfileTouched] = useState(false);
@@ -33,7 +33,7 @@ export default function M2NovaSenha() {
     confirm: confirm === pw ? undefined : 'As senhas não são iguais.',
     name: !isMentor || name.trim().length >= 2 ? undefined : 'Informe seu nome.',
     photo: !photoUrl || /^https:\/\/\S+$/.test(photoUrl) ? undefined : 'Use um endereço https://',
-    phone: [0, 10, 11].includes(phone.replace(/\D/g, '').length) ? undefined : 'Telefone inválido. Informe DDD e número.',
+    phone: optionalPhoneError(phone),
   }), [current, pw, confirm, name, photoUrl, phone]);
   const valid = !errors.current && !errors.pw && !errors.confirm && !errors.name && !errors.photo && !errors.phone;
   const shown = <K extends keyof typeof errors>(k: K) => (touched ? errors[k] : undefined);

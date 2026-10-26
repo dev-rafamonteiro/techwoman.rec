@@ -81,6 +81,7 @@ export const EMAILS = [
   },
   {
     id: '06-acesso-mentora',
+    paraMentora: true,
     vars: ['mentora_nome', 'email_login', 'senha_provisoria', 'link_login', 'validade_senha'],
     preheader: 'Sua senha provisória está aqui.',
     selo: ['PARA MENTORAS', ...SELO.lilas],
@@ -122,6 +123,7 @@ export const EMAILS = [
   {
     // aviso à mentora (mentor_slot_released): {{motivo}} é a frase do motivo, montada no worker (message.ts)
     id: '09-aviso-mentora',
+    paraMentora: true,
     vars: ['mentora_nome', 'nome', 'horario', 'mesa', 'link_painel', 'motivo'],
     preheader: 'O horário já aparece livre no seu painel.',
     selo: ['PARA MENTORAS', ...SELO.lilas],

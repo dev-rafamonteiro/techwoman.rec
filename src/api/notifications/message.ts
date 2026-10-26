@@ -1,4 +1,4 @@
-import { formatTimeBR, MENTOR_SLOT_RELEASED_REASONS, type MentorSlotReleasedReason, type OutboxType } from '@tw/shared';
+import { formatTimeBR, isMentorSlotReleasedReason, MENTOR_SLOT_RELEASED_TEXT, type MentorSlotReleasedReason, type OutboxType } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, TableDoc, UserDoc } from '@tw/db';
 import type { NotifierAttachment } from '../worker/notifier.js';
 import { buildIcs, ICS_FILENAME, tableLabel } from './ics.js';
@@ -42,13 +42,10 @@ export function formatEventDate(date: string): string {
 
 const isEmailType = (t: OutboxType): t is EmailOutboxType => t in EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
 
-/** Layout 9: frase do motivo (`{{motivo}}`), equivalente ao texto do WhatsApp (UI-SPEC, Mensagens enviadas). */
-const MENTOR_MOTIVO: Record<MentorSlotReleasedReason, (v: { nome: string; horario: string; mesa: string }) => string> = {
-  confirmed_cancelled: (v) => `${v.nome} cancelou a mentoria das ${v.horario} na ${v.mesa}. O horário voltou a ficar livre na sua agenda.`,
-  invite_declined: (v) => `${v.nome} recusou o convite para as ${v.horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila.`,
-  invite_cancelled: (v) => `${v.nome} cancelou a inscrição e o convite para as ${v.horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila.`,
-};
-const isMentorReason = (v: unknown): v is MentorSlotReleasedReason => (MENTOR_SLOT_RELEASED_REASONS as readonly unknown[]).includes(v);
+/** Layout 9: frase do motivo (`{{motivo}}`), a mesma do WhatsApp (`MENTOR_SLOT_RELEASED_TEXT`). */
+function mentorMotivo(reason: MentorSlotReleasedReason, v: Record<string, string>): string {
+  return `${MENTOR_SLOT_RELEASED_TEXT[reason].replace(/\{(\w+)\}/g, (m, k: string) => v[k] ?? m)}.`;
+}
 
 /** Monta assunto, HTML, texto e anexo de um e-mail da outbox. Variável que falta vira `RenderError`. */
 export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
@@ -91,11 +88,11 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
   let reason: MentorSlotReleasedReason | undefined;
   if (layout === '09-aviso-mentora') {
     const r = i.item.payload?.['reason'];
-    if (!isMentorReason(r)) throw new RenderError(`motivo desconhecido: ${String(r)}`);
+    if (!isMentorSlotReleasedReason(r)) throw new RenderError(`motivo desconhecido: ${String(r)}`);
     reason = r;
     vars['link_painel'] = `${i.baseUrl}/entrar`;
     if (vars['nome'] !== undefined && vars['horario'] !== undefined && vars['mesa'] !== undefined) {
-      vars['motivo'] = MENTOR_MOTIVO[r]({ nome: vars['nome'], horario: vars['horario'], mesa: vars['mesa'] });
+      vars['motivo'] = mentorMotivo(r, { nome: vars['nome'], horario: vars['horario'], mesa: vars['mesa'] });
     }
   }
   // assunto editado em A7 vale para o layout; moved e reminder mantêm as variantes próprias do layout 3 e, no layout 9,

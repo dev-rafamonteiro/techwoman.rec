@@ -117,8 +117,9 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
     case 'decline_no_interest': {
       if (from !== 'invited') return invalid(from, 'recusar');
       if (isExpiredAt(i.appointment.expiresAt, now)) return fail('INVITE_EXPIRED', 'O prazo para responder terminou.');
+      // como em mentee_cancel: "cancelada, como você pediu" só quando a própria participante recusa
       return plan(from, 'declined', 'cancelled', 'appointment.decline', {
-        notify: 'registration_cancelled',
+        notify: byMentee ? 'registration_cancelled' : null,
         notifyMentor: byMentee ? 'invite_declined' : null,
         reason: 'no_interest',
         respondedAt: true,

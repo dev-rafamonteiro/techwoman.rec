@@ -1,4 +1,6 @@
 /** Formatação pt-BR. Horários sempre em horário de Recife e no formato 14h20. */
+import { normalizePhoneBR } from '@tw/shared';
+
 export const EVENT_TIMEZONE = 'America/Recife';
 
 /** "2026-11-14T17:20:00Z" -> "14h20". */
@@ -53,6 +55,16 @@ export function maskPhone(v: string): string {
   if (d.length <= 2) return d.length ? `(${d}` : '';
   if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+/** Telefone em E.164 (+55...) para a máscara do campo; vazio sem telefone. */
+export function phoneFromE164(v: string | null | undefined): string {
+  return maskPhone((v ?? '').replace(/^\+55/, ''));
+}
+
+/** WhatsApp opcional (mentora): vazio vale; senão a mesma regra da API (`normalizePhoneBR`). */
+export function optionalPhoneError(v: string): string | undefined {
+  return !v.trim() || normalizePhoneBR(v) ? undefined : 'Telefone inválido. Informe DDD e número.';
 }
 
 export const PERIOD_LABELS = {

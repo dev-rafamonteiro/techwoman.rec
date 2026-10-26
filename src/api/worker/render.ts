@@ -1,4 +1,4 @@
-import { DEFAULT_WHATSAPP_LISTS, formatTimeBR, type MentorSlotReleasedReason } from '@tw/shared';
+import { DEFAULT_WHATSAPP_LISTS, formatTimeBR, isMentorSlotReleasedReason, MENTOR_SLOT_RELEASED_TEXT } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, UserDoc, TableDoc } from '@tw/db';
 import { inviteRowId, presenceMinutes, presenceRowId } from '../domain/index.js';
 import type { NotifierList } from './notifier.js';
@@ -40,12 +40,9 @@ const FIXED: Record<string, string> = {
   slot_released: 'Tudo bem, {nome}. O horário das {horario} foi liberado e você continua na fila com prioridade. Se quiser, escolha outro horário na sua página: {link}',
 };
 
-/** Aviso à mentora (`mentor_slot_released`), um texto fixo por `payload.reason` (UI-SPEC, Mensagens enviadas). */
-const MENTOR_FIXED: Record<MentorSlotReleasedReason, string> = {
-  confirmed_cancelled: 'Oi, {mentora}. {nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda: {link_painel}',
-  invite_declined: 'Oi, {mentora}. {nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}',
-  invite_cancelled: 'Oi, {mentora}. {nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}',
-};
+/** Aviso à mentora (`mentor_slot_released`): a frase do motivo de `payload.reason`, a mesma do e-mail (layout 9). */
+const mentorText = (reason: unknown): string | undefined =>
+  isMentorSlotReleasedReason(reason) ? `Oi, {mentora}. ${MENTOR_SLOT_RELEASED_TEXT[reason]}: {link_painel}` : undefined;
 
 /**
  * List Messages (RN18 presença, RN20 convite): título e texto vêm de `events.whatsappLists` (A7); rodapé, botão e
@@ -80,7 +77,7 @@ export interface RenderInput {
 export function render(i: RenderInput): { subject: string; text: string; list?: NotifierList } {
   const { item, event } = i;
   const subject = SUBJECTS[item.type] ?? 'Tech Woman';
-  const mentorTpl = item.type === 'mentor_slot_released' ? MENTOR_FIXED[item.payload['reason'] as MentorSlotReleasedReason] : undefined;
+  const mentorTpl = item.type === 'mentor_slot_released' ? mentorText(item.payload['reason']) : undefined;
   if (item.type === 'mentor_slot_released' && !mentorTpl) throw new RenderError(`motivo desconhecido: ${String(item.payload['reason'])}`);
   const tpl = item.type === 'moved' ? MOVED_DEFAULT : mentorTpl ?? FIXED[item.type] ?? (event.templates as Record<string, string>)[item.type] ?? '';
   const a = i.appointment;

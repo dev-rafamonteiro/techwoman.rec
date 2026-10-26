@@ -10,7 +10,7 @@ type Draft = Omit<EventConfig, 'id' | 'slots'> & { emailSubjects?: Partial<Recor
 const EMAIL_LAYOUTS: [EmailLayoutId, string][] = [
   ['01-inscricao-recebida', 'Inscrição recebida'], ['02-convite-horario', 'Convite de horário'], ['03-confirmacao', 'Confirmação'],
   ['04-convite-expirado', 'Convite expirado'], ['05-cancelamento-mentora', 'Cancelamento pela mentora'], ['06-acesso-mentora', 'Acesso da mentora'],
-  ['07-inscricao-cancelada', 'Inscrição cancelada'], ['08-horario-liberado', 'Horário liberado'], ['09-aviso-mentora', 'Aviso à mentora'],
+  ['07-inscricao-cancelada', 'Inscrição cancelada'], ['08-horario-liberado', 'Horário liberado'], ['09-aviso-mentora', 'Aviso à mentora (mentoria confirmada cancelada)'],
 ];
 const TEMPLATE_LABELS: [keyof EventConfig['templates'], string][] = [
   ['registered', 'Inscrição recebida'], ['invite', 'Convite de horário'], ['confirmed', 'Confirmação'],
@@ -229,7 +229,7 @@ export default function A7Configuracoes() {
           </section>
 
           <section className="a7-sec" aria-labelledby="a7-assuntos">
-            <div className="a7-sec__head"><h2 id="a7-assuntos">Assuntos dos e-mails</h2><span className="a79-hint">Só o assunto é editável. O HTML dos 6 e-mails é fixo no código.</span></div>
+            <div className="a7-sec__head"><h2 id="a7-assuntos">Assuntos dos e-mails</h2><span className="a79-hint">Só o assunto é editável. O HTML dos 9 e-mails é fixo no código.</span></div>
             <div className="a7-subjects">
               {EMAIL_LAYOUTS.map(([id, label]) => (
                 <TextField key={id} label={label} maxLength={200} value={d.emailSubjects?.[id] ?? ''} data-testid={`subject-${id}`}

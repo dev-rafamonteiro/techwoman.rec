@@ -12,7 +12,8 @@ import { sealSecret } from './secret-box.js';
  * Canais por tipo (PLAN, "Notificações"): e-mail é o canal obrigatório; WhatsApp só se ligado e houver telefone.
  * Lembrete: canais da regra (e-mail se o WhatsApp não estiver disponível). Senha da mentora: só e-mail. Respostas da
  * presença (RN18) e do convite (RN20): só WhatsApp, e nada sem WhatsApp disponível. Nos demais tipos, `wanted`
- * (quando vem) restringe os canais: interseção com os disponíveis (RN18 "Não vou": `slot_released` só por e-mail).
+ * (quando vem) restringe os canais: interseção com os disponíveis (RN18 "Não vou": `slot_released` só por e-mail); se
+ * a interseção ficar vazia, vai por e-mail, o canal obrigatório.
  * A destinatária é a participante ou, no `mentor_slot_released`, a mentora (telefone de `users.phone`, opcional).
  */
 export function channelsFor(ctx: AppContext, type: OutboxType, recipient: { phone?: string | null } | null, wanted?: readonly OutboxChannel[]): OutboxChannel[] {
@@ -25,7 +26,9 @@ export function channelsFor(ctx: AppContext, type: OutboxType, recipient: { phon
     return ok.length ? [...new Set(ok)] : ['email'];
   }
   const all: OutboxChannel[] = wa ? ['email', 'whatsapp'] : ['email'];
-  return wanted ? all.filter((c) => wanted.includes(c)) : all;
+  if (!wanted) return all;
+  const ok = all.filter((c) => wanted.includes(c));
+  return ok.length ? ok : ['email'];
 }
 
 export interface EnqueueInput {

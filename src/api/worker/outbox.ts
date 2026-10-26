@@ -87,7 +87,8 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
   const [mentor, table, staffUser, apptMentee] = await Promise.all([
     appt ? c.users.findOne({ _id: appt.mentorId }) : null,
     appt ? c.tables.findOne({ _id: appt.tableId }) : null,
-    item.userId ? c.users.findOne({ _id: item.userId }) : null,
+    // destinatária do layout 6; no aviso à mentora `userId` é a própria mentora, já lida acima
+    item.type === 'staff_password' && item.userId ? c.users.findOne({ _id: item.userId }) : null,
     // aviso à mentora: o item não tem `menteeId` (sem links com o token dela); o nome vem da mentoria
     item.type === 'mentor_slot_released' && appt ? c.mentees.findOne({ _id: appt.menteeId }, { projection: { name: 1 } }) : null,
   ]);

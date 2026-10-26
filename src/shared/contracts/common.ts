@@ -101,6 +101,17 @@ export type OutboxType = z.infer<typeof OutboxTypeSchema>;
 /** `payload.reason` do `mentor_slot_released` (PLAN, Notificações > Aviso à mentora). */
 export const MENTOR_SLOT_RELEASED_REASONS = ['confirmed_cancelled', 'invite_declined', 'invite_cancelled'] as const;
 export type MentorSlotReleasedReason = (typeof MENTOR_SLOT_RELEASED_REASONS)[number];
+export const isMentorSlotReleasedReason = (v: unknown): v is MentorSlotReleasedReason =>
+  (MENTOR_SLOT_RELEASED_REASONS as readonly unknown[]).includes(v);
+/**
+ * Frase do motivo do aviso à mentora, a mesma no e-mail (`{{motivo}}` do layout 9) e no WhatsApp (UI-SPEC, Mensagens
+ * enviadas). Placeholders `{nome}`, `{horario}` e `{mesa}`; sem ponto final, que cada canal fecha do seu jeito.
+ */
+export const MENTOR_SLOT_RELEASED_TEXT: Record<MentorSlotReleasedReason, string> = {
+  confirmed_cancelled: '{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda',
+  invite_declined: '{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila',
+  invite_cancelled: '{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila',
+};
 
 /** Motivos de recusa em E04 (RN06). */
 export const DECLINE_REASONS = ['schedule', 'no_interest'] as const;
