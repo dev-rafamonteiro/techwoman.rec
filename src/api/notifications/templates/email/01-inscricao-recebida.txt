@@ -7,7 +7,7 @@ Oi, {{nome}}! Sua inscrição está ativa.
 
 Recebemos sua inscrição na mentoria do Tech Woman.
 
-Assim que uma mentora da sua área escolher você, ela vai propor um horário e uma mesa. Você recebe o aviso por aqui e pelo WhatsApp e confirma pela sua página pessoal.
+Assim que uma mentora da sua área for atribuída a você, ela vai propor um horário e uma mesa. Você recebe o aviso por aqui e pelo WhatsApp e confirma pela sua página pessoal.
 
 Acompanhar minha mentoria: {{link_minha_mentoria}}
 

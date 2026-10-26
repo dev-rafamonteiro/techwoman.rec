@@ -21,7 +21,7 @@ export const EMAILS = [
     titulo: 'Oi, {{nome}}! Sua inscrição está ativa.',
     paragrafos: [
       'Recebemos sua inscrição na mentoria do Tech Woman.',
-      'Assim que uma mentora da sua área escolher você, ela vai propor um horário e uma mesa. Você recebe o aviso por aqui e pelo WhatsApp e confirma pela sua página pessoal.',
+      'Assim que uma mentora da sua área for atribuída a você, ela vai propor um horário e uma mesa. Você recebe o aviso por aqui e pelo WhatsApp e confirma pela sua página pessoal.',
     ],
     botao: ['Acompanhar minha mentoria', 'link_minha_mentoria'],
     nota: 'A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.',

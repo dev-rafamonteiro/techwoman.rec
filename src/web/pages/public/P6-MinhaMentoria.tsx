@@ -356,7 +356,7 @@ export default function P6MinhaMentoria() {
     const text =
       lastOutcome === 'declined_schedule' ? 'Tudo bem! Sua inscrição continua ativa e com prioridade. Se quiser, ajuste o período preferido.'
       : lastOutcome === 'cancelled_by_staff' ? 'Sua mentoria foi cancelada. Você voltou para a fila com prioridade.'
-      : 'Assim que uma mentora escolher você, avisamos por e-mail e WhatsApp e o convite aparece aqui.';
+      : 'Assim que uma mentora for atribuída a você, avisamos por e-mail e WhatsApp e o convite aparece aqui.';
     body = confirmCancel ? cancelDialog : (
       <>
         <p data-testid="p6-outcome">{text}</p>
