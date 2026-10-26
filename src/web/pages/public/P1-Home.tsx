@@ -85,17 +85,15 @@ export default function P1Home() {
 
       <section className="tw-p1__dark" id="como-funciona">
         <div className="tw-pub__wrap">
-          <div>
-            <span className="tw-pub__eyebrow">Como funciona</span>
-            <h2>Descubra sua área e ganhe uma mentoria no evento.</h2>
-            {[
-              ['Descubra sua área', 'Perguntas e desafios rápidos revelam sua aptidão, seu nível e seu perfil.', '#f26430'],
-              ['Inscreva-se na mentoria', 'Um formulário curto, com a sua área já preenchida e o período que você prefere.', '#d98ce6'],
-              ['Aguarde o convite de uma mentora', 'Ela propõe um horário e uma mesa; você confirma pelo celular.', '#c9f4ee'],
-            ].map(([t, d, c], i) => (
-              <div key={t} className="tw-p1__step"><b style={{ background: c }}>{i + 1}</b><div><strong>{t}</strong><p style={{ margin: '2px 0 0' }}>{d}</p></div></div>
-            ))}
-          </div>
+          <span className="tw-pub__eyebrow">Como funciona</span>
+          <h2>Descubra sua área e ganhe uma mentoria no evento.</h2>
+          {[
+            ['Descubra sua área', 'Perguntas e desafios rápidos revelam sua aptidão, seu nível e seu perfil.', '#f26430'],
+            ['Inscreva-se na mentoria', 'Um formulário curto, com a sua área já preenchida e o período que você prefere.', '#d98ce6'],
+            ['Aguarde o convite de uma mentora', 'Ela propõe um horário e uma mesa; você confirma pelo celular.', '#c9f4ee'],
+          ].map(([t, d, c], i) => (
+            <div key={t} className="tw-p1__step"><b style={{ background: c }}>{i + 1}</b><div><strong>{t}</strong><p style={{ margin: '2px 0 0' }}>{d}</p></div></div>
+          ))}
           <div className="tw-p1__invite" aria-label="Exemplo de convite">
             <span className="tw-p1__eyebrow">Convite recebido</span>
             <h3 style={{ margin: 0 }}>Mesa 7 · 14h15</h3>

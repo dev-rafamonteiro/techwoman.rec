@@ -104,11 +104,12 @@
 @media (min-width: 640px) { .tw-p1__cards { grid-template-columns: repeat(3, 1fr); } }
 .tw-p1__ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 8px; }
 .tw-p1__dark { background: var(--tw-plum-800); color: #fff; }
-.tw-p1__dark .tw-pub__wrap { display: grid; gap: 28px; align-items: center; }
-@media (min-width: 900px) { .tw-p1__dark .tw-pub__wrap { grid-template-columns: 1fr 1fr; } }
+.tw-p1 .tw-p1__dark .tw-pub__wrap { max-width: 720px; }
+.tw-p1__dark .tw-pub__eyebrow, .tw-p1__dark h2 { display: block; text-align: center; }
 .tw-p1__dark h2 { color: var(--tw-mint-200); }
 .tw-p1__step { display: flex; gap: 12px; margin-bottom: 14px; }
 .tw-p1__step > b { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); color: var(--tw-plum-950); }
+.tw-p1__dark .tw-p1__invite { margin-left: 48px; }
 .tw-p1__invite { background: #fff; color: var(--color-ink); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
 .tw-p1__lilac { background: var(--tw-lilac-100); }
 .tw-p1__stat strong { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--tw-purple-600); display: block; }
