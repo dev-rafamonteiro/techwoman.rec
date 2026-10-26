@@ -62,7 +62,7 @@ export default function P3Resultado() {
         <section className="tw-p3__cta">
           <div style={{ flex: 1, minWidth: 220 }}>
             <h2>Inscreva-se na nossa mentoria para te ajudarmos.</h2>
-            <p style={{ margin: 0 }}>A área <strong>{AREAS[top]}</strong> já vai preenchida. Uma mentora da área escolhe sua inscrição e propõe horário e mesa; você confirma pelo celular.</p>
+            <p style={{ margin: 0 }}>A área <strong>{AREAS[top]}</strong> já vai preenchida. Uma mentora da área é atribuída a você e propõe horário e mesa; você confirma pelo celular.</p>
           </div>
           <LinkButton to="/mentoria/inscricao" size="lg" className="tw-btn--dark" data-testid="p3-cta">Quero uma mentoria nessa área</LinkButton>
         </section>

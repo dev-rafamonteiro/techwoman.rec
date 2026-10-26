@@ -55,7 +55,7 @@ export default function P5InscricaoOk() {
       )}
       <strong>O que acontece agora</strong>
       <ol className="tw-steps">
-        <li>Uma mentora da sua área escolhe sua inscrição.</li>
+        <li>Uma mentora da sua área é atribuída a você.</li>
         <li>Você recebe horário e mesa e tem 15 minutos para confirmar.</li>
         <li>Chegue 5 minutos antes na mesa indicada.</li>
       </ol>

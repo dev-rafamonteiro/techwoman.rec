@@ -110,7 +110,7 @@ export default function P1Home() {
         <div className="tw-pub__wrap tw-stack">
           <span className="tw-p1__eyebrow">Mentoria</span>
           <h2>Mulheres que já trilharam o caminho, prontas para te ajudar.</h2>
-          <p>Depois da jornada, inscreva-se na área que mais combina com você. Uma mentora da área escolhe sua inscrição, propõe um horário e uma mesa, e você confirma pelo celular.</p>
+          <p>Depois da jornada, inscreva-se na área que mais combina com você. Uma mentora da área é atribuída a você, propõe um horário e uma mesa, e você confirma pelo celular.</p>
           <div className="tw-p1__cards">
             <div className="tw-card tw-p1__stat"><strong>40 min</strong><b>Por sessão</b><p>Uma conversa individual, em horários fixos ao longo do dia.</p></div>
             <div className="tw-card tw-p1__stat"><strong>Mesas</strong><b>No local do evento</b><p>Você recebe o número da mesa junto com o horário.</p></div>
