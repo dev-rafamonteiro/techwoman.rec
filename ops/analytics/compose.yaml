@@ -1,0 +1,76 @@
+# Analytics (Umami) self-hosted, stack separada do app (projeto compose "umami"). Detalhes: docs/PLAN.md > Analytics (Umami).
+# Pré-requisitos (uma vez; refazer o "connect" se o container do NPM for recriado):
+#   docker network create --internal umami_edge
+#   docker network connect umami_edge nginx-proxy-manager
+# Subir / atualizar:
+#   docker compose -p umami --env-file ops/analytics/.env -f ops/analytics/compose.yaml up -d
+# Nenhuma porta publicada no host. O NPM (proxy host analytics.techwoman.dev) repassa para http://umami:3000.
+# Isolamento: umami e umami-db não entram na npm_network nem em rede techwoman_*; umami_internal e umami_edge são
+# internal, então o Umami não tem saída para a internet (telemetria e checagem de versão também desligadas).
+# Escala no dia do evento: aumente UMAMI_CPUS/UMAMI_MEM no .env e rode o "up -d" de novo; para mais réplicas,
+# "--scale umami=N" (o serviço umami não tem container_name; o NPM resolve o nome "umami" pelo DNS da rede).
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:3.4.0
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?defina UMAMI_DB_PASSWORD}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?defina UMAMI_APP_SECRET}
+      DISABLE_TELEMETRY: "1"
+      DISABLE_UPDATES: "1"
+    networks:
+      umami_internal: {}
+      umami_edge: { aliases: [umami] }
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache:mode=1777
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:3000/api/heartbeat"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      umami-db: { condition: service_healthy }
+    deploy: { resources: { limits: { cpus: "${UMAMI_CPUS:-1.0}", memory: "${UMAMI_MEM:-768M}" } } }
+
+  umami-db:
+    image: postgres:16.14-alpine
+    container_name: umami-db
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?defina UMAMI_DB_PASSWORD}
+    volumes:
+      - umami_db:/var/lib/postgresql/data
+    networks: [umami_internal]
+    read_only: true
+    tmpfs: ["/tmp", "/var/run/postgresql"]
+    security_opt: ["no-new-privileges:true"]
+    # o entrypoint parte como root, ajusta dono das pastas e cai para o usuário postgres (uid 70)
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy: { resources: { limits: { cpus: "${UMAMI_DB_CPUS:-0.5}", memory: "${UMAMI_DB_MEM:-512M}" } } }
+
+networks:
+  umami_internal: { internal: true }
+  umami_edge: { external: true }
+
+volumes:
+  umami_db: { name: umami_db }

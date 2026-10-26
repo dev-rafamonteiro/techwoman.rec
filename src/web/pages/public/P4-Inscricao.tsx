@@ -5,6 +5,7 @@ import {
   ApiError, Button, CheckboxField, EmptyState, ErrorState, Hero, PERIOD_LABELS, RadioCards, SelectField, SkeletonList,
   TextArea, TextField, call, maskPhone, useQuery,
 } from '../../ui';
+import { track } from '../../analytics';
 import { FALLBACK_AREAS } from './lib/areas';
 import { loadJourney, savePersonalPath } from './lib/journey';
 import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
@@ -121,14 +122,17 @@ export default function P4Inscricao() {
         },
       });
       if (res.status === 'already_registered') {
+        track('inscricao_erro', { codigo: 'ALREADY_REGISTERED' });
         setAlready(true);
         return;
       }
+      track('inscricao_concluida', { area: effArea, periodo: values.preferredPeriod! });
       const links = { personalPath: res.personalPath, shortPath: res.shortPath };
       savePersonalPath(links);
       navigate('/mentoria/inscricao/ok', { state: links });
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
+      track('inscricao_erro', { codigo: ae?.code ?? 'UNKNOWN' });
       if (ae?.code === 'NETWORK') setFormError({ network: true, text: '' });
       else if (ae?.code === 'REGISTRATION_CLOSED') setFormError({ network: false, text: 'As inscrições estão fechadas no momento.' });
       else if (ae?.code === 'VALIDATION_ERROR') setFormError({ network: false, text: 'Confira os campos e tente de novo.' });

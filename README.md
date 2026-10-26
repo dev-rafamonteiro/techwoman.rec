@@ -116,6 +116,27 @@ docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVE
   ignorado nessa variante porque o cliente o forjaria; no Cloudflare Tunnel (`compose.yaml`) vale `CLIENT_IP_HEADER=cf`.
 - O `container_name` fixo impede `--scale api=N`; para escalar, tire o `container_name` da `api` no override.
 
+## Analytics (Umami)
+
+Medição anônima e sem cookies, só nas páginas públicas e sem query string, numa stack separada (`ops/analytics/`, projeto
+`umami`: Umami 3.4.0 + Postgres 16.14). Detalhes, eventos, snippet do NPM e escala: docs/PLAN.md > Analytics (Umami).
+
+```sh
+docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # 1º deploy deste recurso: rebuild do web
+docker network create --internal umami_edge                # uma vez
+docker network connect umami_edge nginx-proxy-manager      # refazer se o NPM for recriado
+cp ops/analytics/.env.example ops/analytics/.env           # UMAMI_DB_PASSWORD (openssl rand -hex 24), UMAMI_APP_SECRET (-hex 32)
+docker compose -p umami --env-file ops/analytics/.env -f ops/analytics/compose.yaml up -d
+```
+
+- NPM: proxy host `analytics.techwoman.dev` → `http://umami:3000`, Let's Encrypt + Force SSL, Advanced do PLAN (painel só
+  para IPs da lista; `/api/send` e `/script.js` públicos).
+- No painel (`admin` / `umami`, troque a senha), crie o site e copie o Website ID para o `.env` da raiz:
+  `UMAMI_HOST_URL=https://analytics.techwoman.dev` e `UMAMI_WEBSITE_ID=<id>`. Com a imagem nova do web já no ar, recrie só o web (config em runtime, sem `--build`):
+  `docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d web`. `UMAMI_WEBSITE_ID` vazio desliga tudo.
+- O tracker é uma cópia do `script.js` da versão fixa em `src/web/public/a/u.js` (SRI no código). Ao trocar a versão do
+  Umami: `ops/analytics/vendor-tracker.sh <versão>`, atualize as constantes em `src/web/analytics/core.ts` e rebuild do web.
+
 ## Docker x Podman (encontrado até agora)
 
 - `docker` aqui é alias para Podman 5.7; `podman compose` delega ao `docker-compose` (não há `podman-compose`).

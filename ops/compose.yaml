@@ -58,6 +58,9 @@ services:
     environment:
       # cf: a entrada é o cloudflared (CF-Connecting-IP); o compose.npm.yaml troca para x-real-ip
       CLIENT_IP_HEADER: cf
+      # Analytics (Umami), lido em runtime pelo entrypoint; UMAMI_WEBSITE_ID vazio = desligado (docs/PLAN.md > Analytics)
+      UMAMI_HOST_URL: ${UMAMI_HOST_URL:-}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     networks: [edge, app]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]

@@ -5,6 +5,7 @@ import {
   ApiError, type BodyOf, Button, Card, Countdown, EmptyState, ErrorState, ExternalButton, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList, SlotSingleChoice,
   StatusBadge, PriorityBadge, TextField, call, endpointUrl, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useQuery, useToast, usePolling,
 } from '../../ui';
+import { track } from '../../analytics';
 import { FALLBACK_AREAS } from './lib/areas';
 import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
 import './public.css';
@@ -41,6 +42,7 @@ function InvalidLink() {
       if (!ts.current) throw new ApiError(0, 'TURNSTILE_FAILED', 'Não foi possível verificar que você é uma pessoa. Recarregue a página.');
       const turnstileToken = await ts.current.getToken();
       await call(ENDPOINTS.E05, { body: { email: email.trim(), turnstileToken } });
+      track('link_reenviado');
       setState('sent');
     } catch (err) {
       setState('idle');
@@ -79,6 +81,7 @@ function ChooseSlot({ onBooked, onStale }: { onBooked: (next: Me) => void; onSta
     setBooking(true);
     try {
       const next = await call(ENDPOINTS.E08, { body: { slotId: slot.slotId } });
+      track('horario_escolhido');
       setPending(null);
       onBooked(next);
     } catch (e) {
@@ -135,6 +138,15 @@ function ChooseSlot({ onBooked, onStale }: { onBooked: (next: Me) => void; onSta
   );
 }
 
+/** Evento de uso de cada ação de E04 que deu certo (docs/UI-SPEC.md > Medição de uso). */
+function trackAction(body: BodyOf<typeof ENDPOINTS.E04>) {
+  if (body.action === 'accept') track('convite_aceito');
+  else if (body.action === 'decline') track('convite_recusado', { motivo: body.reason === 'schedule' ? 'horario' : 'sem_interesse' });
+  else if (body.action === 'cancel') track('inscricao_cancelada');
+  else if (body.action === 'reschedule') track('horario_trocado');
+  else if (body.action === 'update_preference') track('preferencia_atualizada', { periodo: body.preferredPeriod });
+}
+
 /** P6 · Minha mentoria (E03, E04, E07, E08) · RN05, RN06, RN07, RN19 */
 export default function P6MinhaMentoria() {
   const [params] = useSearchParams();
@@ -186,6 +198,7 @@ export default function P6MinhaMentoria() {
     setBusy(key);
     try {
       const next = await call(ENDPOINTS.E04, { body });
+      trackAction(body);
       setMe(next);
       setFreshAt(Date.now());
       setDeclining(false);
@@ -309,7 +322,7 @@ export default function P6MinhaMentoria() {
             {ap.mentor.linkedin && <a className="tw-link" href={li(ap.mentor.linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
           </div>
         </Card>
-        <ExternalButton variant="mint" block data-testid="p6-ics" download="mentoria-tech-woman.ics"
+        <ExternalButton variant="mint" block data-testid="p6-ics" download="mentoria-tech-woman.ics" onClick={() => track('agenda_adicionada')}
           href={endpointUrl(ENDPOINTS.E06, { query: { t: getMenteeToken() ?? '' } })}>Adicionar à agenda (.ics)</ExternalButton>
         <Button variant="danger-link" block onClick={() => setConfirmCancel(true)} data-testid="p6-cancel">Cancelar mentoria</Button>
       </>

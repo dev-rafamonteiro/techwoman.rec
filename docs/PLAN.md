@@ -53,6 +53,8 @@ A requisição entra pelo Cloudflare, atravessa o túnel até o Nginx e chega à
 
 **Variante com Nginx Proxy Manager (`ops/compose.npm.yaml`):** em servidor que já tem o Nginx Proxy Manager (NPM) na rede docker externa `npm_network`, o `cloudflared` fica de fora (ele está no profile `tunnel` e só sobe com `--profile tunnel`) e a subida é `docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build`. Containers com nome fixo: `techwoman-web` (redes `edge`, `app` e `npm_network`), `techwoman-api` (`app`, `egress`; não entra na `npm_network`) e `techwoman-worker` (`egress`, `npm_network`). O fluxo é NPM (TLS de `techwoman.dev`) → `http://techwoman-web:8080` → nginx do projeto → `api:3000`, sem porta publicada no host. O worker fala com o WAHA pelo container (`http://waha:3000`) e o WAHA chama o webhook pelo container (`http://techwoman-web:8080/api/webhooks/waha`), sem passar pelo domínio. O nginx do projeto continua necessário: serve o build do SPA, aplica os cabeçalhos de segurança/CSP e faz o `/l/` do encurtador; o NPM só termina o TLS e repassa tudo. O IP real do cliente vem de um único cabeçalho confiável, escolhido por `CLIENT_IP_HEADER` no web (o entrypoint gera `/tmp/client-ip.conf`): `x-real-ip` nesta variante (o NPM sobrescreve o `X-Real-IP` com o IP do cliente; o `CF-Connecting-IP` é ignorado porque o cliente o forjaria) e `cf` no Cloudflare Tunnel (`CF-Connecting-IP`, posto pela borda); sem o cabeçalho, vale o peer. Se a Cloudflare passar a fazer proxy na frente do NPM, o `X-Real-IP` vira o IP da borda: o NPM precisa então de `real_ip_header CF-Connecting-IP` com `set_real_ip_from` das faixas da Cloudflare. Com `container_name` fixo não há `--scale api=N`.
 
+**Analytics:** o Umami roda numa stack separada (`ops/analytics/compose.yaml`, projeto `umami`), fora das redes do app e da `npm_network`; o NPM o alcança só pela rede `umami_edge`. Ver Analytics (Umami).
+
 **Regras de container:** filesystem somente leitura (`read_only: true` + `tmpfs` para `/tmp`), `no-new-privileges`, limites de CPU e memória por serviço, `healthcheck` em todos, segredos via Docker secrets (URI do Atlas, chave JWT, chaves de e-mail/WhatsApp/Turnstile), nunca em variável no `compose.yaml`.
 
 **Escala no dia:** `docker compose up -d --scale api=4`. O Nginx resolve `api` pelo DNS interno do Docker e distribui as requisições. A API é sem estado (sessão no Mongo), então qualquer réplica atende qualquer requisição, inclusive SSE.
@@ -588,7 +590,7 @@ O sistema guarda nome, e-mail, telefone e LinkedIn de cerca de 2.500 pessoas, en
 
 - Cloudflare: TLS, WAF gerenciado, Turnstile em E02 e E05, rate limit alto por IP (300 requisições de inscrição a cada 10 min), porque o Wi-Fi do evento sai por poucos IPs; a defesa principal contra robôs é o Turnstile.
 - API: `@fastify/rate-limit` por sessão; Zod com `strict()` em todo corpo (rejeita campos extras); limite de 1 MB por requisição, 2 MB no CSV.
-- Nginx: CSP restrita a self e Turnstile, HSTS, `X-Content-Type-Options`, `Referrer-Policy: same-origin` (em `/l/`, `no-referrer`, para o código não vazar no cabeçalho `Referer`).
+- Nginx: CSP restrita a self e Turnstile (com o analytics ligado, `connect-src` também aceita `UMAMI_HOST_URL`; ver Analytics (Umami)), HSTS, `X-Content-Type-Options`, `Referrer-Policy: same-origin` (em `/l/`, `no-referrer`, para o código não vazar no cabeçalho `Referer`).
 - Atlas: usuário de banco só com `readWrite` no banco do evento; Access List só com o IP da VM; backup contínuo ligado.
 - Logs sem dados pessoais: e-mail mascarado (`j***@g***.com`), telefone nunca.
 
@@ -641,6 +643,129 @@ A carga esperada é pequena para o tamanho da máquina; o risco real é conflito
 4. Durante o evento: Felipe ou admin no balcão de apoio com A1, A5 e A9 abertos. A cada hora, exportar a agenda (E37) como contingência; se o site cair, o balcão segue pela última exportação.
 5. 15/11: fechar inscrições, exportar tudo, voltar Atlas e VM ao tamanho normal.
 6. 14/12: job de anonimização, que também apaga `outbox` e `short_links` (prazo a confirmar).
+
+## Analytics (Umami)
+
+Medição de uso anônima e sem cookies, com Umami self-hosted em `analytics.techwoman.dev`. Só as páginas públicas são medidas, a query string nunca sai do navegador e nenhum dado pessoal entra nos eventos.
+
+**Stack separada** (`ops/analytics/compose.yaml`, projeto compose `umami`, sobe e cai sem tocar no app):
+
+| Serviço | Imagem (versão fixa) | Container | Redes |
+| --- | --- | --- | --- |
+| `umami` | `ghcr.io/umami-software/umami:3.4.0` (lançada em 17/09/2026; índice `sha256:85909afc45bdcda1917394594a087421fdbb05610fded0fa9f6fb861abb2f367`) | sem `container_name` (nome DNS `umami`, para escalar) | `umami_internal`, `umami_edge` |
+| `umami-db` | `postgres:16.14-alpine` | `umami-db` | `umami_internal` |
+
+- Nenhuma porta publicada no host. Volume do Postgres: `umami_db` (nome fixo, fora do prefixo do projeto).
+- `umami_internal` (`internal: true`): só `umami` ↔ `umami-db`.
+- `umami_edge` (externa, criada antes com `docker network create --internal umami_edge`): só `umami` e o Nginx Proxy Manager (`docker network connect umami_edge nginx-proxy-manager`). Se o container do NPM for recriado, o `network connect` precisa ser refeito. Como as duas redes são `internal`, o Umami não tem saída para a internet; o NPM continua com a saída das redes dele.
+- Isolamento: o Umami não entra na `npm_network` nem em rede `techwoman_*`; não enxerga web, api, worker, WAHA nem o Atlas. O NPM só fala com ele por `http://umami:3000`.
+- Telemetria e checagem de versão desligadas (`DISABLE_TELEMETRY=1`, `DISABLE_UPDATES=1`). `COLLECT_API_ENDPOINT` não é usado (com ele o Umami reescreveria o `script.js` na partida, o que falha com filesystem somente leitura).
+- Endurecimento: `read_only: true`; `umami` com `tmpfs` em `/tmp` e `/app/.next/cache` e `cap_drop: [ALL]`; `umami-db` com `tmpfs` em `/tmp` e `/var/run/postgresql`, `cap_drop: [ALL]` e `cap_add` só de `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETUID`, `SETGID` (o entrypoint do Postgres parte como root e cai para o uid 70); `no-new-privileges`; `restart: unless-stopped`; log `json-file` com `max-size: 10m` e `max-file: 3`. Healthchecks: `curl` em `http://127.0.0.1:3000/api/heartbeat` no `umami` e `pg_isready` no `umami-db`. Testado com Podman: os dois sobem saudáveis assim, inclusive com volume vazio.
+
+**Variáveis** (`ops/analytics/.env`, gitignored; nomes em `ops/analytics/.env.example`):
+
+| Variável | Uso |
+| --- | --- |
+| `UMAMI_DB_PASSWORD` | Senha do Postgres; monta o `DATABASE_URL` (`postgresql://umami:<senha>@umami-db:5432/umami`). Gere com `openssl rand -hex 24` (hex, para não precisar escapar na URL) |
+| `UMAMI_APP_SECRET` | Vira o `APP_SECRET` do Umami (assina as sessões do painel). Gere com `openssl rand -hex 32` |
+| `UMAMI_CPUS`, `UMAMI_MEM` | Limites do `umami`; padrão `1.0` e `768M` |
+| `UMAMI_DB_CPUS`, `UMAMI_DB_MEM` | Limites do `umami-db`; padrão `0.5` e `512M` |
+
+**Limites e escala no dia do evento:** o servidor tem 4 vCPU e 7,4 GB; o site espera ~200 req/s e o analytics recebe uma fração disso (um pageview por troca de tela pública e poucos eventos). Para o dia, suba os limites no `ops/analytics/.env` (ex.: `UMAMI_CPUS=2.0`, `UMAMI_MEM=1024M`, `UMAMI_DB_CPUS=1.0`, `UMAMI_DB_MEM=768M`) e rode o `up -d` de novo; se ainda faltar, `--scale umami=2` (o serviço não tem `container_name` e o NPM resolve `umami` pelo DNS da rede `umami_edge`, com o alias `umami`). Depois do evento, volte os valores e rode o `up -d`.
+
+**Script do tracker (vendorizado):**
+
+- Arquivo `src/web/public/a/u.js`: cópia exata de `/app/public/script.js` do Umami 3.4.0 (4.773 bytes, `sha384-ZMxgpYfO/phGz4GiYTIZhcauuGKTb2onmOB5gsiigjmBR38DGAmIna5J1Y/dM/13`), tirada da camada da imagem no GHCR e conferida byte a byte com a imagem do Docker Hub. É servida pelo nginx do web na mesma origem, em `/a/u.js?v=3.4.0` (a query só fura o cache do navegador quando a versão muda), com `integrity` (SRI) e `crossorigin="anonymous"`. O script de `analytics.techwoman.dev/script.js` não é usado pelo site.
+- Constantes em `src/web/analytics/core.ts`: `UMAMI_VERSION` e `UMAMI_SCRIPT_SRI`. Um teste unitário recalcula o sha384 do arquivo e compara com a constante.
+- Para atualizar o Umami: troque a tag em `ops/analytics/compose.yaml`; rode `ops/analytics/vendor-tracker.sh <versão>` (extrai `/app/public/script.js` da imagem para `src/web/public/a/u.js` e imprime o SRI); atualize `UMAMI_VERSION` e `UMAMI_SCRIPT_SRI` e esta seção; `npm test`; rebuild do web (`up -d --build web`), porque o script vai no build. Só a troca de `UMAMI_HOST_URL`/`UMAMI_WEBSITE_ID` dispensa rebuild.
+
+**Configuração em runtime (web):**
+
+| Variável (container `web`) | Uso |
+| --- | --- |
+| `UMAMI_HOST_URL` | Origem do Umami, só `https://host` sem caminho e sem barra final (ex.: `https://analytics.techwoman.dev`). Obrigatória quando `UMAMI_WEBSITE_ID` está preenchida |
+| `UMAMI_WEBSITE_ID` | UUID do site no Umami. Vazia (padrão) = analytics desligado: nenhuma meta, nenhum script, CSP sem origem extra |
+
+- O `ops/web-entrypoint.sh` valida as duas (UUID; `^https://[A-Za-z0-9.-]+(:porta)?$`) e sai com erro se forem inválidas, como faz com `CLIENT_IP_HEADER`. Gera `/tmp/csp.conf` (a linha `add_header Content-Security-Policy` inteira; com o analytics ligado, `connect-src 'self' <UMAMI_HOST_URL>`) e `/tmp/analytics.conf` (vazio quando desligado; ligado, um `sub_filter` que injeta no `</head>` do `index.html` as metas `tw-umami-website-id` e `tw-umami-host-url`). `script-src` continua `'self'` (mais o Turnstile): o script é da mesma origem.
+- A SPA lê as metas na partida (`src/web/analytics/index.ts`). Sem as metas (dev com Vite, testes, `UMAMI_WEBSITE_ID` vazia), `track` e os pageviews não fazem nada.
+
+**Como o tracker é usado (só páginas públicas, sem query string):**
+
+- Páginas públicas (lista fechada, caminho exato): `/` (P1), `/jornada` (P2), `/jornada/resultado` (P3), `/mentoria/inscricao` (P4), `/mentoria/inscricao/ok` (P5), `/mentoria/minha` (P6), `/privacidade`. Nunca: `/admin*`, `/mentora*`, `/entrar*` (M1, M2), `/_ui`, 404 e qualquer outro caminho.
+- O script só é injetado quando a primeira rota pública é aberta; quem entra direto em `/admin` ou `/entrar` não baixa o script.
+- Atributos: `data-website-id`, `data-host-url` (envio para `<UMAMI_HOST_URL>/api/send`), `data-auto-track="false"` (o script não intercepta o `history` nem cliques), `data-exclude-search="true"`, `data-exclude-hash="true"`, `data-do-not-track="true"` (navegador com Do Not Track não envia nada) e `data-before-send="__twUmamiBeforeSend"`.
+- Pageview: o componente `RouteAnalytics` (em `App.tsx`) chama `umami.track()` a cada troca de caminho público. Eventos: o helper `track(nome, dados?)` de `src/web/analytics`.
+- Filtro `__twUmamiBeforeSend` (função global chamada pelo script antes de cada envio, segunda barreira): descarta tudo que não for do tipo `event` (pageview e evento; `identify` e `performance` nunca saem); descarta se o caminho atual do roteador não for público; reescreve `url` com o caminho atual sem query e sem hash (com `auto-track` desligado o script congelaria a URL da primeira página); troca `title` por um rótulo fixo da rota (`P1 · Home` etc.; o título da aba pode ter ficado de uma tela do admin); `referrer` fica só no primeiro pageview da carga da página e só se for de outra origem, e mesmo assim só origem + caminho (sem query e sem hash); do próprio site, em eventos e nos pageviews seguintes, vai vazio. O filtro só aceita envios iniciados por `track`/`RouteAnalytics` (o caminho é capturado na chamada); uma chamada direta a `window.umami` é descartada.
+- `track` só aceita os nomes da tabela abaixo e, de cada um, só as propriedades listadas, com valor de formato fechado (categoria, nunca texto livre); qualquer outra propriedade é descartada. Nunca entram nome, e-mail, telefone, LinkedIn, comentário, token, código de link curto ou ids.
+
+**Eventos** (nomes em snake_case; telas em SDD 1):
+
+| Evento | Tela e momento | Propriedades |
+| --- | --- | --- |
+| `inscricao_concluida` | P4, E02 respondeu 201 (inscrição nova ou reativada) | `area` (chave da área), `periodo` (`morning` \| `early_afternoon` \| `late_afternoon` \| `any`) |
+| `inscricao_erro` | P4, envio falhou ou E02 respondeu 200 `ALREADY_REGISTERED` | `codigo` (código do erro em maiúsculas, ex.: `ALREADY_REGISTERED`, `NETWORK`, `RATE_LIMITED`, `TURNSTILE_FAILED`) |
+| `link_reenviado` | P6 "Link inválido", E05 aceito | — |
+| `convite_aceito` | P6, E04 `accept` com sucesso | — |
+| `convite_recusado` | P6, E04 `decline` com sucesso | `motivo` (`horario` \| `sem_interesse`) |
+| `inscricao_cancelada` | P6, E04 `cancel` com sucesso | — |
+| `horario_trocado` | P6, E04 `reschedule` com sucesso | — |
+| `horario_escolhido` | P6, E08 com sucesso | — |
+| `agenda_adicionada` | P6, toque em "Adicionar à agenda (.ics)" | — |
+| `preferencia_atualizada` | P6, E04 `update_preference` com sucesso | `periodo` |
+
+**Política de dados:** sem cookies (o Umami identifica a sessão por um hash de IP + user agent + site com sal rotativo, calculado no servidor dele; o IP não é guardado, só país/região/cidade aproximados derivados dele, além de navegador, sistema, dispositivo, idioma e tamanho de tela); sem dado pessoal nos eventos; sem query string nem hash (o `?t=<token>` de P6 nunca sai do navegador); só páginas públicas; sem rastreio entre sites; Do Not Track respeitado; dados ficam no nosso servidor (Postgres `umami_db`). O aviso de privacidade (`/privacidade`) explica isso em um parágrafo (texto em SDD 1, P · Privacidade).
+
+**Proxy host no NPM (`analytics.techwoman.dev`):**
+
+- Details: domínio `analytics.techwoman.dev`, esquema `http`, host `umami`, porta `3000`; Block Common Exploits ligado; Websockets desligado.
+- SSL: Let's Encrypt, Force SSL, HTTP/2 e HSTS ligados.
+- Advanced: o painel (`/`, login e API do painel) fica restrito a uma lista de IPs; só a coleta (`/api/send`) e o `script.js` ficam públicos. O NPM já gera o `location /`, então o Advanced não pode redefini-lo: o `allow`/`deny` vai no nível do server (o `location /` do NPM herda) e as duas rotas públicas ganham `location` próprio com `allow all` (dentro de um `location`, `allow`/`deny` substituem os herdados).
+
+```nginx
+# Painel só para a lista abaixo (troque pelos IPs da equipe; um allow por linha)
+allow 203.0.113.10;
+deny all;
+
+# Coleta pública (POST e o preflight OPTIONS do CORS)
+location = /api/send {
+  allow all;
+  limit_except POST OPTIONS { deny all; }
+  client_max_body_size 64k;
+  include conf.d/include/proxy.conf;   # o proxy.conf do NPM já faz o proxy_pass para umami:3000
+}
+
+# Script público (o site usa a cópia vendorizada; este fica para teste)
+location = /script.js {
+  allow all;
+  include conf.d/include/proxy.conf;   # o proxy.conf do NPM já faz o proxy_pass para umami:3000
+}
+```
+
+- Antes de confiar no snippet, confira no servidor que o `/data/nginx/proxy_host/<n>.conf` gerado define `$forward_scheme`, `$server` e `$port` e que o `conf.d/include/proxy.conf` do NPM termina em `proxy_pass $forward_scheme://$server:$port$request_uri;` (por isso o snippet não repete o `proxy_pass`, que daria "directive is duplicate"); depois `docker exec nginx-proxy-manager nginx -t`. O snippet foi validado com `nginx -t` num server montado como o do NPM 2.x. Teste de fora da lista: `curl -I https://analytics.techwoman.dev/` dá 403 e `curl -X OPTIONS -H 'Origin: https://techwoman.dev' -H 'Access-Control-Request-Method: POST' -I https://analytics.techwoman.dev/api/send` dá 204.
+- `analytics.techwoman.dev` deve ficar só DNS na Cloudflare (nuvem cinza). Se passar pelo proxy da Cloudflare, o `allow` veria IPs da Cloudflare e o NPM precisaria de `real_ip_header CF-Connecting-IP` com `set_real_ip_from` das faixas dela (mesmo caso do host principal, em Arquitetura).
+- O preflight do CORS foi testado: `OPTIONS /api/send` responde 204 com `Access-Control-Allow-Origin: *`, e `POST /api/send` responde 200.
+
+**Implantação (ordem importa: o id do site só existe com o Umami no ar):**
+
+```sh
+# 0. Primeiro deploy deste recurso: rebuild do web (nginx.conf, entrypoint, SPA e u.js mudaram). Sem ele, a imagem
+#    antiga ignora UMAMI_* sem erro. Pode ir com UMAMI_WEBSITE_ID ainda vazio (analytics desligado).
+docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build
+# 1. Rede de borda (uma vez) e NPM nela (refazer se o container do NPM for recriado)
+docker network create --internal umami_edge
+docker network connect umami_edge nginx-proxy-manager
+# 2. Segredos e subida da stack
+cp ops/analytics/.env.example ops/analytics/.env   # preencha com openssl rand -hex 24 / -hex 32
+docker compose -p umami --env-file ops/analytics/.env -f ops/analytics/compose.yaml up -d
+docker compose -p umami --env-file ops/analytics/.env -f ops/analytics/compose.yaml ps   # os dois "healthy"
+# 3. NPM: proxy host analytics.techwoman.dev -> http://umami:3000, SSL Let's Encrypt + Force SSL, Advanced acima
+# 4. Painel: entrar com admin / umami, trocar a senha, criar o site "techwoman.dev" e copiar o Website ID
+# 5. App: no .env da raiz, UMAMI_HOST_URL=https://analytics.techwoman.dev e UMAMI_WEBSITE_ID=<id>; com a imagem do passo 0,
+#    trocar UMAMI_* só exige recriar o web (sem --build)
+docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d web
+```
+
+Desligar o analytics: esvazie `UMAMI_WEBSITE_ID` e recrie o web. Sempre passe `--env-file ops/analytics/.env` e `-p umami` (o `.env` implícito do compose não é o desta pasta).
 
 ## Cronograma até 14/11 e pendências
 

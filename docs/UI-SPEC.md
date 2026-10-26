@@ -322,6 +322,31 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Aviso à mentora: participante cancelou a inscrição com convite pendente (texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
 | E-mail do aviso à mentora (layout 9; selo "PARA MENTORAS"; título "Seu horário das {horario} ficou livre"; card com Mesa, Horário e Participante; botão "Abrir minha agenda"; nota "O horário já aparece livre no seu painel.") | E-mail | Parágrafo "Oi, {mentora}." seguido de `motivo`: confirmada cancelada "{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda."; convite recusado "{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; inscrição cancelada "{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila." |
 
+## Medição de uso (analytics)
+
+Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha` e `/privacidade`. As telas da mentora (M1–M6, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A9) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
+
+Cada tela pública conta um pageview ao abrir. Eventos por tela (propriedades só de categoria; nunca nome, e-mail, telefone, LinkedIn, comentário, token ou ids):
+
+| Tela | Momento | Evento | Propriedades |
+| --- | --- | --- | --- |
+| P4 | Inscrição enviada com sucesso (E02, 201), antes de ir para P5 | `inscricao_concluida` | `area`, `periodo` |
+| P4 | Erro no envio, ou e-mail já inscrito (E02, `ALREADY_REGISTERED`) | `inscricao_erro` | `codigo` |
+| P6 (Link inválido) | "Reenviar link por e-mail" aceito (E05) | `link_reenviado` | — |
+| P6 (Horário proposto) | "Aceitar" com sucesso | `convite_aceito` | — |
+| P6 (Horário proposto) | "Horário não serve" / "Não tenho mais interesse" com sucesso | `convite_recusado` | `motivo`: `horario` \| `sem_interesse` |
+| P6 (Aguardando ou Confirmada) | Cancelar inscrição / "Não tenho mais interesse" com sucesso | `inscricao_cancelada` | — |
+| P6 (Confirmada) | "Trocar de horário" com sucesso | `horario_trocado` | — |
+| P6 (Recusada por horário) | Horário escolhido e confirmado (E08) | `horario_escolhido` | — |
+| P6 (Confirmada) | Toque em "Adicionar à agenda (.ics)" | `agenda_adicionada` | — |
+| P6 | Período preferido salvo | `preferencia_atualizada` | `periodo` |
+
+### Privacidade · parágrafo sobre medição de uso
+
+Na página `/privacidade`, em um cartão próprio (o restante do aviso continua pendente), título "Medição de uso" e o texto:
+
+"Para entender como o site é usado, contamos visitas e ações nas páginas públicas de forma anônima, com uma ferramenta de medição própria (Umami) hospedada por nós. Não usamos cookies, não guardamos nome, e-mail, telefone nem o seu link pessoal, e não acompanhamos você em outros sites. Se o seu navegador pede para não ser rastreado (Do Not Track), nada é medido."
+
 ## Pendências de UI
 
 - [ ] Rafaela confirmar os campos da inscrição (P4): data de nascimento entra ou não?
