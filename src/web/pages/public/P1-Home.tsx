@@ -3,11 +3,14 @@ import { Brand, CalendarIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, Pi
 import './public.css';
 import './p1.css';
 
-function longDate(date: string, startTime: string): string {
+function longDate(date: string, startTime: string, endTime: string): string {
   const d = new Date(`${date}T12:00:00-03:00`);
   const txt = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Recife' }).format(d);
-  const [h, m] = startTime.split(':');
-  return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}, a partir das ${Number(h)}h${m === '00' ? '' : m}`;
+  const formatHour = (time: string) => {
+    const [h, m] = time.split(':');
+    return `${Number(h)}h${m === '00' ? '' : m}`;
+  };
+  return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}, das ${formatHour(startTime)} às ${formatHour(endTime)}`;
 }
 
 /** Página oficial do evento (ingresso) e dados fixos do local (UI-SPEC, P1). */
@@ -30,7 +33,7 @@ const TRAILS = [
 /** P1 · Home do evento (E01) */
 export default function P1Home() {
   const ev = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
-  const when = ev.status === 'success' ? longDate(ev.data.date, ev.data.startTime) : 'Sábado, 14 de novembro de 2026, a partir das 9h';
+  const when = ev.status === 'success' ? longDate(ev.data.date, ev.data.startTime, ev.data.endTime) : 'Sábado, 14 de novembro de 2026, das 8h às 18h';
   const where = ev.status === 'success' ? ev.data.location : null;
   const cta = (cls = '') => <LinkButton to="/jornada" size="lg" className={cls} data-testid="p1-cta">Começar minha jornada</LinkButton>;
 
@@ -71,7 +74,7 @@ export default function P1Home() {
           {ev.status === 'error' && <ErrorState error={ev.error} onRetry={ev.reload} />}
           <div className="tw-p1__cards">
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#f26430' }} aria-hidden="true"><CalendarIcon size={20} color="#3D0A45" /></span><h3>Quando</h3><p>{when}</p></div>
-            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>{where ? `${where} · ` : ''}Recife</p></div>
+            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>Recife Expo Center</p></div>
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true"><PeopleIcon size={20} color="#3D0A45" /></span><h3>Para quem</h3><p>Mulheres que querem entrar ou crescer na área de tecnologia</p></div>
           </div>
           <h3 className="tw-p1__trailstitle">Cinco trilhas de conhecimento</h3>

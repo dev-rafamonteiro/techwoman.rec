@@ -1,4 +1,4 @@
-/** Fixtures do evento padrão: 9h-18h, 40+5 min = 12 slots, fuso America/Recife (UTC-3, sem horário de verão). */
+/** Fixtures do evento padrão: 8h-18h, 40+5 min = 13 slots, fuso America/Recife (UTC-3, sem horário de verão). */
 export const EVENT_ID = "techwoman-2026";
 export const EVENT_DATE = "2026-11-14";
 const RECIFE_OFFSET_H = 3;
@@ -11,7 +11,7 @@ export interface SlotFixture {
 
 export function buildSlots(
   date = EVENT_DATE,
-  start = "09:00",
+  start = "08:00",
   end = "18:00",
   slotMinutes = 40,
   gapMinutes = 5,
@@ -37,7 +37,7 @@ export function buildEvent(overrides: Record<string, unknown> = {}) {
     name: "Tech Woman",
     date: EVENT_DATE,
     timezone: "America/Recife",
-    startTime: "09:00",
+    startTime: "08:00",
     endTime: "18:00",
     slotMinutes: 40,
     gapMinutes: 5,

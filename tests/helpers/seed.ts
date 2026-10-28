@@ -104,7 +104,7 @@ export interface World {
   slotIds: string[];
 }
 
-/** Evento padrão (12 slots), índices, `tables` mesas, `mentors` mentoras e `mentees` participantes waiting. */
+/** Evento padrão (13 slots), índices, `tables` mesas, `mentors` mentoras e `mentees` participantes waiting. */
 export async function seedWorld(db: Db, opts: { mentors?: number; tables?: number; mentees?: number; registrationOpen?: boolean } = {}): Promise<World> {
   const { mentors = 3, tables = 20, mentees = 10, registrationOpen = true } = opts;
   await createIndexes(db);

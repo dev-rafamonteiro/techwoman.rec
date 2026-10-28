@@ -23,7 +23,7 @@ O sistema é uma API Node.js com MongoDB Atlas, em containers Docker atrás do C
 | Infra | Docker Compose em VM própria, exposta só via Cloudflare Tunnel | Nenhuma porta pública aberta |
 | Domínio | techwoman.dev | Sem domínio ou marca Bradesco |
 
-**Números de referência para dimensionamento:** cerca de 2.500 mulheres no evento; 45 a 50 mentoras; 20 mesas; grade padrão 9h00–18h00 com sessões de 40 min e 5 min de intervalo, ou seja, 12 horários e no máximo 240 mentorias no dia. A capacidade é bem menor que o público, por isso as telas avisam que a inscrição não garante vaga.
+**Números de referência para dimensionamento:** cerca de 2.500 mulheres no evento; 45 a 50 mentoras; 20 mesas; grade padrão 8h00–18h00 com sessões de 40 min e 5 min de intervalo, ou seja, 13 horários e no máximo 260 mentorias no dia. A capacidade é bem menor que o público, por isso as telas avisam que a inscrição não garante vaga.
 
 **Portabilidade:** há discussão interna sobre internalizar o site depois. Tudo fica em containers, configurável por variáveis de ambiente e sem dependência do Cloudflare no código (Turnstile e Tunnel são plugáveis).
 
@@ -162,7 +162,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 {
   "_id": "techwoman-2026",
   "name": "Tech Woman", "date": "2026-11-14", "timezone": "America/Recife",
-  "startTime": "09:00", "endTime": "18:00", "slotMinutes": 40, "gapMinutes": 5,
+  "startTime": "08:00", "endTime": "18:00", "slotMinutes": 40, "gapMinutes": 5,
   "slots": [ { "id": "s01", "startAt": "2026-11-14T12:00:00Z", "endAt": "2026-11-14T12:40:00Z" } ],
   "responseWindowMinutes": 15, "minLeadMinutes": 10,
   "registrationOpen": true,
@@ -779,11 +779,10 @@ Admin e inscrição vêm antes do painel da mentora porque a importação da lis
 
 - [ ] Rafaela: lista oficial das \~50 mentoras (nome, e-mail, LinkedIn, organização, horários) no modelo CSV de A3.
 - [ ] Rafaela: confirmar campos da inscrição (data de nascimento entra?) e a lista final de áreas da gamificação.
-- [ ] Confirmar horário de término do evento (assumido 18h00; o site do evento diz "das 9h em diante").
+- [x] Horário do evento: das 8h às 18h.
 - [ ] Definir provedor de e-mail e abrir a conta WhatsApp Business com os modelos de mensagem.
 - [ ] Texto do aviso de privacidade e quem é a controladora dos dados (sem citar o Bradesco).
 - [ ] Confirmar a stack do front atual hospedado no Cloudflare para decidir se as telas novas entram no mesmo projeto.
 - [ ] Quem opera o painel admin no dia (contas de admin a criar em A8).
 
 **Assumido neste SDD (mudar aqui se a decisão for outra):** grade fixa 40 + 5 min; prazo de 15 min para aceitar convite; uma mentoria por participante; perguntas da gamificação fixas no código (configuração pelo admin fica para a fase 2).
-

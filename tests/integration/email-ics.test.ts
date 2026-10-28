@@ -17,7 +17,7 @@ describe.skipIf(!api)("E06 calendar.ics e anexo do e-mail 3", () => {
   let mentee: Client;
   let apptId: string;
   let startAt: Date;
-  const slotIdx = 4; // 09:00 + 4 x 45 min = 12:00 em Recife
+  const slotIdx = 5; // 08:00 + 5 x 45 min = 12:00 em Recife
 
   beforeAll(async () => {
     b = await bootApi(api!, "ics", { mentors: 2, mentees: 2, tables: 20 });

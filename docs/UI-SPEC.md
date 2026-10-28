@@ -4,7 +4,7 @@ Oct 23, 2026 · @Felipe
 
 ## Contexto e escopo
 
-Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sábado 14/11/2026, a partir das 9h): inscrição da participante, painel da mentora e painel de super admin. Ele vai para o Claude Design gerar as telas; o comportamento por trás de cada botão está no SDD 2 (Funcional e Backend), referenciado aqui pelos códigos de endpoint **E-xx**.
+Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sábado 14/11/2026, das 8h às 18h): inscrição da participante, painel da mentora e painel de super admin. Ele vai para o Claude Design gerar as telas; o comportamento por trás de cada botão está no SDD 2 (Funcional e Backend), referenciado aqui pelos códigos de endpoint **E-xx**.
 
 **O que já existe e fica:** página inicial do evento e a jornada de gamificação que indica a área de afinidade da participante. Essas telas recebem só ajustes pontuais (CTA para a mentoria).
 
@@ -167,7 +167,7 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 
 ### M3 · Minha disponibilidade
 
-- Grade vertical com todos os horários do dia (ex.: 9h00, 9h45, 10h30… definidos em A7). Cada horário é um botão liga/desliga "Disponível".
+- Grade vertical com todos os horários do dia (ex.: 8h00, 8h45, 9h30… definidos em A7). Cada horário é um botão liga/desliga "Disponível".
 - Atalhos: "Manhã inteira", "Tarde inteira", "Limpar".
 - Horário com mentoria já marcada aparece travado, com o nome da participante; não pode ser desligado sem antes cancelar a mentoria em M6.
 - Salvar envia para **E21** (carga inicial via **E20**). Aviso se a mentora tentar entrar em M4 sem nenhum horário disponível.
@@ -356,4 +356,3 @@ Na página `/privacidade`, em um cartão próprio (o restante do aviso continua 
 - [ ] Haverá avaliação pós-mentoria? Se sim, link na tela de status Concluída (P6).
 - [ ] Texto do aviso de privacidade (LGPD) e quem é a controladora dos dados, sem citar o Bradesco.
 - [ ] Fase 2, se der tempo: tela de configuração das perguntas e pesos da gamificação no admin (hoje ficam fixas no código).
-
