@@ -75,8 +75,8 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN20 convite pelo 
   it("o worker envia o convite pelo WhatsApp como List Message (texto da UI-SPEC) e grava presence_checks kind invite", async () => {
     expect((await b.invite(0, 0, 8, 0)).status).toBe(201);
     expect((await b.invite(1, 1, 8, 1)).status).toBe(201);
-    expect((await b.invite(0, 2, 8, 0)).status).toBe(201);
-    expect((await b.invite(1, 3, 8, 1)).status).toBe(201);
+    expect((await b.invite(0, 2, 7, 0)).status).toBe(201);
+    expect((await b.invite(1, 3, 7, 1)).status).toBe(201);
     const n = new api!.MemoryNotifier!();
     await api!.processOutbox!(b.t.db, { notifier: n, now: b.clock.now, config: WORKER_CONFIG });
 
@@ -100,7 +100,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN20 convite pelo 
   });
 
   it("convite já respondido antes do envio: o item whatsapp é descartado e não grava presence_checks", async () => {
-    expect((await b.invite(0, 4, 8, 0)).status).toBe(201);
+    expect((await b.invite(0, 4, 6, 0)).status).toBe(201);
     const r = await Client.asMentee(b.app, mentee(4).token).post("/api/public/me/actions", { action: "accept" });
     expect(r.status).toBe(200);
     const appt = await apptOf(4);
@@ -218,7 +218,8 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN20 convite pelo 
   });
 
   it("toque em 'Aceito' na lista depois do prazo (relógio após expiresAt): invite_closed, sem transição", async () => {
-    expect((await b.invite(1, 5, 8, 1)).status).toBe(201);
+    b.clock.now = t0;
+    expect((await b.invite(1, 5, 5, 1)).status).toBe(201);
     const appt = await apptOf(5);
     await api!.processOutbox!(b.t.db, { notifier: new api!.MemoryNotifier!(), now: b.clock.now, config: WORKER_CONFIG });
     expect(await check(5)).toMatchObject({ kind: "invite", status: "pending" });
@@ -284,8 +285,8 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN20 convite pelo 
 
   it("convite aceito ou recusado pela página: o registro fecha e texto depois não recebe invite_closed; toque em 'Aceito' só responde se não foi aceito", async () => {
     b.clock.now = t0;
-    expect((await b.invite(0, 6, 7, 0)).status).toBe(201);
-    expect((await b.invite(1, 7, 7, 1)).status).toBe(201);
+    expect((await b.invite(0, 6, 4, 0)).status).toBe(201);
+    expect((await b.invite(1, 7, 4, 1)).status).toBe(201);
     await api!.processOutbox!(b.t.db, { notifier: new api!.MemoryNotifier!(), now: b.clock.now, config: WORKER_CONFIG });
     expect(await check(6)).toMatchObject({ kind: "invite", status: "pending" });
     expect(await check(7)).toMatchObject({ kind: "invite", status: "pending" });

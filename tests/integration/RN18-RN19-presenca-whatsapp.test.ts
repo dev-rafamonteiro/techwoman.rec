@@ -80,8 +80,8 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
 
   describe("RN18 · lembrete com a List Message", () => {
     it("lembretes 30/15/5 pelo WhatsApp: só o de 30 leva presenceCheck (e só no item whatsapp)", async () => {
-      expect((await b.invite(0, 0, 8, 0)).status).toBe(201);
-      expect((await b.invite(1, 1, 8, 1)).status).toBe(201);
+      expect((await b.invite(0, 0, 7, 0)).status).toBe(201);
+      expect((await b.invite(1, 1, 7, 1)).status).toBe(201);
       await accept(0);
       await accept(1);
       const rem = await c.outbox.find({ type: "reminder", menteeId: mentee(0).doc._id }).sort({ nextAttemptAt: 1 }).toArray();
@@ -93,7 +93,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
     });
 
     it("o worker envia o de 30 como lista, com {minutos} da hora do envio, e grava presence_checks pending", async () => {
-      const start = await startOf(8);
+      const start = await startOf(7);
       const n = new api!.MemoryNotifier!();
       await api!.processOutbox!(b.t.db, { notifier: n, now: min(start, -28), config: WORKER_CONFIG });
       for (const i of [0, 1]) {
@@ -172,7 +172,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
     });
 
     it("o worker envia as respostas fixas e descarta os lembretes seguintes da mentoria cancelada", async () => {
-      const start = await startOf(8);
+      const start = await startOf(7);
       const n = new api!.MemoryNotifier!();
       await api!.processOutbox!(b.t.db, { notifier: n, now: min(start, -26), config: WORKER_CONFIG });
       const conf = n.sent.find((m: any) => m.type === "presence_confirmed");
@@ -262,19 +262,19 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
       const S = (await c.events.findOne({}))!.slots;
       b.clock.now = min(S[2]!.startAt, -5); // s03 em 5 min: fora (antecedência mínima de 10)
       await c.mentees.updateOne({ _id: mentee(3).doc._id }, { $set: { preferredPeriod: "early_afternoon" } });
-      await c.users.updateMany({ _id: { $in: [mt0!, mt1!] } }, { $set: { availability: ["s03", "s04", "s05", "s06", "s07"] } });
+      await c.users.updateMany({ _id: { $in: [mt0!, mt1!] } }, { $set: { availability: ["s03", "s04", "s05", "s06", "s07", "s08"] } });
 
       const r = await m3().get("/api/public/me/slots");
       expect(r.status).toBe(200);
-      expect(r.body.items.map((s: any) => s.slotId)).toEqual(["s04", "s05", "s06", "s07"]);
+      expect(r.body.items.map((s: any) => s.slotId)).toEqual(["s04", "s05", "s06", "s07", "s08"]);
       expect(r.body.items.find((s: any) => s.slotId === "s04").matchesPeriod).toBe(true); // 12:15
-      expect(r.body.items.find((s: any) => s.slotId === "s07").matchesPeriod).toBe(false); // 15:15
+      expect(r.body.items.find((s: any) => s.slotId === "s08").matchesPeriod).toBe(false); // 15:15
       expect(r.body.items[0]).toMatchObject({ startAt: S[3]!.startAt.toISOString(), endAt: S[3]!.endAt.toISOString() });
 
       // s05: mentora 0 ocupada (convite ativo) e a 1 sem disponibilidade; s07 só a 0
       expect((await b.invite(0, 6, 4, 0)).status).toBe(201);
       await c.users.updateOne({ _id: mt1! }, { $set: { availability: ["s04", "s06"] } });
-      expect(await slots(m3())).toEqual(["s04", "s06", "s07"]);
+      expect(await slots(m3())).toEqual(["s04", "s06", "s07", "s08"]);
 
       // mentora 0 de outra área não conta
       await c.users.updateOne({ _id: mt0! }, { $set: { areas: ["ux"] } });
@@ -285,9 +285,9 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
       const others = b.w.tables.slice(1).map((t) => t._id);
       await c.tables.updateMany({ _id: { $in: others } }, { $set: { active: false } });
       expect((await b.invite(1, 7, 3, 0)).status).toBe(201);
-      expect(await slots(m3())).toEqual(["s06", "s07"]);
+      expect(await slots(m3())).toEqual(["s06", "s07", "s08"]);
       await c.tables.updateMany({ _id: { $in: others } }, { $set: { active: true } });
-      expect(await slots(m3())).toEqual(["s04", "s06", "s07"]);
+      expect(await slots(m3())).toEqual(["s04", "s06", "s07", "s08"]);
 
       // mais tarde: só o que ainda está à frente com antecedência
       const keep = b.clock.now;

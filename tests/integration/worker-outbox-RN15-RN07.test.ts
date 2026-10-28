@@ -132,7 +132,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier || !api?.expireInvit
     const mi = 5;
     expect((await b.invite(1, mi, 8, 4)).status).toBe(201);
     await Client.asMentee(b.app, b.w.mentees[mi]!.token).post("/api/public/me/actions", { action: "accept" });
-    const slotStart = (await getCollections(b.t.db).events.findOne({}))!.slots[9]!.startAt;
+    const slotStart = (await getCollections(b.t.db).events.findOne({}))!.slots[8]!.startAt;
     const n = mk();
     await api!.processOutbox!(b.t.db, { notifier: n, now: min(slotStart, -14) });
     expect(n.sent.filter((m: any) => m.type === "reminder")).toHaveLength(1);
