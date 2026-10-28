@@ -23,7 +23,7 @@ export function userDoc(i: number, over: Partial<UserDoc> = {}): UserDoc {
     areas: ["dados"],
     bio: null,
     photoUrl: null,
-    availability: Array.from({ length: 12 }, (_, k) => `s${String(k + 1).padStart(2, "0")}`),
+    availability: Array.from({ length: 9 }, (_, k) => `s${String(k + 1).padStart(2, "0")}`),
     lastLoginAt: null,
     failedLogins: 0,
     failedLoginWindowStart: null,
@@ -80,7 +80,7 @@ export function appointmentDoc(over: Partial<AppointmentDoc> & Pick<AppointmentD
     _id: new ObjectId(),
     eventId: EVENT_ID,
     startAt: new Date(now.getTime() + 3600_000),
-    endAt: new Date(now.getTime() + 3600_000 + 40 * 60_000),
+    endAt: new Date(now.getTime() + 3600_000 + 45 * 60_000),
     status: "invited",
     slotLock: true,
     menteeLock: true,
@@ -104,7 +104,7 @@ export interface World {
   slotIds: string[];
 }
 
-/** Evento padrão (13 slots), índices, `tables` mesas, `mentors` mentoras e `mentees` participantes waiting. */
+/** Evento padrão (9 slots), índices, `tables` mesas, `mentors` mentoras e `mentees` participantes waiting. */
 export async function seedWorld(db: Db, opts: { mentors?: number; tables?: number; mentees?: number; registrationOpen?: boolean } = {}): Promise<World> {
   const { mentors = 3, tables = 20, mentees = 10, registrationOpen = true } = opts;
   await createIndexes(db);

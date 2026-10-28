@@ -10,7 +10,7 @@ const mentee: MenteeStaffView = {
   id: '1', name: 'Joana Lima', area: 'backend', preferredPeriod: 'early_afternoon', linkedin: 'joanalima', note: 'Quero migrar de suporte para backend',
   priority: true, priorityReason: 'declined_schedule', status: 'waiting', queuedAt: new Date(Date.now() - 25 * 60000).toISOString(),
 };
-const slots = ['9h00', '9h45', '10h30', '11h15', '12h00', '12h45'].map((label, i) => ({ id: String(i), label, locked: i === 2, caption: 'Marina', preferred: i === 1 }));
+const slots = ['10h00', '10h45', '11h30', '12h15', '13h00', '13h45'].map((label, i) => ({ id: String(i), label, locked: i === 2, caption: 'Marina', preferred: i === 1 }));
 
 /** Catálogo visual dos componentes (rota /_ui, só em desenvolvimento). */
 export default function Gallery() {

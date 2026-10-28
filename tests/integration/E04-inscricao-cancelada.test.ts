@@ -119,7 +119,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E04 · inscrição
     expect(await c.outbox.countDocuments({ type: "cancelled", appointmentId: appt4._id })).toBeGreaterThan(0);
     // admin cancela a inscrição de quem aguarda e de quem está confirmada (transição mentee_cancel com actor admin)
     expect((await b.admin.patch(`/api/admin/mentees/${mentee(5).doc._id}`, { action: "cancel" })).status).toBe(200);
-    expect((await b.invite(1, 6, 9, 3)).status).toBe(201);
+    expect((await b.invite(1, 6, 8, 3)).status).toBe(201);
     expect((await asMentee(6).post("/api/public/me/actions", { action: "accept" })).status).toBe(200);
     const r = await b.admin.patch(`/api/admin/mentees/${mentee(6).doc._id}`, { action: "cancel" });
     expect(r.status, JSON.stringify(r.body)).toBe(200);
@@ -129,7 +129,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E04 · inscrição
   });
 
   it("trocar de horário (mentee_reschedule) não gera registration_cancelled", async () => {
-    expect((await b.invite(0, 7, 10, 4)).status).toBe(201);
+    expect((await b.invite(0, 7, 8, 4)).status).toBe(201);
     expect((await asMentee(7).post("/api/public/me/actions", { action: "accept" })).status).toBe(200);
     const r = await asMentee(7).post("/api/public/me/actions", { action: "reschedule" });
     expect(r.status, JSON.stringify(r.body)).toBe(200);

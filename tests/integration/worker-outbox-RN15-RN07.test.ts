@@ -130,7 +130,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier || !api?.expireInvit
 
   it("RN15: lembrete de mentoria confirmada é enviado no horário", async () => {
     const mi = 5;
-    expect((await b.invite(1, mi, 9, 4)).status).toBe(201);
+    expect((await b.invite(1, mi, 8, 4)).status).toBe(201);
     await Client.asMentee(b.app, b.w.mentees[mi]!.token).post("/api/public/me/actions", { action: "accept" });
     const slotStart = (await getCollections(b.t.db).events.findOne({}))!.slots[9]!.startAt;
     const n = mk();

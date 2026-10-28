@@ -26,7 +26,7 @@ const LIST_BLOCKS: { kind: WhatsappListKind; label: string; options: [string, st
   { kind: 'invite', label: 'Convite (menu do WhatsApp)', options: ['Aceito', 'Não posso'] },
   { kind: 'presence', label: 'Confirmação de presença (menu do WhatsApp)', options: ['Sim, confirmo', 'Não poderei ir'] },
 ];
-const LIST_SAMPLE: Record<string, string> = { nome: 'Ana', mentora: 'Tatiana Barros', horario: '9h00', mesa: 'Mesa 5', prazo: '8h50', minutos: '15', link: 'https://techwoman.dev/l/IEO31Kd' };
+const LIST_SAMPLE: Record<string, string> = { nome: 'Ana', mentora: 'Tatiana Barros', horario: '10h00', mesa: 'Mesa 5', prazo: '9h50', minutos: '15', link: 'https://techwoman.dev/l/IEO31Kd' };
 const fillSample = (t: string) => t.replace(/\{(\w+)\}/g, (m, k: string) => LIST_SAMPLE[k] ?? m);
 
 const toMin = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); return (h ?? 0) * 60 + (m ?? 0); };

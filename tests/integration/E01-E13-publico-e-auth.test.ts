@@ -75,7 +75,7 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
   });
 
   it("RN02: inscrições fechadas ou após o início do último horário -> 403 REGISTRATION_CLOSED", async () => {
-    b.clock.now = new Date("2026-11-14T20:30:00Z"); // 17:30 Recife, último slot começa 17:15
+    b.clock.now = new Date("2026-11-14T19:30:00Z"); // 16:30 Recife, após o início do último slot (16:00)
     let r = await b.anon.post("/api/public/mentees", body({ email: "tarde@y.test" }));
     expect([r.status, r.body.code]).toEqual([403, "REGISTRATION_CLOSED"]);
     b.clock.now = new Date("2026-11-14T11:00:00Z");

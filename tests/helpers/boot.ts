@@ -4,7 +4,7 @@ import { seedWorld, userDoc, type World } from "./seed.js";
 import { Client, loadApi, testPasswordHash, type ApiModules } from "./app.js";
 import { getCollections } from "../../src/db/collections.js";
 
-/** 2026-11-14 07:00 em Recife: antes do primeiro horário (08:00) com folga para RN04/RN05. */
+/** 2026-11-14 07:00 em Recife: antes do primeiro horário (10:00) com folga para RN04/RN05. */
 export const NOW = new Date("2026-11-14T10:00:00Z");
 
 export interface Booted {
