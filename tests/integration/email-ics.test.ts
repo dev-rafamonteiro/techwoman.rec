@@ -17,7 +17,7 @@ describe.skipIf(!api)("E06 calendar.ics e anexo do e-mail 3", () => {
   let mentee: Client;
   let apptId: string;
   let startAt: Date;
-  const slotIdx = 5; // 08:00 + 5 x 45 min = 12:00 em Recife
+  const slotIdx = 6; // 08:00 + 6 x 45 min = 12:30 em Recife
 
   beforeAll(async () => {
     b = await bootApi(api!, "ics", { mentors: 2, mentees: 2, tables: 20 });
@@ -35,7 +35,7 @@ describe.skipIf(!api)("E06 calendar.ics e anexo do e-mail 3", () => {
     expect((await ics()).status).toBe(404);
   });
 
-  it("confirmada: text/calendar que passa no node-ical, 1 VEVENT, UID = id da mentoria, 40 min, 12:00 em America/Recife", async () => {
+  it("confirmada: text/calendar que passa no node-ical, 1 VEVENT, UID = id da mentoria, 40 min, 12:30 em America/Recife", async () => {
     const acc = await mentee.post("/api/public/me/actions", { action: "accept" });
     expect(acc.status).toBe(200);
     const c = getCollections(b.t.db);
@@ -54,12 +54,12 @@ describe.skipIf(!api)("E06 calendar.ics e anexo do e-mail 3", () => {
     const ev = events[0];
     expect(ev.uid).toBe(apptId);
     expect(new Date(ev.start).getTime()).toBe(startAt.getTime());
-    expect(RECIFE(new Date(ev.start))).toBe("12:00");
+    expect(RECIFE(new Date(ev.start))).toBe("12:30");
     expect(new Date(ev.end).getTime() - new Date(ev.start).getTime()).toBe(40 * 60_000);
     expect(String(ev.summary)).toMatch(/Mesa|mesa|Mentoria/);
     expect(String(ev.location ?? "") + String(ev.description ?? "")).toMatch(/Mesa \d+|mesa|Recife/i);
     // o horário não pode estar em UTC "cru" sem fuso: ou é UTC (Z) ou tem TZID=America/Recife
-    expect(raw).toMatch(/DTSTART(;TZID=America\/Recife:\d{8}T120000|:\d{8}T150000Z)/);
+    expect(raw).toMatch(/DTSTART(;TZID=America\/Recife:\d{8}T123000|:\d{8}T153000Z)/);
   });
 
   it("anexo do e-mail de confirmação (worker) é o mesmo .ics: METHOD:PUBLISH, mesmo UID e mesmo horário", async () => {
@@ -75,7 +75,7 @@ describe.skipIf(!api)("E06 calendar.ics e anexo do e-mail 3", () => {
     const [ev] = parse(raw);
     expect(ev.uid).toBe(apptId);
     expect(new Date(ev.start).getTime()).toBe(startAt.getTime());
-    expect(RECIFE(new Date(ev.start))).toBe("12:00");
+    expect(RECIFE(new Date(ev.start))).toBe("12:30");
   });
 
   it("mover (E39): o .ics tem o novo horário, mesmo UID (raiz da cadeia) e SEQUENCE +1 a cada move", async () => {
@@ -86,7 +86,7 @@ describe.skipIf(!api)("E06 calendar.ics e anexo do e-mail 3", () => {
     const r = await ics();
     expect(r.status).toBe(200);
     const [after] = parse(r.body);
-    expect(RECIFE(new Date(after.start))).toBe("12:45");
+    expect(RECIFE(new Date(after.start))).toBe("13:15");
     expect(Number(after.sequence ?? 0)).toBe(seqBefore + 1);
     expect(after.uid, "UID estável: id da mentoria raiz da cadeia").toBe(apptId);
     // segundo move: UID segue o mesmo e SEQUENCE sobe de novo
@@ -96,6 +96,6 @@ describe.skipIf(!api)("E06 calendar.ics e anexo do e-mail 3", () => {
     const [again] = parse((await ics()).body);
     expect(again.uid).toBe(apptId);
     expect(Number(again.sequence ?? 0)).toBe(seqBefore + 2);
-    expect(RECIFE(new Date(again.start))).toBe("13:30");
+    expect(RECIFE(new Date(again.start))).toBe("14:00");
   });
 });
