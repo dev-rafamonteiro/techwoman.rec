@@ -5,6 +5,7 @@ import type {
   BradescoReservationDoc,
   AuditLogDoc,
   EventDoc,
+  ExtraSessionDoc,
   IdempotencyDoc,
   MenteeDoc,
   OutboxDoc,
@@ -31,6 +32,7 @@ export const COLLECTIONS = {
   presenceChecks: 'presence_checks',
   whatsappInbound: 'whatsapp_inbound',
   shortLinks: 'short_links',
+  extraSessions: 'extra_sessions',
 } as const;
 
 export interface Collections {
@@ -48,6 +50,7 @@ export interface Collections {
   presenceChecks: Collection<PresenceCheckDoc>;
   whatsappInbound: Collection<WhatsappInboundDoc>;
   shortLinks: Collection<ShortLinkDoc>;
+  extraSessions: Collection<ExtraSessionDoc>;
 }
 
 export function getCollections(db: Db): Collections {
@@ -66,5 +69,6 @@ export function getCollections(db: Db): Collections {
     presenceChecks: db.collection<PresenceCheckDoc>(COLLECTIONS.presenceChecks),
     whatsappInbound: db.collection<WhatsappInboundDoc>(COLLECTIONS.whatsappInbound),
     shortLinks: db.collection<ShortLinkDoc>(COLLECTIONS.shortLinks),
+    extraSessions: db.collection<ExtraSessionDoc>(COLLECTIONS.extraSessions),
   };
 }

@@ -111,8 +111,9 @@ contribuem para a pontuação. Não há respostas certas ou erradas. Cada respos
 
 ### P3 · Resultado e reserva de mentoria
 
-- Exibe o resultado de afinidade e até três mentoras elegíveis com maior compatibilidade, percentual de match e os
-  temas cadastrados por elas. A elegibilidade segue o momento escolhido e os temas selecionados; a pontuação compara
+- Exibe o resultado de afinidade e até três mentoras elegíveis com maior compatibilidade, percentual de match e
+  especialidade. Temas e horários não aparecem nos cards; a participante escolhe um horário depois de selecionar
+  "Simular reserva". A elegibilidade segue o momento escolhido e os temas selecionados; a pontuação compara
   as respostas com temas, domínios, especialidades e tópicos do perfil. Empates são distribuídos deterministicamente
   por jornada, sem favorecer a ordem do cadastro.
 - A participante pode escolher uma mentora e um horário disponível, informar nome, e-mail e WhatsApp, aceitar o
@@ -125,8 +126,8 @@ contribuem para a pontuação. Não há respostas certas ou erradas. Cada respos
 
 ### P7 · Catálogo de mentoras Bradesco
 
-Lista perfis, expertise, temas e domínios da planilha e somente horários ainda disponíveis. A data vem de E01.
-O catálogo inicial é carregado por `npm run db:seed:bradesco-mentors`; alterações futuras são feitas em A10.
+Lista perfis e expertise. Temas e horários permanecem ocultos nos cards. A data vem de E01. O catálogo inicial
+é carregado por `npm run db:seed:bradesco-mentors`; alterações futuras são feitas em A10.
 
 ### A10 · Mentoras Bradesco
 
@@ -215,10 +216,11 @@ Tela principal da mentora no dia.
 Gaveta de baixo para cima no celular, modal no desktop.
 
 - Resumo da participante no topo.
-- **Horário:** lista só dos horários em que a mentora está disponível e livre, com o período preferido da participante destacado como "Preferência dela".
+- **Horário:** lista os horários em que a mentora está disponível e livre, inclusive convites de última hora, até o início da sessão. O período preferido da participante fica destacado como "Preferência dela".
 - **Mesa:** lista das mesas livres naquele horário; a mesa usada pela mentora no horário anterior vem pré-selecionada com a dica "Mantenha a mesma mesa para não precisar trocar de lugar".
 - Opções carregadas por **E23** a cada troca de horário.
-- Botão "Enviar convite" (**E24**). Texto de apoio: "Ela tem até 15 min para confirmar; se não confirmar, o horário volta a ficar livre."
+- Botão "Enviar convite" (**E24**). Texto de apoio: "O convite expira no prazo informado à mentorada. Em horários próximos, ela pode confirmar até o início da sessão."
+- Em convites enviados com menos antecedência, a participante pode confirmar até o início do horário; a notificação informa que há tolerância de até 5 minutos após o horário marcado para chegada.
 - **Conflitos (resposta 409 de E24), com mensagem e ação:**
   - Participante já escolhida: "Outra mentora acabou de convidar a Joana", fecha o painel e atualiza M4.
   - Mesa ocupada: "A Mesa 7 acabou de ser ocupada nesse horário", recarrega as mesas.
@@ -233,6 +235,7 @@ Gaveta de baixo para cima no celular, modal no desktop.
   - Confirmada: "Iniciar" / "Concluir", "Não compareceu" (liberado 10 min após o início), "Cancelar" com motivo.
 - Destaque visual da próxima mentoria e aviso "Começa em 5 min".
 - Dados: **E25**, atualização em tempo real por **E27**.
+- Ação "Registrar sessão extra realizada": a mentora escolhe um horário encerrado e uma mentorada já cadastrada ou preenche o cadastro completo de uma nova participante. O registro nasce como realizado, não ocupa a agenda e não envia convite; o histórico é exibido em M6 (E52–E54).
 
 ## Telas do super admin (A1–A9)
 
@@ -327,13 +330,13 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Momento | Canal | Texto base |
 | --- | --- | --- |
 | Inscrição recebida | E-mail + WhatsApp | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
-| Convite de horário | E-mail | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
-| Convite de horário (RN20; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Aceito" e "Não posso" (descrição "Você conta o motivo na sua página") |
+| Convite de horário | E-mail | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}". Inclui aviso de tolerância de 5 min para chegada após o horário marcado. |
+| Convite de horário (RN20; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto editável com aviso fixo de tolerância de até 5 min após o horário marcado para chegada; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Aceito" e "Não posso" (descrição "Você conta o motivo na sua página") |
 | Resposta ao convite: aceitou | WhatsApp | A mensagem de Confirmação normal |
 | Resposta ao convite: não pode (texto fixo) | WhatsApp | "Tudo bem, {nome}! Para recusar, conte o motivo na sua página: {link}. Se for o horário, você continua na fila com prioridade." |
 | Resposta ao convite: não está mais disponível (texto fixo) | WhatsApp | "Este convite não está mais disponível. Veja como está sua inscrição: {link}" |
 | Resposta ao convite: não entendida (texto fixo) | WhatsApp | "Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO." |
-| Confirmação | E-mail + WhatsApp | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
+| Confirmação | E-mail + WhatsApp | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes. Há tolerância de até 5 minutos após o horário marcado para chegada." |
 | Lembrete (antes da mentoria, tempos e canais configurados em A7; padrão 15 min) | WhatsApp e/ou e-mail | "Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!" |
 | Primeiro lembrete pelo WhatsApp: confirmação de presença (RN18; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Sim, confirmo" e "Não poderei ir" (descrição "Você poderá escolher outro horário") |
 | Resposta: confirmou (texto fixo) | WhatsApp | "Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}." |

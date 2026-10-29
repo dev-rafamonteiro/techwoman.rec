@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ENDPOINTS, type E49PublicResponse } from '@tw/shared';
-import { Brand, Button, LinkButton, SkeletonList, call, useQuery } from '../../ui';
+import { Brand, LinkButton, SkeletonList, call, useQuery } from '../../ui';
 import './public.css';
 import './p7.css';
 
@@ -352,16 +352,12 @@ export default function P7MentorasBradesco() {
       : [];
   const mentorCount = directory.status === 'loading' ? '—' : mentors.length;
   const [query, setQuery] = useState('');
-  const [availability, setAvailability] = useState<'all' | 'available' | 'unavailable'>('all');
   const availableSlotCount = directory.status === 'loading'
     ? '—'
     : mentors.reduce((count, mentor) => count + mentor.slots.filter((slot) => !slot.reserved).length, 0);
   const filteredMentors = useMemo(() => {
     const search = normalizeSearch(query);
     return mentors.filter((mentor) => {
-      const hasAvailableSlot = mentor.slots.some((slot) => !slot.reserved);
-      const matchesAvailability = availability === 'all'
-        || (availability === 'available' ? hasAvailableSlot : !hasAvailableSlot);
       const searchableText = normalizeSearch([
         mentor.name,
         mentor.expertise,
@@ -369,10 +365,10 @@ export default function P7MentorasBradesco() {
         legacyProfile(mentor)?.bio ?? '',
         ...mentor.slots.map((slot) => slot.topic),
       ].join(' '));
-      return matchesAvailability && (!search || searchableText.includes(search));
+      return !search || searchableText.includes(search);
     }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
-  }, [availability, mentors, query]);
-  const hasFilters = Boolean(query || availability !== 'all');
+  }, [mentors, query]);
+  const hasFilters = Boolean(query);
 
   return (
     <div className="tw-pub tw-p7">
@@ -434,7 +430,6 @@ export default function P7MentorasBradesco() {
                 <span className="tw-pub__eyebrow">Conheça quem inspira</span>
                 <h2>Nossas mentoras Bradesco</h2>
               </div>
-              <p>Temas e horários escolhidos por cada mentora.</p>
             </div>
             <div className="tw-p7__filters">
               <label className="tw-p7__search">
@@ -446,25 +441,8 @@ export default function P7MentorasBradesco() {
                   placeholder="Ex.: dados, Java, liderança"
                 />
               </label>
-              <label className="tw-p7__availability-filter">
-                <span>Disponibilidade</span>
-                <select
-                  value={availability}
-                  onChange={(event) => setAvailability(
-                    event.target.value === 'available'
-                      ? 'available'
-                      : event.target.value === 'unavailable'
-                        ? 'unavailable'
-                        : 'all',
-                  )}
-                >
-                  <option value="all">Todas as mentoras</option>
-                  <option value="available">Com horário livre</option>
-                  <option value="unavailable">Sem horário livre</option>
-                </select>
-              </label>
               {hasFilters && (
-                <button className="tw-p7__clear" type="button" onClick={() => { setQuery(''); setAvailability('all'); }}>
+                <button className="tw-p7__clear" type="button" onClick={() => setQuery('')}>
                   Limpar filtros
                 </button>
               )}
@@ -477,13 +455,6 @@ export default function P7MentorasBradesco() {
               </p>
             )}
             {directory.status === 'loading' && <SkeletonList rows={3} height={180} />}
-            {directory.status === 'error' && (
-              <div className="tw-card" role="status" style={{ marginBlock: 20 }}>
-                <strong>Exibindo o catálogo salvo anteriormente</strong>
-                <p>Não foi possível carregar o catálogo atual. Os dados exibidos podem não refletir os cadastros e as reservas mais recentes. Tente atualizar quando o serviço estiver disponível.</p>
-                <Button variant="secondary" onClick={directory.reload}>Atualizar catálogo</Button>
-              </div>
-            )}
             <div className="tw-p7__grid">
               {filteredMentors.map((mentor) => {
                 const index = mentors.indexOf(mentor);
@@ -503,24 +474,6 @@ export default function P7MentorasBradesco() {
                         <p className="tw-p7__expertise">{mentor.expertise}</p>
                       </div>
                       {bio && <p className="tw-p7__bio">{bio}</p>}
-                      <div className="tw-p7__slots">
-                        <h4>Temas e horários</h4>
-                        {directory.status === 'error' ? <ul>
-                          {mentor.slots.map((slot) => (
-                            <li key={`${slot.time}-${slot.topic}`}>
-                              <time>{slot.time}</time>
-                              <span>{slot.topic}</span>
-                            </li>
-                          ))}
-                        </ul> : mentor.slots.some((slot) => !slot.reserved) ? <ul>
-                          {mentor.slots.filter((slot) => !slot.reserved).map((slot) => (
-                            <li key={`${slot.time}-${slot.topic}`}>
-                              <time>{slot.time}</time>
-                              <span>{slot.topic}</span>
-                            </li>
-                          ))}
-                        </ul> : <p className="tw-p7__bio">Todos os horários desta mentora já foram reservados.</p>}
-                      </div>
                       {mentor.linkedin && <a className="tw-p7__linkedin" href={mentor.linkedin} target="_blank" rel="noopener noreferrer">
                         Ver perfil no LinkedIn <span>↗ <span className="tw-p7__new-tab">abre em nova aba</span></span>
                       </a>}
@@ -533,7 +486,7 @@ export default function P7MentorasBradesco() {
               <div className="tw-p7__empty" role="status">
                 <h3>{mentors.length === 0 ? 'Nenhuma mentora cadastrada' : 'Nenhuma mentora encontrada'}</h3>
                 <p>{mentors.length === 0 ? 'As mentoras cadastradas aparecerão aqui quando o catálogo for atualizado.' : 'Tente outro nome, tema ou disponibilidade para encontrar uma mentora.'}</p>
-                <button className="tw-p7__clear" type="button" onClick={() => { setQuery(''); setAvailability('all'); }}>Ver todas as mentoras</button>
+                <button className="tw-p7__clear" type="button" onClick={() => setQuery('')}>Ver todas as mentoras</button>
               </div>
             )}
           </div>

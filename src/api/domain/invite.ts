@@ -7,7 +7,7 @@ export interface InviteCheckInput {
   mentor: { status: 'active' | 'disabled'; availability: readonly string[] };
   table: { active: boolean } | null;
   minLeadMinutes: number;
-  /** Só admin (E39): ignora disponibilidade e/ou antecedência, com aviso. */
+  /** Admin pode ignorar disponibilidade/antecedência; convites de última hora ignoram somente a antecedência. */
   override?: { ignoreAvailability?: boolean; ignoreLeadTime?: boolean };
 }
 
@@ -19,8 +19,8 @@ export type InviteCheck =
 
 /**
  * RN04 (parte estática) · Convite válido: mentora ativa; horário na disponibilidade dela; horário começa em pelo menos
- * `minLeadMinutes`; mesa ativa. As demais condições (mesa livre, mentora livre, participante `waiting`) são decididas
- * pelos índices únicos e pelo findOneAndUpdate condicional dentro da transação.
+ * `minLeadMinutes` (salvo convite de última hora); mesa ativa. As demais condições (mesa livre, mentora livre,
+ * participante `waiting`) são decididas pelos índices únicos e pelo findOneAndUpdate condicional dentro da transação.
  */
 export function checkInvite(i: InviteCheckInput): InviteCheck {
   const warnings: InviteWarning[] = [];
@@ -45,10 +45,10 @@ export function checkInvite(i: InviteCheckInput): InviteCheck {
   return { ok: true, warnings };
 }
 
-/** RN05 · `expiresAt` = o menor entre agora + janela de resposta e o início do horário menos 5 min. */
-export function computeExpiry(now: Date, slotStartAt: Date, responseWindowMinutes: number): Date {
+/** RN05 · `expiresAt` = menor entre a janela de resposta e o início menos a margem configurada (5 min por padrão). */
+export function computeExpiry(now: Date, slotStartAt: Date, responseWindowMinutes: number, minutesBeforeStart = 5): Date {
   const byWindow = now.getTime() + responseWindowMinutes * 60_000;
-  const byStart = slotStartAt.getTime() - 5 * 60_000;
+  const byStart = slotStartAt.getTime() - minutesBeforeStart * 60_000;
   return new Date(Math.min(byWindow, byStart));
 }
 

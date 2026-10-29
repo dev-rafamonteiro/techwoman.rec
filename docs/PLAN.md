@@ -140,7 +140,7 @@ Um usuário de staff pode ter mais de um papel (`roles: ["mentor", "admin"]`); a
 
 ## Modelo de dados MongoDB Atlas e índices
 
-São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL); a regra "ninguém em dois lugares ao mesmo tempo" mora em três índices únicos parciais da coleção `appointments`, e não no código.
+São nove coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL); a regra "ninguém em dois lugares ao mesmo tempo" mora em três índices únicos parciais da coleção `appointments`, e não no código.
 
 | Coleção | Guarda | Telas |
 | --- | --- | --- |
@@ -150,6 +150,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 | `tables` | Mesas | A6, M5, A5 |
 | `mentees` | Participantes inscritas e status na fila | P4–P6, M4, A4 |
 | `appointments` | Convites e mentorias (mesa × horário × mentora × participante) | M5, M6, A5, P6 |
+| `extra_sessions` | Sessões extras já realizadas registradas pela mentora, vinculadas a um cadastro de participante, sem ocupar a grade nem criar convite | M6 |
 | `outbox` | Notificações a enviar e lembretes agendados | A9 |
 | `audit_logs` | Trilha de auditoria | A9 |
 | `presence_checks` | Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença (RN18) | P6, A9 |
@@ -229,7 +230,7 @@ db.short_links.createIndex({ menteeId: 1, kind: 1, tokenVersion: 1 }, { unique: 
 db.short_links.createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 })  // nome: short_link_ttl
 ```
 
-Os índices são criados pelo script `create-indexes`, executado no start da API (idempotente). Validação de schema (`$jsonSchema`) em `mentees`, `appointments` e `users` com `validationLevel: "strict"`. Campo novo num validador (ex.: `users.phone`) muda o validador gravado: antes de subir a API nova, rode uma vez `npm run db:indexes` com um usuário dbAdmin (o usuário da aplicação só tem `readWrite` e a API não roda `collMod` quando o validador é igual).
+Os índices são criados pelo script `create-indexes`, executado no start da API (idempotente). Validação de schema (`$jsonSchema`) em `mentees`, `appointments`, `extra_sessions` e `users` com `validationLevel: "strict"`. Campo novo num validador (ex.: `users.phone`) muda o validador gravado: antes de subir a API nova, rode uma vez `npm run db:indexes` com um usuário dbAdmin (o usuário da aplicação só tem `readWrite` e a API não roda `collMod` quando o validador é igual).
 
 ## Regras de negócio e máquina de estados
 
@@ -255,8 +256,8 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
 1. **RN01 · Inscrição única.** Uma inscrição por e-mail normalizado por evento. E-mail já inscrito e ativo: não cria outra e reenvia o link pessoal. Inscrição `cancelled` ou `no_show`: reativa como `waiting`, sem prioridade, com novo `queuedAt`.
 2. **RN02 · Janela de inscrição.** Só aceita com `registrationOpen = true` e antes do início do último horário do dia.
 3. **RN03 · Ordem da fila.** Fila = participantes `waiting`, ordenadas por `priority` (true primeiro) e depois `queuedAt` (mais antiga primeiro). Voltar à fila por recusa ou cancelamento da mentora mantém o `queuedAt` original.
-4. **RN04 · Convite válido.** Só cria convite se: mentora ativa; horário na disponibilidade dela; horário começa em pelo menos `minLeadMinutes` (10); mesa ativa e livre; mentora livre no horário; participante `waiting`. Admin pode ignorar a disponibilidade e a antecedência, com aviso.
-5. **RN05 · Prazo do convite.** `expiresAt` = o menor entre agora + `responseWindowMinutes` (15) e o início do horário menos 5 min.
+4. **RN04 · Convite válido.** Só cria convite se: mentora ativa; horário na disponibilidade dela; mesa ativa e livre; mentora livre no horário; participante `waiting`. O limite normal é `minLeadMinutes` (10); a mentora pode convidar alguém da fila com menos antecedência, desde que a sessão ainda não tenha começado. Admin pode ignorar disponibilidade e antecedência, com aviso.
+5. **RN05 · Prazo do convite.** Normalmente, `expiresAt` = o menor entre agora + `responseWindowMinutes` (15) e o início do horário menos 5 min. Em convite de última hora, vence no início da sessão para permitir que a participante confirme antes de começar.
 6. **RN06 · Resposta da participante.** Aceitar só se o convite ainda for `invited` e não vencido. Recusar com "Horário não serve" devolve à fila com `priority = true` e `priorityReason = "declined_schedule"`. Recusar com "Não tenho mais interesse" encerra a inscrição (`cancelled`).
 7. **RN07 · Expiração.** O worker, a cada 30 s, marca como `expired` todo convite `invited` com `expiresAt` vencido; a participante volta para `waiting` sem ganhar prioridade e recebe aviso.
 8. **RN08 · Confirmação presencial.** A mentora pode confirmar um convite `invited` quando a participante está na mesa; o registro guarda quem confirmou.
@@ -280,6 +281,7 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
     - Aceito (ou texto de confirmação): se o convite ainda está `invited` e não venceu, aplica `accept` com ator participante, como E04 (sai a `confirmed` normal, que é a resposta, e os lembretes); `presence_checks.status = confirmed`. Se não está mais `invited` ou venceu: `closed` e envia `invite_closed`.
     - Não posso (ou texto de recusa): não muda nada no sistema; envia `invite_decline_link` com o link pessoal, onde ela recusa com o motivo (RN06). O registro continua `pending`: ela ainda pode tocar "Aceito" enquanto o convite valer.
     - Não entendido: mantém `pending` e envia `invite_unclear`.
+21. **RN21 · Registro de sessão extra realizada.** M6 permite à mentora associar um horário já encerrado a uma mentorada cadastrada ou fazer o cadastro completo de uma nova participante com consentimento. O registro fica em `extra_sessions`, não ocupa mesa/horário e não gera convite ou notificação. Uma nova participante entra em `mentees` com status `done` (fora da fila); o histórico extra aponta para esse cadastro.
 
 ## API REST ligada às telas
 
@@ -325,6 +327,9 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E26 | `PATCH /mentor/appointments/:id` | M6 | `{ action: "confirm_in_person" \| "start" \| "finish" \| "no_show" \| "cancel", reason? }`; RN08–RN10 |
 | E27 | `GET /mentor/stream` (SSE) | M4, M6 | Eventos `queue.added`, `queue.removed`, `appointment.updated` |
 | E28 | `PATCH /mentor/profile` | M2 | Nome, LinkedIn, WhatsApp (`phone`), foto, áreas, bio |
+| E52 | `GET /mentor/extra-sessions/mentees?q=` | M6 | Busca mentoradas cadastradas pelo nome para associar a uma sessão realizada; sem contato |
+| E53 | `POST /mentor/extra-sessions` | M6 | Registra uma sessão já encerrada, associada a uma mentorada cadastrada ou a um cadastro completo com consentimento; novo cadastro fica `done`, fora da fila. Não cria convite |
+| E54 | `GET /mentor/extra-sessions` | M6 | Lista as sessões extras realizadas pela mentora autenticada |
 
 ### Admin e super admin
 

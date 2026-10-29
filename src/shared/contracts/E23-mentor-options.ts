@@ -7,7 +7,7 @@ export const E23QuerySchema = z.object({ menteeId: IdSchema, slotId: SlotIdSchem
 export type E23Query = z.input<typeof E23QuerySchema>;
 
 export const E23ResponseSchema = z.object({
-  /** Horários em que a mentora está disponível e livre, com início >= agora + minLeadMinutes. */
+  /** Horários futuros em que a mentora está disponível e livre; a mentora pode enviar convite de última hora. */
   slots: z.array(SlotSchema.extend({ preferred: z.boolean() })),
   /** Horário para o qual as mesas foram calculadas (o pedido, ou o preferido/primeiro livre). */
   selectedSlotId: SlotIdSchema.nullable(),

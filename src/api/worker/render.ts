@@ -96,7 +96,15 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
   const lists = event.whatsappLists ?? DEFAULT_WHATSAPP_LISTS;
   if (i.list === 'invite' && a) {
     // sem {link} no texto editado, o link da página vai numa linha nova (PLAN, events.whatsappLists)
-    const desc = lists.invite.description.includes('{link}') || !vars['link'] ? lists.invite.description : `${lists.invite.description}\nDetalhes: {link}`;
+    const grace = 'Há tolerância de até 5 minutos após o horário marcado para chegada.';
+    const baseDescription = lists.invite.description;
+    const linkLine = '\nDetalhes: {link}';
+    const description = baseDescription.includes(grace)
+      ? baseDescription
+      : baseDescription.includes(linkLine)
+        ? baseDescription.replace(linkLine, `\n${grace}${linkLine}`)
+        : `${baseDescription}\n${grace}`;
+    const desc = description.includes('{link}') || !vars['link'] ? description : `${description}\nDetalhes: {link}`;
     const list: NotifierList = {
       title: fill(lists.invite.title),
       description: fill(desc),
@@ -129,6 +137,8 @@ export function render(i: RenderInput): { subject: string; text: string; list?: 
     return { subject, text: `${list.title} ${list.description}`, list };
   }
   let text = fill(tpl);
+  const grace = 'Há tolerância de até 5 minutos após o horário marcado para chegada.';
+  if (item.type === 'confirmed' && !text.includes(grace)) text += ` ${grace}`;
   // todo link aponta para P6 pelo link curto (PLAN): garante que mensagens com agendamento tragam o link
   if (i.links && !text.includes(vars['link']!) && ['invite', 'confirmed', 'moved', 'cancelled', 'expired', 'slot_released'].includes(item.type)) text += ` ${vars['link']}`;
   return { subject, text };

@@ -136,10 +136,45 @@ export const appointmentsSchema: Schema = strictObject(
   ['eventId', 'menteeId', 'mentorId', 'tableId', 'slotId', 'startAt', 'endAt', 'status', 'history', 'createdBy', 'createdAt'],
 );
 
+const extraSessionAttendee = strictObject(
+  {
+    name: str,
+    email: strN,
+    phone: strN,
+    linkedin: strN,
+    area: str,
+    preferredPeriod: enumOf(PREFERRED_PERIODS),
+    note: strN,
+    consent: {
+      bsonType: ['object', 'null'],
+      required: ['version', 'acceptedAt'],
+      additionalProperties: false,
+      properties: { version: str, acceptedAt: date },
+    },
+  },
+  ['name', 'email', 'phone', 'linkedin', 'area', 'preferredPeriod', 'note', 'consent'],
+);
+
+export const extraSessionsSchema: Schema = strictObject(
+  {
+    _id: oid,
+    eventId: str,
+    mentorId: oid,
+    menteeId: oid,
+    mentee: extraSessionAttendee,
+    slotId: str,
+    startAt: date,
+    endAt: date,
+    createdAt: date,
+  },
+  ['eventId', 'mentorId', 'menteeId', 'mentee', 'slotId', 'startAt', 'endAt', 'createdAt'],
+);
+
 export const VALIDATED_COLLECTIONS: Record<string, Schema> = {
   [COLLECTIONS.users]: usersSchema,
   [COLLECTIONS.mentees]: menteesSchema,
   [COLLECTIONS.appointments]: appointmentsSchema,
+  [COLLECTIONS.extraSessions]: extraSessionsSchema,
   [COLLECTIONS.bradescoMentors]: strictObject(
     {
       _id: oid,

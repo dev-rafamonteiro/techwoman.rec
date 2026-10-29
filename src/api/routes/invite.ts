@@ -25,6 +25,7 @@ export function registerInviteRoutes(app: FastifyInstance, ctx: AppContext): voi
         tableId: oid(body.tableId),
         actor: actorForRoute(req, 'mentor'),
         createdByRole: 'mentor',
+        allowLastMinute: true,
         ip: req.ip,
       });
       const resBody = { appointment: toMentorAppointmentView(appointment, mentee, table) };

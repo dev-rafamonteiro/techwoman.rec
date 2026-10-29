@@ -51,6 +51,9 @@ const INDEXES: Record<string, IndexDescription[]> = {
     { key: { status: 1, expiresAt: 1 }, name: 'appt_status_expires' },
     { key: { eventId: 1, menteeId: 1, createdAt: -1 }, name: 'appt_mentee_created' },
   ],
+  [COLLECTIONS.extraSessions]: [
+    { key: { eventId: 1, mentorId: 1, startAt: -1 }, name: 'extra_session_mentor_start' },
+  ],
   [COLLECTIONS.mentees]: [
     { key: { eventId: 1, emailNorm: 1 }, name: 'mentee_event_email', unique: true },
     { key: { tokenHash: 1 }, name: 'mentee_token', unique: true },

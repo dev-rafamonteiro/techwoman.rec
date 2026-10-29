@@ -295,3 +295,24 @@ export interface ShortLinkDoc {
   /** Fim do evento + 7 dias (TTL `short_link_ttl`); E48 também confere. */
   expireAt: Date;
 }
+
+export interface ExtraSessionDoc {
+  _id: ObjectId;
+  eventId: string;
+  mentorId: ObjectId;
+  menteeId: ObjectId;
+  mentee: {
+    name: string;
+    email: string | null;
+    phone: string | null;
+    linkedin: string | null;
+    area: string;
+    preferredPeriod: PreferredPeriod;
+    note: string | null;
+    consent: { version: string; acceptedAt: Date } | null;
+  };
+  slotId: string;
+  startAt: Date;
+  endAt: Date;
+  createdAt: Date;
+}

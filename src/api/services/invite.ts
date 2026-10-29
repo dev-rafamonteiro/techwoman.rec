@@ -25,6 +25,7 @@ export async function createInvite(
     actor: Actor;
     createdByRole: 'mentor' | 'admin' | 'super_admin';
     override?: { ignoreAvailability?: boolean; ignoreLeadTime?: boolean };
+    allowLastMinute?: boolean;
     ip?: string | null;
   },
 ): Promise<{ appointment: AppointmentDoc; mentee: MenteeDoc; table: TableDoc; warnings: InviteWarning[] }> {
@@ -37,13 +38,21 @@ export async function createInvite(
   if (!mentor) throw notFound('Mentora');
   if (!table) throw notFound('Mesa');
   const slot = event.slots.find((s) => s.id === input.slotId) ?? null;
+  const lastMinute = !!input.allowLastMinute && !!slot && slot.startAt.getTime() > now.getTime()
+    && slot.startAt.getTime() - now.getTime() < event.minLeadMinutes * 60_000;
+  const insideExpiryBuffer = !!slot && slot.startAt.getTime() - now.getTime() <= 5 * 60_000;
   const check = checkInvite({
     now,
     slot,
     mentor: { status: mentor.status, availability: mentor.availability },
     table,
     minLeadMinutes: event.minLeadMinutes,
-    ...(input.override ? { override: input.override } : {}),
+    ...((input.override || lastMinute) ? {
+      override: {
+        ...input.override,
+        ...(lastMinute ? { ignoreLeadTime: true } : {}),
+      },
+    } : {}),
   });
   if (!check.ok) throw new AppError('SLOT_UNAVAILABLE', check.message, { details: { reason: check.reason } });
   if (!slot) throw new AppError('SLOT_UNAVAILABLE', 'Horário inexistente.', { details: { reason: 'not_in_event' } });
@@ -69,7 +78,7 @@ export async function createInvite(
     startAt: slot.startAt,
     endAt: slot.endAt,
     status: 'invited',
-    expiresAt: computeExpiry(now, slot.startAt, event.responseWindowMinutes),
+    expiresAt: computeExpiry(now, slot.startAt, event.responseWindowMinutes, lastMinute || insideExpiryBuffer ? 0 : 5),
     createdBy: { userId: new ObjectId(input.actor.userId as string), role: input.createdByRole },
     history: { from: null, to: 'invited', by: { userId: new ObjectId(input.actor.userId as string), role: input.createdByRole }, at: now, reason: null },
     now,

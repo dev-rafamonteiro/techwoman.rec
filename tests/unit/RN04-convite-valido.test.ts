@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkInvite } from "@tw/api/domain";
+import { checkInvite, computeExpiry } from "@tw/api/domain";
 import { S, min } from "./_util.js";
 
 const mentor = { status: "active" as const, availability: ["s01", "s02", "s03"] };
@@ -58,5 +58,10 @@ describe("RN04 convite válido (parte estática)", () => {
     });
     it("sem override, flags ausentes não ignoram nada", () =>
       expect(checkInvite(base({ now: min(S(1).startAt, -2), override: {} })).ok).toBe(false));
+  });
+
+  it("convite de última hora expira no início do horário para permitir a confirmação", () => {
+    const now = min(S(1).startAt, -2);
+    expect(computeExpiry(now, S(1).startAt, 15, 0)).toEqual(S(1).startAt);
   });
 });

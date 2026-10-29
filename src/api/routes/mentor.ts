@@ -118,8 +118,7 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
     if (mentee.status !== 'waiting') throw new AppError('MENTEE_TAKEN', 'Outra mentora acabou de convidar esta participante.');
     const mine = await ctx.c.appointments.find({ eventId: event._id, mentorId: user._id, slotLock: true }).toArray();
     const busy = new Set(mine.map((a) => a.slotId));
-    const lead = event.minLeadMinutes * 60_000;
-    const free = event.slots.filter((s) => user.availability.includes(s.id) && !busy.has(s.id) && s.startAt.getTime() - now.getTime() >= lead);
+    const free = event.slots.filter((s) => user.availability.includes(s.id) && !busy.has(s.id) && s.startAt.getTime() > now.getTime());
     const slots = free.map((s) => ({ ...toSlot(s), preferred: matchesPeriod(mentee.preferredPeriod, s.startAt, event.timezone) && mentee.preferredPeriod !== 'any' }));
     const chosen = (query.slotId ? free.find((s) => s.id === query.slotId) : undefined) ?? free.find((s) => matchesPeriod(mentee.preferredPeriod, s.startAt, event.timezone)) ?? free[0] ?? null;
     let tables: { table: ReturnType<typeof toTableView>; free: boolean }[] = [];

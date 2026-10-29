@@ -5,7 +5,7 @@ Mentoria · {{evento_data}} · {{evento_local}}
 
 Uma mentora quer te mentorar!
 
-Oi, {{nome}}! {{mentora_nome}} ({{mentora_linkedin}}) escolheu sua inscrição e propôs uma conversa de 45 minutos aqui no evento.
+Oi, {{nome}}! {{mentora_nome}} ({{mentora_linkedin}}) escolheu sua inscrição e propôs uma conversa de 45 minutos aqui no evento. Há tolerância de até 5 minutos após o horário marcado para chegada.
 
 MESA: {{mesa}}
 HORÁRIO: {{horario}}

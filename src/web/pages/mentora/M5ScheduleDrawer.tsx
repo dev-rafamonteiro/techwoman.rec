@@ -36,7 +36,7 @@ export interface ScheduleDrawerProps {
 
 /** Mensagem curta por details.reason de SLOT_UNAVAILABLE (RN04). */
 const UNAVAILABLE_TEXT: Record<string, string> = {
-  lead_time: 'Esse horário está muito próximo para enviar o convite.',
+  lead_time: 'Só é possível enviar o convite antes do início da sessão.',
   not_available: 'Você não está disponível nesse horário.',
   not_in_event: 'Esse horário não faz parte do evento.',
   mentor_inactive: 'Sua conta não pode enviar convites agora.',
@@ -45,7 +45,7 @@ const UNAVAILABLE_TEXT: Record<string, string> = {
 
 const defaultSubmit = ({ menteeId, slotId, tableId }: { menteeId: string; slotId: string; tableId: string }) => call(ENDPOINTS.E24, { body: { menteeId, slotId, tableId } });
 
-export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions, onSubmit = defaultSubmit, mentorId, mentorPicker, warnings, onDone, initialSlotId, submitLabel = 'Enviar convite', helpText = 'Ela tem até 15 min para confirmar; se não confirmar, o horário volta a ficar livre.' }: ScheduleDrawerProps) {
+export function M5ScheduleDrawer({ open, onClose, mentee, areaLabel, loadOptions, onSubmit = defaultSubmit, mentorId, mentorPicker, warnings, onDone, initialSlotId, submitLabel = 'Enviar convite', helpText = 'O convite expira no prazo informado à mentorada. Em horários próximos, ela pode confirmar até o início da sessão.' }: ScheduleDrawerProps) {
   const toast = useToast();
   const [opts, setOpts] = useState<E23Response | null>(null);
   const [error, setError] = useState<ApiError | null>(null);

@@ -25,7 +25,7 @@ describe("A7 · menus do WhatsApp", () => {
   it("sem whatsappLists no evento: textos padrão da UI-SPEC", () => {
     const r = base(buildEvent({}, now), "invite");
     expect(r.list!.title).toBe("Oi, Ana!");
-    expect(r.list!.description).toBe("Tatiana Barros quer te mentorar às 10h00, na Mesa 5. Você aceita? Responda até 9h45.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
+    expect(r.list!.description).toBe("Tatiana Barros quer te mentorar às 10h00, na Mesa 5. Você aceita? Responda até 9h45.\nHá tolerância de até 5 minutos após o horário marcado para chegada.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
   });
 
   it("título e texto editados entram; rodapé, botão e opções (rowId) não mudam", () => {
@@ -33,12 +33,28 @@ describe("A7 · menus do WhatsApp", () => {
     const inv = base(ev, "invite").list!;
     expect(inv.title).toBe("Olá Ana");
     // sem {link} no texto, o link vai numa linha nova
-    expect(inv.description).toBe("Tatiana Barros te chama às 10h00.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
+    expect(inv.description).toBe("Tatiana Barros te chama às 10h00.\nHá tolerância de até 5 minutos após o horário marcado para chegada.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
     expect([inv.footer, inv.button]).toEqual(["Se preferir, responda SIM ou NÃO", "Responder"]);
     expect(inv.sections[0]!.rows.map((r) => [r.title, r.rowId])).toEqual([["Aceito", `aceitar:${appt._id}`], ["Não posso", `recusar:${appt._id}`]]);
     const pres = base(ev, "presence").list!;
     expect([pres.title, pres.description]).toEqual(["Bom dia, Ana", "Faltam 30 min. Vem?"]);
     expect(pres.sections[0]!.rows.map((r) => r.rowId)).toEqual([`confirmar:${appt._id}`, `cancelar:${appt._id}`]);
+  });
+
+  it("inclui a tolerância de chegada nas mensagens de confirmação, mesmo com texto de evento personalizado", () => {
+    const event = buildEvent({ templates: { ...buildEvent({}, now).templates, confirmed: 'Sua mentoria começa {horario}.' } }, now);
+    const r = render({
+      item: { type: 'confirmed', payload: {} } as never,
+      event,
+      mentee: { name: 'Ana' } as never,
+      appointment: appt as never,
+      mentor: { name: 'Tatiana Barros' } as never,
+      table: { number: 5, name: null } as never,
+      links: { personal: 'https://techwoman.dev/l/IEO31Kd', calendar: null },
+      baseUrl: 'https://techwoman.dev',
+      now,
+    });
+    expect(r.text).toContain('Há tolerância de até 5 minutos após o horário marcado para chegada.');
   });
 
   it("variável desconhecida ou fora da lista dela é recusada", () => {

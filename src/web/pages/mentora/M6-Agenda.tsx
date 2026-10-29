@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E25Response, type E26Body, type MentorAppointmentView, type MenteeStaffView, type MentorStreamEvent, type Slot } from '@tw/shared';
 import {
-  ApiError, AreaBadge, Button, ConnectionBar, Countdown, EmptyState, ErrorState, Overlay, SkeletonList, StatusBadge, TextArea,
-  call, formatDayShort, formatTime, LinkButton, useEventStream, usePolling, useQuery, useToast,
+  ApiError, AreaBadge, Button, ConnectionBar, Countdown, ErrorState, Overlay, SkeletonList, StatusBadge, TextArea,
+  call, formatDayShort, formatTime, useEventStream, usePolling, useQuery, useToast,
 } from '../../ui';
 import { FALLBACK_AREAS } from '../public/lib/areas';
 import { noShowAllowed, startsSoon } from './lib/format';
 import '../public/public.css';
 import { M5ScheduleDrawer } from './M5ScheduleDrawer';
 import { M6PickMentee } from './M6PickMentee';
+import { M6ExtraSessionDrawer } from './M6ExtraSessionDrawer';
 import './mentora.css';
 import './m4.css';
 import './m6.css';
@@ -26,6 +27,7 @@ export default function M6Agenda() {
   const areaLabel = useCallback((key: string) => areas.find((a) => a.key === key)?.label ?? key, [areas]);
   // grade inteira do dia (E20) para mostrar também os horários fora da disponibilidade
   const grid = useQuery((s) => call(ENDPOINTS.E20, { signal: s }), []);
+  const extraSessions = useQuery((s) => call(ENDPOINTS.E54, { signal: s }), []);
 
   const [data, setData] = useState<E25Response | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
@@ -35,6 +37,7 @@ export default function M6Agenda() {
   // horário livre tocado → lista de participantes → M5 já nesse horário
   const [pickSlot, setPickSlot] = useState<Slot | null>(null);
   const [chosen, setChosen] = useState<MenteeStaffView | null>(null);
+  const [extraSessionOpen, setExtraSessionOpen] = useState(false);
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNowMs(Date.now()), 15000);
@@ -92,8 +95,6 @@ export default function M6Agenda() {
 
   if (error && !data) return <div className="tw-page"><ErrorState error={error} onRetry={() => void load()} /></div>;
   if (!data) return <div className="tw-page"><SkeletonList rows={5} height={100} /></div>;
-  if (data.slots.length === 0) return <div className="tw-page"><EmptyState title="Você ainda não marcou horários" text="Marque sua disponibilidade para aparecer aqui." action={<LinkButton to="/mentora/disponibilidade">Ir para Disponibilidade</LinkButton>} /></div>;
-
   const serverOffset = new Date(data.serverNow).getTime() - Date.now();
   const now = nowMs + serverOffset;
 
@@ -106,7 +107,9 @@ export default function M6Agenda() {
     : data.slots.map((r) => ({ ...r, available: true }));
   const activeCount = data.slots.filter((r) => isActive(r.appointment)).length;
   const freeCount = data.slots.filter((r) => !r.appointment && new Date(r.slot.endAt).getTime() > now).length;
-  const day = formatDayShort(data.slots[0]!.slot.startAt).replace(/^./, (c) => c.toUpperCase());
+  const daySlot = data.slots[0]?.slot ?? (grid.status === 'success' ? grid.data.slots[0]?.slot : undefined);
+  const day = daySlot ? formatDayShort(daySlot.startAt).replace(/^./, (c) => c.toUpperCase()) : 'Hoje';
+  const completedSlots = grid.status === 'success' ? grid.data.slots.map((item) => item.slot) : [];
 
   const tags = (ap: MentorAppointmentView) => (
     <div className="m6-card__tags">
@@ -177,8 +180,18 @@ export default function M6Agenda() {
         <span className="mt-hero__counts" data-testid="m6-counts">
           {activeCount} {activeCount === 1 ? 'mentoria ativa' : 'mentorias ativas'} · {freeCount} {freeCount === 1 ? 'horário livre' : 'horários livres'}
         </span>
+        <Button variant="secondary" onClick={() => setExtraSessionOpen(true)} data-testid="m6-extra-open">+ Registrar sessão extra realizada</Button>
       </header>
       <div className="mt-live"><ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} /></div>
+      <section className="tw-card tw-stack" aria-labelledby="m6-extra-history-title" data-testid="m6-extra-history">
+        <h2 id="m6-extra-history-title">Sessões extras realizadas</h2>
+        {extraSessions.status === 'loading' ? <p role="status">Carregando registros…</p>
+          : extraSessions.status === 'error' ? <ErrorState error={extraSessions.error} onRetry={() => void extraSessions.reload()} />
+            : extraSessions.data.items.length === 0 ? <p>Nenhuma sessão extra registrada.</p>
+              : <ul>{extraSessions.data.items.map((item) => (
+                <li key={item.id}>{formatDayShort(item.startAt)} · {formatTime(item.startAt)}–{formatTime(item.endAt)} · {item.mentee.name}</li>
+              ))}</ul>}
+      </section>
       <ol className="m6-timeline">
         {rows.map((row) => (
           <li key={row.slot.id} className={`m6-row${new Date(row.slot.endAt).getTime() <= now ? ' m6-row--past' : ''}`}
@@ -194,6 +207,8 @@ export default function M6Agenda() {
       <M5ScheduleDrawer open={!!chosen} mentee={chosen} areaLabel={areaLabel} initialSlotId={pickSlot?.id}
         onClose={() => setChosen(null)}
         onDone={(r) => { setChosen(null); if (r === 'sent') setPickSlot(null); void load(); }} />
+      <M6ExtraSessionDrawer open={extraSessionOpen} onClose={() => setExtraSessionOpen(false)} slots={completedSlots}
+        areas={areas} now={now} areaLabel={areaLabel} onDone={() => void extraSessions.reload()} />
 
       <Overlay title="Cancelar mentoria" open={!!cancelFor} onClose={() => setCancelFor(null)}>
         <div className="tw-stack">

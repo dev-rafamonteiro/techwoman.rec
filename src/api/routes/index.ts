@@ -8,6 +8,7 @@ import { registerAuthRoutes } from './auth.js';
 import { registerEmailPreviewRoutes } from './email-preview.js';
 import { registerInviteRoutes } from './invite.js';
 import { registerMentorRoutes } from './mentor.js';
+import { registerMentorExtraSessionRoutes } from './mentor-extra-sessions.js';
 import { registerPublicRoutes } from './public.js';
 import { registerShortLinkRoutes } from './short-links.js';
 import { registerWebhookRoutes } from './webhooks.js';
@@ -18,6 +19,7 @@ export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerBradescoMentorRoutes(app, ctx); // E49–E51
   registerAuthRoutes(app, ctx); // E10–E13
   registerMentorRoutes(app, ctx); // E20–E28 (E24 em invite.ts)
+  registerMentorExtraSessionRoutes(app, ctx); // E52–E54
   registerInviteRoutes(app, ctx); // E24, E39 (POST)
   registerAdminMentorRoutes(app, ctx); // E30–E34
   registerAdminMenteeRoutes(app, ctx); // E35–E38
