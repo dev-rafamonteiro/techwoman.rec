@@ -247,10 +247,10 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier || !api?.expireInvit
     });
 
     it("'Não vou' no WhatsApp (RN18): a participante só recebe o e-mail do slot_released; a mentora, e-mail + WhatsApp", async () => {
-      expect((await b.invite(0, 9, 10, 9)).status).toBe(201);
+      expect((await b.invite(0, 9, 8, 9)).status).toBe(201);
       await act(9, { action: "accept" });
       const appt = await apptOf(9);
-      const start = await startOf(10);
+      const start = await startOf(8);
       // o lembrete de 15 min sai pelo WAHA como List Message e abre o pedido de presença
       await run(min(start, -14));
       expect((await c.presenceChecks.findOne({ _id: appt._id }))!.status).toBe("pending");

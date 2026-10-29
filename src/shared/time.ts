@@ -90,7 +90,7 @@ export interface GridSlot {
 
 /**
  * Grade fixa de horários (decisão do SDD 2): início, +slot, +gap... enquanto o fim da sessão caber em `endTime`.
- * 09:00–18:00, 40 min + 5 min => 12 horários (s01..s12).
+ * 10:00–16:45, 45 min sem intervalo => 9 horários (s01..s09).
  */
 export function generateSlots(cfg: GridConfig): GridSlot[] {
   const start = hhmmToMinutes(cfg.startTime);

@@ -44,7 +44,7 @@ describe.skipIf(!api)("E24 concorrência: 50 mentoras x mesmas 10 participantes 
 
   it("50 mentoras x 10 participantes (500 convites simultâneos): zero duplicidade de participante, mesa ou mentora", async () => {
     const { w, clients } = await setup("conc500", { mentors: 50, mentees: 10 });
-    const sl = (i: number) => w.slotIds[i % 12]!;
+    const sl = (i: number) => w.slotIds[i % 9]!;
     const jobs: Promise<Res>[] = [];
     clients.forEach((c, i) =>
       w.mentees.forEach((m, j) =>
@@ -94,7 +94,7 @@ describe.skipIf(!api)("E24 concorrência: 50 mentoras x mesmas 10 participantes 
 
   it("todas as mentoras na MESMA participante: exatamente 1 vence, 49 recebem MENTEE_TAKEN", async () => {
     const { w, clients } = await setup("samementee", { mentors: 50, mentees: 1 });
-    const res = await Promise.all(clients.map((c, i) => c.post("/api/mentor/appointments", body(w.mentees[0]!.doc._id, w.slotIds[i % 12]!, w.tables[i % 20]!._id))));
+    const res = await Promise.all(clients.map((c, i) => c.post("/api/mentor/appointments", body(w.mentees[0]!.doc._id, w.slotIds[i % 9]!, w.tables[i % 20]!._id))));
     expect(res.filter((r) => r.status === 201 || r.status === 200)).toHaveLength(1);
     const losers = res.filter((r) => r.status === 409);
     expect(losers).toHaveLength(49);

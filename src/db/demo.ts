@@ -58,14 +58,14 @@ const ADMINS = ['Rafaela Coordenação'];
 const MENTORS: [string, string, string[], number[]][] = [
   ['Ana Beatriz Lima', 'Cesar School', ['backend', 'cloud'], [0, 1, 2, 3, 6, 7]],
   ['Juliana Ferraz', 'Porto Digital', ['frontend', 'ux'], [0, 1, 2, 4, 5, 8]],
-  ['Camila Rocha', 'Neurotech', ['dados'], [1, 2, 3, 4, 9, 10]],
-  ['Larissa Monteiro', 'Accenture', ['produto'], [0, 2, 4, 6, 8, 10]],
+  ['Camila Rocha', 'Neurotech', ['dados'], [0, 1, 2, 3, 4]],
+  ['Larissa Monteiro', 'Accenture', ['produto'], [0, 1, 2, 4, 6, 8]],
   ['Patrícia Albuquerque', 'CI&T', ['cloud', 'backend'], [3, 4, 5, 6, 7, 8]],
-  ['Renata Souza', 'Avanade', ['ux', 'produto'], [5, 6, 7, 8, 9, 10, 11]],
-  ['Fernanda Cavalcanti', 'Jusbrasil', ['dados', 'backend'], [0, 1, 6, 7, 10, 11]],
-  ['Mariana Teixeira', 'ThoughtWorks', ['frontend'], [2, 3, 4, 5, 9, 11]],
-  ['Gabriela Nunes', 'Stone', ['backend', 'dados'], [4, 5, 6, 7, 8, 9]],
-  ['Tatiana Barros', 'Zup', ['produto', 'ux'], [0, 1, 2, 9, 10, 11]],
+  ['Renata Souza', 'Avanade', ['ux', 'produto'], [0, 1, 2, 5, 6, 7, 8]],
+  ['Fernanda Cavalcanti', 'Jusbrasil', ['dados', 'backend'], [0, 1, 2, 6, 7]],
+  ['Mariana Teixeira', 'ThoughtWorks', ['frontend'], [0, 2, 3, 4, 5]],
+  ['Gabriela Nunes', 'Stone', ['backend', 'dados'], [0, 4, 5, 6, 7, 8]],
+  ['Tatiana Barros', 'Zup', ['produto', 'ux'], [0, 1, 2]],
 ];
 
 const MENTEE_NAMES = [

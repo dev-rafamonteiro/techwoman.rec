@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildAuditEntry } from "@tw/api/domain";
 
-const grid = { date: "2026-11-14", timezone: "America/Recife", startTime: "09:00", endTime: "18:00", slotMinutes: 40, gapMinutes: 5 };
+const grid = { date: "2026-11-14", timezone: "America/Recife", startTime: "10:00", endTime: "16:45", slotMinutes: 45, gapMinutes: 0 };
 
 describe("RN17 auditoria", () => {
   it("monta registro completo com ator, antes/depois", () => {

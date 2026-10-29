@@ -92,7 +92,7 @@ describe.skipIf(!api)("tempo real: SSE alimentado por Change Streams (E27 mentor
   it("E38 GET /admin/schedule devolve a grade com as mentorias com slotLock", async () => {
     const r = await b.admin.get("/api/admin/schedule");
     expect(r.status).toBe(200);
-    expect(r.body.slots).toHaveLength(12);
+    expect(r.body.slots).toHaveLength(9);
     expect(r.body.tables).toHaveLength(20);
     expect(r.body.appointments.length).toBeGreaterThanOrEqual(3);
   });

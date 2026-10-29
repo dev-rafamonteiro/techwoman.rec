@@ -3,11 +3,10 @@ import { Brand, CalendarIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, Pi
 import './public.css';
 import './p1.css';
 
-function longDate(date: string, startTime: string): string {
+function longDate(date: string): string {
   const d = new Date(`${date}T12:00:00-03:00`);
   const txt = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Recife' }).format(d);
-  const [h, m] = startTime.split(':');
-  return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}, a partir das ${Number(h)}h${m === '00' ? '' : m}`;
+  return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}, das 8h às 18h`;
 }
 
 /** Página oficial do evento (ingresso) e dados fixos do local (UI-SPEC, P1). */
@@ -30,7 +29,7 @@ const TRAILS = [
 /** P1 · Home do evento (E01) */
 export default function P1Home() {
   const ev = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
-  const when = ev.status === 'success' ? longDate(ev.data.date, ev.data.startTime) : 'Sábado, 14 de novembro de 2026, a partir das 9h';
+  const when = ev.status === 'success' ? longDate(ev.data.date) : 'Sábado, 14 de novembro de 2026, das 8h às 18h';
   const where = ev.status === 'success' ? ev.data.location : null;
   const cta = (cls = '') => <LinkButton to="/jornada" size="lg" className={cls} data-testid="p1-cta">Começar minha jornada</LinkButton>;
 
@@ -71,7 +70,7 @@ export default function P1Home() {
           {ev.status === 'error' && <ErrorState error={ev.error} onRetry={ev.reload} />}
           <div className="tw-p1__cards">
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#f26430' }} aria-hidden="true"><CalendarIcon size={20} color="#3D0A45" /></span><h3>Quando</h3><p>{when}</p></div>
-            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>{where ? `${where} · ` : ''}Recife</p></div>
+            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>Recife Expo Center</p></div>
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true"><PeopleIcon size={20} color="#3D0A45" /></span><h3>Para quem</h3><p>Mulheres que querem entrar ou crescer na área de tecnologia</p></div>
           </div>
           <h3 className="tw-p1__trailstitle">Cinco trilhas de conhecimento</h3>
@@ -96,9 +95,9 @@ export default function P1Home() {
           ))}
           <div className="tw-p1__invite" aria-label="Exemplo de convite">
             <span className="tw-p1__eyebrow">Convite recebido</span>
-            <h3 style={{ margin: 0 }}>Mesa 7 · 14h15</h3>
-            <p style={{ margin: 0 }}>Ana quer te mentorar em Backend. Sessão de 40 minutos, aqui no evento.</p>
-            <div className="tw-row"><span className="tw-badge tw-badge--invited">Horário proposto</span><span className="tw-badge tw-badge--priority">Responda até 14h05</span></div>
+            <h3 style={{ margin: 0 }}>Mesa 7 · 14h30</h3>
+            <p style={{ margin: 0 }}>Ana quer te mentorar em Backend. Sessão de 45 minutos, aqui no evento.</p>
+            <div className="tw-row"><span className="tw-badge tw-badge--invited">Horário proposto</span><span className="tw-badge tw-badge--priority">Responda até 14h20</span></div>
             <div className="tw-btnrow" aria-hidden="true"><span className="tw-btn tw-btn--primary">Aceitar</span><span className="tw-btn tw-btn--secondary">Recusar</span></div>
           </div>
         </div>
@@ -110,7 +109,7 @@ export default function P1Home() {
           <h2>Mulheres que já trilharam o caminho, prontas para te ajudar.</h2>
           <p>Depois da jornada, inscreva-se na área que mais combina com você. Uma mentora da área é atribuída a você, propõe um horário e uma mesa, e você confirma pelo celular.</p>
           <div className="tw-p1__cards">
-            <div className="tw-card tw-p1__stat"><strong>40 min</strong><b>Por sessão</b><p>Uma conversa individual, em horários fixos ao longo do dia.</p></div>
+            <div className="tw-card tw-p1__stat"><strong>45 min</strong><b>Por sessão</b><p>Uma conversa individual, em horários fixos ao longo do dia.</p></div>
             <div className="tw-card tw-p1__stat"><strong>Mesas</strong><b>No local do evento</b><p>Você recebe o número da mesa junto com o horário.</p></div>
             <div className="tw-card tw-p1__stat"><strong>Celular</strong><b>Você confirma por lá</b><p>Avisamos por e-mail e WhatsApp quando chegar o convite.</p></div>
           </div>

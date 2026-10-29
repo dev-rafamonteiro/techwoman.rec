@@ -12,10 +12,12 @@ describe("RN14 período preferido (horário de Recife)", () => {
   ] as const)("%s -> %s", (hhmm, expected) => expect(periodOfStart(recife(hhmm), TZ)).toBe(expected));
 
   it("slots da grade padrão caem nos períodos esperados", () => {
-    const periods = Array.from({ length: 12 }, (_, i) => periodOfStart(S(i + 1).startAt, TZ));
-    for (const k of ["morning", "early_afternoon", "late_afternoon"]) expect(periods.filter((p) => p === k)).toHaveLength(4);
+    const periods = Array.from({ length: 9 }, (_, i) => periodOfStart(S(i + 1).startAt, TZ));
+    expect(periods.filter((p) => p === "morning")).toHaveLength(3);
+    expect(periods.filter((p) => p === "early_afternoon")).toHaveLength(4);
+    expect(periods.filter((p) => p === "late_afternoon")).toHaveLength(2);
     expect(periods[0]).toBe("morning");
-    expect(periods[11]).toBe("late_afternoon");
+    expect(periods[8]).toBe("late_afternoon");
   });
   it("any casa com qualquer horário; específico só com o seu", () => {
     expect(matchesPeriod("any", recife("16:00"), TZ)).toBe(true);

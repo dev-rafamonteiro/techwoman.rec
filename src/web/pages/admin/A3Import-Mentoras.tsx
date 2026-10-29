@@ -9,7 +9,7 @@ type ImportRow = E33Response['rows'][number];
 type OnExisting = 'update' | 'skip';
 
 const STEPS = ['Baixar modelo', 'Enviar arquivo', 'Conferir prévia', 'Confirmar'];
-const TEMPLATE_ROW = ['Maria Silva', 'maria@exemplo.com', 'linkedin.com/in/maria', 'Empresa X', 'backend|dados', '09:00|09:45', '(81) 99999-1234'];
+const TEMPLATE_ROW = ['Maria Silva', 'maria@exemplo.com', 'linkedin.com/in/maria', 'Empresa X', 'backend|dados', '10:00|10:45', '(81) 99999-1234'];
 const csvEsc = (v: string) => `"${v.replace(/"/g, '""')}"`;
 const csvBlob = (lines: string[][]) => new Blob(['﻿' + lines.map((l) => l.map(csvEsc).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
 

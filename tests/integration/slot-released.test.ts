@@ -138,17 +138,17 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("slot_released · h
     const appt4 = await apptOf(4);
     expect((await b.mentor[0]!.patch(`/api/mentor/appointments/${appt4._id}`, { action: "cancel" })).status).toBe(200);
     expect(await c.outbox.countDocuments({ type: "cancelled", appointmentId: appt4._id })).toBeGreaterThan(0);
-    expect((await b.invite(0, 5, 9, 0)).status).toBe(201);
+    expect((await b.invite(0, 5, 8, 0)).status).toBe(201);
     await accept(5);
     expect((await b.admin.patch(`/api/admin/mentees/${mentee(5).doc._id}`, { action: "cancel" })).status).toBe(200);
     for (const i of [4, 5]) expect(await items(i), mentee(i).doc.name).toHaveLength(0);
   });
 
   it("'Não poderei ir' no WhatsApp (RN18): slot_released só por e-mail; no WhatsApp, só o presence_cancelled", async () => {
-    expect((await b.invite(0, 2, 10, 2)).status).toBe(201);
+    expect((await b.invite(0, 2, 8, 2)).status).toBe(201);
     await accept(2);
     const appt = await apptOf(2);
-    const start = await startOf(10);
+    const start = await startOf(8);
     // o lembrete de 15 min sai pelo WAHA como List Message e abre o pedido de presença
     await run(min(start, -14));
     expect((await c.presenceChecks.findOne({ _id: appt._id }))!.status).toBe("pending");

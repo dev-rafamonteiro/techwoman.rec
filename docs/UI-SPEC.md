@@ -4,7 +4,7 @@ Oct 23, 2026 · @Felipe
 
 ## Contexto e escopo
 
-Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sábado 14/11/2026, a partir das 9h): inscrição da participante, painel da mentora e painel de super admin. Ele vai para o Claude Design gerar as telas; o comportamento por trás de cada botão está no SDD 2 (Funcional e Backend), referenciado aqui pelos códigos de endpoint **E-xx**.
+Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sábado 14/11/2026, das 8h às 18h): inscrição da participante, painel da mentora e painel de super admin. Ele vai para o Claude Design gerar as telas; o comportamento por trás de cada botão está no SDD 2 (Funcional e Backend), referenciado aqui pelos códigos de endpoint **E-xx**.
 
 **O que já existe e fica:** página inicial do evento e a jornada de gamificação que indica a área de afinidade da participante. Essas telas recebem só ajustes pontuais (CTA para a mentoria).
 
@@ -21,7 +21,7 @@ Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sába
 | --- | --- |
 | Quem escolhe a mentorada | A mentora escolhe, na lista de aguardando. Não há round robin. |
 | Login de mentora | Só para as \~50 mentoras da lista oficial, cadastradas pelo admin. Sem autocadastro. |
-| Duração da sessão | 40 minutos, em grade fixa de horários. |
+| Duração da sessão | 45 minutos, em grade fixa de horários entre 10h e 16h45, sem intervalo entre as sessões. |
 | Mesas | 20 mesas, 2 cadeiras cada, quantidade configurável. |
 | Horário da participante | Ela informa só uma preferência; o horário real vem da mentora e precisa da confirmação dela. |
 | Recusa por horário | A participante volta para a fila marcada como prioridade. |
@@ -88,7 +88,7 @@ A jornada é QR Code → gamificação → resultado → inscrição → link pe
 
 ### P1 · Home do evento (ajuste)
 
-- Incluir o bloco "Mentoria": como funciona em 3 passos (descubra sua área, inscreva-se, aguarde o convite de uma mentora), sessões de 40 min, mesas no local.
+- Incluir o bloco "Mentoria": como funciona em 3 passos (descubra sua área, inscreva-se, aguarde o convite de uma mentora), sessões de 45 min, mesas no local.
 - CTA principal "Começar minha jornada" leva a P2. Texto de apoio: "A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras."
 - Dados de data, local e horário vêm de **E01**.
 - Conteúdo do evento, tirado da página oficial (Jalan, `https://app.jalanlive.com/techwoman26/home`):
@@ -141,7 +141,7 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | Status | O que mostra | Ações |
 | --- | --- | --- |
 | Aguardando mentora | Área, período preferido, posição neutra ("Sua inscrição está ativa") | Editar período preferido; Cancelar inscrição (**E04**) |
-| Horário proposto | Card com mentora (nome, foto opcional, LinkedIn), mesa, horário, duração 40 min e contador "Responda até 14h05" | Aceitar; Recusar com motivo: Horário não serve / Não tenho mais interesse (**E04**) |
+| Horário proposto | Card com mentora (nome, foto opcional, LinkedIn), mesa, horário, duração 45 min e contador "Responda até 14h05" | Aceitar; Recusar com motivo: Horário não serve / Não tenho mais interesse (**E04**) |
 | Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**): abre a escolha "Trocar de horário" (`reschedule`, RN19: cancela esta mentoria, volta à fila com prioridade e mostra os horários livres) ou "Não tenho mais interesse" (`cancel`, encerra a inscrição) |
 | Recusada por horário (inclui quem trocou de horário ou disse "Não poderei ir" no WhatsApp) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
 | Proposta expirada | "O prazo para responder terminou e o horário foi liberado. Você continua na fila." | — |
@@ -167,7 +167,7 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 
 ### M3 · Minha disponibilidade
 
-- Grade vertical com todos os horários do dia (ex.: 9h00, 9h45, 10h30… definidos em A7). Cada horário é um botão liga/desliga "Disponível".
+- Grade vertical com todos os horários do dia (ex.: 8h00, 8h45, 9h30… definidos em A7). Cada horário é um botão liga/desliga "Disponível".
 - Atalhos: "Manhã inteira", "Tarde inteira", "Limpar".
 - Horário com mentoria já marcada aparece travado, com o nome da participante; não pode ser desligado sem antes cancelar a mentoria em M6.
 - Salvar envia para **E21** (carga inicial via **E20**). Aviso se a mentora tentar entrar em M4 sem nenhum horário disponível.
@@ -258,7 +258,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A7 · Configurações do evento (super admin)
 
-- Nome, data, local, fuso (America/Recife), hora de início e de fim, duração da sessão (40 min), intervalo entre sessões (5 min). Prévia ao vivo da grade de horários gerada.
+- Nome, data, local, fuso (America/Recife), grade de mentoria das 10h às 16h45, duração da sessão (45 min), intervalo entre sessões (0 min). O evento ocorre das 8h às 18h. Prévia ao vivo da grade de horários gerada.
 - Prazo para a participante responder ao convite (15 min) e antecedência mínima para convite (10 min antes do horário).
 - Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min por e-mail e WhatsApp. Sem WhatsApp disponível, vai só por e-mail.
 - Menus do WhatsApp (List Message), dois blocos: "Convite (menu do WhatsApp)" e "Confirmação de presença (menu do WhatsApp)". Cada um tem dois campos editáveis, Título e Texto (`events.whatsappLists`), e ao lado uma prévia ao vivo no estilo do WhatsApp com o rodapé "Se preferir, responda SIM ou NÃO", o botão "Responder" e as duas opções, fixos e não editáveis (convite: "Aceito" / "Não posso"; presença: "Sim, confirmo" / "Não poderei ir"), com a nota "As opções e o rodapé são fixos: as respostas da participante dependem deles." Variáveis do convite: {nome} {mentora} {horario} {mesa} {prazo} {link}; da presença: {nome} {mentora} {horario} {mesa} {minutos} {link}. Na prévia, as variáveis aparecem com dados de exemplo.
@@ -356,4 +356,3 @@ Na página `/privacidade`, em um cartão próprio (o restante do aviso continua 
 - [ ] Haverá avaliação pós-mentoria? Se sim, link na tela de status Concluída (P6).
 - [ ] Texto do aviso de privacidade (LGPD) e quem é a controladora dos dados, sem citar o Bradesco.
 - [ ] Fase 2, se der tempo: tela de configuração das perguntas e pesos da gamificação no admin (hoje ficam fixas no código).
-

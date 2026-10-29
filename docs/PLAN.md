@@ -23,7 +23,7 @@ O sistema é uma API Node.js com MongoDB Atlas, em containers Docker atrás do C
 | Infra | Docker Compose em VM própria, exposta só via Cloudflare Tunnel | Nenhuma porta pública aberta |
 | Domínio | techwoman.dev | Sem domínio ou marca Bradesco |
 
-**Números de referência para dimensionamento:** cerca de 2.500 mulheres no evento; 45 a 50 mentoras; 20 mesas; grade padrão 9h00–18h00 com sessões de 40 min e 5 min de intervalo, ou seja, 12 horários e no máximo 240 mentorias no dia. A capacidade é bem menor que o público, por isso as telas avisam que a inscrição não garante vaga.
+**Números de referência para dimensionamento:** cerca de 2.500 mulheres no evento; 45 a 50 mentoras; 20 mesas; evento das 8h00 às 18h00, com grade de mentoria das 10h00 às 16h45: 9 sessões de 45 min, sem intervalo, e até 180 mentorias em 20 mesas. A capacidade é bem menor que o público, por isso as telas avisam que a inscrição não garante vaga.
 
 **Portabilidade:** há discussão interna sobre internalizar o site depois. Tudo fica em containers, configurável por variáveis de ambiente e sem dependência do Cloudflare no código (Turnstile e Tunnel são plugáveis).
 
@@ -162,7 +162,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 {
   "_id": "techwoman-2026",
   "name": "Tech Woman", "date": "2026-11-14", "timezone": "America/Recife",
-  "startTime": "09:00", "endTime": "18:00", "slotMinutes": 40, "gapMinutes": 5,
+  "startTime": "10:00", "endTime": "16:45", "slotMinutes": 45, "gapMinutes": 0,
   "slots": [ { "id": "s01", "startAt": "2026-11-14T12:00:00Z", "endAt": "2026-11-14T12:40:00Z" } ],
   "responseWindowMinutes": 15, "minLeadMinutes": 10,
   "registrationOpen": true,
@@ -555,7 +555,7 @@ Layout 3 (confirmação, mudança e lembrete): além do texto do design, um segu
 - **Placeholders:** `{{variavel}}`, sempre com escape de HTML. Todo dado de exemplo fixo no layout (nome, horário, mesa) vira placeholder. Variável faltando é erro de renderização: o item vai para `failed` e nunca sai com `{{...}}` cru.
 - **Compatibilidade com clientes de e-mail:** CSS embutido nos elementos no build (juice), layout em tabela com largura máxima de 600 px, imagens com URL absoluta em `https://techwoman.dev/email/` e texto `alt`, sem JavaScript, com texto de pré-visualização (preheader).
 - **Links nunca executam ação:** botões levam a P6 pelo link curto (`/l/<código>`, que E48 redireciona para `/mentoria/minha?t=<token>`; o redirect só lê), onde a participante aceita ou recusa. Filtros antispam abrem links automaticamente, então um link que aceita o convite por GET aceitaria sozinho.
-- **Adicionar à agenda (layout 3):** o botão aponta para E06 pelo link curto de `kind = calendar`; E06 devolve `text/calendar` da mentoria confirmada: título, mesa, horário em America/Recife, 40 min, local do evento. O mesmo `.ics` vai anexado (`METHOD:PUBLISH`, `UID` = id da mentoria raiz da cadeia `movedFromId`, que não muda quando a mentoria é movida, e `SEQUENCE` = número de moves, para a agenda atualizar o evento em vez de duplicar).
+- **Adicionar à agenda (layout 3):** o botão aponta para E06 pelo link curto de `kind = calendar`; E06 devolve `text/calendar` da mentoria confirmada: título, mesa, horário em America/Recife, 45 min, local do evento. O mesmo `.ics` vai anexado (`METHOD:PUBLISH`, `UID` = id da mentoria raiz da cadeia `movedFromId`, que não muda quando a mentoria é movida, e `SEQUENCE` = número de moves, para a agenda atualizar o evento em vez de duplicar).
 - **Senha provisória (layout 6):** nunca fica em texto puro no banco. Na `outbox`, a senha vai cifrada (AES-256-GCM, chave no Docker secret `outbox_key`); o worker decifra só no envio e remove o campo (`$unset`) ao marcar `sent` ou `failed`. Logs e A9 mostram "senha oculta". A senha provisória vale 72 h (`users.tempPasswordExpiresAt`); depois disso o login orienta a pedir nova senha ao admin.
 - **Remetente:** `Tech Woman <mentoria@techwoman.dev>`, com Reply-To configurável. Nenhuma menção ao Bradesco.
 - **Prévia:** E46 renderiza qualquer layout com dados de exemplo; A7 usa isso no botão "Prévia dos e-mails". O HTML é fixo no código; em A7 só se editam os assuntos (`events.emailSubjects`, por id de layout, validados contra as variáveis do layout em E41) e os textos do WhatsApp.
@@ -779,11 +779,10 @@ Admin e inscrição vêm antes do painel da mentora porque a importação da lis
 
 - [ ] Rafaela: lista oficial das \~50 mentoras (nome, e-mail, LinkedIn, organização, horários) no modelo CSV de A3.
 - [ ] Rafaela: confirmar campos da inscrição (data de nascimento entra?) e a lista final de áreas da gamificação.
-- [ ] Confirmar horário de término do evento (assumido 18h00; o site do evento diz "das 9h em diante").
+- [x] Horário do evento: das 8h às 18h.
 - [ ] Definir provedor de e-mail e abrir a conta WhatsApp Business com os modelos de mensagem.
 - [ ] Texto do aviso de privacidade e quem é a controladora dos dados (sem citar o Bradesco).
 - [ ] Confirmar a stack do front atual hospedado no Cloudflare para decidir se as telas novas entram no mesmo projeto.
 - [ ] Quem opera o painel admin no dia (contas de admin a criar em A8).
 
 **Assumido neste SDD (mudar aqui se a decisão for outra):** grade fixa 40 + 5 min; prazo de 15 min para aceitar convite; uma mentoria por participante; perguntas da gamificação fixas no código (configuração pelo admin fica para a fase 2).
-

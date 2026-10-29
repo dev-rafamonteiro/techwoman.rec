@@ -5,8 +5,8 @@ import { buildEvent } from "../../src/db/event.js";
 import { render } from "../../src/api/worker/render.js";
 
 /** PLAN, events.whatsappLists: título e texto editáveis em A7; rodapé, botão e opções fixos (RN18, RN20). */
-const now = new Date("2026-11-14T11:30:00Z");
-const appt = { _id: new ObjectId(), startAt: new Date("2026-11-14T12:00:00Z"), expiresAt: new Date("2026-11-14T11:45:00Z") };
+const now = new Date("2026-11-14T12:30:00Z");
+const appt = { _id: new ObjectId(), startAt: new Date("2026-11-14T13:00:00Z"), expiresAt: new Date("2026-11-14T12:45:00Z") };
 const base = (event: ReturnType<typeof buildEvent>, list: "invite" | "presence") =>
   render({
     item: { type: list === "invite" ? "invite" : "reminder", payload: {} } as never,
@@ -25,7 +25,7 @@ describe("A7 · menus do WhatsApp", () => {
   it("sem whatsappLists no evento: textos padrão da UI-SPEC", () => {
     const r = base(buildEvent({}, now), "invite");
     expect(r.list!.title).toBe("Oi, Ana!");
-    expect(r.list!.description).toBe("Tatiana Barros quer te mentorar às 9h00, na Mesa 5. Você aceita? Responda até 8h45.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
+    expect(r.list!.description).toBe("Tatiana Barros quer te mentorar às 10h00, na Mesa 5. Você aceita? Responda até 9h45.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
   });
 
   it("título e texto editados entram; rodapé, botão e opções (rowId) não mudam", () => {
@@ -33,7 +33,7 @@ describe("A7 · menus do WhatsApp", () => {
     const inv = base(ev, "invite").list!;
     expect(inv.title).toBe("Olá Ana");
     // sem {link} no texto, o link vai numa linha nova
-    expect(inv.description).toBe("Tatiana Barros te chama às 9h00.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
+    expect(inv.description).toBe("Tatiana Barros te chama às 10h00.\nDetalhes: https://techwoman.dev/l/IEO31Kd");
     expect([inv.footer, inv.button]).toEqual(["Se preferir, responda SIM ou NÃO", "Responder"]);
     expect(inv.sections[0]!.rows.map((r) => [r.title, r.rowId])).toEqual([["Aceito", `aceitar:${appt._id}`], ["Não posso", `recusar:${appt._id}`]]);
     const pres = base(ev, "presence").list!;

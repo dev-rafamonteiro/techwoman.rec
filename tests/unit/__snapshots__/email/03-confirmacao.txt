@@ -16,7 +16,7 @@ MENTORA: Ana
 Adicionar à agenda: https://techwoman.dev/public/calendar.ics?t=8f3k2q
 Ver minha mentoria: https://techwoman.dev/mentoria/minha?t=8f3k2q
 
-Sábado, 14 de novembro de 2026 · sessão de 40 minutos · horário de Recife.
+Sábado, 14 de novembro de 2026 · sessão de 45 minutos · horário de Recife.
 
 Se o botão não funcionar, copie e cole este link no navegador:
 https://techwoman.dev/mentoria/minha?t=8f3k2q

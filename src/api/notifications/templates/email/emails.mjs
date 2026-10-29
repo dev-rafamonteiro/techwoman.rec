@@ -33,7 +33,7 @@ export const EMAILS = [
     preheader: 'Confirme até {{prazo}} para garantir seu horário.',
     selo: ['HORÁRIO PROPOSTO', ...SELO.laranja],
     titulo: 'Uma mentora quer te mentorar!',
-    paragrafos: ['Oi, {{nome}}! [{{mentora_nome}}]({{mentora_linkedin}}) escolheu sua inscrição e propôs uma conversa de 40 minutos aqui no evento.'],
+    paragrafos: ['Oi, {{nome}}! [{{mentora_nome}}]({{mentora_linkedin}}) escolheu sua inscrição e propôs uma conversa de 45 minutos aqui no evento.'],
     card: [['MESA', '{{mesa}}'], ['HORÁRIO', '{{horario}}'], ['MENTORA', '{{mentora_nome}}']],
     destaque: 'Confirme até {{prazo}} (horário de Recife). Depois disso, o horário é liberado.',
     botao: ['Ver convite e confirmar', 'link_minha_mentoria'],
@@ -50,7 +50,7 @@ export const EMAILS = [
     card: [['MESA', '{{mesa}}'], ['HORÁRIO', '{{horario}}'], ['MENTORA', '{{mentora_nome}}']],
     botao: ['Adicionar à agenda', 'link_agenda'],
     sec: ['Ver minha mentoria', 'link_minha_mentoria'],
-    nota: '{{evento_data}} · sessão de 40 minutos · horário de Recife.',
+    nota: '{{evento_data}} · sessão de 45 minutos · horário de Recife.',
     linkFallback: 'link_minha_mentoria',
   },
   {

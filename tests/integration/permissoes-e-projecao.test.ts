@@ -120,7 +120,7 @@ describe.skipIf(!api)("permissões, escopo por dono e projeção sem contato (ma
   });
 
   it("RN04: antecedência mínima -> SLOT_UNAVAILABLE lead_time", async () => {
-    b.clock.now = new Date(b.w.mentors.length ? "2026-11-14T12:55:00Z" : "2026-11-14T12:55:00Z"); // 09:55 Recife; slot s02 começa 09:45
+    b.clock.now = new Date("2026-11-14T13:40:00Z"); // 10:40 Recife; slot s02 começa 10:45
     const r = await b.invite(0, 2, 1, 4);
     expect([r.status, r.body.details?.reason]).toEqual([409, "lead_time"]);
   });
