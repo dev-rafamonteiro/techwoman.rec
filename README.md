@@ -16,8 +16,13 @@ cp .env.example .env        # preencha localmente; nunca commite
 npm install
 npm run db:indexes -- --wait # índices, validadores e Atlas Search no banco do MONGODB_URI (Atlas)
 npm run db:seed             # evento, mesas e super admin (se SUPER_ADMIN_EMAIL definido)
+npm run db:seed:bradesco-mentors # importa os 23 perfis iniciais da planilha, sem sobrescrever cadastros existentes
 npm run dev                 # api + web com reload
 ```
+
+As novas mentoras Bradesco, temas comerciais, domínios e horários podem ser mantidos em
+`/admin/mentoras-bradesco` por admins e super admins. Cada reserva é persistida por mentora e horário; horários
+ocupados deixam de aparecer na jornada e no diretório público.
 
 O banco da aplicação é sempre o Atlas: `MONGODB_URI` no `.env` aponta para o cluster (banco `techwoman`), tanto no
 host quanto nos containers (`env_file`); o compose não cria banco local para api e worker. O usuário do banco só tem

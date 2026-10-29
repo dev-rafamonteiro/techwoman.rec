@@ -78,6 +78,7 @@ export const ADMIN_ITEMS: readonly AdminItem[] = [
   { to: '/admin/participantes', label: 'Participantes' },
   { to: '/admin/mapa', label: 'Mapa de mesas' },
   { to: '/admin/mentoras', label: 'Mentoras' },
+  { to: '/admin/mentoras-bradesco', label: 'Mentoras Bradesco' },
   { to: '/admin/mesas', label: 'Mesas', roles: ['super_admin'] },
   { to: '/admin/evento', label: 'Evento', roles: ['super_admin'] },
   { to: '/admin/usuarios', label: 'Administradores', roles: ['super_admin'] },
@@ -109,7 +110,7 @@ function AdminSideFoot() {
 }
 
 const ADMIN_TITLES: [string, string][] = [
-  ['/admin/participantes', 'Participantes'], ['/admin/mapa', 'Mapa de mesas'], ['/admin/mentoras', 'Mentoras'], ['/admin/mesas', 'Mesas'],
+  ['/admin/participantes', 'Participantes'], ['/admin/mapa', 'Mapa de mesas'], ['/admin/mentoras', 'Mentoras'], ['/admin/mentoras-bradesco', 'Mentoras Bradesco'], ['/admin/mesas', 'Mesas'],
   ['/admin/evento', 'Configurações do evento'], ['/admin/usuarios', 'Administradores'], ['/admin/logs', 'Notificações e auditoria'],
 ];
 

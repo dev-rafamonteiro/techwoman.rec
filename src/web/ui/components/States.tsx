@@ -30,10 +30,10 @@ export function EmptyState({ title, text, action }: { title: string; text?: stri
 }
 
 /** Erro: mensagem + tentar de novo. Se for sem rede ou 5xx usa texto padrão. */
-export function ErrorState({ error, onRetry, title = 'Não foi possível carregar' }: { error?: unknown; onRetry?: () => void; title?: string }) {
+export function ErrorState({ error, onRetry, title = 'Não foi possível carregar', description }: { error?: unknown; onRetry?: () => void; title?: string; description?: string }) {
   // 403 vira o estado obrigatório "sem permissão"; 401 já é tratado globalmente (volta para M1 com a rota de retorno).
   if (error instanceof ApiError && (error.code === 'FORBIDDEN' || (error.status === 403 && error.code !== 'PASSWORD_CHANGE_REQUIRED'))) return <NoPermission />;
-  const msg = error instanceof ApiError ? error.message : 'Algo deu errado. Tente de novo.';
+  const msg = description ?? (error instanceof ApiError ? error.message : 'Algo deu errado. Tente de novo.');
   return (
     <div className="tw-state" role="alert">
       <span className="tw-state__icon" aria-hidden="true">!</span>

@@ -24,7 +24,7 @@ const PLAN_CODES = [
   "E10", "E11", "E12", "E13",
   "E20", "E21", "E22", "E23", "E24", "E25", "E26", "E27", "E28",
   "E30", "E31", "E32", "E33", "E34", "E35", "E36", "E37", "E38", "E39",
-  "E40", "E41", "E42", "E43", "E44", "E45", "E47", "E48",
+  "E40", "E41", "E42", "E43", "E44", "E45", "E47", "E48", "E49", "E50", "E51",
 ];
 
 /** Todo objeto Zod do corpo precisa ser .strict() (PLAN: segurança, "Zod com strict() em todo corpo"). */
@@ -47,7 +47,7 @@ function nonStrictObjects(schema: z.ZodType, path = "$"): string[] {
   return bad;
 }
 
-describe("contratos: catálogo E01–E48", () => {
+describe("contratos: catálogo E01–E51", () => {
   it("todo código do PLAN aparece em ENDPOINTS", () => {
     const codes = new Set(ENDPOINT_LIST.map((e) => e.code));
     for (const c of PLAN_CODES) expect(codes.has(c), `falta ${c}`).toBe(true);
@@ -78,6 +78,15 @@ describe("contratos: catálogo E01–E48", () => {
     const p = ENDPOINTS.E48.params as z.ZodType;
     expect(p.parse({ code: "IEO31Kd" })).toEqual({ code: "IEO31Kd" });
     expect(p.parse({ code: "x".repeat(65) })).toEqual({ code: "" });
+  });
+
+  it("E49–E51: catálogo Bradesco público, reserva com Turnstile e manutenção restrita a admin", () => {
+    expect(ENDPOINTS.E49Public.auth).toBe("public");
+    expect(ENDPOINTS.E50.turnstile).toBe(true);
+    expect(ENDPOINTS.E50.method).toBe("POST");
+    expect(ENDPOINTS.E49AdminCreate.roles).toEqual(["admin", "super_admin"]);
+    expect(ENDPOINTS.E49AdminList.roles).toEqual(["admin", "super_admin"]);
+    expect(ENDPOINTS.E51.roles).toEqual(["admin", "super_admin"]);
   });
 
   it("buildPath/fullPath", () => {

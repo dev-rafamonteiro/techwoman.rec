@@ -1,5 +1,7 @@
 import { ENDPOINTS } from '@tw/shared';
+import { Link } from 'react-router-dom';
 import { Brand, CalendarIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, PinFilledIcon, PinIcon, SkeletonList, call, useQuery } from '../../ui';
+import { TRAILS } from './lib/journeyData';
 import './public.css';
 import './p1.css';
 
@@ -18,14 +20,6 @@ const SOCIAL = [
   ['LinkedIn', 'https://www.linkedin.com/company/techwoman'],
   ['YouTube', 'https://www.youtube.com/@techwomanrec'],
 ] as const;
-const TRAILS = [
-  ['Carreiras', 'Para quem deseja ingressar no mercado de tecnologia, fazer uma transição profissional ou descobrir novas possibilidades de atuação.', '#f26430'],
-  ['Técnica', 'Para profissionais que já atuam no setor e buscam aprofundar conhecimentos e acompanhar as transformações tecnológicas.', '#8a1f96'],
-  ['Soft Skills', 'Comunicação, inteligência emocional e liderança, fundamentais para o desenvolvimento pessoal e profissional.', '#d98ce6'],
-  ['Empreendedorismo', 'Para mulheres que empreendem ou desejam transformar ideias em negócios, com inovação e conexões.', '#f4af3e'],
-  ['Tecnologia para quem não é da tecnologia', 'Inteligência artificial, inovação, comportamento e segurança digital: a transformação digital faz parte de todas as áreas.', '#c9f4ee'],
-] as const;
-
 /** P1 · Home do evento (E01) */
 export default function P1Home() {
   const ev = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
@@ -38,7 +32,7 @@ export default function P1Home() {
       <header className="tw-pub__head">
         <Brand height={44} />
         <nav className="tw-pub__nav" aria-label="Seções">
-          <a href="#evento">O evento</a><a href="#como-funciona">Como funciona</a><a href="#mentoria">Mentoria</a><a href="#local">Local</a>
+          <a href="#evento">O evento</a><a href="#como-funciona">Como funciona</a><a href="#mentoria">Mentoria</a><Link to="/mentoras-bradesco">Mentoras Bradesco</Link><a href="#local">Local</a>
         </nav>
         <LinkButton to="/jornada" size="sm">Começar minha jornada</LinkButton>
       </header>
@@ -73,10 +67,10 @@ export default function P1Home() {
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>Recife Expo Center</p></div>
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true"><PeopleIcon size={20} color="#3D0A45" /></span><h3>Para quem</h3><p>Mulheres que querem entrar ou crescer na área de tecnologia</p></div>
           </div>
-          <h3 className="tw-p1__trailstitle">Cinco trilhas de conhecimento</h3>
+          <h3 className="tw-p1__trailstitle">Três trilhas macro com as mentoras</h3>
           <div className="tw-p1__trails" data-testid="p1-trails">
-            {TRAILS.map(([t, d, c]) => (
-              <div key={t} className="tw-card tw-p1__trail" style={{ borderTopColor: c }}><h4>{t}</h4><p>{d}</p></div>
+            {TRAILS.map((trail) => (
+              <div key={trail.key} className="tw-card tw-p1__trail" style={{ borderTopColor: trail.color }}><h4>{trail.title}</h4><p>{trail.description}</p></div>
             ))}
           </div>
         </div>
@@ -85,20 +79,18 @@ export default function P1Home() {
       <section className="tw-p1__dark" id="como-funciona">
         <div className="tw-pub__wrap">
           <span className="tw-pub__eyebrow">Como funciona</span>
-          <h2>Descubra sua área e ganhe uma mentoria no evento.</h2>
+          <h2>Descubra sua afinidade e encontre uma mentora.</h2>
           {[
-            ['Descubra sua área', 'Perguntas e desafios rápidos revelam sua aptidão, seu nível e seu perfil.', '#f26430'],
-            ['Inscreva-se na mentoria', 'Um formulário curto, com a sua área já preenchida e o período que você prefere.', '#d98ce6'],
-            ['Aguarde o convite de uma mentora', 'Ela propõe um horário e uma mesa; você confirma pelo celular.', '#c9f4ee'],
+            ['Descubra suas afinidades', 'Perguntas rápidas identificam suas áreas de afinidade e seu momento profissional.', '#f26430'],
+            ['Veja seu match', 'Compare até três recomendações e explore as outras mentoras disponíveis.', '#d98ce6'],
+            ['Reserve seu horário', 'Escolha um horário livre e confirme a reserva na própria página.', '#c9f4ee'],
           ].map(([t, d, c], i) => (
             <div key={t} className="tw-p1__step"><b style={{ background: c }}>{i + 1}</b><div><strong>{t}</strong><p style={{ margin: '2px 0 0' }}>{d}</p></div></div>
           ))}
           <div className="tw-p1__invite" aria-label="Exemplo de convite">
-            <span className="tw-p1__eyebrow">Convite recebido</span>
-            <h3 style={{ margin: 0 }}>Mesa 7 · 14h30</h3>
-            <p style={{ margin: 0 }}>Ana quer te mentorar em Backend. Sessão de 45 minutos, aqui no evento.</p>
-            <div className="tw-row"><span className="tw-badge tw-badge--invited">Horário proposto</span><span className="tw-badge tw-badge--priority">Responda até 14h20</span></div>
-            <div className="tw-btnrow" aria-hidden="true"><span className="tw-btn tw-btn--primary">Aceitar</span><span className="tw-btn tw-btn--secondary">Recusar</span></div>
+            <span className="tw-pub__eyebrow">Reserva direta</span>
+            <h3 style={{ margin: 0 }}>Sua mentora, seu horário</h3>
+            <p style={{ margin: 0 }}>Veja as recomendações, escolha uma mentora e reserve um dos horários livres. A vaga confirmada deixa de aparecer para outras pessoas.</p>
           </div>
         </div>
       </section>
@@ -107,13 +99,14 @@ export default function P1Home() {
         <div className="tw-pub__wrap tw-stack">
           <span className="tw-p1__eyebrow">Mentoria</span>
           <h2>Mulheres que já trilharam o caminho, prontas para te ajudar.</h2>
-          <p>Depois da jornada, inscreva-se na área que mais combina com você. Uma mentora da área é atribuída a você, propõe um horário e uma mesa, e você confirma pelo celular.</p>
+          <p>Depois da jornada, veja até três mentoras alinhadas ao seu momento e explore as outras opções. Escolha um horário disponível e confirme sua reserva na própria página.</p>
           <div className="tw-p1__cards">
-            <div className="tw-card tw-p1__stat"><strong>45 min</strong><b>Por sessão</b><p>Uma conversa individual, em horários fixos ao longo do dia.</p></div>
-            <div className="tw-card tw-p1__stat"><strong>Mesas</strong><b>No local do evento</b><p>Você recebe o número da mesa junto com o horário.</p></div>
-            <div className="tw-card tw-p1__stat"><strong>Celular</strong><b>Você confirma por lá</b><p>Avisamos por e-mail e WhatsApp quando chegar o convite.</p></div>
+            <div className="tw-card tw-p1__stat"><strong>45 min</strong><b>Por conversa</b><p>Uma conversa individual com a mentora escolhida.</p></div>
+            <div className="tw-card tw-p1__stat"><strong>Você escolhe</strong><b>Mentora e horário</b><p>As recomendações mostram os horários ainda livres.</p></div>
+            <div className="tw-card tw-p1__stat"><strong>Confirmação</strong><b>Na própria página</b><p>A reserva é confirmada após o preenchimento dos seus dados.</p></div>
           </div>
           <div className="tw-row">{cta('tw-btn--dark')}<span className="tw-pub__muted" style={{ maxWidth: 420 }}>A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</span></div>
+          <Link className="tw-btn tw-btn--dark tw-btn--lg" to="/mentoras-bradesco">Conheça as mentoras do Bradesco</Link>
         </div>
       </section>
 
@@ -130,7 +123,7 @@ export default function P1Home() {
       <section>
         <div className="tw-pub__wrap">
           <div className="tw-p1__band">
-            <div><p className="tw-p1__quote">Você não precisa trabalhar com tecnologia para fazer parte dessa transformação.</p><h2>Pronta para descobrir sua área?</h2><p style={{ margin: 0 }}>A jornada leva poucos minutos e termina com a sua inscrição na mentoria.</p></div>
+            <div><p className="tw-p1__quote">Você não precisa trabalhar com tecnologia para fazer parte dessa transformação.</p><h2>Pronta para descobrir suas afinidades?</h2><p style={{ margin: 0 }}>A jornada leva poucos minutos e termina com recomendações de mentoras para você escolher.</p></div>
             {cta('tw-btn--dark')}
           </div>
         </div>
@@ -158,7 +151,7 @@ export default function P1Home() {
         <div className="tw-pub__wrap tw-row" style={{ justifyContent: 'space-between' }}>
           <span>© 2026 Tech Woman · <a href="mailto:contato@techwoman.rec.br">contato@techwoman.rec.br</a></span>
           <span className="tw-row">{SOCIAL.map(([n, u]) => <a key={n} href={u} target="_blank" rel="noopener noreferrer">{n}</a>)}</span>
-          <span className="tw-row"><a href="#evento">O evento</a><a href="#mentoria">Mentoria</a><a href="/jornada">Jornada</a><a href="/privacidade">Aviso de privacidade</a></span>
+          <span className="tw-row"><a href="#evento">O evento</a><a href="#mentoria">Mentoria</a><Link to="/mentoras-bradesco">Mentoras Bradesco</Link><a href="/jornada">Jornada</a><a href="/privacidade">Aviso de privacidade</a></span>
         </div>
       </footer>
     </div>

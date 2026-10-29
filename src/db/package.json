@@ -19,7 +19,8 @@
     "seed": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/seed.js",
     "seed:super-admin": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/seed-super-admin.js",
     "seed:demo": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/seed-demo.js",
-    "import:mentoras": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/import-mentoras.js"
+    "import:mentoras": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/import-mentoras.js",
+    "seed:bradesco-mentors": "tsc -p tsconfig.json && node --env-file-if-exists=../../.env dist/cli/seed-bradesco-mentors.js"
   },
   "dependencies": {
     "@tw/shared": "*",

@@ -1,4 +1,5 @@
 export * from './time.js';
+export * from './bradesco-mentor-seed.js';
 export * from './contracts/common.js';
 export * from './contracts/entities.js';
 export * from './contracts/sse.js';
@@ -42,6 +43,9 @@ export * from './contracts/E45-admin-audit.js';
 export * from './contracts/E46-admin-email-preview.js';
 export * from './contracts/E47-webhook-waha.js';
 export * from './contracts/E48-short-link.js';
+export * from './contracts/E49-bradesco-mentors.js';
+export * from './contracts/E50-bradesco-reservation.js';
+export * from './contracts/E51-bradesco-mentor-patch.js';
 
 import type { EndpointDef } from './contracts/common.js';
 import { E01 } from './contracts/E01-public-event.js';
@@ -84,6 +88,9 @@ import { E45 } from './contracts/E45-admin-audit.js';
 import { E46 } from './contracts/E46-admin-email-preview.js';
 import { E47 } from './contracts/E47-webhook-waha.js';
 import { E48 } from './contracts/E48-short-link.js';
+import { E49AdminCreate, E49AdminList, E49Public } from './contracts/E49-bradesco-mentors.js';
+import { E50 } from './contracts/E50-bradesco-reservation.js';
+import { E51 } from './contracts/E51-bradesco-mentor-patch.js';
 
 /** Todos os endpoints, por nome. Usado pelo cliente HTTP tipado e pelo registro de rotas da API. */
 export const ENDPOINTS = {
@@ -93,7 +100,7 @@ export const ENDPOINTS = {
   E30, E31List, E31Create, E32, E33, E34, E35, E35Detail, E36, E37, E38, E38Stream,
   E39Create, E39Patch, E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg,
   E43List, E43Create, E43Patch, E44List, E44Retry, E45, E46,
-  E47, E48,
+  E47, E48, E49Public, E49AdminList, E49AdminCreate, E50, E51,
 } as const;
 
 export type EndpointName = keyof typeof ENDPOINTS;

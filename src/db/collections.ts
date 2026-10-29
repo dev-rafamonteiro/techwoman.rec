@@ -1,6 +1,8 @@
 import type { Collection, Db } from 'mongodb';
 import type {
   AppointmentDoc,
+  BradescoMentorDoc,
+  BradescoReservationDoc,
   AuditLogDoc,
   EventDoc,
   IdempotencyDoc,
@@ -21,6 +23,8 @@ export const COLLECTIONS = {
   tables: 'tables',
   mentees: 'mentees',
   appointments: 'appointments',
+  bradescoMentors: 'bradesco_mentors',
+  bradescoReservations: 'bradesco_reservations',
   outbox: 'outbox',
   auditLogs: 'audit_logs',
   idempotencyKeys: 'idempotency_keys',
@@ -36,6 +40,8 @@ export interface Collections {
   tables: Collection<TableDoc>;
   mentees: Collection<MenteeDoc>;
   appointments: Collection<AppointmentDoc>;
+  bradescoMentors: Collection<BradescoMentorDoc>;
+  bradescoReservations: Collection<BradescoReservationDoc>;
   outbox: Collection<OutboxDoc>;
   auditLogs: Collection<AuditLogDoc>;
   idempotencyKeys: Collection<IdempotencyDoc>;
@@ -52,6 +58,8 @@ export function getCollections(db: Db): Collections {
     tables: db.collection<TableDoc>(COLLECTIONS.tables),
     mentees: db.collection<MenteeDoc>(COLLECTIONS.mentees),
     appointments: db.collection<AppointmentDoc>(COLLECTIONS.appointments),
+    bradescoMentors: db.collection<BradescoMentorDoc>(COLLECTIONS.bradescoMentors),
+    bradescoReservations: db.collection<BradescoReservationDoc>(COLLECTIONS.bradescoReservations),
     outbox: db.collection<OutboxDoc>(COLLECTIONS.outbox),
     auditLogs: db.collection<AuditLogDoc>(COLLECTIONS.auditLogs),
     idempotencyKeys: db.collection<IdempotencyDoc>(COLLECTIONS.idempotencyKeys),

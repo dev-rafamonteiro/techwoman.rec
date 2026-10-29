@@ -140,6 +140,39 @@ export const VALIDATED_COLLECTIONS: Record<string, Schema> = {
   [COLLECTIONS.users]: usersSchema,
   [COLLECTIONS.mentees]: menteesSchema,
   [COLLECTIONS.appointments]: appointmentsSchema,
+  [COLLECTIONS.bradescoMentors]: strictObject(
+    {
+      _id: oid,
+      name: str,
+      expertise: str,
+      city: str,
+      linkedin: strN,
+      bio: str,
+      photoUrl: strN,
+      themes: arrOf(strictObject({ name: str, domains: arrOf(str) }, ['name', 'domains'])),
+      slots: arrOf(strictObject({ id: str, time: str, topic: str }, ['id', 'time', 'topic'])),
+      active: bool,
+      scheduleVersion: int,
+      createdAt: date,
+      updatedAt: date,
+    },
+    ['name', 'expertise', 'city', 'linkedin', 'bio', 'photoUrl', 'themes', 'slots', 'active', 'scheduleVersion', 'createdAt', 'updatedAt'],
+  ),
+  [COLLECTIONS.bradescoReservations]: strictObject(
+    {
+      _id: oid,
+      eventId: str,
+      mentorId: oid,
+      slotId: str,
+      name: str,
+      email: str,
+      phone: str,
+      consentVersion: str,
+      consentAt: date,
+      createdAt: date,
+    },
+    ['eventId', 'mentorId', 'slotId', 'name', 'email', 'phone', 'consentVersion', 'consentAt', 'createdAt'],
+  ),
 };
 
 /** Cria/atualiza o validador `$jsonSchema` (strict, error) das coleções. Idempotente. */

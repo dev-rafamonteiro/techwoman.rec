@@ -58,6 +58,11 @@ const INDEXES: Record<string, IndexDescription[]> = {
     { key: { eventId: 1, area: 1, status: 1 }, name: 'mentee_area_status' },
   ],
   [COLLECTIONS.users]: [{ key: { email: 1 }, name: 'user_email', unique: true }],
+  [COLLECTIONS.bradescoMentors]: [{ key: { name: 1 }, name: 'bradesco_mentor_name', unique: true }],
+  [COLLECTIONS.bradescoReservations]: [
+    { key: { eventId: 1, mentorId: 1, slotId: 1 }, name: 'bradesco_mentor_slot', unique: true },
+    { key: { eventId: 1, createdAt: -1 }, name: 'bradesco_reservation_created' },
+  ],
   [COLLECTIONS.tables]: [{ key: { eventId: 1, number: 1 }, name: 'table_event_number', unique: true }],
   [COLLECTIONS.sessions]: [
     { key: { expiresAt: 1 }, name: 'session_ttl', expireAfterSeconds: 0 },

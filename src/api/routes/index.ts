@@ -11,9 +11,11 @@ import { registerMentorRoutes } from './mentor.js';
 import { registerPublicRoutes } from './public.js';
 import { registerShortLinkRoutes } from './short-links.js';
 import { registerWebhookRoutes } from './webhooks.js';
+import { registerBradescoMentorRoutes } from './bradesco-mentors.js';
 
 export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerPublicRoutes(app, ctx); // E01–E08
+  registerBradescoMentorRoutes(app, ctx); // E49–E51
   registerAuthRoutes(app, ctx); // E10–E13
   registerMentorRoutes(app, ctx); // E20–E28 (E24 em invite.ts)
   registerInviteRoutes(app, ctx); // E24, E39 (POST)

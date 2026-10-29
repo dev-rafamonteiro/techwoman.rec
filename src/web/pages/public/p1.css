@@ -9,6 +9,7 @@
 .tw-p1 .tw-pub__nav a { font-size: 15px; font-weight: 600; padding: 10px 0; }
 .tw-p1 .tw-pub__head .tw-btn { font-size: 15px; font-weight: 700; min-height: 44px; padding: 0 20px; }
 @media (min-width: 768px) { .tw-p1 .tw-pub__head { flex-wrap: nowrap; gap: 24px; } }
+@media (min-width: 768px) and (max-width: 1023px) { .tw-p1 .tw-pub__nav { display: none; } }
 
 /* Botões da página: 700 17px (o kit usa 800) */
 .tw-p1 .tw-btn { font-weight: 700; }

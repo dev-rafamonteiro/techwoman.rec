@@ -25,13 +25,13 @@ Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sába
 | Mesas | 20 mesas, 2 cadeiras cada, quantidade configurável. |
 | Horário da participante | Ela informa só uma preferência; o horário real vem da mentora e precisa da confirmação dela. |
 | Recusa por horário | A participante volta para a fila marcada como prioridade. |
-| Marca | Nenhuma referência ao Bradesco em nenhuma tela, exceto o logo de patrocínio no bloco "Quem faz o Tech Woman" da P1. |
+| Marca | A jornada geral mantém a marca Tech Woman; as páginas específicas do catálogo e da reserva identificam a iniciativa Bradesco. |
 
 **Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M6, A1–A9; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
 
 ## Diretrizes visuais e de experiência
 
-As telas novas seguem a identidade visual da arte do Tech Woman já aplicada no site (roxo, laranja e menta) e não podem conter nome, logo, cor institucional ou domínio do Bradesco, exceto o logo de patrocínio no bloco "Quem faz o Tech Woman" da P1.
+As telas gerais seguem a identidade visual Tech Woman (roxo, laranja e menta). P7, A10 e o fluxo específico de recomendação e reserva identificam as mentoras Bradesco, sem alterar a identidade visual das demais páginas.
 
 - **Mobile first para participante e mentora.** A participante chega pelo QR Code no celular; a mentora opera da mesa, provavelmente pelo celular. Largura de referência 375 px; nada pode exigir rolagem horizontal.
 - **Desktop first para o super admin**, mas utilizável em tablet no dia do evento (balcão de apoio).
@@ -62,6 +62,7 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 | P4 | Inscrição na mentoria | `/mentoria/inscricao` | Público | Nova |
 | P5 | Inscrição recebida | `/mentoria/inscricao/ok` | Público | Nova |
 | P6 | Minha mentoria | `/mentoria/minha?t=<token>` (as mensagens e P5 levam para cá pelo link curto `/l/<código>`, E48) | Participante (link pessoal) | Nova |
+| P7 | Mentoras Bradesco | `/mentoras-bradesco` | Público | Catálogo e horários disponíveis |
 | M1 | Login | `/entrar` | Mentora, admin | Nova |
 | M2 | Primeiro acesso / troca de senha | `/entrar/nova-senha` | Mentora, admin | Nova |
 | M3 | Minha disponibilidade | `/mentora/disponibilidade` | Mentora | Nova |
@@ -77,10 +78,11 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 | A7 | Configurações do evento | `/admin/evento` | Super admin | Nova |
 | A8 | Administradores | `/admin/usuarios` | Super admin | Nova |
 | A9 | Notificações e auditoria | `/admin/logs` | Admin, super admin | Nova |
+| A10 | Mentoras Bradesco | `/admin/mentoras-bradesco` | Admin, super admin | Cadastro de temas, domínios e horários |
 
 **Menu da mentora (barra inferior no celular):** Aguardando · Minha agenda · Disponibilidade · Sair.
 
-**Menu do admin (lateral):** Dashboard · Participantes · Mapa de mesas · Mentoras · Mesas · Evento · Administradores · Logs. Itens sem permissão não aparecem.
+**Menu do admin (lateral):** Dashboard · Participantes · Mapa de mesas · Mentoras · Mentoras Bradesco · Mesas · Evento · Administradores · Logs. Itens sem permissão não aparecem.
 
 ## Telas da participante (P1–P6)
 
@@ -93,20 +95,44 @@ A jornada é QR Code → gamificação → resultado → inscrição → link pe
 - Dados de data, local e horário vêm de **E01**.
 - Conteúdo do evento, tirado da página oficial (Jalan, `https://app.jalanlive.com/techwoman26/home`):
   - Hero: título "Conectar mulheres, tecnologia e futuros possíveis" e o resumo "O Tech Woman é um movimento que nasceu para ampliar a presença feminina no universo da tecnologia e da inovação, fortalecendo a representatividade, o desenvolvimento profissional e as conexões entre mulheres." Link secundário "Garanta seu ingresso" para a página oficial (o ingresso do evento é vendido lá; a inscrição na mentoria é separada e gratuita).
-  - Bloco "O evento": cartões Quando, Onde e Para quem, seguidos das cinco trilhas de conhecimento, cada uma com nome e uma frase: Carreiras, Técnica, Soft Skills, Empreendedorismo, Tecnologia para quem não é da tecnologia.
+  - Bloco "O evento": cartões Quando, Onde e Para quem, seguidos das três trilhas macro com as mentoras: Transição de Carreira (posicionamento, currículo, networking e próximos passos); Crescimento e Especialização Técnica (dados, IA, desenvolvimento, produtos digitais, plataformas, infraestrutura e operações); Liderança e Gestão (liderança técnica e de pessoas, comunicação, influência e metodologias ágeis).
   - Faixa final: frase "Você não precisa trabalhar com tecnologia para fazer parte dessa transformação." acima do CTA.
   - Bloco "Local": nome do local (E01 `location`), endereço "Cais Santa Rita, 156 - São José, Recife - PE" e botão "Ver no mapa" (Google Maps, nova aba). Endereço e link são constantes da página, não vêm da API.
   - Rodapé: Instagram, LinkedIn, YouTube e o e-mail contato@techwoman.rec.br, além dos links atuais.
 - Bloco "Quem faz o Tech Woman" (`id="quem-faz"`), logo acima do rodapé, fundo roxo escuro #3D0A45: título laranja, sobretítulo "Realização" com o logo da Combogó Eventos sozinho e centralizado, divisor fino e sobretítulo "Patrocínio" com Instituto Claro, Bradesco e MongoDB numa linha centralizada que quebra no celular (espaço de 56 px; 32 px abaixo de 600 px). Arquivos oficiais em off-white em `/brand/patrocinadores/` (sem link, sem recolorir). Alturas desktop / celular: Combogó 72/56, Instituto Claro 64/48, Bradesco 52/40, MongoDB 48/36 px.
 
-### P2 · Gamificação (existente)
+### P2 · Gamificação
 
-Sem mudança de layout. Ao terminar, guarda o resultado (área principal e pontuação por área) para enviar na inscrição.
+Começa com uma pergunta para identificar início/transição, aprofundamento técnico ou liderança. Quem está começando
+permanece elegível para todas as mentoras; as escolhas seguintes refinam a busca. Quem escolhe especialização técnica
+ou liderança tem o ranking restrito às mentoras com perfis daquela trilha. As duas perguntas seguintes aprofundam
+essa escolha e refinam os perfis pelo assunto selecionado; em seguida, sete perguntas de afinidade/interesses
+contribuem para a pontuação. Não há respostas certas ou erradas. Cada resposta soma 10 XP.
 
-### P3 · Resultado (ajuste)
+### P3 · Resultado e reserva de mentoria
 
-- Mantém o resultado atual e acrescenta o CTA "Quero uma mentoria nessa área" para P4, com a área já preenchida.
+- Exibe o resultado de afinidade e até três mentoras elegíveis com maior compatibilidade, percentual de match e os
+  temas cadastrados por elas. A elegibilidade segue o momento escolhido e os temas selecionados; a pontuação compara
+  as respostas com temas, domínios, especialidades e tópicos do perfil. Empates são distribuídos deterministicamente
+  por jornada, sem favorecer a ordem do cadastro.
+- A participante pode escolher uma mentora e um horário disponível, informar nome, e-mail e WhatsApp, aceitar o
+  aviso de privacidade e confirmar a reserva.
+- Reservas concorrentes do mesmo horário/mentora são serializadas no servidor; a vaga confirmada desaparece do
+  resultado e do diretório P7. "Ver outras mentoras" mostra as demais opções disponíveis.
+- Se a API estiver indisponível, P3 ainda recomenda mentoras pelo catálogo inicial, informa que a disponibilidade
+  não pôde ser confirmada e desativa reservas até o serviço voltar.
 - Link secundário "Refazer a jornada".
+
+### P7 · Catálogo de mentoras Bradesco
+
+Lista perfis, expertise, temas e domínios da planilha e somente horários ainda disponíveis. A data vem de E01.
+O catálogo inicial é carregado por `npm run db:seed:bradesco-mentors`; alterações futuras são feitas em A10.
+
+### A10 · Mentoras Bradesco
+
+Admins e super admins cadastram/alteram perfil, até dois temas comerciais e seus domínios, e horários no formato
+`HH:mm|horário exibido|tema`. Horários já reservados não podem ser removidos e mentoras com reservas não podem ser
+desativadas.
 
 ### P4 · Inscrição na mentoria (nova)
 

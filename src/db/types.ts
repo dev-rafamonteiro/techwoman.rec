@@ -104,6 +104,35 @@ export interface TableDoc {
   active: boolean;
 }
 
+export interface BradescoMentorDoc {
+  _id: ObjectId;
+  name: string;
+  expertise: string;
+  city: string;
+  linkedin: string | null;
+  bio: string;
+  photoUrl: string | null;
+  themes: { name: string; domains: string[] }[];
+  slots: { id: string; time: string; topic: string }[];
+  active: boolean;
+  scheduleVersion: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface BradescoReservationDoc {
+  _id: ObjectId;
+  eventId: string;
+  mentorId: ObjectId;
+  slotId: string;
+  name: string;
+  email: string;
+  phone: string;
+  consentVersion: string;
+  consentAt: Date;
+  createdAt: Date;
+}
+
 export interface MenteeDoc {
   _id: ObjectId;
   eventId: string;

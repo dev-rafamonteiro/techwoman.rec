@@ -298,6 +298,10 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E08 | `POST /public/me/book` | P6 | RN19; `{ slotId }` com `Idempotency-Key`; o sistema escolhe mentora e mesa e cria a mentoria já `confirmed`; 409 `SLOT_UNAVAILABLE` se o horário acabou de ser ocupado |
 | E06 | `GET /public/calendar.ics?t=<token>` | P6, e-mail 3 | Só para mentoria confirmada; `text/calendar`; `UID` = id da mentoria raiz da cadeia de moves (estável); 404 em qualquer outro status |
 | E48 | `GET /l/:code` (rota da API `/api/l/:code`; link público `<PUBLIC_BASE_URL>/l/<código>`) | E-mails, WhatsApp, P5 | Público, sem login e sem CSRF; não executa ação. Sempre 302 sem corpo, com `Location` relativo: `kind = personal` → `/mentoria/minha?t=<token>`, `kind = calendar` → `/api/public/calendar.ics?t=<token>`, com o token derivado na hora do `tokenVersion` atual. Código inexistente, formato inválido (o parâmetro aceita qualquer texto de até 64 caracteres, sem 422), revogado (`tokenVersion` do link ≠ atual), vencido (`expireAt` já passou) ou de participante que não existe mais → 302 para `/mentoria/minha` (P6 mostra "Link inválido"), resposta idêntica nos cinco casos. Cabeçalhos `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Rate limit próprio por IP: 600 por minuto. Código E48 escolhido depois de E47 (E09 segue livre). Regras em Notificações > Links curtos |
+| E49 | `GET /public/bradesco-mentors` | P3, P7 | Catálogo público e horários livres; omite horários passados e reservados |
+| E50 | `POST /public/bradesco-reservations` | P3 | Turnstile + consentimento; grava a reserva por mentora/horário, com índice único e rate limit; `SLOT_UNAVAILABLE` (409) em disputa |
+| E49 | `GET/POST /admin/bradesco-mentors` | A10 | Lista e cadastra mentoras Bradesco; admin/super admin |
+| E51 | `PATCH /admin/bradesco-mentors/:id` | A10 | Atualiza catálogo; impede remover horário reservado ou desativar mentora com reservas |
 
 ### Autenticação
 

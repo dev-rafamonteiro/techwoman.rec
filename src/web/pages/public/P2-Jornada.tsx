@@ -1,55 +1,73 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Brand, Button } from '../../ui';
-import { QUESTIONS, calcXp, saveAnswers, type Answers } from './lib/journeyData';
+import { getMentorQuestions, MENTOR_QUESTION_COUNT, QUESTIONS, STAGE_QUESTION, calcXp, saveAnswers, saveMentorJourney, type Answers, type MentorAnswers } from './lib/journeyData';
 import './public.css';
 
-/** P2 · Gamificação: intro, 7 etapas de perguntas e desafios com XP. Resultado em P3. */
+/** P2 · Questionário de afinidade e momento profissional; recomendações em P3. */
 export default function P2Jornada() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'intro' | 'quiz'>('intro');
+  const [step, setStep] = useState<'intro' | 'moment' | 'affinity'>('intro');
   const [i, setI] = useState(0);
+  const [mentorI, setMentorI] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
-  const total = QUESTIONS.length;
-  const q = QUESTIONS[i]!;
-  const sel = answers[i];
+  const [mentorAnswers, setMentorAnswers] = useState<MentorAnswers>({});
+  const total = QUESTIONS.length + MENTOR_QUESTION_COUNT;
+  const stage = STAGE_QUESTION.opcoes[mentorAnswers[0] ?? -1]?.stage ?? null;
+  const q = step === 'moment' ? getMentorQuestions(stage, mentorAnswers[1])[mentorI] ?? STAGE_QUESTION : QUESTIONS[i]!;
+  const sel = step === 'moment' ? mentorAnswers[mentorI] : answers[i];
   const hasSel = sel != null;
-  const progress = Math.round(((i + (hasSel ? 1 : 0)) / total) * 100);
-  const right = q.correta != null && sel === q.correta;
-
+  const completed = step === 'moment' ? mentorI + (hasSel ? 1 : 0) : MENTOR_QUESTION_COUNT + i + (hasSel ? 1 : 0);
+  const progress = Math.round((completed / total) * 100);
   const next = () => {
     if (!hasSel) return;
-    if (i >= total - 1) {
+    if (step === 'moment' && mentorI >= MENTOR_QUESTION_COUNT - 1) {
+      setStep('affinity');
+      setI(0);
+    } else if (step === 'affinity' && i >= QUESTIONS.length - 1) {
       saveAnswers(answers);
+      saveMentorJourney(mentorAnswers);
       navigate('/jornada/resultado');
-    } else setI(i + 1);
+    } else if (step === 'moment') setMentorI(mentorI + 1);
+    else if (step === 'affinity') setI(i + 1);
+  };
+
+  const back = () => {
+    if (step === 'affinity' && i === 0) {
+      setStep('moment');
+      setMentorI(MENTOR_QUESTION_COUNT - 1);
+    } else if (step === 'affinity') setI(i - 1);
+    else if (step === 'moment' && mentorI === 0) setStep('intro');
+    else if (step === 'moment') setMentorI(mentorI - 1);
   };
 
   return (
     <div className="tw-pub tw-p3" data-testid="p2" style={{ minHeight: '100vh' }}>
       <header className="tw-pub__head">
         <Brand height={44} />
-        <span className="tw-p3__xp" aria-live="polite" data-testid="p2-xp">{calcXp(answers)} XP</span>
+        <span className="tw-p3__xp" aria-live="polite" data-testid="p2-xp">{calcXp(answers, mentorAnswers)} XP</span>
         <Link className="tw-pub__back" to="/">Voltar ao início</Link>
       </header>
 
       {step === 'intro' ? (
         <main className="tw-p3__body tw-p3__intro" style={{ gap: 20, paddingTop: 48 }}>
           <span className="tw-pub__eyebrow">Gamificação</span>
-          <h1>Descubra sua aptidão na tecnologia.</h1>
-          <p style={{ margin: 0, maxWidth: 560 }}>Responda algumas perguntas e encare desafios rápidos. No final, você recebe um resumo da sua aptidão e pode se inscrever na mentoria da sua área.</p>
+          <h1>Descubra suas afinidades na tecnologia.</h1>
+          <p style={{ margin: 0, maxWidth: 560 }}>Comece contando em que momento profissional você está. Se está começando, todas as mentoras podem ser consideradas; se busca especialização técnica ou liderança, a jornada prioriza mentoras dessa trilha e aprofunda os temas escolhidos. Cada resposta soma XP e ajuda a encontrar as mentoras mais alinhadas a você.</p>
           <div className="tw-p2i">
-            <div className="tw-p2i__a"><strong>{total} etapas</strong><span>Perguntas e desafios</span></div>
-            <div className="tw-p2i__b"><strong>Aptidão</strong><span>Área, nível e perfil</span></div>
-            <div className="tw-p2i__c"><strong>Mentoria</strong><span>Inscreva-se na sua área</span></div>
+            <div className="tw-p2i__a"><strong>{total} perguntas</strong><span>Interesses e momento profissional</span></div>
+            <div className="tw-p2i__b"><strong>Match</strong><span>3 mentoras recomendadas</span></div>
+            <div className="tw-p2i__c"><strong>Reserva</strong><span>Escolha mentora e horário</span></div>
           </div>
-          <div><Button size="lg" onClick={() => setStep('quiz')} data-testid="p2-start">Começar jornada</Button></div>
+          <div><Button size="lg" onClick={() => setStep('moment')} data-testid="p2-start">Começar jornada</Button></div>
         </main>
       ) : (
         <main className="tw-p3__body">
           <div className="tw-row" style={{ justifyContent: 'space-between' }}>
-            <strong>Etapa {i + 1} de {total}</strong>
-            <span className="tw-pub__tag" data-testid="p2-kind">{q.tipo === 'desafio' ? 'Desafio' : 'Pergunta'}</span>
+            <strong>Etapa {completed - (hasSel ? 1 : 0) + 1} de {total}</strong>
+            <span className="tw-pub__tag" data-testid="p2-kind">
+              {step === 'moment' ? 'Momento profissional' : 'Afinidade e interesses'}
+            </span>
           </div>
           <div className="tw-pub__progress" role="progressbar" aria-label="Progresso" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><div style={{ width: `${progress}%` }} /></div>
           <section className="tw-p3__white">
@@ -57,20 +75,26 @@ export default function P2Jornada() {
             <div className="tw-p2__opts" role="group" aria-label="Alternativas">
               {q.opcoes.map((o, k) => (
                 <button key={k} type="button" className="tw-opt" aria-pressed={sel === k} data-testid={`p2-opt-${k}`}
-                  onClick={() => setAnswers((p) => ({ ...p, [i]: k }))}>
-                  <span className="tw-opt__letter" aria-hidden="true">{'ABCD'.charAt(k)}</span><span>{o.label}</span>
+                  onClick={() => {
+                    if (step === 'moment') {
+                      setMentorAnswers((previous) => {
+                        if (mentorI === 0) return { 0: k };
+                        const nextAnswers = { ...previous };
+                        if (mentorI === 1) delete nextAnswers[2];
+                        nextAnswers[mentorI] = k;
+                        return nextAnswers;
+                      });
+                    } else {
+                      setAnswers((previous) => ({ ...previous, [i]: k }));
+                    }
+                  }}>
+                  <span className="tw-opt__letter" aria-hidden="true">{String.fromCharCode(65 + k)}</span><span>{o.label}</span>
                 </button>
               ))}
             </div>
-            {hasSel && q.correta != null && (
-              <div className="tw-card" role="status" data-testid="p2-feedback">
-                <strong>{right ? 'Mandou bem! +20 XP de bônus' : `Quase! A resposta certa é ${q.opcoes[q.correta]!.label}.`}</strong>
-                <p>{q.explica}</p>
-              </div>
-            )}
             <div className="tw-row" style={{ justifyContent: 'space-between' }}>
-              <Button variant="secondary" onClick={() => (i === 0 ? setStep('intro') : setI(i - 1))} data-testid="p2-back">Voltar</Button>
-              <Button disabled={!hasSel} onClick={next} data-testid="p2-next">{i === total - 1 ? 'Ver meu resultado' : 'Próxima'}</Button>
+              <Button variant="secondary" onClick={back} data-testid="p2-back">Voltar</Button>
+              <Button disabled={!hasSel} onClick={next} data-testid="p2-next">{step === 'affinity' && i === QUESTIONS.length - 1 ? 'Ver meu resultado' : 'Próxima'}</Button>
             </div>
           </section>
         </main>

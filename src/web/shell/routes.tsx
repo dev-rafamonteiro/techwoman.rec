@@ -9,7 +9,7 @@ import { AdminLayout, BareLayout, MentorLayout, ParticipantLayout } from './layo
 /**
  * Páginas: src/web/pages/<area>/<codigo>*.tsx com `export default` do componente.
  * Convenção de nome (o roteador procura por prefixo): public/P1*.tsx, public/P2*.tsx, public/P3*.tsx, public/P4*.tsx, public/P5*.tsx,
- * public/P6*.tsx, mentora/M1*.tsx … mentora/M4*.tsx, mentora/M6*.tsx, admin/A1*.tsx … admin/A9*.tsx.
+ * public/P6*.tsx, public/P7*.tsx, mentora/M1*.tsx … mentora/M4*.tsx, mentora/M6*.tsx, admin/A1*.tsx … admin/A9*.tsx.
  * A3 tem 3 rotas: A3Form*.tsx (nova e :id) e A3Import*.tsx (importar). M5 é gaveta de M4 (componente, não rota).
  * Tela ainda sem arquivo mostra um aviso "em construção" (não quebra o build).
  */
@@ -52,6 +52,7 @@ export const routes: RouteObject[] = [
     { path: '/', element: el('public', 'P1') },
     { path: '/jornada', element: el('public', 'P2') },
     { path: '/jornada/resultado', element: el('public', 'P3') },
+    { path: '/mentoras-bradesco', element: el('public', 'P7') },
     // QR Code do cartaz aponta para techwoman.dev/cadastro: leva à jornada (QR → gamificação → resultado → inscrição).
     { path: '/cadastro', element: <Navigate to="/jornada" replace /> },
   ] },
@@ -84,6 +85,7 @@ export const routes: RouteObject[] = [
     { path: '/admin/mentoras/nova', element: el('admin', 'A3Form') },
     { path: '/admin/mentoras/importar', element: el('admin', 'A3Import') },
     { path: '/admin/mentoras/:id', element: el('admin', 'A3Form') },
+    { path: '/admin/mentoras-bradesco', element: el('admin', 'A10') },
     { path: '/admin/participantes', element: el('admin', 'A4') },
     { path: '/admin/mapa', element: el('admin', 'A5') },
     { path: '/admin/mesas', element: guard(['super_admin'], el('admin', 'A6')) },
