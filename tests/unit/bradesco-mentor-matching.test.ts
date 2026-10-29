@@ -24,7 +24,7 @@ const mentors: PublicMentor[] = areas.map((area, index) => {
     bio: '',
     photoUrl: null,
     themes: [{ name: areaName, domains: mentorDomains[area] ?? [] }],
-    slots: [{ id: '10:00', time: '10h–10h45', topic: areaName, available: true }],
+    slots: [{ id: '10:00', time: '10h–10h45', topic: areaName, available: true, reserved: false }],
   };
 });
 const catalogMentors: PublicMentor[] = INITIAL_BRADESCO_MENTORS.map((mentor) => ({
@@ -36,7 +36,7 @@ const catalogMentors: PublicMentor[] = INITIAL_BRADESCO_MENTORS.map((mentor) => 
   bio: mentor.bio,
   photoUrl: mentor.photoUrl,
   themes: mentor.themes.map((theme) => ({ name: theme.name ?? '', domains: [...(theme.domains ?? [])] })),
-  slots: mentor.slots.map((slot) => ({ ...slot, available: true })),
+  slots: mentor.slots.map((slot) => ({ ...slot, available: true, reserved: false })),
 }));
 
 describe('matching de mentoras Bradesco', () => {

@@ -46,7 +46,11 @@ export function registerBradescoMentorRoutes(app: FastifyInstance, ctx: AppConte
           ...publicView,
           slots: publicView.slots
             .filter((slot) => zonedTimeToUtc(event.date, slot.id, event.timezone).getTime() > now.getTime())
-            .map((slot) => ({ ...slot, available: slot.available && reservationsOpen })),
+            .map((slot) => ({
+              ...slot,
+              available: slot.available && reservationsOpen,
+              reserved: reserved.has(`${mentor._id}:${slot.id}`),
+            })),
         };
       }),
     };

@@ -13,6 +13,7 @@ import {
   E21BodySchema,
   E24BodySchema,
   E26BodySchema,
+  E49PublicResponseSchema,
   E39CreateBodySchema,
   E39PatchBodySchema,
   buildPath,
@@ -87,6 +88,29 @@ describe("contratos: catálogo E01–E51", () => {
     expect(ENDPOINTS.E49AdminCreate.roles).toEqual(["admin", "super_admin"]);
     expect(ENDPOINTS.E49AdminList.roles).toEqual(["admin", "super_admin"]);
     expect(ENDPOINTS.E51.roles).toEqual(["admin", "super_admin"]);
+  });
+
+  it("E49 separa horário não reservado da disponibilidade para reserva", () => {
+    const response = {
+      eventDate: "2026-11-13",
+      consentVersion: "v1",
+      items: [{
+        id: "mentor-1",
+        name: "Mentora Exemplo",
+        expertise: "Dados",
+        city: "Recife",
+        linkedin: null,
+        bio: "",
+        photoUrl: null,
+        themes: [{ name: "Dados", domains: ["Engenharia"] }],
+        slots: [{ id: "10:00", time: "10h–10h45", topic: "Engenharia", available: false, reserved: false }],
+      }],
+    };
+
+    expect(E49PublicResponseSchema.parse(response).items[0]?.slots[0]).toMatchObject({
+      available: false,
+      reserved: false,
+    });
   });
 
   it("buildPath/fullPath", () => {

@@ -36,7 +36,7 @@ export default function P3Resultado() {
     bio: mentor.bio,
     photoUrl: mentor.photoUrl,
     themes: mentor.themes.map((theme) => ({ name: theme.name, domains: [...theme.domains] })),
-    slots: mentor.slots.map((slot) => ({ ...slot, available: false })),
+    slots: mentor.slots.map((slot) => ({ ...slot, available: false, reserved: false })),
   })), []);
   const matches = useMemo(
     () => {

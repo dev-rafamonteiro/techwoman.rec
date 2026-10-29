@@ -55,7 +55,9 @@ const BradescoMentorPublicViewSchema = z.object({
   photoUrl: BradescoMentorFields.photoUrl,
   themes: BradescoMentorFields.themes,
   id: z.string(),
-  slots: z.array(BradescoMentorAvailableSlotSchema),
+  slots: z.array(BradescoMentorAvailableSlotSchema.extend({
+    reserved: z.boolean(),
+  })),
 }).strict();
 
 export const E49PublicResponseSchema = z.object({

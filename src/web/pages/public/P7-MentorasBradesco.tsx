@@ -307,8 +307,6 @@ const mentorPhotos: Record<string, string> = {
   'France Oliveira': '/mentoras/23-france-evellyn-gomes-de-oliveira.jpg',
 };
 
-const legacyCities = [...new Set(legacyMentors.map((mentor) => mentor.city))];
-
 function initials(name: string): string {
   return name
     .split(' ')
@@ -348,16 +346,22 @@ export default function P7MentorasBradesco() {
             time: slot.time,
             topic: slot.topic,
             available: false,
+            reserved: false,
           })),
         }))
       : [];
-  const cities = [...new Set([...legacyCities, ...mentors.map((mentor) => mentor.city)])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const mentorCount = directory.status === 'loading' ? '—' : mentors.length;
   const [query, setQuery] = useState('');
-  const [city, setCity] = useState('');
+  const [availability, setAvailability] = useState<'all' | 'available' | 'unavailable'>('all');
+  const availableSlotCount = directory.status === 'loading'
+    ? '—'
+    : mentors.reduce((count, mentor) => count + mentor.slots.filter((slot) => !slot.reserved).length, 0);
   const filteredMentors = useMemo(() => {
     const search = normalizeSearch(query);
     return mentors.filter((mentor) => {
-      const matchesCity = !city || mentor.city === city;
+      const hasAvailableSlot = mentor.slots.some((slot) => !slot.reserved);
+      const matchesAvailability = availability === 'all'
+        || (availability === 'available' ? hasAvailableSlot : !hasAvailableSlot);
       const searchableText = normalizeSearch([
         mentor.name,
         mentor.expertise,
@@ -365,10 +369,10 @@ export default function P7MentorasBradesco() {
         legacyProfile(mentor)?.bio ?? '',
         ...mentor.slots.map((slot) => slot.topic),
       ].join(' '));
-      return matchesCity && (!search || searchableText.includes(search));
-    });
-  }, [city, mentors, query]);
-  const hasFilters = Boolean(query || city);
+      return matchesAvailability && (!search || searchableText.includes(search));
+    }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+  }, [availability, mentors, query]);
+  const hasFilters = Boolean(query || availability !== 'all');
 
   return (
     <div className="tw-pub tw-p7">
@@ -398,7 +402,7 @@ export default function P7MentorasBradesco() {
             <div className="tw-p7__hero-art" aria-hidden="true">
               <span className="tw-p7__orbit tw-p7__orbit--one" />
               <span className="tw-p7__orbit tw-p7__orbit--two" />
-              <span className="tw-p7__hero-count">{directory.status === 'success' ? mentors.length : '—'}<small>mentoras</small></span>
+              <span className="tw-p7__hero-count">{mentorCount}<small>mentoras</small></span>
               <span className="tw-p7__hero-spark tw-p7__hero-spark--one">✦</span>
               <span className="tw-p7__hero-spark tw-p7__hero-spark--two">✦</span>
             </div>
@@ -416,8 +420,8 @@ export default function P7MentorasBradesco() {
               </p>
               <div className="tw-p7__facts" aria-label="Informações das mentorias">
                 <span><strong>45 min</strong> por conversa</span>
-                <span><strong>{directory.status === 'success' ? mentors.length : '—'}</strong> profissionais</span>
-                <span><strong>{directory.status === 'success' ? directory.data.eventDate : '—'}</strong> no evento</span>
+                <span><strong>{mentorCount}</strong> profissionais</span>
+                <span><strong>{availableSlotCount}</strong> {availableSlotCount === 1 ? 'horário disponível' : 'horários disponíveis'}</span>
               </div>
             </div>
           </div>
@@ -442,15 +446,25 @@ export default function P7MentorasBradesco() {
                   placeholder="Ex.: dados, Java, liderança"
                 />
               </label>
-              <label className="tw-p7__city-filter">
-                <span>Localidade</span>
-                <select value={city} onChange={(event) => setCity(event.target.value)}>
-                  <option value="">Todas as cidades</option>
-                  {cities.map((option) => <option key={option} value={option}>{option}</option>)}
+              <label className="tw-p7__availability-filter">
+                <span>Disponibilidade</span>
+                <select
+                  value={availability}
+                  onChange={(event) => setAvailability(
+                    event.target.value === 'available'
+                      ? 'available'
+                      : event.target.value === 'unavailable'
+                        ? 'unavailable'
+                        : 'all',
+                  )}
+                >
+                  <option value="all">Todas as mentoras</option>
+                  <option value="available">Com horário livre</option>
+                  <option value="unavailable">Sem horário livre</option>
                 </select>
               </label>
               {hasFilters && (
-                <button className="tw-p7__clear" type="button" onClick={() => { setQuery(''); setCity(''); }}>
+                <button className="tw-p7__clear" type="button" onClick={() => { setQuery(''); setAvailability('all'); }}>
                   Limpar filtros
                 </button>
               )}
@@ -466,7 +480,7 @@ export default function P7MentorasBradesco() {
             {directory.status === 'error' && (
               <div className="tw-card" role="status" style={{ marginBlock: 20 }}>
                 <strong>Exibindo o catálogo salvo anteriormente</strong>
-                <p>Não foi possível atualizar a disponibilidade agora. Os horários abaixo são apenas informativos; confirme as vagas quando o serviço voltar.</p>
+                <p>Não foi possível carregar o catálogo atual. Os dados exibidos podem não refletir os cadastros e as reservas mais recentes. Tente atualizar quando o serviço estiver disponível.</p>
                 <Button variant="secondary" onClick={directory.reload}>Atualizar catálogo</Button>
               </div>
             )}
@@ -498,8 +512,8 @@ export default function P7MentorasBradesco() {
                               <span>{slot.topic}</span>
                             </li>
                           ))}
-                        </ul> : mentor.slots.some((slot) => slot.available) ? <ul>
-                          {mentor.slots.filter((slot) => slot.available).map((slot) => (
+                        </ul> : mentor.slots.some((slot) => !slot.reserved) ? <ul>
+                          {mentor.slots.filter((slot) => !slot.reserved).map((slot) => (
                             <li key={`${slot.time}-${slot.topic}`}>
                               <time>{slot.time}</time>
                               <span>{slot.topic}</span>
@@ -515,11 +529,11 @@ export default function P7MentorasBradesco() {
                 );
               })}
             </div>
-            {directory.status === 'success' && filteredMentors.length === 0 && (
+            {directory.status !== 'loading' && filteredMentors.length === 0 && (
               <div className="tw-p7__empty" role="status">
                 <h3>{mentors.length === 0 ? 'Nenhuma mentora cadastrada' : 'Nenhuma mentora encontrada'}</h3>
-                <p>{mentors.length === 0 ? 'As mentoras cadastradas aparecerão aqui quando o catálogo for atualizado.' : 'Tente outro nome, tema ou cidade para encontrar uma mentora.'}</p>
-                <button className="tw-p7__clear" type="button" onClick={() => { setQuery(''); setCity(''); }}>Ver todas as mentoras</button>
+                <p>{mentors.length === 0 ? 'As mentoras cadastradas aparecerão aqui quando o catálogo for atualizado.' : 'Tente outro nome, tema ou disponibilidade para encontrar uma mentora.'}</p>
+                <button className="tw-p7__clear" type="button" onClick={() => { setQuery(''); setAvailability('all'); }}>Ver todas as mentoras</button>
               </div>
             )}
           </div>
