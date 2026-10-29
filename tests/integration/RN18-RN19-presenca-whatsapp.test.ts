@@ -115,7 +115,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
 
   describe("RN18 · E47 webhook do WAHA", () => {
     beforeAll(async () => {
-      b.clock.now = min(await startOf(8), -27);
+      b.clock.now = min(await startOf(7), -27);
     });
 
     it("assinatura inválida ou ausente -> 401, nada gravado", async () => {
@@ -260,21 +260,22 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
     it("E07 lista só horários válidos e livres (antecedência, disponibilidade, área, mentora ocupada, mesa livre)", async () => {
       const [mt0, mt1] = b.w.mentors.map((m) => m._id);
       const S = (await c.events.findOne({}))!.slots;
-      b.clock.now = min(S[2]!.startAt, -5); // s03 em 5 min: fora (antecedência mínima de 10)
-      await c.mentees.updateOne({ _id: mentee(3).doc._id }, { $set: { preferredPeriod: "early_afternoon" } });
-      await c.users.updateMany({ _id: { $in: [mt0!, mt1!] } }, { $set: { availability: ["s03", "s04", "s05", "s06", "s07", "s08"] } });
+      b.clock.now = min(S[1]!.startAt, -5); // s02 em 5 min: fora (antecedência mínima de 10)
+      await c.mentees.updateOne({ _id: mentee(3).doc._id }, { $set: { preferredPeriod: "morning" } });
+      await c.users.updateMany({ _id: { $in: [mt0!, mt1!] } }, { $set: { availability: ["s02", "s03", "s04", "s05", "s06", "s07"] } });
 
       const r = await m3().get("/api/public/me/slots");
       expect(r.status).toBe(200);
-      expect(r.body.items.map((s: any) => s.slotId)).toEqual(["s04", "s05", "s06", "s07", "s08"]);
-      expect(r.body.items.find((s: any) => s.slotId === "s04").matchesPeriod).toBe(true); // 12:15
-      expect(r.body.items.find((s: any) => s.slotId === "s08").matchesPeriod).toBe(false); // 15:15
-      expect(r.body.items[0]).toMatchObject({ startAt: S[3]!.startAt.toISOString(), endAt: S[3]!.endAt.toISOString() });
+      expect(r.body.items.map((s: any) => s.slotId)).toEqual(["s03", "s04", "s05", "s06", "s07"]);
+      expect(r.body.items.find((s: any) => s.slotId === "s03").matchesPeriod).toBe(true); // 11:30
+      expect(r.body.items.find((s: any) => s.slotId === "s04").matchesPeriod).toBe(false); // 12:15
+      expect(r.body.items[0]).toMatchObject({ startAt: S[2]!.startAt.toISOString(), endAt: S[2]!.endAt.toISOString() });
 
       // s05: mentora 0 ocupada (convite ativo) e a 1 sem disponibilidade; s07 só a 0
+      b.clock.now = min(S[2]!.startAt, -5);
       expect((await b.invite(0, 6, 4, 0)).status).toBe(201);
       await c.users.updateOne({ _id: mt1! }, { $set: { availability: ["s04", "s06"] } });
-      expect(await slots(m3())).toEqual(["s04", "s06", "s07", "s08"]);
+      expect(await slots(m3())).toEqual(["s04", "s06", "s07"]);
 
       // mentora 0 de outra área não conta
       await c.users.updateOne({ _id: mt0! }, { $set: { areas: ["ux"] } });
@@ -285,9 +286,9 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN18/RN19 presenç
       const others = b.w.tables.slice(1).map((t) => t._id);
       await c.tables.updateMany({ _id: { $in: others } }, { $set: { active: false } });
       expect((await b.invite(1, 7, 3, 0)).status).toBe(201);
-      expect(await slots(m3())).toEqual(["s06", "s07", "s08"]);
+      expect(await slots(m3())).toEqual(["s06", "s07"]);
       await c.tables.updateMany({ _id: { $in: others } }, { $set: { active: true } });
-      expect(await slots(m3())).toEqual(["s04", "s06", "s07", "s08"]);
+      expect(await slots(m3())).toEqual(["s04", "s06", "s07"]);
 
       // mais tarde: só o que ainda está à frente com antecedência
       const keep = b.clock.now;
