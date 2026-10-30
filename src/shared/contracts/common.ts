@@ -241,7 +241,14 @@ export const PASSWORD_MIN_LENGTH = 10;
 export const PasswordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(128);
 
 export const MENTEE_NOTE_MAX = 280;
-export const MENTOR_BIO_MAX = 200;
+export const MENTOR_BIO_MAX = 1500;
+
+/** Temas comerciais da mentora (Tema 1 e Tema 2), texto livre; substituem as áreas no perfil. */
+export const MENTOR_THEMES_MAX = 2;
+export const MENTOR_THEME_MAX = 120;
+export const MentorThemesSchema = z.array(z.string().trim().min(1).max(MENTOR_THEME_MAX)).max(MENTOR_THEMES_MAX);
+/** Domínios de cada tema (mesmo índice de `themes`). */
+export const MentorThemeDomainsSchema = z.array(z.array(z.string().trim().min(1).max(MENTOR_THEME_MAX)).max(10)).max(MENTOR_THEMES_MAX);
 
 export const SlotSchema = z.object({
   id: SlotIdSchema,

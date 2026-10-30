@@ -25,6 +25,7 @@ export function toSessionUser(u: UserDoc): SessionUser {
     phone: u.phone ?? null,
     photoUrl: u.photoUrl,
     areas: u.areas,
+    themes: u.themes ?? [],
     bio: u.bio,
   };
 }

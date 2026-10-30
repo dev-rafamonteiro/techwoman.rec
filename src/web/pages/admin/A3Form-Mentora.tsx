@@ -1,23 +1,30 @@
 import { useEffect, useId, useState, type FormEvent, type InputHTMLAttributes } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ENDPOINTS, MENTOR_BIO_MAX, type UserView } from '@tw/shared';
+import { ENDPOINTS, MENTOR_BIO_MAX, MENTOR_THEME_MAX, type UserView } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, ErrorState, LinkButton, SkeletonList, SlotToggleGrid,
   call, formatTime, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useQuery, useToast,
 } from '../../ui';
-import { PageHead, errMsg, useAreas, useTitle } from './lib/common';
+import { PageHead, errMsg, useTitle } from './lib/common';
 import './lib/a2-a3.css';
 
 interface FormState {
-  name: string; email: string; linkedin: string; phone: string; organization: string; areas: string[]; bio: string; photoUrl: string;
+  name: string; email: string; linkedin: string; phone: string; organization: string; areas: string[]; theme1: string; theme2: string; domains1: string; domains2: string; bio: string; photoUrl: string;
   availability: Set<string>; alsoAdmin: boolean; sendPasswordByEmail: boolean;
 }
-const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
+const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], theme1: '', theme2: '', domains1: '', domains2: '', bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
 
 const fromUser = (u: UserView): FormState => ({
-  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, bio: u.bio ?? '',
+  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, theme1: u.themes[0] ?? '', theme2: u.themes[1] ?? '', domains1: (u.themeDomains[0] ?? []).join('; '), domains2: (u.themeDomains[1] ?? []).join('; '), bio: u.bio ?? '',
   photoUrl: u.photoUrl ?? '', availability: new Set(u.availability), alsoAdmin: u.roles.includes('admin'), sendPasswordByEmail: false,
 });
+
+const splitDomains = (s: string) => s.split(';').map((d) => d.trim()).filter(Boolean);
+/** Tema sem texto sai junto com os domínios dele, para os índices de `themes` e `themeDomains` seguirem alinhados. */
+function themesBody(f: FormState): { themes: string[]; themeDomains: string[][] } {
+  const pairs = [[f.theme1, f.domains1], [f.theme2, f.domains2]].filter(([t]) => t!.trim());
+  return { themes: pairs.map(([t]) => t!.trim()), themeDomains: pairs.map(([, d]) => splitDomains(d!)) };
+}
 
 /** Campo do design: rótulo 700 com nota em cinza ao lado, dica ou erro abaixo. */
 function Field({ label, note, hint, error, ...rest }: { label: string; note?: string; hint?: string; error?: string } & InputHTMLAttributes<HTMLInputElement>) {
@@ -66,7 +73,6 @@ export default function A3FormMentora() {
   const toast = useToast();
   const { hasRole } = useAuth();
   const isSuper = hasRole('super_admin');
-  const { areas } = useAreas();
 
   const slots = useQuery((s) => call(ENDPOINTS.E38, { signal: s }), []);
   const mentors = useQuery(async (s) => (editing ? call(ENDPOINTS.E31List, { signal: s }) : null), [id]);
@@ -106,7 +112,7 @@ export default function A3FormMentora() {
     setSaving(true);
     const common = {
       name: f.name.trim(), linkedin: f.linkedin.trim() || null, phone: f.phone.trim() || null, organization: f.organization.trim() || null,
-      areas: f.areas, bio: f.bio.trim() || null, photoUrl: f.photoUrl.trim() || null, availability: [...f.availability],
+      areas: f.areas, ...themesBody(f), bio: f.bio.trim() || null, photoUrl: f.photoUrl.trim() || null, availability: [...f.availability],
     };
     try {
       if (editing) {
@@ -129,7 +135,6 @@ export default function A3FormMentora() {
 
   const slotOptions = slots.status === 'success' ? slots.data.slots.map((s) => ({ id: s.id, label: formatTime(s.startAt) })) : [];
   const chosen = slotOptions.filter((s) => f.availability.has(s.id)).length;
-  const toggleArea = (key: string) => set('areas', f.areas.includes(key) ? f.areas.filter((k) => k !== key) : [...f.areas, key]);
 
   return (
     <div className="tw-page a23">
@@ -148,17 +153,13 @@ export default function A3FormMentora() {
             <Field label="WhatsApp" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone}
               hint="Para avisar a mentora quando uma participante liberar o horário dela. Sem WhatsApp, o aviso vai só por e-mail." data-testid="a3-phone" />
             <Field label="Organização" note="(uso interno, nunca aparece para a participante)" placeholder="Onde ela trabalha" value={f.organization} onChange={(e) => set('organization', e.target.value)} />
-            <fieldset className="a3f-areas">
-              <legend>Áreas de atuação</legend>
-              <div>
-                {areas.map((a) => (
-                  <button key={a.key} type="button" className="a3f-area" aria-pressed={f.areas.includes(a.key)} onClick={() => toggleArea(a.key)}>{a.label}</button>
-                ))}
-              </div>
-            </fieldset>
+            <Field label="Tema comercial 1" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1" />
+            <Field label="Domínios do tema 1" note="(separados por ;)" value={f.domains1} onChange={(e) => set('domains1', e.target.value)} data-testid="a3-domains1" />
+            <Field label="Tema comercial 2" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme2} onChange={(e) => set('theme2', e.target.value)} data-testid="a3-theme2" />
+            <Field label="Domínios do tema 2" note="(separados por ;)" value={f.domains2} onChange={(e) => set('domains2', e.target.value)} data-testid="a3-domains2" />
             <div className="tw-field a3f-bio">
               <label className="tw-field__label" htmlFor="a3-bio">Mini bio <span className="a3f-note">(opcional)</span></label>
-              <textarea id="a3-bio" className="tw-textarea" rows={3} maxLength={MENTOR_BIO_MAX + 50} value={f.bio} onChange={(e) => set('bio', e.target.value)}
+              <textarea id="a3-bio" className="tw-textarea" rows={6} maxLength={MENTOR_BIO_MAX + 50} value={f.bio} onChange={(e) => set('bio', e.target.value)}
                 aria-invalid={errors.bio ? true : undefined} aria-describedby="a3-bio-msg" />
               {errors.bio ? <span id="a3-bio-msg" className="tw-field__error" role="alert"><span aria-hidden="true">⚠ </span>{errors.bio}</span>
                 : <span id="a3-bio-msg" className="tw-field__hint">{f.bio.length}/{MENTOR_BIO_MAX}</span>}

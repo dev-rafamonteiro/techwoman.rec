@@ -223,6 +223,7 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
     if (body.phone !== undefined) set['phone'] = parseOptionalPhone(body.phone);
     if (body.photoUrl !== undefined) set['photoUrl'] = body.photoUrl;
     if (body.bio !== undefined) set['bio'] = body.bio;
+    if (body.themes !== undefined) set['themes'] = body.themes;
     if (body.areas !== undefined) {
       const keys = new Set(event.areas.map((a) => a.key));
       if (body.areas.some((a) => !keys.has(a))) throw new AppError('VALIDATION_ERROR', 'Área desconhecida.', { details: { field: 'areas' } });

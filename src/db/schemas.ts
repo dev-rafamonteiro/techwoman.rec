@@ -42,6 +42,8 @@ export const usersSchema: Schema = strictObject(
     phone: strN,
     organization: strN,
     areas: arrOf(str),
+    themes: arrOf(str),
+    themeDomains: arrOf(arrOf(str)),
     bio: strN,
     photoUrl: strN,
     availability: arrOf(str),

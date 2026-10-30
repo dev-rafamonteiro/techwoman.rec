@@ -66,6 +66,10 @@ export interface UserDoc {
   phone?: string | null;
   organization: string | null;
   areas: string[];
+  /** Temas comerciais (Tema 1 e 2); ausente em contas antigas = sem temas. */
+  themes?: string[];
+  /** Domínios de cada tema (mesmo índice de `themes`), vindos da planilha do Bradesco. */
+  themeDomains?: string[][];
   bio: string | null;
   photoUrl: string | null;
   availability: string[];

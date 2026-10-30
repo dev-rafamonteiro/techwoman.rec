@@ -105,7 +105,11 @@ export default function A2Mentoras() {
     { key: 'name', header: 'Nome', render: (m) => m.name, text: (m) => m.name },
     { key: 'email', header: 'E-mail', render: (m) => <span className="a2-clip a2-clip--email" title={m.email}>{m.email}</span>, text: (m) => m.email },
     { key: 'org', header: 'Organização (interno)', render: (m) => (m.organization ? <span className="a2-clip a2-clip--org" title={m.organization}>{m.organization}</span> : '—'), text: (m) => m.organization ?? '' },
-    { key: 'areas', header: 'Áreas', render: (m) => m.areas.map(areaLabel).join(', ') || '—', text: (m) => m.areas.map(areaLabel).join(', ') },
+    { key: 'themes', header: 'Temas e domínios', render: (m) => (m.themes.length ? (
+      <div className="a2-themes">{m.themes.map((t, i) => (
+        <div key={i}><strong>{t}</strong>{m.themeDomains[i]?.length ? <span>{m.themeDomains[i]!.join(' · ')}</span> : null}</div>
+      ))}</div>
+    ) : '—'), text: (m) => m.themes.map((t, i) => [t, ...(m.themeDomains[i] ?? [])].join(': ')).join(' | ') },
     { key: 'slots', header: 'Horários disp.', render: (m) => m.availableSlots, text: (m) => m.availableSlots },
     { key: 'appts', header: 'Confirm. / concl.', render: (m) => `${m.confirmedCount} / ${m.doneCount}`, text: (m) => `${m.confirmedCount}/${m.doneCount}` },
     { key: 'last', header: 'Último acesso', render: (m) => (m.lastLoginAt ? lastAccess(m.lastLoginAt) : '—'), text: (m) => m.lastLoginAt ?? '' },
