@@ -158,7 +158,7 @@ export default function A3FormMentora() {
             </fieldset>
             <div className="tw-field a3f-bio">
               <label className="tw-field__label" htmlFor="a3-bio">Mini bio <span className="a3f-note">(opcional)</span></label>
-              <textarea id="a3-bio" className="tw-textarea" rows={3} maxLength={MENTOR_BIO_MAX + 50} value={f.bio} onChange={(e) => set('bio', e.target.value)}
+              <textarea id="a3-bio" className="tw-textarea" rows={6} maxLength={MENTOR_BIO_MAX + 50} value={f.bio} onChange={(e) => set('bio', e.target.value)}
                 aria-invalid={errors.bio ? true : undefined} aria-describedby="a3-bio-msg" />
               {errors.bio ? <span id="a3-bio-msg" className="tw-field__error" role="alert"><span aria-hidden="true">⚠ </span>{errors.bio}</span>
                 : <span id="a3-bio-msg" className="tw-field__hint">{f.bio.length}/{MENTOR_BIO_MAX}</span>}

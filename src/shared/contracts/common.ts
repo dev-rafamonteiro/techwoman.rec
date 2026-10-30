@@ -241,7 +241,7 @@ export const PASSWORD_MIN_LENGTH = 10;
 export const PasswordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(128);
 
 export const MENTEE_NOTE_MAX = 280;
-export const MENTOR_BIO_MAX = 200;
+export const MENTOR_BIO_MAX = 1500;
 
 export const SlotSchema = z.object({
   id: SlotIdSchema,
