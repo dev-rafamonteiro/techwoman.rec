@@ -16,6 +16,7 @@ export const SessionUserSchema = z.object({
   phone: z.string().nullable(),
   photoUrl: z.string().nullable(),
   areas: z.array(z.string()),
+  themes: z.array(z.string()),
   bio: z.string().nullable(),
 });
 export type SessionUser = z.infer<typeof SessionUserSchema>;

@@ -66,6 +66,8 @@ export interface UserDoc {
   phone?: string | null;
   organization: string | null;
   areas: string[];
+  /** Temas comerciais (Tema 1 e 2); ausente em contas antigas = sem temas. */
+  themes?: string[];
   bio: string | null;
   photoUrl: string | null;
   availability: string[];

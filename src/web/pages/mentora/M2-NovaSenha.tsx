@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
-import { ApiError, Button, TextField, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useQuery, useToast } from '../../ui';
+import { ENDPOINTS, MENTOR_THEME_MAX, PASSWORD_MIN_LENGTH } from '@tw/shared';
+import { ApiError, Button, TextField, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
 import { safeNext } from '../../shell/auth';
 import '../public/public.css';
 
@@ -13,7 +13,6 @@ export default function M2NovaSenha() {
   // Perfil (E28) só existe para quem tem o papel de mentora; admin só troca a senha (E13).
   const isMentor = !!user?.roles.includes('mentor');
   const toast = useToast();
-  const event = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
   const [current, setCurrent] = useState('');
   const [pw, setPw] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -22,7 +21,8 @@ export default function M2NovaSenha() {
   const [linkedin, setLinkedin] = useState(user?.linkedin ?? '');
   const [phone, setPhone] = useState(phoneFromE164(user?.phone));
   const [photoUrl, setPhotoUrl] = useState(user?.photoUrl ?? '');
-  const [areas, setAreas] = useState<Set<string> | null>(user ? new Set(user.areas) : null);
+  const [theme1, setTheme1] = useState(user?.themes[0] ?? '');
+  const [theme2, setTheme2] = useState(user?.themes[1] ?? '');
   const [profileTouched, setProfileTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,6 @@ export default function M2NovaSenha() {
   }), [current, pw, confirm, name, photoUrl, phone]);
   const valid = !errors.current && !errors.pw && !errors.confirm && !errors.name && !errors.photo && !errors.phone;
   const shown = <K extends keyof typeof errors>(k: K) => (touched ? errors[k] : undefined);
-  const areaList = event.status === 'success' ? event.data.areas : [];
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -55,7 +54,7 @@ export default function M2NovaSenha() {
               ...(linkedin.trim() ? { linkedin: linkedin.trim() } : {}),
               phone: phone.trim() || null,
               ...(photoUrl.trim() ? { photoUrl: photoUrl.trim() } : {}),
-              ...(areas ? { areas: [...areas] } : {}),
+              themes: [theme1, theme2].map((t) => t.trim()).filter(Boolean),
             },
           });
         } catch (pe) {
@@ -73,16 +72,6 @@ export default function M2NovaSenha() {
       setSubmitting(false);
     }
   }
-
-  const toggleArea = (key: string) => {
-    setProfileTouched(true);
-    setAreas((prev) => {
-      const next = new Set(prev ?? []);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
 
   return (
     <div className="tw-page tw-stack">
@@ -108,16 +97,10 @@ export default function M2NovaSenha() {
           onChange={(e) => { setPhone(maskPhone(e.target.value)); setProfileTouched(true); }} data-testid="m2-phone" />
         <TextField label="Foto" optional type="url" value={photoUrl} error={shown('photo')} placeholder="https://"
           onChange={(e) => { setPhotoUrl(e.target.value); setProfileTouched(true); }} data-testid="m2-photo" />
-        {areaList.length > 0 && (
-          <fieldset className="tw-stack" style={{ border: 0, padding: 0, margin: 0, gap: 8 }}>
-            <legend className="tw-field__label" style={{ marginBottom: 8 }}>Áreas de atuação</legend>
-            <div className="tw-chips">
-              {areaList.map((a) => (
-                <button key={a.key} type="button" className="tw-chip" aria-pressed={areas?.has(a.key) ?? false} onClick={() => toggleArea(a.key)}>{a.label}</button>
-              ))}
-            </div>
-          </fieldset>
-        )}
+        <TextField label="Tema comercial 1" optional value={theme1} maxLength={MENTOR_THEME_MAX}
+          onChange={(e) => { setTheme1(e.target.value); setProfileTouched(true); }} data-testid="m2-theme1" />
+        <TextField label="Tema comercial 2" optional value={theme2} maxLength={MENTOR_THEME_MAX}
+          onChange={(e) => { setTheme2(e.target.value); setProfileTouched(true); }} data-testid="m2-theme2" />
         </>)}
         <Button type="submit" size="lg" block loading={submitting} data-testid="m2-submit">Salvar e continuar</Button>
       </form>

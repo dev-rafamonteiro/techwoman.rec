@@ -87,12 +87,6 @@ button.a2-act { text-decoration: none; }
 .a3f-form .tw-textarea { border-radius: 12px; padding: 10px 12px; font-size: 15px; resize: vertical; }
 .a3f-form .tw-field__hint { font-size: 13px; color: var(--tw-muted); }
 .a3f-bio .tw-field__hint { text-align: right; }
-.a3f-areas { border: 0; margin: 0; padding: 0; min-width: 0; }
-.a3f-areas legend { font-weight: 700; padding: 0; margin-bottom: 8px; }
-.a3f-areas > div { display: flex; flex-wrap: wrap; gap: 8px; }
-.a3f-area { cursor: pointer; min-height: 40px; border-radius: 999px; border: 2px solid var(--tw-lilac-200); background: var(--tw-white); color: var(--tw-plum-950); font: inherit; font-weight: 700; font-size: 14px; padding: 0 14px; }
-.a3f-area[aria-pressed='true'] { border-color: var(--tw-purple-600); background: var(--tw-purple-600); color: var(--tw-white); }
-.a3f-area:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .a3f-photo { display: flex; align-items: flex-end; gap: 14px; }
 .a3f-photo > .tw-field { flex: 1 1 auto; min-width: 0; }
 .a3f-avatar { flex: 0 0 auto; width: 56px; height: 56px; border-radius: 50%; background: var(--tw-lilac-100); border: 2px dashed var(--tw-lilac-400); object-fit: cover; box-sizing: border-box; }
