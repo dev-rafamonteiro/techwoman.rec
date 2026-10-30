@@ -143,6 +143,7 @@ export const UserViewSchema = z.object({
   organization: z.string().nullable(),
   areas: z.array(AreaKeySchema),
   themes: z.array(z.string()),
+  themeDomains: z.array(z.array(z.string())),
   bio: z.string().nullable(),
   photoUrl: z.string().nullable(),
   availability: z.array(z.string()),

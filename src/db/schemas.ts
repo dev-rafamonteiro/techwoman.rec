@@ -43,6 +43,7 @@ export const usersSchema: Schema = strictObject(
     organization: strN,
     areas: arrOf(str),
     themes: arrOf(str),
+    themeDomains: arrOf(arrOf(str)),
     bio: strN,
     photoUrl: strN,
     availability: arrOf(str),
