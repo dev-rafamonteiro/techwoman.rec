@@ -9,17 +9,22 @@ import { PageHead, errMsg, useTitle } from './lib/common';
 import './lib/a2-a3.css';
 
 interface FormState {
-  name: string; email: string; linkedin: string; phone: string; organization: string; areas: string[]; theme1: string; theme2: string; themeDomains: string[][]; bio: string; photoUrl: string;
+  name: string; email: string; linkedin: string; phone: string; organization: string; areas: string[]; theme1: string; theme2: string; domains1: string; domains2: string; bio: string; photoUrl: string;
   availability: Set<string>; alsoAdmin: boolean; sendPasswordByEmail: boolean;
 }
-const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], theme1: '', theme2: '', themeDomains: [], bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
+const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], theme1: '', theme2: '', domains1: '', domains2: '', bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
 
 const fromUser = (u: UserView): FormState => ({
-  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, theme1: u.themes[0] ?? '', theme2: u.themes[1] ?? '', themeDomains: u.themeDomains, bio: u.bio ?? '',
+  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, theme1: u.themes[0] ?? '', theme2: u.themes[1] ?? '', domains1: (u.themeDomains[0] ?? []).join('; '), domains2: (u.themeDomains[1] ?? []).join('; '), bio: u.bio ?? '',
   photoUrl: u.photoUrl ?? '', availability: new Set(u.availability), alsoAdmin: u.roles.includes('admin'), sendPasswordByEmail: false,
 });
 
-const domainsHint = (d: string[] | undefined) => (d?.length ? `Domínios: ${d.join(' · ')}` : undefined);
+const splitDomains = (s: string) => s.split(';').map((d) => d.trim()).filter(Boolean);
+/** Tema sem texto sai junto com os domínios dele, para os índices de `themes` e `themeDomains` seguirem alinhados. */
+function themesBody(f: FormState): { themes: string[]; themeDomains: string[][] } {
+  const pairs = [[f.theme1, f.domains1], [f.theme2, f.domains2]].filter(([t]) => t!.trim());
+  return { themes: pairs.map(([t]) => t!.trim()), themeDomains: pairs.map(([, d]) => splitDomains(d!)) };
+}
 
 /** Campo do design: rótulo 700 com nota em cinza ao lado, dica ou erro abaixo. */
 function Field({ label, note, hint, error, ...rest }: { label: string; note?: string; hint?: string; error?: string } & InputHTMLAttributes<HTMLInputElement>) {
@@ -107,7 +112,7 @@ export default function A3FormMentora() {
     setSaving(true);
     const common = {
       name: f.name.trim(), linkedin: f.linkedin.trim() || null, phone: f.phone.trim() || null, organization: f.organization.trim() || null,
-      areas: f.areas, themes: [f.theme1, f.theme2].map((t) => t.trim()).filter(Boolean), bio: f.bio.trim() || null, photoUrl: f.photoUrl.trim() || null, availability: [...f.availability],
+      areas: f.areas, ...themesBody(f), bio: f.bio.trim() || null, photoUrl: f.photoUrl.trim() || null, availability: [...f.availability],
     };
     try {
       if (editing) {
@@ -148,8 +153,10 @@ export default function A3FormMentora() {
             <Field label="WhatsApp" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone}
               hint="Para avisar a mentora quando uma participante liberar o horário dela. Sem WhatsApp, o aviso vai só por e-mail." data-testid="a3-phone" />
             <Field label="Organização" note="(uso interno, nunca aparece para a participante)" placeholder="Onde ela trabalha" value={f.organization} onChange={(e) => set('organization', e.target.value)} />
-            <Field label="Tema comercial 1" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme1} onChange={(e) => set('theme1', e.target.value)} hint={domainsHint(f.themeDomains[0])} data-testid="a3-theme1" />
-            <Field label="Tema comercial 2" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme2} onChange={(e) => set('theme2', e.target.value)} hint={domainsHint(f.themeDomains[1])} data-testid="a3-theme2" />
+            <Field label="Tema comercial 1" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1" />
+            <Field label="Domínios do tema 1" note="(separados por ;)" value={f.domains1} onChange={(e) => set('domains1', e.target.value)} data-testid="a3-domains1" />
+            <Field label="Tema comercial 2" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme2} onChange={(e) => set('theme2', e.target.value)} data-testid="a3-theme2" />
+            <Field label="Domínios do tema 2" note="(separados por ;)" value={f.domains2} onChange={(e) => set('domains2', e.target.value)} data-testid="a3-domains2" />
             <div className="tw-field a3f-bio">
               <label className="tw-field__label" htmlFor="a3-bio">Mini bio <span className="a3f-note">(opcional)</span></label>
               <textarea id="a3-bio" className="tw-textarea" rows={6} maxLength={MENTOR_BIO_MAX + 50} value={f.bio} onChange={(e) => set('bio', e.target.value)}

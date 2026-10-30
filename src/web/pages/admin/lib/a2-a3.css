@@ -149,3 +149,7 @@ img.a3f-avatar { border-style: solid; }
 .a3i-done p { margin: 0; color: var(--tw-lilac-150); }
 .a3i-done__note { background: var(--tw-plum-800); border-radius: 12px; padding: 12px 14px; font-weight: 700; }
 .a3i-done .tw-btn--secondary { background: transparent; color: var(--tw-white); border-color: var(--tw-lilac-400); }
+.a2-themes { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+.a2-themes > div { display: flex; flex-direction: column; gap: 2px; }
+.a2-themes strong { font-weight: 700; }
+.a2-themes span { font-size: 13px; color: var(--tw-muted); }

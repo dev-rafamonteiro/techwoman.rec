@@ -150,6 +150,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       organization: body.organization ?? null,
       areas: [...new Set(body.areas)],
       themes: body.themes,
+      themeDomains: body.themeDomains,
       bio: body.bio ?? null,
       photoUrl: body.photoUrl ?? null,
       availability: event.slots.map((s) => s.id).filter((id) => body.availability.includes(id)),
@@ -196,6 +197,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       if (body.organization !== undefined) set['organization'] = body.organization;
       if (body.bio !== undefined) set['bio'] = body.bio;
       if (body.themes !== undefined) set['themes'] = body.themes;
+      if (body.themeDomains !== undefined) set['themeDomains'] = body.themeDomains;
       if (body.photoUrl !== undefined) set['photoUrl'] = body.photoUrl;
       if (body.areas !== undefined) {
         const keys = new Set(event.areas.map((a) => a.key));
