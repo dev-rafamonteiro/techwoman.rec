@@ -94,7 +94,7 @@ const legacyMentors: Mentor[] = [
     expertise: 'IA e BIA Tech AgentiX',
     city: 'São Paulo',
     linkedin: 'https://www.linkedin.com/in/annyaraujo/',
-    bio: 'Software Engineer no Bradesco, atua com Python, Django, FastAPI e IA. Une conhecimento técnico, visão de produto e comunicação para tornar soluções complexas mais acessíveis.',
+    bio: 'Software Engineer no Bradesco, atua com Python, Django, FastAPI e Inteligencia Artificial. Une conhecimento técnico, visão de produto e comunicação para tornar soluções complexas mais acessíveis.',
     slots: [
       { time: '14h30–15h15', topic: 'Transição da carreira acadêmica para TI' },
       { time: '15h15–16h', topic: 'Agentes de IA e multiagentes' },
@@ -239,7 +239,7 @@ const legacyMentors: Mentor[] = [
     expertise: 'IA e BIA Tech SDLC',
     city: 'São Paulo',
     linkedin: 'https://www.linkedin.com/in/tatiana-gomes-de-farias/',
-    bio: 'Tech Manager em IA e líder de Engenharia de Plataformas, com atuação em AIOps, IA generativa, cibersegurança, infraestrutura e arquitetura.',
+    bio: 'Tech Manager em Inteligencia Artificial e líder de Engenharia de Plataformas, com atuação em AIOps, IA generativa, cibersegurança, infraestrutura e arquitetura.',
     slots: [
       { time: '10h–10h45', topic: 'Ciclo de desenvolvimento com IA' },
       { time: '10h45–11h30', topic: 'AIOps e observabilidade inteligente' },
