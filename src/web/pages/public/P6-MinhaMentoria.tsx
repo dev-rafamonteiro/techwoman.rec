@@ -7,7 +7,7 @@ import {
 } from '../../ui';
 import { track } from '../../analytics';
 import { FALLBACK_AREAS } from './lib/areas';
-import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
+import { useTurnstile } from './lib/turnstile';
 import './public.css';
 
 type Me = E03Response;
@@ -20,15 +20,7 @@ function InvalidLink() {
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState<string | null>(null);
   const box = useRef<HTMLDivElement>(null);
-  const ts = useRef<TurnstileHandle | null>(null);
-  useEffect(() => {
-    let alive = true;
-    if (box.current) mountTurnstile(box.current).then((h) => (alive ? (ts.current = h) : h.destroy()), () => undefined);
-    return () => {
-      alive = false;
-      ts.current?.destroy();
-    };
-  }, []);
+  const getToken = useTurnstile(box);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -39,8 +31,9 @@ function InvalidLink() {
     setError(null);
     setState('sending');
     try {
-      if (!ts.current) throw new ApiError(0, 'TURNSTILE_FAILED', 'Não foi possível verificar que você é uma pessoa. Recarregue a página.');
-      const turnstileToken = await ts.current.getToken();
+      const turnstileToken = await getToken().catch(() => {
+        throw new ApiError(0, 'TURNSTILE_FAILED', 'Não foi possível verificar que você é uma pessoa. Recarregue a página.');
+      });
       await call(ENDPOINTS.E05, { body: { email: email.trim(), turnstileToken } });
       track('link_reenviado');
       setState('sent');
@@ -61,7 +54,7 @@ function InvalidLink() {
         <form className="tw-stack" onSubmit={submit} noValidate>
           <TextField label="E-mail da inscrição" placeholder="voce@email.com" type="email" inputMode="email" autoComplete="email" value={email} error={error ?? undefined}
             onChange={(e) => setEmail(e.target.value)} data-testid="p6-resend-email" />
-          <div ref={box} aria-hidden="true" />
+          <div ref={box} />
           <Button type="submit" block loading={state === 'sending'} data-testid="p6-resend">Reenviar link por e-mail</Button>
         </form>
       )}

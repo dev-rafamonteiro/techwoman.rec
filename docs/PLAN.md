@@ -597,7 +597,7 @@ O sistema guarda nome, e-mail, telefone e LinkedIn de cerca de 2.500 pessoas, en
 
 **Borda e API**
 
-- Cloudflare: TLS, WAF gerenciado, Turnstile em E02 e E05, rate limit alto por IP (300 requisições de inscrição a cada 10 min), porque o Wi-Fi do evento sai por poucos IPs; a defesa principal contra robôs é o Turnstile.
+- Cloudflare: TLS, WAF gerenciado, Turnstile em E02 e E05, rate limit alto por IP (300 requisições de inscrição a cada 10 min), porque o Wi-Fi do evento sai por poucos IPs; a defesa principal contra robôs é o Turnstile. No navegador (P4 e P6), o widget é renderizado com `size: flexible`, `execution: execute` (o desafio só roda no envio) e `appearance: interaction-only` (fica escondido e só aparece se a Cloudflare pedir interação). O valor `size: invisible` não existe na API atual e gera `TurnstileError` (QA em produção, 04/11/2026); o modo invisível, se desejado, é escolhido no painel da Cloudflare, na configuração do widget. O envio espera o widget terminar de montar e desiste com `TURNSTILE_FAILED` depois de 2 minutos sem token, em vez de ficar carregando.
 - API: `@fastify/rate-limit` por sessão; Zod com `strict()` em todo corpo (rejeita campos extras); limite de 1 MB por requisição, 2 MB no CSV.
 - Nginx: CSP restrita a self e Turnstile (com o analytics ligado, `connect-src` também aceita `UMAMI_HOST_URL`; ver Analytics (Umami)), HSTS, `X-Content-Type-Options`, `Referrer-Policy: same-origin` (em `/l/`, `no-referrer`, para o código não vazar no cabeçalho `Referer`).
 - Atlas: usuário de banco só com `readWrite` no banco do evento; Access List só com o IP da VM; backup contínuo ligado.

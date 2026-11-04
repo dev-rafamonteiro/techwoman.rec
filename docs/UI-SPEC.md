@@ -124,7 +124,7 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 | Consentimento LGPD | Caixa de seleção | Sim | Link para o aviso de privacidade |
 
 - Abaixo do período: "É só uma preferência. O horário final é definido pela mentora e você confirma."
-- Verificação anti-robô invisível (Cloudflare Turnstile) antes de enviar.
+- Verificação anti-robô (Cloudflare Turnstile) no envio, escondida: o widget roda só ao enviar (`execution: execute`) e só aparece, abaixo do formulário, se a Cloudflare pedir interação (`appearance: interaction-only`). Sem token em 2 minutos (ou com erro do desafio), o envio para e mostra "Não foi possível verificar que você é uma pessoa. Tente de novo."
 - Botão "Quero ser mentorada" envia para **E02**.
 - Estados: validação por campo em tempo real; e-mail já inscrito mostra "Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail" (o reenvio também é **E02**); falha de rede mantém os dados preenchidos.
 
