@@ -49,15 +49,18 @@ export class NotifierError extends Error {
  * Limite do provedor (HTTP 429, throttling do SES): não é falha da mensagem. O worker devolve o item à fila sem gastar
  * tentativa e pausa o canal por `retryAfterMs`.
  */
-export class RateLimitError extends NotifierError {
-  constructor(message: string, readonly retryAfterMs: number) {
-    super(message, false);
-  }
-}
-
 /** Espera padrão quando o provedor não diz quanto esperar; cota diária/mensal estourada espera mais. */
 export const RATE_LIMIT_WAIT_MS = 1_000;
 export const QUOTA_WAIT_MS = 5 * 60_000;
+
+export class RateLimitError extends NotifierError {
+  /** Teto de 5 min: um cabeçalho estranho (data distante, epoch) não pode estacionar a mensagem fora do alerta da fila. */
+  readonly retryAfterMs: number;
+  constructor(message: string, retryAfterMs: number) {
+    super(message, false);
+    this.retryAfterMs = Math.min(Math.max(0, Number.isFinite(retryAfterMs) ? retryAfterMs : RATE_LIMIT_WAIT_MS), QUOTA_WAIT_MS);
+  }
+}
 
 /** `Retry-After` em segundos (ou data HTTP); senão `ratelimit-reset` (segundos, Resend). */
 export function retryAfterMs(headers: Headers, now = Date.now()): number | null {

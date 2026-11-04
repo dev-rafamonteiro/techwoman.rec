@@ -55,6 +55,9 @@ describe("outbox: limite do provedor (Resend 10/s)", () => {
     const e = new RateLimitError("HTTP 429", 1000);
     expect(e.permanent).toBe(false);
     expect(e.retryAfterMs).toBe(1000);
+    // cabeçalho absurdo (epoch, data distante) não estaciona a mensagem: teto de 5 min
+    expect(new RateLimitError("HTTP 429", 1.7e12).retryAfterMs).toBe(5 * 60_000);
+    expect(new RateLimitError("HTTP 429", Number.NaN).retryAfterMs).toBe(1000);
   });
 
   it("faixas de prioridade: convite primeiro, inscrição recebida por último, todo tipo em uma faixa", () => {
