@@ -1,0 +1,16 @@
+/* A10 · Avaliações: mesmos cartões e barras do A1, com três distribuições lado a lado e a lista de respostas. */
+.a10-of { font-size: 16px; font-weight: 700; opacity: .7; }
+.a10-charts > * { flex: 1 1 280px; }
+.a10-charts .adm-bars__row { grid-template-columns: 90px minmax(0, 1fr) 40px; }
+.a10-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.a10-filters .adm-pillbtn[aria-pressed="true"] { background: var(--tw-plum-950); border-color: var(--tw-plum-950); color: var(--tw-white); }
+.a10-answers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.a10-answer { padding: 12px 14px; background: var(--tw-lilac-50); border-radius: 14px; display: flex; flex-direction: column; gap: 8px; }
+.a10-answer__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.a10-answer__meta { font-size: 13px; color: var(--color-ink-muted); }
+.a10-answer__rates { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; font-size: 14px; }
+.a10-answer__rates > div { display: flex; gap: 6px; align-items: baseline; }
+.a10-answer__rates dt { font-weight: 700; }
+.a10-answer__rates dd { margin: 0; color: var(--tw-orange-500); letter-spacing: 1px; }
+.a10-answer__rates > div[data-low="true"] dd { color: var(--tw-red-900); }
+.a10-answer__comment { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }

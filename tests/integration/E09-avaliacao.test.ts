@@ -71,10 +71,22 @@ describe.skipIf(!api)("E09 · avaliação depois da mentoria concluída", () => 
     expect(r.body.feedback.comment).toBeNull();
   });
 
+  it("E49: admin vê totais, médias, distribuição e a resposta com mentora; mentora e participante não acessam", async () => {
+    const r = await b.admin.get("/api/admin/feedback");
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(r.body).toMatchObject({ total: 1, doneCount: 1 });
+    expect(r.body.summary.event).toEqual({ average: 3, counts: [0, 0, 1, 0, 0] });
+    expect(r.body.items).toHaveLength(1);
+    expect(r.body.items[0]).toMatchObject({ menteeName: b.w.mentees[0]!.doc.name, mentorName: b.w.mentors[0]!.name, ratings: { event: 3, talk: 3, mentoring: 3 }, comment: null });
+    expect((await b.mentor[0]!.get("/api/admin/feedback")).status).toBe(403);
+    expect((await asMentee(0).get("/api/admin/feedback")).status).toBe(401);
+  });
+
   it("E36 anonymize apaga a avaliação", async () => {
     const id = b.w.mentees[0]!.doc._id;
     const r = await b.admin.patch(`/api/admin/mentees/${id}`, { action: "anonymize" });
     expect(r.status, JSON.stringify(r.body)).toBe(200);
     expect(await c.feedbacks.countDocuments({ _id: id })).toBe(0);
+    expect((await b.admin.get("/api/admin/feedback")).body).toMatchObject({ total: 0, items: [], summary: { talk: { average: null, counts: [0, 0, 0, 0, 0] } } });
   });
 });

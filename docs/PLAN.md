@@ -155,7 +155,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 | `presence_checks` | Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença (RN18) | P6, A9 |
 | `whatsapp_inbound` | Mensagens recebidas do WAHA já processadas (deduplicação, TTL de 7 dias) | — |
 | `short_links` | Links curtos `/l/<código>` que levam ao link pessoal ou ao `.ics` da participante (E48) | P5, e-mails, WhatsApp |
-| `feedbacks` | Avaliação da participante depois da mentoria concluída (E09) | P6 |
+| `feedbacks` | Avaliação da participante depois da mentoria concluída (E09, E49) | P6, A10 |
 
 ### events
 
@@ -204,7 +204,7 @@ As duas travas são campos booleanos mantidos junto com o status:
 - `presence_checks` (sem validador; `_id` = `appointmentId`): `kind` (`invite` | `presence`; ausente = `presence`), `menteeId`, `phone` (só dígitos, ex.: `5511996604159`), `messageId` (hash final do id da mensagem no WAHA), `status` (`pending` | `confirmed` | `cancelled` | `closed`), `sentAt`, `answeredAt`, `answer{kind: "list" | "text", text, interpretation: "confirm" | "cancel" | null}`. Índice `{ phone: 1, status: 1, sentAt: -1 }`.
 - `whatsapp_inbound` (sem validador; `_id` = hash final do id da mensagem recebida): `receivedAt`, `expireAt` (TTL), `phone`, `result` (`confirm` | `cancel` | `unclear` | `ignored`). Serve só para descartar o mesmo evento reenviado pelo WAHA.
 - `short_links` (sem validador; `_id` = código de 7 caracteres base62): `menteeId`, `kind` (`personal` | `calendar`), `tokenVersion` (o da participante quando o link foi criado), `createdAt`, `expireAt` (fim do evento + 7 dias; TTL). O token não é gravado: E48 o deriva na hora. Regras em Notificações > Links curtos.
-- `feedbacks` (sem validador; `_id` = menteeId, o que já garante uma avaliação por participante): `eventId`, `appointmentId` (a mentoria concluída), `ratings` (`event`, `talk`, `mentoring`, inteiros de 1 a 5), `comment` (texto ou null), `createdAt`. Apagada na anonimização.
+- `feedbacks` (sem validador; `_id` = menteeId, o que já garante uma avaliação por participante): `eventId`, `appointmentId` (a mentoria concluída), `ratings` (`event`, `talk`, `mentoring`, inteiros de 1 a 5), `comment` (texto ou null), `createdAt`. Índice `feedback_event_created` (`eventId`, `createdAt` decrescente) para A10. Apagada na anonimização.
 
 ### Índices
 
@@ -347,6 +347,7 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E44 | `GET /admin/notifications`, `POST /admin/notifications/:id/retry` | A9 | Admin |
 | E45 | `GET /admin/audit` | A9 | Admin |
 | E46 | `GET /admin/email-preview/:tipo` | A7 | Admin; renderiza um dos 9 layouts de e-mail com dados de exemplo |
+| E49 | `GET /admin/feedback` | A10 | Admin; resultado da avaliação (E09): `total` de respostas, `doneCount` (participantes com mentoria concluída, para a taxa de resposta), `summary` com média (uma casa decimal, null sem respostas) e `counts` (quantas deram nota 1 a 5) de `event`, `talk` e `mentoring`, e `items` com todas as respostas (participante, mentora, notas, comentário, data), da mais recente para a mais antiga. Sem paginação: no máximo uma por participante. Código E49 escolhido depois de E48 |
 
 ### Webhooks
 

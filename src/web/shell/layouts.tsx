@@ -76,6 +76,7 @@ interface AdminItem { to: string; label: string; roles?: readonly Role[]; end?: 
 export const ADMIN_ITEMS: readonly AdminItem[] = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/participantes', label: 'Participantes' },
+  { to: '/admin/avaliacoes', label: 'Avaliações' },
   { to: '/admin/mapa', label: 'Mapa de mesas' },
   { to: '/admin/mentoras', label: 'Mentoras' },
   { to: '/admin/mesas', label: 'Mesas', roles: ['super_admin'] },
@@ -109,7 +110,7 @@ function AdminSideFoot() {
 }
 
 const ADMIN_TITLES: [string, string][] = [
-  ['/admin/participantes', 'Participantes'], ['/admin/mapa', 'Mapa de mesas'], ['/admin/mentoras', 'Mentoras'], ['/admin/mesas', 'Mesas'],
+  ['/admin/participantes', 'Participantes'], ['/admin/avaliacoes', 'Avaliações'], ['/admin/mapa', 'Mapa de mesas'], ['/admin/mentoras', 'Mentoras'], ['/admin/mesas', 'Mesas'],
   ['/admin/evento', 'Configurações do evento'], ['/admin/usuarios', 'Administradores'], ['/admin/logs', 'Notificações e auditoria'],
 ];
 

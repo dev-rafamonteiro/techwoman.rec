@@ -43,7 +43,8 @@ export function useDebounced<T>(value: T, ms = 300): T {
 }
 
 /** Barras horizontais acessíveis (A1 "Inscritas por área"), com alternância para tabela como no design. */
-export function BarChart({ data, label, title }: { data: { label: string; value: number }[]; label: string; title: string }) {
+/** `columns`: cabeçalho da tabela alternativa; `unit`: texto do valor ao passar o mouse (padrão: inscritas por área). */
+export function BarChart({ data, label, title, columns = ['Área', 'Inscritas'], unit = 'inscritas' }: { data: { label: string; value: number }[]; label: string; title: string; columns?: [string, string]; unit?: string }) {
   const [table, setTable] = useState(false);
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
@@ -53,12 +54,12 @@ export function BarChart({ data, label, title }: { data: { label: string; value:
         <button type="button" className="adm-pillbtn" aria-pressed={table} onClick={() => setTable((v) => !v)}>{table ? 'Ver gráfico' : 'Ver tabela'}</button>
       </div>
       {table ? (
-        <table className="adm-table-sm"><thead><tr><th scope="col">Área</th><th scope="col">Inscritas</th></tr></thead>
+        <table className="adm-table-sm"><thead><tr><th scope="col">{columns[0]}</th><th scope="col">{columns[1]}</th></tr></thead>
           <tbody>{data.map((d) => <tr key={d.label}><td>{d.label}</td><td>{d.value}</td></tr>)}</tbody></table>
       ) : (
         <div className="adm-bars" role="img" aria-label={`${label}: ${data.map((d) => `${d.label} ${d.value}`).join(', ')}`} data-testid="chart-area">
           {data.map((d) => (
-            <div key={d.label} className="adm-bars__row" title={`${d.label}: ${d.value} inscritas`}>
+            <div key={d.label} className="adm-bars__row" title={`${d.label}: ${d.value} ${unit}`}>
               <span>{d.label}</span>
               <span className="adm-bars__track"><span className="adm-bars__fill" style={{ width: `${(d.value / max) * 100}%` }} /></span>
               <strong>{d.value}</strong>

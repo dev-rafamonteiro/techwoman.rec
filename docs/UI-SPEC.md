@@ -27,7 +27,7 @@ Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sába
 | Recusa por horário | A participante volta para a fila marcada como prioridade. |
 | Marca | Nenhuma referência ao Bradesco em nenhuma tela, exceto o logo de patrocínio no bloco "Quem faz o Tech Woman" da P1. |
 
-**Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M6, A1–A9; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
+**Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M6, A1–A10; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
 
 ## Diretrizes visuais e de experiência
 
@@ -80,7 +80,7 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 
 **Menu da mentora (barra inferior no celular):** Aguardando · Minha agenda · Disponibilidade · Sair.
 
-**Menu do admin (lateral):** Dashboard · Participantes · Mapa de mesas · Mentoras · Mesas · Evento · Administradores · Logs. Itens sem permissão não aparecem.
+**Menu do admin (lateral):** Dashboard · Participantes · Avaliações · Mapa de mesas · Mentoras · Mesas · Evento · Administradores · Logs. Itens sem permissão não aparecem.
 
 ## Telas da participante (P1–P6)
 
@@ -208,7 +208,7 @@ Gaveta de baixo para cima no celular, modal no desktop.
 - Destaque visual da próxima mentoria e aviso "Começa em 5 min".
 - Dados: **E25**, atualização em tempo real por **E27**.
 
-## Telas do super admin (A1–A9)
+## Telas do super admin (A1–A10)
 
 O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila, as mesas e intervém quando algo trava.
 
@@ -277,6 +277,15 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 - Aba **Notificações (E44):** canal, destinatária, modelo, status (na fila, enviada, falhou), tentativas e botão "Reenviar".
 - Aba **Auditoria (E45):** quem fez o quê e quando (login, cadastro de mentora, convite, cancelamento, override do admin), com filtro por usuário e ação.
 
+### A10 · Avaliações
+
+Rota `/admin/avaliacoes`, admin e super admin. Resultado da avaliação que a participante faz em P6 (Concluída, **E09**), alimentado por **E49** e atualizado a cada minuto.
+
+- Cartões no estilo do A1: Respostas (com a nota "X% das N concluídas", a taxa de resposta sobre as mentorias concluídas), Média · Evento, Média · Palestra e Média · Mentoria (uma casa decimal, "/ 5", e quantas deram 5 estrelas) e Com comentário.
+- Três painéis de barras, um por item, com quantas respostas deram de 5 a 1 estrela; cada um tem o botão "Ver tabela" (Nota, Respostas), como o gráfico de áreas do A1.
+- Lista "Respostas", da mais recente para a mais antiga: participante, mentora, data e hora, as três notas em estrelas (nota até 2 em vermelho) e o comentário. Filtros: Todas · Com comentário · Alguma nota até 2.
+- Sem respostas: "Nenhuma avaliação ainda", explicando que a avaliação abre na página da participante depois que a mentora conclui a mentoria. Participante anonimizada some da lista (a avaliação é apagada).
+
 ## Componentes, estados e mensagens padrão
 
 Os componentes abaixo se repetem entre as três áreas e devem ser desenhados uma vez só.
@@ -324,7 +333,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 ## Medição de uso (analytics)
 
-Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha` e `/privacidade`. As telas da mentora (M1–M6, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A9) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
+Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha` e `/privacidade`. As telas da mentora (M1–M6, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A10) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
 
 Cada tela pública conta um pageview ao abrir. Eventos por tela (propriedades só de categoria; nunca nome, e-mail, telefone, LinkedIn, comentário, token ou ids):
 

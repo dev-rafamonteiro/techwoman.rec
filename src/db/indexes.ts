@@ -83,6 +83,8 @@ const INDEXES: Record<string, IndexDescription[]> = {
   [COLLECTIONS.whatsappInbound]: [{ key: { expireAt: 1 }, name: 'wa_inbound_ttl', expireAfterSeconds: 0 }],
   // links curtos (E48): um por participante, tipo e versão do token; também serve ao deleteMany por menteeId
   // e somem em `expireAt` (fim do evento + 7 dias)
+  // avaliações (E09): A10 lista por evento, da mais recente
+  [COLLECTIONS.feedbacks]: [{ key: { eventId: 1, createdAt: -1 }, name: 'feedback_event_created' }],
   [COLLECTIONS.shortLinks]: [
     { key: { menteeId: 1, kind: 1, tokenVersion: 1 }, name: 'short_link_mentee_kind_version', unique: true },
     { key: { expireAt: 1 }, name: 'short_link_ttl', expireAfterSeconds: 0 },
