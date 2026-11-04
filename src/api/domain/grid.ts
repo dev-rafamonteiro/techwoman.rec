@@ -21,7 +21,7 @@ export function gridChanged(a: GridFields, b: GridFields): boolean {
 }
 
 /**
- * RN16 · Alterar horários, duração ou intervalo do evento é recusado se existir qualquer mentoria ativa.
+ * RN16 · Alterar data, fuso, horários, duração ou intervalo do evento é recusado se existir qualquer mentoria com slotLock.
  * `lockedAppointments` = mentorias com `slotLock` (invited, confirmed, in_progress; também done/no_show, que
  * seguem referenciando o horário).
  */

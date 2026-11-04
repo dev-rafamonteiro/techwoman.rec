@@ -70,7 +70,9 @@ export default function A7Configuracoes() {
     if (q.status === 'success') { const { id: _i, slots: _s, ...rest } = q.data.event; setD(rest); }
   }, [q.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const activeCount = lock.status === 'success' ? lock.data.appointments.filter((a) => ['invited', 'confirmed', 'in_progress'].includes(a.status)).length : 0;
+  // RN16: mesmo critério da API (checkGridChange conta toda mentoria com slotLock, inclusive done/no_show).
+  // E38 já devolve exatamente essas mentorias.
+  const activeCount = lock.status === 'success' ? lock.data.appointments.length : 0;
   const hasActive = activeCount > 0;
   const [newArea, setNewArea] = useState('');
   const slots = useMemo(() => (d ? previewSlots(d) : []), [d]);
@@ -113,7 +115,7 @@ export default function A7Configuracoes() {
       const { id: _i, slots: _s, ...rest } = r.event; setD(rest);
       toast.success('Configurações salvas.');
     } catch (e) {
-      if (e instanceof ApiError && e.code === 'GRID_LOCKED') setGridError('Há mentorias marcadas. Horários, duração e intervalo não podem mudar até cancelá-las ou movê-las.');
+      if (e instanceof ApiError && e.code === 'GRID_LOCKED') setGridError('Há mentorias marcadas ou realizadas. Data, fuso, horários, duração e intervalo não podem mudar.');
       else if (e instanceof ApiError && e.code === 'CONFLICT') toast.conflict('Outra pessoa alterou as configurações.', () => void q.reload());
       else toast.error(errMsg(e));
     } finally { setSaving(false); }
@@ -145,9 +147,9 @@ export default function A7Configuracoes() {
             <h2 id="a7-evento">Evento</h2>
             <div className="a7-grid">
               <TextField label="Nome" value={d.name} onChange={(e) => set('name', e.target.value)} />
-              <TextField label="Data" type="date" value={d.date} onChange={(e) => set('date', e.target.value)} />
+              <TextField label="Data" type="date" value={d.date} disabled={hasActive} onChange={(e) => set('date', e.target.value)} />
               <TextField label="Local" optional value={d.location ?? ''} onChange={(e) => set('location', e.target.value || null)} />
-              <TextField label="Fuso" value={d.timezone} onChange={(e) => set('timezone', e.target.value)} />
+              <TextField label="Fuso" value={d.timezone} disabled={hasActive} onChange={(e) => set('timezone', e.target.value)} />
             </div>
             <div className="a7-insc" data-on={d.registrationOpen}>
               <span className="a7-insc__txt">
@@ -163,7 +165,7 @@ export default function A7Configuracoes() {
             {hasActive && (
               <div className="a7-lock" role="status">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-                Há {activeCount} {activeCount === 1 ? 'mentoria ativa' : 'mentorias ativas'}: horário, duração e intervalo ficam bloqueados.
+                Há {activeCount} {activeCount === 1 ? 'mentoria marcada ou realizada' : 'mentorias marcadas ou realizadas'}: data, fuso, horário, duração e intervalo ficam bloqueados.
               </div>
             )}
             <div className="a7-grid a7-grid--4">
