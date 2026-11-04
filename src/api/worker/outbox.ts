@@ -1,9 +1,10 @@
 import type { Db } from 'mongodb';
 import type { OutboxDoc } from '@tw/db';
+import { OUTBOX_CHANNELS, type OutboxChannel, type OutboxType } from '@tw/shared';
 import type { Config } from '../config.js';
 import type { AppContext } from '../ctx.js';
 import { shouldSendReminder } from '../domain/index.js';
-import { NotifierError, type Notifier, type NotifierMessage, type NotifierResult } from './notifier.js';
+import { NotifierError, RateLimitError, type Notifier, type NotifierMessage, type NotifierResult } from './notifier.js';
 import { render } from './render.js';
 import { openSecret } from '../lib/secret-box.js';
 import { getOrCreateShortLink, shortLink, shortLinkExpireAt } from '../lib/short-links.js';
@@ -11,6 +12,7 @@ import { icsIdentity } from '../notifications/ics.js';
 import { buildEmailMessage } from '../notifications/message.js';
 import { RenderError } from '../notifications/render.js';
 import { workerContext } from './context.js';
+import type { RateLimiters } from './rate-limit.js';
 
 /** Esperas entre tentativas (1 envio + 5 reenvios = 6 envios no total). */
 export const BACKOFF_MS = [30_000, 60_000, 120_000, 240_000, 480_000] as const;
@@ -23,7 +25,22 @@ export interface OutboxResult {
   failed: number;
   skipped: number;
   retried: number;
+  /** Devolvidos à fila por limite do provedor (429), sem gastar tentativa. */
+  rateLimited: number;
 }
+
+/**
+ * Ordem de saída quando a fila acumula: primeiro o que expira em minutos (convite e respostas no WhatsApp), depois o
+ * que muda a agenda de alguém, depois os avisos que não têm hora. Tipos fora da lista saem por último.
+ */
+export const PRIORITY_TIERS: readonly (readonly OutboxType[])[] = [
+  ['invite', 'presence_confirmed', 'presence_cancelled', 'presence_unclear', 'invite_closed', 'invite_decline_link', 'invite_unclear'],
+  ['confirmed', 'moved', 'cancelled', 'expired', 'reminder', 'slot_released', 'mentor_slot_released', 'registration_cancelled'],
+  ['registered', 'staff_password'],
+];
+
+/** Tempo máximo esperando a vez no limitador dentro de uma iteração (o resto fica para a próxima). */
+const MAX_LIMITER_WAIT_MS = 2_000;
 
 /** Itens presos em `sending` há mais de 2 min voltam para `pending` (tentativas preservadas). */
 export async function releaseStuck(ctx: AppContext): Promise<number> {
@@ -64,7 +81,8 @@ function skipReason(item: OutboxDoc, ctx: AppContext, appt: { status: string; ex
 /** Tipos cujo e-mail leva o `.ics` (layout 3). */
 const WITH_ICS = new Set(['confirmed', 'moved', 'reminder']);
 
-async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res: OutboxResult): Promise<void> {
+/** Devolve `pauseMs` quando o provedor pediu para esperar (429): o canal para até lá. */
+async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res: OutboxResult): Promise<{ pauseMs: number } | void> {
   const { c } = ctx;
   // estados finais apagam a senha cifrada da outbox (PLAN, "Senha provisória")
   const done = (set: Partial<OutboxDoc>, terminal = true) =>
@@ -142,6 +160,15 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     sent = await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
   } catch (err) {
     const text = (err instanceof Error ? err.message : String(err)).slice(0, 300);
+    if (err instanceof RateLimitError) {
+      // limite do provedor não é falha da mensagem: volta para a fila sem contar a tentativa feita no claim
+      await c.outbox.updateOne(
+        { _id: item._id, status: 'sending' },
+        { $set: { status: 'pending', lastError: text, nextAttemptAt: new Date(ctx.now().getTime() + err.retryAfterMs), lockedAt: null, lockedBy: null }, $inc: { attempts: -1 } },
+      );
+      res.rateLimited++;
+      return { pauseMs: err.retryAfterMs };
+    }
     const permanent = err instanceof NotifierError && err.permanent;
     if (permanent || item.attempts >= MAX_ATTEMPTS) {
       // canal desligado por configuração não é falha: fica `skipped`
@@ -174,40 +201,83 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
   res.sent++;
 }
 
-/**
- * Uma iteração do laço de 2 s: pega até 50 pendentes (claim atômico `pending` -> `sending`, cada item por um só
- * worker) e envia. Falha: até 6 envios no total com esperas de 30 s, 1, 2, 4 e 8 min; depois `failed` (A9: "Reenviar").
- */
-export async function processOutboxCtx(ctx: AppContext, opts: { notifier: Notifier; workerId: string; isStopping?: () => boolean }): Promise<OutboxResult> {
-  const res: OutboxResult = { sent: 0, failed: 0, skipped: 0, retried: 0 };
-  for (let i = 0; i < CLAIM_BATCH; i++) {
-    if (opts.isStopping?.()) break;
-    const now = ctx.now();
-    const item = await ctx.c.outbox.findOneAndUpdate(
-      { status: 'pending', nextAttemptAt: { $lte: now } },
-      { $set: { status: 'sending', lockedAt: now, lockedBy: opts.workerId }, $inc: { attempts: 1 } },
-      { sort: { nextAttemptAt: 1 }, returnDocument: 'after' },
-    );
-    if (!item) break;
-    try {
-      await handle(ctx, item, opts.notifier, res);
-    } catch (err) {
-      // erro inesperado (ex.: banco ao criar o link curto) não derruba o lote: o item volta para a fila em 30 s
-      ctx.log.error({ outboxId: String(item._id), err: (err as Error).message }, 'outbox: erro ao processar, nova tentativa');
-      await ctx.c.outbox.updateOne(
-        { _id: item._id, status: 'sending' },
-        { $set: { status: 'pending', lockedAt: null, lockedBy: null, nextAttemptAt: new Date(now.getTime() + 30_000), lastError: (err as Error).message.slice(0, 300) } },
-      );
-      res.retried++;
-    }
+/** Claim atômico `pending` -> `sending` do próximo item vencido do canal, na ordem de PRIORITY_TIERS. */
+async function claim(ctx: AppContext, channel: OutboxChannel, workerId: string): Promise<OutboxDoc | null> {
+  const now = ctx.now();
+  const update = { $set: { status: 'sending' as const, lockedAt: now, lockedBy: workerId }, $inc: { attempts: 1 } };
+  const opts = { sort: { nextAttemptAt: 1 }, returnDocument: 'after' } as const;
+  for (const tier of PRIORITY_TIERS) {
+    const item = await ctx.c.outbox.findOneAndUpdate({ status: 'pending', channel, type: { $in: [...tier] }, nextAttemptAt: { $lte: now } }, update, opts);
+    if (item) return item;
   }
+  // tipos novos fora das faixas não ficam parados
+  return ctx.c.outbox.findOneAndUpdate({ status: 'pending', channel, nextAttemptAt: { $lte: now } }, update, opts);
+}
+
+export interface OutboxRunOptions {
+  notifier: Notifier;
+  workerId: string;
+  isStopping?: () => boolean;
+  limiters?: RateLimiters;
+  /** Envios simultâneos por canal (padrão 1). O ritmo continua sendo o do limitador; isto só cobre a latência do provedor. */
+  concurrency?: Partial<Record<OutboxChannel, number>>;
+}
+
+/** Um canal: até CLAIM_BATCH itens, no ritmo do limitador do canal; um 429 pausa só este canal. */
+async function processLane(ctx: AppContext, channel: OutboxChannel, opts: OutboxRunOptions, res: OutboxResult): Promise<void> {
+  const limiter = opts.limiters?.[channel];
+  let budget = CLAIM_BATCH;
+  let stop = false;
+  const one = async () => {
+    while (!stop && budget-- > 0) {
+      if (opts.isStopping?.()) break;
+      // espera a vez antes do claim: o item não fica preso em `sending` enquanto o canal está segurando
+      if (limiter && !(await limiter.take({ maxWaitMs: MAX_LIMITER_WAIT_MS, isStopping: () => stop || !!opts.isStopping?.() }))) break;
+      const item = await claim(ctx, channel, opts.workerId);
+      if (!item) break;
+      if (!(await sendOne(ctx, channel, item, opts, limiter, res))) stop = true;
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, opts.concurrency?.[channel] ?? 1) }, one));
+}
+
+/** Envia um item já reservado. Devolve false quando o canal deve parar nesta iteração (429). */
+async function sendOne(ctx: AppContext, channel: OutboxChannel, item: OutboxDoc, opts: OutboxRunOptions, limiter: RateLimiters[OutboxChannel], res: OutboxResult): Promise<boolean> {
+  try {
+    const r = await handle(ctx, item, opts.notifier, res);
+    if (r?.pauseMs !== undefined) {
+      limiter?.pause(r.pauseMs);
+      ctx.log.warn({ channel, pauseMs: r.pauseMs }, 'outbox: limite do provedor, canal pausado');
+      return false;
+    }
+  } catch (err) {
+    // erro inesperado (ex.: banco ao criar o link curto) não derruba o lote: o item volta para a fila em 30 s
+    ctx.log.error({ outboxId: String(item._id), err: (err as Error).message }, 'outbox: erro ao processar, nova tentativa');
+    await ctx.c.outbox.updateOne(
+      { _id: item._id, status: 'sending' },
+      { $set: { status: 'pending', lockedAt: null, lockedBy: null, nextAttemptAt: new Date(ctx.now().getTime() + 30_000), lastError: (err as Error).message.slice(0, 300) } },
+    );
+    res.retried++;
+  }
+  return true;
+}
+
+/**
+ * Uma iteração do laço de 2 s: e-mail e WhatsApp em paralelo, cada um com até 50 itens (claim atômico `pending` ->
+ * `sending`, cada item por um só worker), em ordem de prioridade e no ritmo do limitador do canal. Falha: até 6 envios
+ * no total com esperas de 30 s, 1, 2, 4 e 8 min; depois `failed` (A9: "Reenviar"). Limite do provedor (429) não conta.
+ */
+export async function processOutboxCtx(ctx: AppContext, opts: OutboxRunOptions): Promise<OutboxResult> {
+  const res: OutboxResult = { sent: 0, failed: 0, skipped: 0, retried: 0, rateLimited: 0 };
+  await Promise.all(OUTBOX_CHANNELS.map((ch) => processLane(ctx, ch, opts, res)));
   return res;
 }
 
 export function processOutbox(
   db: Db,
-  opts: { notifier: Notifier; now?: Date; workerId?: string; config?: Partial<Config> },
+  opts: { notifier: Notifier; now?: Date; workerId?: string; config?: Partial<Config> } & Pick<OutboxRunOptions, 'limiters' | 'concurrency'>,
 ): Promise<OutboxResult> {
   const ctx = workerContext(db, db.client as never, () => opts.now ?? new Date(), opts.config);
-  return releaseStuck(ctx).then(() => processOutboxCtx(ctx, { notifier: opts.notifier, workerId: opts.workerId ?? 'test-worker' }));
+  const extra = { ...(opts.limiters ? { limiters: opts.limiters } : {}), ...(opts.concurrency ? { concurrency: opts.concurrency } : {}) };
+  return releaseStuck(ctx).then(() => processOutboxCtx(ctx, { notifier: opts.notifier, workerId: opts.workerId ?? 'test-worker', ...extra }));
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ENDPOINTS, OUTBOX_CHANNELS, OUTBOX_STATUSES, OUTBOX_TYPES, type AuditEntryView, type OutboxItemView } from '@tw/shared';
+import { ENDPOINTS, OUTBOX_CHANNELS, OUTBOX_STATUSES, OUTBOX_TYPES, type AuditEntryView, type OutboxItemView, type OutboxLaneHealth } from '@tw/shared';
 import { DataTable, ErrorState, SkeletonList, call, formatDateTime, useQuery, useToast, type Column } from '../../ui';
 import { PageHead, errMsg, useDebounced, useTitle } from './lib/common';
 import './lib/a7-a9.css';
@@ -49,6 +49,34 @@ export default function A9NotificacoesAuditoria() {
   );
 }
 
+/** Saúde da fila (E44 health), atualizada a cada 15 s: quanto falta sair, há quanto tempo e se o provedor está limitando. */
+function QueueHealth() {
+  const h = useQuery((signal) => call(ENDPOINTS.E44Health, { signal }), []);
+  useEffect(() => {
+    const t = setInterval(() => void h.refetch(), 15_000);
+    return () => clearInterval(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (h.status !== 'success') return null;
+  const wait = (s: number) => (s < 60 ? `${s} s` : `${Math.floor(s / 60)} min`);
+  const lane = (c: OutboxLaneHealth) => {
+    const late = c.oldestDueSeconds > h.data.alertAfterSeconds;
+    const tone = late ? 'a79-pill--r' : c.rateLimited || c.due > 0 ? 'a79-pill--o' : 'a79-pill--m';
+    const label = late ? `Atrasada (${wait(c.oldestDueSeconds)})` : c.rateLimited ? 'Provedor limitando' : c.due > 0 ? 'Enviando' : 'Em dia';
+    return (
+      <li key={c.channel}>
+        <strong>{c.channel === 'email' ? 'E-mail' : 'WhatsApp'}</strong> <span className={`a79-pill ${tone}`}>{label}</span>
+        <small>{c.due} na fila agora · {c.scheduled} agendadas · {c.failed} falharam</small>
+      </li>
+    );
+  };
+  return (
+    <section className="a9-health" aria-label="Fila de envios">
+      {!h.data.ok && <p role="alert">A fila de envios está atrasada. Se continuar, confira a cota do provedor de e-mail ou troque para o provedor reserva.</p>}
+      <ul>{h.data.channels.map(lane)}</ul>
+    </section>
+  );
+}
+
 function Notifications({ onRetried }: { onRetried: () => void }) {
   const toast = useToast();
   const [status, setStatus] = useState('');
@@ -94,6 +122,7 @@ function Notifications({ onRetried }: { onRetried: () => void }) {
   const rows = [...first.data.items, ...extra].map((i) => patched[i.id] ?? i);
   return (
     <div className="tw-stack">
+      <QueueHealth />
       <DataTable caption="Notificações" columns={columns} rows={rows} rowKey={(i) => i.id} filters={filters} exportName="notificacoes.csv" emptyTitle="Nenhuma notificação" emptyText="Quando houver envios, eles aparecem aqui." />
       {cursor && <button type="button" className="a79-btn a79-btn--line a9-more" onClick={() => void more()}>Carregar mais</button>}
     </div>

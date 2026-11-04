@@ -223,6 +223,7 @@ db.users.createIndex({ email: 1 }, { unique: true })
 db.tables.createIndex({ eventId: 1, number: 1 }, { unique: true })
 db.sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 })
 db.outbox.createIndex({ status: 1, nextAttemptAt: 1 })
+db.outbox.createIndex({ status: 1, channel: 1, type: 1, nextAttemptAt: 1 })
 db.outbox.createIndex({ dedupeKey: 1 }, { unique: true })
 db.audit_logs.createIndex({ eventId: 1, at: -1 })
 db.short_links.createIndex({ menteeId: 1, kind: 1, tokenVersion: 1 }, { unique: true })  // nome: short_link_mentee_kind_version
@@ -482,9 +483,13 @@ E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os 
 
 **Worker:**
 
-- Laço a cada 2 s: pega até 50 itens com `status: "pending"` e `nextAttemptAt <= agora`, trocando para `sending` com `findOneAndUpdate` (cada item é processado por um só worker, mesmo com mais de uma réplica).
+- Laço a cada 2 s: e-mail e WhatsApp em paralelo, cada canal com até 50 itens com `status: "pending"` e `nextAttemptAt <= agora`, trocando para `sending` com `findOneAndUpdate` (cada item é processado por um só worker, mesmo com mais de uma réplica).
+- Prioridade quando a fila acumula: 1) convite e respostas no WhatsApp; 2) confirmação, mudança, cancelamento, expiração, lembrete, horário liberado, aviso à mentora, inscrição cancelada; 3) inscrição recebida e senha provisória. Dentro da faixa, o mais antigo primeiro (índice `outbox_claim_lane`).
+- Ritmo por canal: `EMAIL_MAX_PER_SEC` (padrão 8, abaixo dos 10/s do Resend; 0 = sem limite) e `WHATSAPP_MAX_PER_SEC` (padrão sem limite), com até `EMAIL_CONCURRENCY` envios de e-mail simultâneos (padrão 4; WhatsApp sempre 1, para não trocar a ordem das mensagens). O limite vale por réplica: com N workers, divida por N.
+- Limite do provedor (HTTP 429, throttling do SES/SMTP 421/454): o item volta para `pending` sem contar a tentativa, com `nextAttemptAt` = `Retry-After` (ou 1 s; cota diária/mensal, 5 min), e o canal pausa até lá. Nunca vira `failed` por isso.
+- Saúde da fila (E44 `GET /admin/notifications/health`, painel no topo de A9): por canal, quantos estão vencidos, agendados, enviando e com falha, há quanto tempo espera o mais antigo e se o provedor está limitando. Mais de 120 s de espera = atrasada (aviso em A9 e `warn` no log do worker a cada 30 s).
 - Antes de enviar, relê a mentoria; se o status não combina mais com a mensagem (ex.: lembrete de mentoria cancelada), marca `skipped`. `registration_cancelled` só sai se a participante ainda estiver `cancelled` (se ela se inscreveu de novo antes do envio, o item vira `skipped`). `slot_released` só sai se a participante ainda estiver `waiting` (se já recebeu outro convite, foi confirmada ou cancelou antes do envio, o item vira `skipped`). `mentor_slot_released` só exige que a mentoria exista (sem ela, `skipped`); o worker lê a mentora por `userId` e o nome da participante pelo `menteeId` da mentoria, e como o item não tem `menteeId`, nenhum link com o token da participante entra na mensagem.
-- Falha: até 5 tentativas com espera de 30 s, 1, 2, 4 e 8 min; depois `failed`, visível em A9 com "Reenviar".
+- Falha: até 5 tentativas com espera de 30 s, 1, 2, 4 e 8 min; depois `failed`, visível em A9 com "Reenviar". Teste de carga: `TW_LOAD=1 npm run test:integration -- outbox-carga`.
 - Itens presos em `sending` há mais de 2 min voltam para `pending`.
 - No mesmo laço roda a expiração de convites (RN07).
 

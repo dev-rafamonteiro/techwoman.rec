@@ -45,6 +45,33 @@ export class NotifierError extends Error {
   }
 }
 
+/**
+ * Limite do provedor (HTTP 429, throttling do SES): não é falha da mensagem. O worker devolve o item à fila sem gastar
+ * tentativa e pausa o canal por `retryAfterMs`.
+ */
+export class RateLimitError extends NotifierError {
+  constructor(message: string, readonly retryAfterMs: number) {
+    super(message, false);
+  }
+}
+
+/** Espera padrão quando o provedor não diz quanto esperar; cota diária/mensal estourada espera mais. */
+export const RATE_LIMIT_WAIT_MS = 1_000;
+export const QUOTA_WAIT_MS = 5 * 60_000;
+
+/** `Retry-After` em segundos (ou data HTTP); senão `ratelimit-reset` (segundos, Resend). */
+export function retryAfterMs(headers: Headers, now = Date.now()): number | null {
+  const ra = headers.get('retry-after');
+  if (ra) {
+    const sec = Number(ra);
+    if (Number.isFinite(sec)) return Math.max(0, sec * 1000);
+    const at = Date.parse(ra);
+    if (!Number.isNaN(at)) return Math.max(0, at - now);
+  }
+  const reset = Number(headers.get('ratelimit-reset'));
+  return Number.isFinite(reset) && headers.get('ratelimit-reset') !== null ? Math.max(0, reset * 1000) : null;
+}
+
 /** Resultado do envio. `providerMessageId`: id estável da mensagem no provedor (WAHA: o `<hash>` final do id). */
 export interface NotifierResult {
   providerMessageId?: string;
@@ -57,15 +84,20 @@ export interface Notifier {
 /** Notifier de teste: guarda o que foi enviado e permite simular falhas. */
 export class MemoryNotifier implements Notifier {
   readonly sent: NotifierMessage[] = [];
-  private failures: { left: number; permanent: boolean }[] = [];
+  private failures: { left: number; permanent: boolean; rateLimitMs?: number }[] = [];
   /** Falha nos próximos `times` envios. */
   failNext(times = 1, permanent = false): void {
     this.failures.push({ left: times, permanent });
+  }
+  /** Responde "limite do provedor" (429) nos próximos `times` envios. */
+  rateLimitNext(times = 1, retryAfterMs = 1_000): void {
+    this.failures.push({ left: times, permanent: false, rateLimitMs: retryAfterMs });
   }
   async send(msg: NotifierMessage): Promise<NotifierResult> {
     const f = this.failures[0];
     if (f) {
       if (--f.left <= 0) this.failures.shift();
+      if (f.rateLimitMs !== undefined) throw new RateLimitError('HTTP 429 limite simulado', f.rateLimitMs);
       throw new NotifierError('falha simulada', f.permanent);
     }
     this.sent.push(msg);
@@ -94,6 +126,11 @@ async function postJson(url: string, headers: Record<string, string>, body: unkn
   }
   if (res.ok) return res.json().catch(() => undefined);
   const text = (await res.text().catch(() => '')).slice(0, 200);
+  if (res.status === 429) {
+    // Resend: `daily_quota_exceeded` / `monthly_quota_exceeded` não passam em 1 s; espera mais para não martelar
+    const quota = /quota/i.test(text);
+    throw new RateLimitError(`HTTP 429 ${text}`, retryAfterMs(res.headers) ?? (quota ? QUOTA_WAIT_MS : RATE_LIMIT_WAIT_MS));
+  }
   throw new NotifierError(`HTTP ${res.status} ${text}`, isPermanent(res.status));
 }
 
@@ -140,7 +177,11 @@ export class MailerEmailNotifier implements Notifier {
           : {}),
       });
     } catch (err) {
-      const e = err as { responseCode?: number; code?: string; message?: string };
+      const e = err as { responseCode?: number; code?: string; name?: string; message?: string };
+      // SES "Maximum sending rate exceeded" (Throttling) e SMTP 421/454: limite do servidor, não da mensagem
+      if (e.name === 'ThrottlingException' || e.code === 'Throttling' || e.responseCode === 421 || e.responseCode === 454 || /rate exceeded|throttl/i.test(e.message ?? '')) {
+        throw new RateLimitError(`e-mail: ${(e.message ?? String(err)).slice(0, 200)}`, RATE_LIMIT_WAIT_MS);
+      }
       // resposta 5xx do servidor SMTP: destinatário ou mensagem recusados, não adianta repetir
       const permanent = typeof e.responseCode === 'number' && e.responseCode >= 500 && e.responseCode < 600;
       throw new NotifierError(`e-mail: ${(e.message ?? String(err)).slice(0, 200)}`, permanent);

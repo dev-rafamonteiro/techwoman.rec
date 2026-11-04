@@ -65,6 +65,8 @@ const INDEXES: Record<string, IndexDescription[]> = {
   ],
   [COLLECTIONS.outbox]: [
     { key: { status: 1, nextAttemptAt: 1 }, name: 'outbox_status_next' },
+    // claim do worker por canal e faixa de prioridade (status + canal + tipos, mais antigo primeiro)
+    { key: { status: 1, channel: 1, type: 1, nextAttemptAt: 1 }, name: 'outbox_claim_lane' },
     { key: { dedupeKey: 1 }, name: 'outbox_dedupe', unique: true },
     { key: { appointmentId: 1 }, name: 'outbox_appointment' },
     { key: { status: 1, lockedAt: 1 }, name: 'outbox_sending_lock' },

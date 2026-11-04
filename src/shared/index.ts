@@ -79,7 +79,7 @@ import { E40Get, E40Put } from './contracts/E40-admin-tables.js';
 import { E41Get, E41Put } from './contracts/E41-admin-event.js';
 import { E42Png, E42Svg } from './contracts/E42-admin-event-qrcode.js';
 import { E43Create, E43List, E43Patch } from './contracts/E43-admin-users.js';
-import { E44List, E44Retry } from './contracts/E44-admin-notifications.js';
+import { E44Health, E44List, E44Retry } from './contracts/E44-admin-notifications.js';
 import { E45 } from './contracts/E45-admin-audit.js';
 import { E46 } from './contracts/E46-admin-email-preview.js';
 import { E47 } from './contracts/E47-webhook-waha.js';
@@ -92,7 +92,7 @@ export const ENDPOINTS = {
   E20, E21, E22, E23, E24, E25, E26, E27, E28,
   E30, E31List, E31Create, E32, E33, E34, E35, E35Detail, E36, E37, E38, E38Stream,
   E39Create, E39Patch, E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg,
-  E43List, E43Create, E43Patch, E44List, E44Retry, E45, E46,
+  E43List, E43Create, E43Patch, E44List, E44Retry, E44Health, E45, E46,
   E47, E48,
 } as const;
 

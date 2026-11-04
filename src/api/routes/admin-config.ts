@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
 import QRCode from 'qrcode';
 import {
-  E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg, E43Create, E43List, E43Patch, E44List, E44Retry, E45,
+  E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg, E43Create, E43List, E43Patch, E44Health, E44List, E44Retry, E45,
   DEFAULT_REMINDERS, DEFAULT_WHATSAPP_LISTS, generateSlots, invalidWhatsappListVariable, type EventConfig,
 } from '@tw/shared';
 import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, type EventDoc, type UserDoc } from '@tw/db';
@@ -12,6 +12,7 @@ import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
 import { sealSecret } from '../lib/secret-box.js';
 import { invalidSubjectVariable } from '../notifications/render.js';
+import { outboxHealth } from '../lib/outbox-health.js';
 import { shortLinkExpireAt } from '../lib/short-links.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { RAW, respond, route } from '../lib/route.js';
@@ -247,6 +248,8 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
     const last = page[page.length - 1];
     return { items: page.map(toOutboxItemView), nextCursor: docs.length > limit && last ? encodeCursor({ t: last.createdAt.getTime(), id: String(last._id) }) : null };
   });
+
+  route(app, ctx, E44Health, async () => outboxHealth(ctx));
 
   route(app, ctx, E44Retry, async ({ req, user, params }) => {
     const id = oid(params.id);
