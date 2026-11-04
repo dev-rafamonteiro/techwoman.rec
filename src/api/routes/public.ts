@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
-import { E01, E02, E03, E04, E05, E06, E07, E08, type E01Response } from '@tw/shared';
+import { E01, E02, E03, E04, E05, E06, E07, E08, E09, type E01Response } from '@tw/shared';
 import { hashMenteeToken, menteeToken, personalPath } from '../lib/tokens.js';
 import { getOrCreateShortLink, shortLinkExpireAt, shortPath } from '../lib/short-links.js';
 import type { MenteeDoc } from '@tw/db';
@@ -282,6 +282,26 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       return state;
     }),
   );
+
+  // E09 · POST /public/me/feedback · uma avaliação por participante, só com a mentoria concluída
+  route(app, ctx, E09, async ({ mentee, body }) => {
+    const fresh = await ctx.c.mentees.findOne({ _id: mentee._id });
+    if (!fresh || fresh.status !== 'done') throw new AppError('INVALID_STATE', 'A avaliação abre depois que a mentoria é concluída.');
+    try {
+      await ctx.c.feedbacks.insertOne({
+        _id: fresh._id,
+        eventId: fresh.eventId,
+        appointmentId: fresh.currentAppointmentId,
+        ratings: { event: body.event, talk: body.talk, mentoring: body.mentoring },
+        comment: body.comment ? body.comment : null,
+        createdAt: ctx.now(),
+      });
+    } catch (err) {
+      if (isDuplicateKey(err)) throw new AppError('INVALID_STATE', 'Você já enviou sua avaliação.');
+      throw err;
+    }
+    return buildMenteeState(ctx, fresh);
+  });
 
   // E05 · POST /public/resend-link · sempre 202 (sem enumeração)
   route(

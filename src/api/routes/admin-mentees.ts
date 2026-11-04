@@ -171,6 +171,8 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
           await ctx.c.outbox.deleteMany({ menteeId: id }, { session });
           // LGPD: o $inc de tokenVersion já revoga os links curtos; apagar tira o vínculo do banco
           await ctx.c.shortLinks.deleteMany({ menteeId: id }, { session });
+          // a avaliação (E09) tem comentário livre
+          await ctx.c.feedbacks.deleteMany({ _id: id }, { session });
           await writeAudit(ctx, session, { actor, action: 'mentee.anonymize', entity: 'mentee', entityId: id, ip: req.ip });
           break;
         }

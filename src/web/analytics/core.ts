@@ -70,6 +70,7 @@ export const EVENTS = {
   horario_escolhido: {},
   agenda_adicionada: {},
   preferencia_atualizada: { periodo: isPeriod },
+  avaliacao_enviada: {},
 } as const satisfies Record<string, Record<string, (v: unknown) => boolean>>;
 
 export type EventName = keyof typeof EVENTS;

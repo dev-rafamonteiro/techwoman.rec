@@ -21,6 +21,8 @@ export async function buildMenteeState(ctx: AppContext, mentee: MenteeDoc, sessi
       if (mentor && table) appointment = toMenteeAppointmentView(a, mentor, table, event, now);
     }
   }
+  // E09: a avaliação só existe (e só é procurada) depois da mentoria concluída
+  const fb = mentee.status === 'done' ? await ctx.c.feedbacks.findOne({ _id: mentee._id }, opt) : null;
   return {
     mentee: {
       name: mentee.name,
@@ -32,6 +34,7 @@ export async function buildMenteeState(ctx: AppContext, mentee: MenteeDoc, sessi
     },
     appointment,
     lastOutcome: mentee.status === 'waiting' ? mentee.lastOutcome : null,
+    feedback: fb ? { ratings: fb.ratings, comment: fb.comment, createdAt: iso(fb.createdAt) } : null,
     event: { registrationOpen: event.registrationOpen, timezone: event.timezone },
     serverNow: iso(now),
   };

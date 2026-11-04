@@ -10,6 +10,7 @@ export * from './contracts/E05-resend-link.js';
 export * from './contracts/E06-public-calendar.js';
 export * from './contracts/E07-public-me-slots.js';
 export * from './contracts/E08-public-me-book.js';
+export * from './contracts/E09-public-me-feedback.js';
 export * from './contracts/E10-login.js';
 export * from './contracts/E11-logout.js';
 export * from './contracts/E12-me.js';
@@ -52,6 +53,7 @@ import { E05 } from './contracts/E05-resend-link.js';
 import { E06 } from './contracts/E06-public-calendar.js';
 import { E07 } from './contracts/E07-public-me-slots.js';
 import { E08 } from './contracts/E08-public-me-book.js';
+import { E09 } from './contracts/E09-public-me-feedback.js';
 import { E10 } from './contracts/E10-login.js';
 import { E11 } from './contracts/E11-logout.js';
 import { E12 } from './contracts/E12-me.js';
@@ -87,7 +89,7 @@ import { E48 } from './contracts/E48-short-link.js';
 
 /** Todos os endpoints, por nome. Usado pelo cliente HTTP tipado e pelo registro de rotas da API. */
 export const ENDPOINTS = {
-  E01, E02, E03, E04, E05, E06, E07, E08,
+  E01, E02, E03, E04, E05, E06, E07, E08, E09,
   E10, E11, E12, E13,
   E20, E21, E22, E23, E24, E25, E26, E27, E28,
   E30, E31List, E31Create, E32, E33, E34, E35, E35Detail, E36, E37, E38, E38Stream,

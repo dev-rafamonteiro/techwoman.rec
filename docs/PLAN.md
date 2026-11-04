@@ -155,6 +155,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 | `presence_checks` | Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença (RN18) | P6, A9 |
 | `whatsapp_inbound` | Mensagens recebidas do WAHA já processadas (deduplicação, TTL de 7 dias) | — |
 | `short_links` | Links curtos `/l/<código>` que levam ao link pessoal ou ao `.ics` da participante (E48) | P5, e-mails, WhatsApp |
+| `feedbacks` | Avaliação da participante depois da mentoria concluída (E09) | P6 |
 
 ### events
 
@@ -203,6 +204,7 @@ As duas travas são campos booleanos mantidos junto com o status:
 - `presence_checks` (sem validador; `_id` = `appointmentId`): `kind` (`invite` | `presence`; ausente = `presence`), `menteeId`, `phone` (só dígitos, ex.: `5511996604159`), `messageId` (hash final do id da mensagem no WAHA), `status` (`pending` | `confirmed` | `cancelled` | `closed`), `sentAt`, `answeredAt`, `answer{kind: "list" | "text", text, interpretation: "confirm" | "cancel" | null}`. Índice `{ phone: 1, status: 1, sentAt: -1 }`.
 - `whatsapp_inbound` (sem validador; `_id` = hash final do id da mensagem recebida): `receivedAt`, `expireAt` (TTL), `phone`, `result` (`confirm` | `cancel` | `unclear` | `ignored`). Serve só para descartar o mesmo evento reenviado pelo WAHA.
 - `short_links` (sem validador; `_id` = código de 7 caracteres base62): `menteeId`, `kind` (`personal` | `calendar`), `tokenVersion` (o da participante quando o link foi criado), `createdAt`, `expireAt` (fim do evento + 7 dias; TTL). O token não é gravado: E48 o deriva na hora. Regras em Notificações > Links curtos.
+- `feedbacks` (sem validador; `_id` = menteeId, o que já garante uma avaliação por participante): `eventId`, `appointmentId` (a mentoria concluída), `ratings` (`event`, `talk`, `mentoring`, inteiros de 1 a 5), `comment` (texto ou null), `createdAt`. Apagada na anonimização.
 
 ### Índices
 
@@ -297,8 +299,9 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E05 | `POST /public/resend-link` | P6 | Sempre 202, exista ou não o e-mail (sem enumeração) |
 | E07 | `GET /public/me/slots` | P6 | RN19; horários livres para ela escolher: `{ items: [{ slotId, startAt, endAt, matchesPeriod }] }`; `INVALID_STATE` (409) fora do estado permitido |
 | E08 | `POST /public/me/book` | P6 | RN19; `{ slotId }` com `Idempotency-Key`; o sistema escolhe mentora e mesa e cria a mentoria já `confirmed`; 409 `SLOT_UNAVAILABLE` se o horário acabou de ser ocupado |
+| E09 | `POST /public/me/feedback` | P6 | Avaliação depois da mentoria concluída: `{ event, talk, mentoring, comment? }`, notas inteiras de 1 a 5 e comentário opcional de até 1.000 caracteres. Só com a participante `done`; uma por participante, sem edição (coleção `feedbacks`, `_id` = menteeId). 409 `INVALID_STATE` fora de `done` ou se já enviou. Devolve o estado de E03, que traz `feedback` (notas, comentário, data) ou null. A anonimização (E36) apaga a avaliação |
 | E06 | `GET /public/calendar.ics?t=<token>` | P6, e-mail 3 | Só para mentoria confirmada; `text/calendar`; `UID` = id da mentoria raiz da cadeia de moves (estável); 404 em qualquer outro status |
-| E48 | `GET /l/:code` (rota da API `/api/l/:code`; link público `<PUBLIC_BASE_URL>/l/<código>`) | E-mails, WhatsApp, P5 | Público, sem login e sem CSRF; não executa ação. Sempre 302 sem corpo, com `Location` relativo: `kind = personal` → `/mentoria/minha?t=<token>`, `kind = calendar` → `/api/public/calendar.ics?t=<token>`, com o token derivado na hora do `tokenVersion` atual. Código inexistente, formato inválido (o parâmetro aceita qualquer texto de até 64 caracteres, sem 422), revogado (`tokenVersion` do link ≠ atual), vencido (`expireAt` já passou) ou de participante que não existe mais → 302 para `/mentoria/minha` (P6 mostra "Link inválido"), resposta idêntica nos cinco casos. Cabeçalhos `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Rate limit próprio por IP: 600 por minuto. Código E48 escolhido depois de E47 (E09 segue livre). Regras em Notificações > Links curtos |
+| E48 | `GET /l/:code` (rota da API `/api/l/:code`; link público `<PUBLIC_BASE_URL>/l/<código>`) | E-mails, WhatsApp, P5 | Público, sem login e sem CSRF; não executa ação. Sempre 302 sem corpo, com `Location` relativo: `kind = personal` → `/mentoria/minha?t=<token>`, `kind = calendar` → `/api/public/calendar.ics?t=<token>`, com o token derivado na hora do `tokenVersion` atual. Código inexistente, formato inválido (o parâmetro aceita qualquer texto de até 64 caracteres, sem 422), revogado (`tokenVersion` do link ≠ atual), vencido (`expireAt` já passou) ou de participante que não existe mais → 302 para `/mentoria/minha` (P6 mostra "Link inválido"), resposta idêntica nos cinco casos. Cabeçalhos `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Rate limit próprio por IP: 600 por minuto. Código E48 escolhido depois de E47. Regras em Notificações > Links curtos |
 
 ### Autenticação
 

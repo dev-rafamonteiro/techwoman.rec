@@ -270,3 +270,20 @@ export interface ShortLinkDoc {
   /** Fim do evento + 7 dias (TTL `short_link_ttl`); E48 também confere. */
   expireAt: Date;
 }
+
+/**
+ * Avaliação da participante depois da mentoria concluída (E09, P6). Uma por participante (`_id` = menteeId), sem
+ * edição. Sem validador (a coleção nasce sozinha em `createIndexes`); o corpo já é validado pelo Zod de E09.
+ * O comentário é texto livre: a anonimização (E36) apaga o documento.
+ */
+export interface FeedbackDoc {
+  /** = menteeId */
+  _id: ObjectId;
+  eventId: string;
+  /** Mentoria concluída avaliada. */
+  appointmentId: ObjectId | null;
+  /** Notas de 1 a 5. */
+  ratings: { event: number; talk: number; mentoring: number };
+  comment: string | null;
+  createdAt: Date;
+}

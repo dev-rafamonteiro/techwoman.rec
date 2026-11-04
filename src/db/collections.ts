@@ -3,6 +3,7 @@ import type {
   AppointmentDoc,
   AuditLogDoc,
   EventDoc,
+  FeedbackDoc,
   IdempotencyDoc,
   MenteeDoc,
   OutboxDoc,
@@ -27,6 +28,7 @@ export const COLLECTIONS = {
   presenceChecks: 'presence_checks',
   whatsappInbound: 'whatsapp_inbound',
   shortLinks: 'short_links',
+  feedbacks: 'feedbacks',
 } as const;
 
 export interface Collections {
@@ -42,6 +44,7 @@ export interface Collections {
   presenceChecks: Collection<PresenceCheckDoc>;
   whatsappInbound: Collection<WhatsappInboundDoc>;
   shortLinks: Collection<ShortLinkDoc>;
+  feedbacks: Collection<FeedbackDoc>;
 }
 
 export function getCollections(db: Db): Collections {
@@ -58,5 +61,6 @@ export function getCollections(db: Db): Collections {
     presenceChecks: db.collection<PresenceCheckDoc>(COLLECTIONS.presenceChecks),
     whatsappInbound: db.collection<WhatsappInboundDoc>(COLLECTIONS.whatsappInbound),
     shortLinks: db.collection<ShortLinkDoc>(COLLECTIONS.shortLinks),
+    feedbacks: db.collection<FeedbackDoc>(COLLECTIONS.feedbacks),
   };
 }

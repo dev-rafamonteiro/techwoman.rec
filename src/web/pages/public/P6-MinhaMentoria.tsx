@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ENDPOINTS, type E03Response, type E07Item, type PreferredPeriod } from '@tw/shared';
+import { ENDPOINTS, FEEDBACK_COMMENT_MAX, type E03Response, type E07Item, type PreferredPeriod } from '@tw/shared';
 import {
   ApiError, type BodyOf, Button, Card, Countdown, EmptyState, ErrorState, ExternalButton, LinkButton, PERIOD_LABELS, RadioCards, SkeletonList, SlotSingleChoice,
-  StatusBadge, PriorityBadge, TextField, call, endpointUrl, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useQuery, useToast, usePolling,
+  StatusBadge, PriorityBadge, TextArea, TextField, call, endpointUrl, formatDayShort, formatRange, formatTime, getMenteeToken, setMenteeToken, useQuery, useToast, usePolling,
 } from '../../ui';
 import { track } from '../../analytics';
 import { FALLBACK_AREAS } from './lib/areas';
@@ -138,6 +138,97 @@ function ChooseSlot({ onBooked, onStale }: { onBooked: (next: Me) => void; onSta
   );
 }
 
+type Ratings = { event: number; talk: number; mentoring: number };
+const QUESTIONS: { key: keyof Ratings; label: string }[] = [
+  { key: 'event', label: 'O evento' },
+  { key: 'talk', label: 'A palestra' },
+  { key: 'mentoring', label: 'A mentoria' },
+];
+const RATING_LABELS = ['', 'Muito ruim', 'Ruim', 'Regular', 'Boa', 'Excelente'];
+
+const Star = () => (
+  <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" /></svg>
+);
+
+/** Escala de 1 a 5 em estrelas (radiogroup); `onChange` ausente = só leitura. */
+function StarScale({ label, value, onChange, testId }: { label: string; value: number; onChange?: (v: number) => void; testId: string }) {
+  return (
+    <div className="tw-rate" data-testid={testId}>
+      <span className="tw-rate__label">{label}</span>
+      <div className="tw-stars" role={onChange ? 'radiogroup' : 'img'} aria-label={onChange ? label : `${label}: ${value} de 5`}>
+        {[1, 2, 3, 4, 5].map((n) =>
+          onChange ? (
+            <button key={n} type="button" role="radio" className="tw-star" aria-checked={value === n} aria-label={`${n} de 5 · ${RATING_LABELS[n]}`}
+              data-on={n <= value} onClick={() => onChange(n)} data-testid={`${testId}-${n}`}><Star /></button>
+          ) : (
+            <span key={n} className="tw-star" data-on={n <= value}><Star /></span>
+          ),
+        )}
+      </div>
+      <small className="tw-rate__hint" aria-hidden="true">{value ? RATING_LABELS[value] : 'Toque de 1 a 5 estrelas'}</small>
+    </div>
+  );
+}
+
+/** Concluída: avaliação de evento, palestra e mentoria (1 a 5) e comentário livre (E09). Uma por participante. */
+function Feedback({ sent, onSent }: { sent: Me['feedback']; onSent: (next: Me) => void }) {
+  const toast = useToast();
+  const [ratings, setRatings] = useState<Ratings>({ event: 0, talk: 0, mentoring: 0 });
+  const [comment, setComment] = useState('');
+  const [missing, setMissing] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  if (sent) {
+    return (
+      <Card accent>
+        <div className="tw-stack tw-p6-feedback" data-testid="p6-feedback-sent">
+          <h2>Obrigada pela avaliação!</h2>
+          {QUESTIONS.map((q) => <StarScale key={q.key} label={q.label} value={sent.ratings[q.key]} testId={`p6-feedback-${q.key}`} />)}
+          {sent.comment && <p className="tw-p6-feedback__comment">“{sent.comment}”</p>}
+        </div>
+      </Card>
+    );
+  }
+
+  const complete = QUESTIONS.every((q) => ratings[q.key] > 0);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!complete) {
+      setMissing(true);
+      return;
+    }
+    setSending(true);
+    try {
+      const next = await call(ENDPOINTS.E09, { body: { ...ratings, ...(comment.trim() ? { comment: comment.trim() } : {}) } });
+      track('avaliacao_enviada');
+      onSent(next);
+    } catch (err) {
+      const ae = err instanceof ApiError ? err : new ApiError(0, 'NETWORK', 'Sem conexão.');
+      toast.error(ae.message || 'Não foi possível enviar agora. Tente de novo.');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <Card accent>
+      <form className="tw-stack tw-p6-feedback" onSubmit={submit} noValidate data-testid="p6-feedback">
+        <h2>Como foi sua experiência?</h2>
+        <p>Dê uma nota de 1 a 5 para cada item. Sua opinião ajuda a melhorar as próximas edições.</p>
+        {QUESTIONS.map((q) => (
+          <StarScale key={q.key} label={q.label} value={ratings[q.key]} testId={`p6-feedback-${q.key}`}
+            onChange={(v) => { setRatings((r) => ({ ...r, [q.key]: v })); setMissing(false); }} />
+        ))}
+        <TextArea label="Quer contar mais?" optional rows={4} maxLength={FEEDBACK_COMMENT_MAX} placeholder="O que foi bom, o que pode melhorar…"
+          hint={<span className="tw-counter">{comment.length}/{FEEDBACK_COMMENT_MAX}</span>} value={comment}
+          onChange={(e) => setComment(e.target.value)} data-testid="p6-feedback-comment" />
+        {missing && <p className="tw-slotmsg" role="alert" data-testid="p6-feedback-missing">Dê uma nota para o evento, a palestra e a mentoria.</p>}
+        <Button type="submit" block loading={sending} data-testid="p6-feedback-send">Enviar avaliação</Button>
+      </form>
+    </Card>
+  );
+}
+
 /** Evento de uso de cada ação de E04 que deu certo (docs/UI-SPEC.md > Medição de uso). */
 function trackAction(body: BodyOf<typeof ENDPOINTS.E04>) {
   if (body.action === 'accept') track('convite_aceito');
@@ -147,7 +238,7 @@ function trackAction(body: BodyOf<typeof ENDPOINTS.E04>) {
   else if (body.action === 'update_preference') track('preferencia_atualizada', { periodo: body.preferredPeriod });
 }
 
-/** P6 · Minha mentoria (E03, E04, E07, E08) · RN05, RN06, RN07, RN19 */
+/** P6 · Minha mentoria (E03, E04, E07, E08, E09) · RN05, RN06, RN07, RN19 */
 export default function P6MinhaMentoria() {
   const [params] = useSearchParams();
   const toast = useToast();
@@ -331,7 +422,12 @@ export default function P6MinhaMentoria() {
     testid = 'p6-concluida';
     badge = <StatusBadge status="done" />;
     title = 'Obrigada por participar!';
-    body = <p data-testid="p6-final">Esperamos que a conversa tenha aberto caminhos. Conte como foi para nós.</p>;
+    body = (
+      <>
+        <p data-testid="p6-final">Esperamos que a conversa tenha aberto caminhos.{me.feedback ? '' : ' Conte como foi para nós.'}</p>
+        <Feedback sent={me.feedback} onSent={(next) => { setMe(next); setFreshAt(Date.now()); }} />
+      </>
+    );
   } else if (mentee.status === 'cancelled' || mentee.status === 'no_show') {
     testid = 'p6-encerrada';
     badge = <StatusBadge status={mentee.status === 'no_show' ? 'no_show' : 'cancelled'} />;

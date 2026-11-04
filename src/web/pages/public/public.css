@@ -180,6 +180,21 @@
 .tw-p6-choose h2 { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.15; margin: 0; }
 .tw-slotmsg { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--tw-red-100); color: var(--tw-red-900); font-size: 14px; font-weight: 600; }
 
+/* P6 (Concluída): avaliação em estrelas de 1 a 5 e comentário (E09). */
+.tw-p6-feedback h2 { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.15; margin: 0; }
+.tw-p6-feedback p { margin: 0; }
+.tw-rate { display: flex; flex-direction: column; gap: 4px; }
+.tw-rate__label { font-weight: 800; }
+.tw-rate__hint { color: var(--color-ink-muted); font-size: 13px; font-weight: 600; }
+.tw-stars { display: flex; gap: 4px; }
+.tw-star { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--tw-lilac-400); }
+button.tw-star { cursor: pointer; }
+.tw-star[data-on="true"] { color: var(--tw-orange-500); }
+.tw-star:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+span.tw-star { width: 32px; height: 32px; }
+span.tw-star svg { width: 24px; height: 24px; }
+.tw-p6-feedback__comment { font-style: italic; overflow-wrap: anywhere; white-space: pre-line; }
+
 /* P2 intro: três cartões coloridos (arte). */
 .tw-p2i { display: grid; gap: 12px; grid-template-columns: 1fr; }
 @media (min-width: 768px) { .tw-p2i { grid-template-columns: repeat(3, 1fr); } }

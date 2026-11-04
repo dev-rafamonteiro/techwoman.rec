@@ -25,6 +25,14 @@ export const E03ResponseSchema = z.object({
   /** Convite ativo ou mentoria confirmada/concluída; null quando não há. */
   appointment: MenteeAppointmentViewSchema.nullable(),
   lastOutcome: LastOutcomeSchema.nullable(),
+  /** Avaliação enviada em E09 (só com status `done`); null quando ainda não enviou. */
+  feedback: z
+    .object({
+      ratings: z.object({ event: z.number().int(), talk: z.number().int(), mentoring: z.number().int() }),
+      comment: z.string().nullable(),
+      createdAt: IsoDateTimeSchema,
+    })
+    .nullable(),
   event: z.object({ registrationOpen: z.boolean(), timezone: z.string() }),
   /** Hora do servidor, para o contador regressivo não depender do relógio do celular. */
   serverNow: IsoDateTimeSchema,

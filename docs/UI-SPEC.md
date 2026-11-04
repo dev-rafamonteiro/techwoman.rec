@@ -145,7 +145,7 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**): abre a escolha "Trocar de horário" (`reschedule`, RN19: cancela esta mentoria, volta à fila com prioridade e mostra os horários livres) ou "Não tenho mais interesse" (`cancel`, encerra a inscrição) |
 | Recusada por horário (inclui quem trocou de horário ou disse "Não poderei ir" no WhatsApp) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
 | Proposta expirada | "O prazo para responder terminou e o horário foi liberado. Você continua na fila." | — |
-| Concluída | Agradecimento e link de avaliação (se houver) | — |
+| Concluída | Agradecimento e o cartão "Como foi sua experiência?": notas de 1 a 5 em estrelas para O evento, A palestra e A mentoria (obrigatórias; abaixo de cada uma, o nome da nota: Muito ruim, Ruim, Regular, Boa, Excelente) e o campo livre "Quer contar mais?" (opcional, até 1.000 caracteres, com contador). Enviar sem as três notas mostra "Dê uma nota para o evento, a palestra e a mentoria." Depois de enviada (ou ao reabrir a página), o cartão vira "Obrigada pela avaliação!" com as notas e o comentário, só para leitura | Enviar avaliação (**E09**) |
 | Não compareceu / Cancelada | Mensagem neutra | Fazer nova inscrição, se o evento ainda estiver aberto |
 | Link inválido | "Não encontramos sua inscrição" | Reenviar link por e-mail (**E05**) |
 
@@ -340,6 +340,7 @@ Cada tela pública conta um pageview ao abrir. Eventos por tela (propriedades s�
 | P6 (Recusada por horário) | Horário escolhido e confirmado (E08) | `horario_escolhido` | — |
 | P6 (Confirmada) | Toque em "Adicionar à agenda (.ics)" | `agenda_adicionada` | — |
 | P6 | Período preferido salvo | `preferencia_atualizada` | `periodo` |
+| P6 (Concluída) | Avaliação enviada com sucesso (E09) | `avaliacao_enviada` | — |
 
 ### Privacidade · parágrafo sobre medição de uso
 
@@ -353,7 +354,6 @@ Na página `/privacidade`, em um cartão próprio (o restante do aviso continua 
 - [ ] Lista oficial das \~50 mentoras com nome, e-mail, LinkedIn e horários, para o modelo de importação (A3).
 - [ ] Lista de áreas finais da gamificação, para os selos e filtros (P3, P4, M4).
 - [ ] Foto da mentora: obrigatória, opcional ou fora?
-- [ ] Haverá avaliação pós-mentoria? Se sim, link na tela de status Concluída (P6).
 - [ ] Texto do aviso de privacidade (LGPD) e quem é a controladora dos dados, sem citar o Bradesco.
 - [ ] Fase 2, se der tempo: tela de configuração das perguntas e pesos da gamificação no admin (hoje ficam fixas no código).
 
