@@ -265,7 +265,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 - Nos textos do WhatsApp, "Convite de horário" leva a nota "Usado quando o WhatsApp sai em texto simples (sem menu)" e "Lembrete" leva "Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença".
 - Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 9 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
-- Alterar a grade com mentorias já marcadas é bloqueado. Dados: **E41**, QR Code: **E42**.
+- Alterar a grade (data, fuso, hora de início e de fim, duração e intervalo) é bloqueado enquanto houver mentoria marcada ou realizada, ou seja, com `slotLock` (convidada, confirmada, em andamento, concluída ou sem comparecimento), o mesmo critério da RN16 em E41. Com o bloqueio, esses campos ficam desabilitados e aparece o aviso com a quantidade de mentorias; se o E41 ainda assim responder `GRID_LOCKED`, a tela mostra o erro acima do formulário. Dados: **E41** (bloqueio calculado com **E38**), QR Code: **E42**.
 
 ### A8 · Administradores (super admin)
 
