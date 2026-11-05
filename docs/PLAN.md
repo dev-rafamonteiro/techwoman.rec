@@ -400,7 +400,7 @@ A busca livre roda no Atlas Search (`$search`): acha por palavra, ignora acentos
 | --- | --- | --- | --- |
 | Fila da mentora, busca livre | M4 | E22 com `q` | `$search` em `mentees_text` (nome, comentário) |
 | Participantes no admin | A4 | E35 com `q` | `$search` em `mentees_text` (nome, e-mail, telefone, comentário) |
-| Mentoras no admin | A2 | E31 com `q` | `$search` em `staff_text` (nome, e-mail, áreas, bio) |
+| Mentoras no admin | A2 | E31 com `q` | `$search` em `staff_text` (nome, e-mail, áreas, bio, empresa, temas) |
 | Fila sem busca | M4, A4 | E22, E35 sem `q` | Consulta comum com índice B-tree (RN03); não passa pelo Atlas Search |
 
 ### Índices do Atlas Search
@@ -419,7 +419,7 @@ db.mentees.createSearchIndex("mentees_text", "search", {
   } }
 })
 
-// mentoras: staff_text -> name (string + autocomplete), email (keyword), areas (token), bio (lucene.portuguese), status, roles (token)
+// mentoras: staff_text -> name (string + autocomplete), email (keyword), areas (token), bio, organization, themes (lucene.portuguese), status, roles (token)
 ```
 
 ### Consulta (E22 com `q`)

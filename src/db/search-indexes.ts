@@ -47,6 +47,8 @@ export const TEXT_SEARCH_INDEXES: readonly SearchIndexSpec[] = [
           email: keyword,
           areas: { type: 'token' },
           bio: portuguese,
+          organization: portuguese,
+          themes: portuguese,
           status: { type: 'token' },
           roles: { type: 'token' },
         },

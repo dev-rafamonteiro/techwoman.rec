@@ -96,10 +96,10 @@ export interface StaffSearch {
   neverLoggedIn?: boolean;
 }
 
-/** Mentoras por palavra: nome, bio, e-mail exato e nome por prefixo; filtros reaplicados sobre o documento atual. */
+/** Mentoras por palavra: nome, bio, empresa, temas, e-mail exato e nome por prefixo; filtros reaplicados sobre o documento atual. */
 export function mentorSearchPipeline(s: StaffSearch): Document[] {
   const should: Document[] = [
-    ...typoTolerant(s.q, ['name', 'bio'], 'name'),
+    ...typoTolerant(s.q, ['name', 'bio', 'organization', 'themes'], 'name'),
     { text: { query: [...new Set([s.q, s.q.toLowerCase()])], path: 'email' } },
   ];
   const filter: Document[] = [equals('roles', 'mentor')];
