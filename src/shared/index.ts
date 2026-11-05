@@ -43,6 +43,7 @@ export * from './contracts/E45-admin-audit.js';
 export * from './contracts/E46-admin-email-preview.js';
 export * from './contracts/E48-short-link.js';
 export * from './contracts/E49-admin-feedback.js';
+export * from './contracts/E50-E53-walk-ins.js';
 
 import type { EndpointDef } from './contracts/common.js';
 import { E01 } from './contracts/E01-public-event.js';
@@ -86,6 +87,7 @@ import { E45 } from './contracts/E45-admin-audit.js';
 import { E46 } from './contracts/E46-admin-email-preview.js';
 import { E48 } from './contracts/E48-short-link.js';
 import { E49 } from './contracts/E49-admin-feedback.js';
+import { E50, E51, E52, E53Delete, E53List } from './contracts/E50-E53-walk-ins.js';
 
 /** Todos os endpoints, por nome. Usado pelo cliente HTTP tipado e pelo registro de rotas da API. */
 export const ENDPOINTS = {
@@ -96,6 +98,7 @@ export const ENDPOINTS = {
   E39Create, E39Patch, E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg,
   E43List, E43Create, E43Patch, E44List, E44Retry, E44Health, E45, E46,
   E48, E49,
+  E50, E51, E52, E53List, E53Delete,
 } as const;
 
 export type EndpointName = keyof typeof ENDPOINTS;

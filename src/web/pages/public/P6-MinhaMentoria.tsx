@@ -417,6 +417,8 @@ export default function P6MinhaMentoria() {
     title = 'Obrigada por participar!';
     body = (
       <>
+        {/* RN21: concluída num atendimento fora da mesa (sem mentoria na mesa) */}
+        {!ap && me.walkIn && <p data-testid="p6-walkin">Você fez uma mentoria com {me.walkIn.mentorName}.</p>}
         <p data-testid="p6-final">Esperamos que a conversa tenha aberto caminhos.{me.feedback ? '' : ' Conte como foi para nós.'}</p>
         <Feedback sent={me.feedback} onSent={(next) => { setMe(next); setFreshAt(Date.now()); }} />
       </>

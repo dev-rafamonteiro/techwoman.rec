@@ -124,7 +124,8 @@ export interface MenteeDoc {
   quizScores: Record<string, number>;
   preferredPeriod: PreferredPeriod;
   note: string | null;
-  consent: { version: string; acceptedAt: Date } | null;
+  /** `collectedBy`: mentora que colheu o aceite no cadastro rápido (RN21, E51); ausente na inscrição pela própria participante. */
+  consent: { version: string; acceptedAt: Date; collectedBy?: ObjectId } | null;
   status: MenteeStatus;
   priority: boolean;
   priorityReason: PriorityReason | null;
@@ -251,8 +252,33 @@ export interface FeedbackDoc {
   eventId: string;
   /** Mentoria concluída avaliada. */
   appointmentId: ObjectId | null;
+  /** Atendimento fora da mesa avaliado (RN21), quando ela foi concluída assim; ausente em avaliações antigas. */
+  walkInId?: ObjectId | null;
+  /** Mentora avaliada (da mentoria ou do atendimento fora da mesa); ausente em avaliações antigas (A10 lê da mentoria). */
+  mentorId?: ObjectId | null;
   /** Notas de 1 a 5. */
   ratings: { event: number; talk: number; mentoring: number };
   comment: string | null;
   createdAt: Date;
+}
+
+/**
+ * RN21 · Atendimento fora da mesa: mentoria rápida que a mentora fez com a participante fora das mesas e da grade.
+ * Não cria `appointments`, não usa mesa nem horário. Sem validador (como `feedbacks`). Um ativo por mentora e
+ * participante (`walkin_pair_active`); a remoção pelo admin (E53) é lógica (`deletedAt`).
+ */
+export interface WalkInDoc {
+  _id: ObjectId;
+  eventId: string;
+  menteeId: ObjectId;
+  mentorId: ObjectId;
+  /** Hora do registro (relógio do servidor). */
+  at: Date;
+  note: string | null;
+  /** Status da participante antes do atendimento; null quando ela foi cadastrada agora (E51 `created`). */
+  previousMenteeStatus: MenteeStatus | null;
+  createdBy: ObjectId;
+  createdAt: Date;
+  deletedAt: Date | null;
+  deletedBy: ObjectId | null;
 }

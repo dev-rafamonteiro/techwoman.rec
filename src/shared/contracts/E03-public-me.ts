@@ -33,6 +33,11 @@ export const E03ResponseSchema = z.object({
       createdAt: IsoDateTimeSchema,
     })
     .nullable(),
+  /**
+   * Atendimento fora da mesa (RN21) mais recente com ela; P6 mostra "Você fez uma mentoria com {mentora}" quando ela
+   * foi concluída assim (sem `appointment`). null quando não há.
+   */
+  walkIn: z.object({ mentorName: z.string(), at: IsoDateTimeSchema }).nullable(),
   event: z.object({ registrationOpen: z.boolean(), timezone: z.string() }),
   /** Hora do servidor, para o contador regressivo não depender do relógio do celular. */
   serverNow: IsoDateTimeSchema,

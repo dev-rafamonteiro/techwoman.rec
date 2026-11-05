@@ -1,7 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { ObjectId } from 'mongodb';
 import { E01, E02, E03, E04, E05, E06, E07, E08, E09, type E01Response } from '@tw/shared';
-import { hashMenteeToken, menteeToken, personalPath } from '../lib/tokens.js';
+import { menteeToken, personalPath } from '../lib/tokens.js';
 import { getOrCreateShortLink, shortLinkExpireAt, shortPath } from '../lib/short-links.js';
 import type { MenteeDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
@@ -14,6 +13,7 @@ import { normalizeLinkedin, normalizePhoneBR } from '../lib/normalize.js';
 import { enqueueMenteeNotifications } from '../lib/outbox.js';
 import { verifyTurnstile } from '../lib/turnstile.js';
 import { buildMenteeState } from '../services/mentee-state.js';
+import { insertNewMentee, newMenteeDoc } from '../services/mentee-registration.js';
 import { listSelfBookSlots, selfBook } from '../services/self-book.js';
 import { applyTransition } from '../services/transitions.js';
 import { canUpdatePreferredPeriod, isRegistrationOpen, normalizeEmail, registrationOutcome } from '../domain/index.js';
@@ -140,32 +140,10 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       }
 
       // create
-      const _id = new ObjectId();
-      const token = menteeToken(ctx.config.menteeTokenSecret, _id, 1);
-      const doc: MenteeDoc = {
-        _id,
-        eventId: ctx.config.eventId,
-        ...fields,
-        status: 'waiting',
-        priority: false,
-        priorityReason: null,
-        queuedAt: now,
-        currentAppointmentId: null,
-        lastOutcome: null,
-        emailNorm,
-        tokenHash: hashMenteeToken(token),
-        tokenVersion: 1,
-        linkSendCount: 1,
-        anonymizedAt: null,
-        version: 1,
-        createdAt: now,
-        updatedAt: now,
-      };
+      const doc = newMenteeDoc(ctx, fields, { status: 'waiting', now });
       try {
         await runTxn(ctx, async (session) => {
-          await ctx.c.mentees.insertOne(doc, { session });
-          await enqueueMenteeNotifications(ctx, session, { type: 'registered', mentee: doc, dedupeSuffix: 1 });
-          await writeAudit(ctx, session, { actor: { userId: null, role: 'mentee' }, action: 'mentee.register', entity: 'mentee', entityId: _id, after: { status: 'waiting', area: doc.area }, ip: req.ip });
+          await insertNewMentee(ctx, session, doc, { actor: { userId: null, role: 'mentee' }, action: 'mentee.register', ip: req.ip });
         });
       } catch (err) {
         if (isDuplicateKey(err)) {
@@ -287,11 +265,16 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
   route(app, ctx, E09, async ({ mentee, body }) => {
     const fresh = await ctx.c.mentees.findOne({ _id: mentee._id });
     if (!fresh || fresh.status !== 'done') throw new AppError('INVALID_STATE', 'A avaliação abre depois que a mentoria é concluída.');
+    // mentora avaliada: a da mentoria concluída na mesa ou, sem ela, a do atendimento fora da mesa mais recente (RN21)
+    const appt = fresh.currentAppointmentId ? await ctx.c.appointments.findOne({ _id: fresh.currentAppointmentId }, { projection: { mentorId: 1 } }) : null;
+    const walkIn = appt ? null : await ctx.c.walkIns.findOne({ eventId: fresh.eventId, menteeId: fresh._id, deletedAt: null }, { sort: { at: -1 }, projection: { mentorId: 1 } });
     try {
       await ctx.c.feedbacks.insertOne({
         _id: fresh._id,
         eventId: fresh.eventId,
         appointmentId: fresh.currentAppointmentId,
+        walkInId: walkIn?._id ?? null,
+        mentorId: appt?.mentorId ?? walkIn?.mentorId ?? null,
         ratings: { event: body.event, talk: body.talk, mentoring: body.mentoring },
         comment: body.comment ? body.comment : null,
         createdAt: ctx.now(),

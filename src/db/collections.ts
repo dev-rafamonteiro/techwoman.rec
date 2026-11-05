@@ -11,6 +11,7 @@ import type {
   ShortLinkDoc,
   TableDoc,
   UserDoc,
+  WalkInDoc,
 } from './types.js';
 
 export const COLLECTIONS = {
@@ -25,6 +26,7 @@ export const COLLECTIONS = {
   idempotencyKeys: 'idempotency_keys',
   shortLinks: 'short_links',
   feedbacks: 'feedbacks',
+  walkIns: 'walk_ins',
 } as const;
 
 export interface Collections {
@@ -39,6 +41,7 @@ export interface Collections {
   idempotencyKeys: Collection<IdempotencyDoc>;
   shortLinks: Collection<ShortLinkDoc>;
   feedbacks: Collection<FeedbackDoc>;
+  walkIns: Collection<WalkInDoc>;
 }
 
 export function getCollections(db: Db): Collections {
@@ -54,5 +57,6 @@ export function getCollections(db: Db): Collections {
     idempotencyKeys: db.collection<IdempotencyDoc>(COLLECTIONS.idempotencyKeys),
     shortLinks: db.collection<ShortLinkDoc>(COLLECTIONS.shortLinks),
     feedbacks: db.collection<FeedbackDoc>(COLLECTIONS.feedbacks),
+    walkIns: db.collection<WalkInDoc>(COLLECTIONS.walkIns),
   };
 }

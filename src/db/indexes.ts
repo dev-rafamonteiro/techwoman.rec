@@ -10,6 +10,9 @@ export const INDEX_NAMES = {
   menteeActive: 'appt_mentee_active',
 } as const;
 
+/** RN21 · um atendimento fora da mesa ativo por mentora e participante (E51 traduz o E11000 em 409). */
+export const WALK_IN_PAIR_INDEX = 'walkin_pair_active';
+
 export type ScheduleConflictCode = 'TABLE_TAKEN' | 'MENTOR_BUSY' | 'MENTEE_TAKEN';
 
 const NAME_TO_CODE: Record<string, ScheduleConflictCode> = {
@@ -83,6 +86,12 @@ const INDEXES: Record<string, IndexDescription[]> = {
   // e somem em `expireAt` (fim do evento + 7 dias)
   // avaliações (E09): A10 lista por evento, da mais recente
   [COLLECTIONS.feedbacks]: [{ key: { eventId: 1, createdAt: -1 }, name: 'feedback_event_created' }],
+  // atendimentos fora da mesa (RN21): um ativo por mentora e participante; M6 lista os da mentora; A4 e E53 por participante
+  [COLLECTIONS.walkIns]: [
+    { key: { eventId: 1, mentorId: 1, menteeId: 1 }, name: WALK_IN_PAIR_INDEX, unique: true, partialFilterExpression: { deletedAt: null } },
+    { key: { eventId: 1, mentorId: 1, at: -1 }, name: 'walkin_mentor_at' },
+    { key: { eventId: 1, menteeId: 1 }, name: 'walkin_mentee' },
+  ],
   [COLLECTIONS.shortLinks]: [
     { key: { menteeId: 1, kind: 1, tokenVersion: 1 }, name: 'short_link_mentee_kind_version', unique: true },
     { key: { expireAt: 1 }, name: 'short_link_ttl', expireAfterSeconds: 0 },

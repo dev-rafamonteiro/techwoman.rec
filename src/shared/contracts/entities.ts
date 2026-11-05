@@ -157,6 +157,8 @@ export const MentorListItemSchema = UserViewSchema.extend({
   availableSlots: z.number().int(),
   confirmedCount: z.number().int(),
   doneCount: z.number().int(),
+  /** RN21 · atendimentos fora da mesa registrados por ela (contados à parte das mentorias na mesa). */
+  walkInCount: z.number().int(),
   /** Derivado: "Ativa" | "Desativada" | "Nunca acessou" fica a cargo da tela; aqui só o fato. */
   neverLoggedIn: z.boolean(),
 });

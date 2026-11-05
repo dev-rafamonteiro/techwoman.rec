@@ -27,7 +27,7 @@ Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sába
 | Recusa por horário | A participante volta para a fila marcada como prioridade. |
 | Marca | Nenhuma referência ao Bradesco em nenhuma tela, exceto o logo de patrocínio no bloco "Quem faz o Tech Woman" da P1. |
 
-**Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M6, A1–A10; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
+**Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M7, A1–A10; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
 
 ## Diretrizes visuais e de experiência
 
@@ -145,11 +145,11 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**): abre a escolha "Trocar de horário" (`reschedule`, RN19: cancela esta mentoria, volta à fila com prioridade e mostra os horários livres) ou "Não tenho mais interesse" (`cancel`, encerra a inscrição) |
 | Recusada por horário (inclui quem trocou de horário) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
 | Proposta expirada | "O prazo para responder terminou e o horário foi liberado. Você continua na fila." | — |
-| Concluída | Agradecimento e o cartão "Como foi sua experiência?": notas de 1 a 5 em estrelas para O evento, A palestra e A mentoria (obrigatórias; abaixo de cada uma, o nome da nota: Muito ruim, Ruim, Regular, Boa, Excelente) e o campo livre "Quer contar mais?" (opcional, até 1.000 caracteres, com contador). Enviar sem as três notas mostra "Dê uma nota para o evento, a palestra e a mentoria." Depois de enviada (ou ao reabrir a página), o cartão vira "Obrigada pela avaliação!" com as notas e o comentário, só para leitura | Enviar avaliação (**E09**) |
+| Concluída | Agradecimento (concluída num atendimento fora da mesa, RN21, sem mentoria na mesa: "Você fez uma mentoria com {mentora}." antes do agradecimento, vindo de `walkIn` de E03) e o cartão "Como foi sua experiência?": notas de 1 a 5 em estrelas para O evento, A palestra e A mentoria (obrigatórias; abaixo de cada uma, o nome da nota: Muito ruim, Ruim, Regular, Boa, Excelente) e o campo livre "Quer contar mais?" (opcional, até 1.000 caracteres, com contador). Enviar sem as três notas mostra "Dê uma nota para o evento, a palestra e a mentoria." Depois de enviada (ou ao reabrir a página), o cartão vira "Obrigada pela avaliação!" com as notas e o comentário, só para leitura | Enviar avaliação (**E09**) |
 | Não compareceu / Cancelada | Mensagem neutra | Fazer nova inscrição, se o evento ainda estiver aberto |
 | Link inválido | "Não encontramos sua inscrição" | Reenviar link por e-mail (**E05**) |
 
-## Telas da mentora (M1–M6)
+## Telas da mentora (M1–M7)
 
 A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguardando, define mesa e horário, e acompanha tudo em "Minha agenda".
 
@@ -207,7 +207,18 @@ Gaveta de baixo para cima no celular, modal no desktop.
   - Confirmada: "Iniciar" / "Concluir", "Não compareceu" (liberado 10 min após o início), "Cancelar" com motivo.
 - **Horário livre:** "+ Escolher participante" abre a lista da fila (E22) com filtro "Período": Manhã, Tarde (início e fim da tarde juntos) ou Qualquer horário (a fila toda). Manhã e Tarde somam quem marcou "Qualquer horário"; ao abrir, vem selecionado o período do horário tocado. Escolher abre o M5 nesse horário.
 - Destaque visual da próxima mentoria e aviso "Começa em 5 min".
+- **Atendimentos fora da mesa (RN21):** bloco "Atendimentos fora da mesa de hoje" acima da linha do tempo, com o botão "Registrar atendimento fora da mesa" (abre o M7) e a lista dos atendimentos dela (hora, nome, área e anotação), do mais recente ao mais antigo (**E52**). Sem nenhum: "Conversou com alguém fora das mesas? Registre para a conversa contar." O bloco aparece também quando a mentora ainda não marcou horários.
 - Dados: **E25**, atualização em tempo real por **E27**.
+
+### M7 · Atendimento fora da mesa (gaveta aberta no M6)
+
+Para a mentoria rápida feita fora das mesas (RN21): não usa mesa nem horário. Gaveta de baixo para cima no celular, modal no desktop (mesmo `Overlay` do M5).
+
+- **Buscar:** campo "Buscar participante" (busca com 300 ms de espera, a partir de 2 letras, tolerante a erro de digitação, **E50**). Resultados com o card da participante (sem e-mail e telefone), o selo da situação ("Na fila", "Mentoria agendada às 14h20", "Já atendida", "Não compareceu", "Atendida por você fora da mesa") e o botão "Registrar" (desabilitado em "Atendida por você fora da mesa"). Canceladas não aparecem. Sem resultado: "Ninguém encontrado. Confira o nome ou faça o cadastro rápido."
+- **Registrar:** mostra o card, o aviso "Ela sai da fila de espera." quando estava na fila, o campo "Anotação" (opcional, até 500 caracteres, "Só a organização vê") e "Registrar atendimento" (**E51** com `menteeId`).
+- **"Não achei, cadastrar":** nome, e-mail, celular (opcional, máscara (00) 00000-0000), área (as do evento), anotação (opcional) e a caixa obrigatória "Ela concordou com o aviso de privacidade" (link para a página de privacidade). "Continuar" leva à **conferência do e-mail**: "Confira o e-mail:" com o e-mail em letra grande e "É para ele que vai o link da participante. Leia junto com ela antes de registrar."; botões "E-mail certo, registrar" (**E51** com `newMentee`) e "Corrigir".
+- **Sucesso (toast):** "Atendimento com {nome} registrado. Ela saiu da fila." (estava na fila), "Atendimento com {nome} registrado." (outras situações), "Atendimento registrado. {nome} vai receber por e-mail o link da página dela." (cadastro novo ou reativado), "Esse e-mail já estava inscrito: o atendimento foi registrado para {nome}." (RN01). A gaveta fecha e a lista do M6 recarrega.
+- **Erros:** 409 com a mensagem da API ("Você já registrou um atendimento fora da mesa com esta participante.", inscrição cancelada) volta à busca; 503 da busca mostra "Não foi possível buscar" com "Tentar de novo".
 
 ## Telas do super admin (A1–A10)
 
@@ -215,14 +226,14 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A1 · Dashboard
 
-- **Indicadores (E30):** inscritas, aguardando, convites pendentes, confirmadas, concluídas, não compareceu, ocupação das mesas agora (ex.: 14/20), capacidade restante do dia (sessões livres), mentoras com login feito / total.
+- **Indicadores (E30):** inscritas, aguardando, convites pendentes, confirmadas, concluídas (na mesa), atendimentos fora da mesa (RN21, contador separado), não compareceu, ocupação das mesas agora (ex.: 14/20), capacidade restante do dia (sessões livres), mentoras com login feito / total.
 - Gráfico de barras "Inscritas por área" e linha "Inscrições por hora".
 - Lista "Precisa de atenção": convites prestes a expirar, mesas com mentoria atrasada, participantes com prioridade há mais de 30 min na fila.
 - Atualização automática a cada 15 s.
 
 ### A2 · Mentoras (lista)
 
-- Tabela: nome, e-mail, organização (uso interno, nunca exibido à participante), áreas, horários disponíveis, mentorias (confirmadas/concluídas), último acesso, status (Ativa / Desativada / Nunca acessou).
+- Tabela: nome, e-mail, organização (uso interno, nunca exibido à participante), áreas, horários disponíveis, mentorias (confirmadas/concluídas), atendimentos fora da mesa (coluna "Fora da mesa", RN21), último acesso, status (Ativa / Desativada / Nunca acessou).
 - Busca livre por nome, e-mail, área ou tema da bio; filtro por status e área. Ações em linha: Editar, Redefinir senha, Ativar/Desativar, Ver agenda.
 - Botões "Nova mentora" e "Importar lista (CSV)".
 - Dados: **E31**.
@@ -240,9 +251,9 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Tabela: nome, e-mail, celular, área, período preferido, status, prioridade, mentora, mesa, horário, inscrita em.
 - Filtros por status, área, prioridade e período; busca livre por nome, e-mail, telefone ou assunto do comentário.
-- Detalhe em painel lateral: dados completos, linha do tempo de eventos (inscrição, convite, recusa, confirmação…) e notificações enviadas.
+- Detalhe em painel lateral: dados completos, linha do tempo de eventos (inscrição, convite, recusa, confirmação…, e "Atendimento fora da mesa com {mentora}" e a remoção dele, RN21), o bloco "Atendimentos fora da mesa" (hora, mentora, anotação e o botão "Remover", com confirmação; **E53**: se ela tinha saído da fila por esse atendimento, volta para a fila e o toast diz "Atendimento removido. Ela voltou para a fila.") e notificações enviadas.
 - **Ações (E36):** marcar/desmarcar prioridade, cancelar inscrição, reenviar link pessoal, agendar manualmente (abre o mesmo componente de M5 escolhendo também a mentora).
-- Exportar CSV (**E37**) com os filtros aplicados.
+- Exportar CSV (**E37**) com os filtros aplicados; a coluna `fora_da_mesa` lista as mentoras do atendimento fora da mesa.
 - Dados: **E35**.
 
 ### A5 · Mapa de mesas
@@ -283,7 +294,7 @@ Rota `/admin/avaliacoes`, admin e super admin. Resultado da avaliação que a pa
 
 - Cartões no estilo do A1: Respostas (com a nota "X% das N concluídas", a taxa de resposta sobre as mentorias concluídas), Média · Evento, Média · Palestra e Média · Mentoria (uma casa decimal, "/ 5", e quantas deram 5 estrelas) e Com comentário.
 - Três painéis de barras, um por item, com quantas respostas deram de 5 a 1 estrela; cada um tem o botão "Ver tabela" (Nota, Respostas), como o gráfico de áreas do A1.
-- Lista "Respostas", da mais recente para a mais antiga: participante, mentora, data e hora, as três notas em estrelas (nota até 2 em vermelho) e o comentário. Filtros: Todas · Com comentário · Alguma nota até 2.
+- Lista "Respostas", da mais recente para a mais antiga: participante, mentora (a do atendimento fora da mesa quando ela foi concluída assim, RN21), data e hora, as três notas em estrelas (nota até 2 em vermelho) e o comentário. Filtros: Todas · Com comentário · Alguma nota até 2.
 - Sem respostas: "Nenhuma avaliação ainda", explicando que a avaliação abre na página da participante depois que a mentora conclui a mentoria. Participante anonimizada some da lista (a avaliação é apagada).
 
 ## Componentes, estados e mensagens padrão
@@ -326,7 +337,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 ## Medição de uso (analytics)
 
-Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha` e `/privacidade`. As telas da mentora (M1–M6, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A10) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
+Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha` e `/privacidade`. As telas da mentora (M1–M7, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A10) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
 
 Cada tela pública conta um pageview ao abrir. Eventos por tela (propriedades só de categoria; nunca nome, e-mail, telefone, LinkedIn, comentário, token ou ids):
 

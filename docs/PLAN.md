@@ -122,6 +122,8 @@ Um usuário de staff pode ter mais de um papel (`roles: ["mentor", "admin"]`); a
 | Editar a própria disponibilidade | — | Sim | — | — |
 | Ver fila de aguardando (sem e-mail/telefone) | — | Sim | Sim (com contato) | Sim (com contato) |
 | Convidar participante para a própria agenda | — | Sim | — | — |
+| Registrar atendimento fora da mesa (RN21) e cadastrar a participante na hora | — | Sim | — | — |
+| Ver e remover atendimentos fora da mesa de todas as mentoras (RN21) | — | — | Sim | Sim |
 | Agendar, mover ou cancelar em nome de qualquer mentora | — | — | Sim | Sim |
 | Cadastrar, editar, desativar mentora; redefinir senha | — | — | Sim | Sim |
 | Importar mentoras por CSV | — | — | Sim | Sim |
@@ -156,6 +158,7 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 | `whatsapp_inbound` | Removida em 2026-11-05 (só e-mail; era a deduplicação do E47). Dados antigos podem continuar no Atlas (o TTL de 7 dias limpa) e a coleção pode ser apagada manualmente | — |
 | `short_links` | Links curtos `/l/<código>` que levam ao link pessoal ou ao `.ics` da participante (E48) | P5, e-mails |
 | `feedbacks` | Avaliação da participante depois da mentoria concluída (E09, E49) | P6, A10 |
+| `walk_ins` | Atendimentos fora da mesa (RN21): mentoria rápida sem mesa e sem horário (E50–E53) | M6, M7, A1, A2, A4, A10, P6 |
 
 ### events
 
@@ -182,7 +185,7 @@ Campos: `name`, `email` (minúsculo), `roles`, `passwordHash` (argon2id), `mustC
 
 ### mentees
 
-Campos: `eventId`, `name`, `email`, `emailNorm`, `phone` (E.164), `linkedin`, `area`, `quizScores{}`, `preferredPeriod` (`morning` | `early_afternoon` | `late_afternoon` | `any`), `note`, `consent{version, acceptedAt}`, `status`, `priority`, `priorityReason`, `queuedAt`, `currentAppointmentId`, `tokenHash`, `tokenVersion` (versão do token; incrementar revoga o link pessoal e os links curtos), `createdAt`.
+Campos: `eventId`, `name`, `email`, `emailNorm`, `phone` (E.164), `linkedin`, `area`, `quizScores{}`, `preferredPeriod` (`morning` | `early_afternoon` | `late_afternoon` | `any`), `note`, `consent{version, acceptedAt, collectedBy?}` (`collectedBy`: mentora que colheu o aceite no cadastro rápido da RN21), `status`, `priority`, `priorityReason`, `queuedAt`, `currentAppointmentId`, `tokenHash`, `tokenVersion` (versão do token; incrementar revoga o link pessoal e os links curtos), `createdAt`.
 
 ### appointments
 
@@ -202,7 +205,8 @@ As duas travas são campos booleanos mantidos junto com o status:
 - `audit_logs`: `at`, `actorId`, `actorRole`, `action`, `entity`, `entityId`, `before`, `after`, `ip`.
 - `presence_checks` e `whatsapp_inbound`: removidas em 2026-11-05 (só e-mail). O código não usa mais; os dados e índices antigos no Atlas (`presence_phone_status_sent`, `wa_inbound_ttl`) podem ser apagados manualmente. Os validadores do MongoDB não mudaram: `outbox.channel` ainda aceita `whatsapp` para não exigir `collMod` no Atlas.
 - `short_links` (sem validador; `_id` = código de 7 caracteres base62): `menteeId`, `kind` (`personal` | `calendar`), `tokenVersion` (o da participante quando o link foi criado), `createdAt`, `expireAt` (fim do evento + 7 dias; TTL). O token não é gravado: E48 o deriva na hora. Regras em Notificações > Links curtos.
-- `feedbacks` (sem validador; `_id` = menteeId, o que já garante uma avaliação por participante): `eventId`, `appointmentId` (a mentoria concluída), `ratings` (`event`, `talk`, `mentoring`, inteiros de 1 a 5), `comment` (texto ou null), `createdAt`. Índice `feedback_event_created` (`eventId`, `createdAt` decrescente) para A10. Apagada na anonimização.
+- `feedbacks` (sem validador; `_id` = menteeId, o que já garante uma avaliação por participante): `eventId`, `appointmentId` (a mentoria concluída), `ratings` (`event`, `talk`, `mentoring`, inteiros de 1 a 5), `comment` (texto ou null), `createdAt`. Índice `feedback_event_created` (`eventId`, `createdAt` decrescente) para A10. Apagada na anonimização. `walkInId` e `mentorId` (opcionais, RN21): o atendimento fora da mesa avaliado e a mentora avaliada; A10 usa `mentorId` e, nas avaliações antigas sem ele, a mentora da mentoria.
+- `walk_ins` (sem validador, RN21): `eventId`, `menteeId`, `mentorId`, `at` (hora do servidor), `note` (texto da mentora, até 500 caracteres, ou null), `previousMenteeStatus` (status da participante antes do atendimento; null no cadastro rápido), `createdBy`, `createdAt`, `deletedAt` e `deletedBy` (remoção lógica pelo admin, E53). Não cria `appointments` nem usa mesa ou horário: a trava de grade (RN16) e os índices únicos de agenda não mudam. Na anonimização (E36) a `note` vira null e o registro fica para os contadores.
 
 ### Índices
 
@@ -228,9 +232,12 @@ db.outbox.createIndex({ dedupeKey: 1 }, { unique: true })
 db.audit_logs.createIndex({ eventId: 1, at: -1 })
 db.short_links.createIndex({ menteeId: 1, kind: 1, tokenVersion: 1 }, { unique: true })  // nome: short_link_mentee_kind_version
 db.short_links.createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 })  // nome: short_link_ttl
+db.walk_ins.createIndex({ eventId: 1, mentorId: 1, menteeId: 1 }, { unique: true, partialFilterExpression: { deletedAt: null } })  // nome: walkin_pair_active
+db.walk_ins.createIndex({ eventId: 1, mentorId: 1, at: -1 })  // nome: walkin_mentor_at
+db.walk_ins.createIndex({ eventId: 1, menteeId: 1 })  // nome: walkin_mentee
 ```
 
-Os índices são criados pelo script `create-indexes`, executado no start da API (idempotente). Validação de schema (`$jsonSchema`) em `mentees`, `appointments` e `users` com `validationLevel: "strict"`. Campo novo num validador (ex.: `users.phone`) muda o validador gravado: antes de subir a API nova, rode uma vez `npm run db:indexes` com um usuário dbAdmin (o usuário da aplicação só tem `readWrite` e a API não roda `collMod` quando o validador é igual).
+Os índices são criados pelo script `create-indexes`, executado no start da API (idempotente). Validação de schema (`$jsonSchema`) em `mentees`, `appointments` e `users` com `validationLevel: "strict"`. Campo novo num validador (ex.: `users.phone`, `mentees.consent.collectedBy` da RN21) muda o validador gravado: antes de subir a API nova, rode uma vez `npm run db:indexes` com um usuário dbAdmin (o usuário da aplicação só tem `readWrite` e a API não roda `collMod` quando o validador é igual).
 
 ## Regras de negócio e máquina de estados
 
@@ -273,6 +280,7 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
 18. **RN18 · Confirmação de presença pelo WhatsApp.** Removido em 2026-11-05 (só e-mail).
 19. **RN19 · Trocar de horário pela participante.** A transição `mentee_reschedule` (de `confirmed`, antes do início) cancela a mentoria (mesa e horário livres na hora) e devolve a participante à fila com `priority = true`, `priorityReason = "declined_schedule"`, `lastOutcome = "declined_schedule"` e o `queuedAt` original. Vem do "Trocar de horário" em P6 (E04 `reschedule`). Uma participante `waiting` com `lastOutcome = "declined_schedule"` pode escolher sozinha um horário livre pelo link pessoal: E07 lista os horários futuros (respeitando `minLeadMinutes`) em que existe mentora ativa da área dela, com o horário na disponibilidade, sem mentoria ativa nele, e uma mesa ativa livre; `matchesPeriod` marca os do período preferido (RN14). E08 reconfere tudo na transação, escolhe a mentora com menos mentorias ativas no evento (empate: nome), a mesa pela RN13, e cria a mentoria já `confirmed` (`createdBy` = a mentora escolhida, `confirmedBy` e `history` com ator participante, auditoria `appointment.self_book`); a participante vira `confirmed` sem prioridade, e saem `confirmed` e os lembretes (RN15). Mentoras e admins continuam podendo convidá-la pela fila enquanto ela não escolhe.
 20. **RN20 · Convite pelo WhatsApp com resposta direta.** Removido em 2026-11-05 (só e-mail).
+21. **RN21 · Atendimento fora da mesa.** No evento, a mentora pode fazer uma mentoria rápida com uma participante em qualquer lugar, sem usar as mesas nem a grade, e registrá-la no painel (M7, aberto pelo M6) para ela ser catalogada e contada. O registro (`walk_ins`) usa a hora do servidor, não cria mentoria (`appointments`), não ocupa mesa nem horário e é contado à parte das mentorias na mesa. Efeito na fila: participante `waiting` vira `done` (a participação dela terminou e ela sai da fila, liberando lugar nas mesas); `invited` e `confirmed` não mudam (a mentoria marcada continua); `done` e `no_show` não mudam; `cancelled` não aparece na busca e não pode ser escolhida. O status anterior fica em `previousMenteeStatus`. Um atendimento ativo por mentora e participante (409 `CONFLICT` "Você já registrou um atendimento fora da mesa com esta participante."). Quem não está inscrita entra pelo cadastro rápido (nome, e-mail, celular opcional, área e o aceite do aviso de privacidade colhido pela mentora): sem Turnstile (a sessão da mentora basta) e fora da janela da RN02; a inscrição nasce `done`, com `preferredPeriod = any`, `consent{version, acceptedAt, collectedBy = mentora}` e o e-mail `registered` com o link pessoal (P6, onde ela avalia). RN01 vale: e-mail de inscrição ativa liga o atendimento à inscrição existente (`linked`, sem e-mail e sem mudar os dados dela); e-mail de inscrição `cancelled` ou `no_show` reativa a inscrição como `done` com os dados novos e reenvia o link (`reactivated`). Remover o atendimento (admin, E53) é lógico; se a participante saiu da fila por ele (`previousMenteeStatus = waiting`), continua `done`, não tem mentoria e não tem outro atendimento ativo, volta para `waiting` com o `queuedAt` e a prioridade de antes (um `no_show` antigo na mesa não impede a volta). Quem foi concluída assim avalia em P6 (E09 grava `walkInId` e `mentorId`). Auditoria: `walk_in.create`, `mentee.walk_in_done`, `mentee.register_by_staff`, `walk_in.delete`, `mentee.walk_in_restore`.
 
 ## API REST ligada às telas
 
@@ -284,12 +292,12 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | --- | --- | --- | --- |
 | E01 | `GET /public/event` | P1, P4 | Nome, data, local, áreas, períodos, inscrições abertas |
 | E02 | `POST /public/mentees` | P4 | Turnstile obrigatório; RN01, RN02; devolve 201 (inscrição nova ou reativada pela RN01) com `token`, `personalPath` (`/mentoria/minha?t=<token>`, usado no botão de P5) e `shortPath` (`/l/<código>`, `kind = personal`, o link que P5 mostra e copia), ou 200 `ALREADY_REGISTERED` (reenvia o link, sem devolvê-lo). O link curto é criado depois do commit da transação da inscrição |
-| E03 | `GET /public/me` (header `X-Mentee-Token`) | P6 | Status, convite ativo (mentora, mesa, horário, prazo) |
+| E03 | `GET /public/me` (header `X-Mentee-Token`) | P6 | Status, convite ativo (mentora, mesa, horário, prazo); `walkIn` = `{ mentorName, at }` do atendimento fora da mesa mais recente (RN21) ou null |
 | E04 | `POST /public/me/actions` | P6 | `{ action: "accept" \| "decline" \| "cancel" \| "reschedule" \| "update_preference", reason?, preferredPeriod? }`; RN06, RN14, RN19 (`reschedule` só de `confirmed`) |
 | E05 | `POST /public/resend-link` | P6 | Sempre 202, exista ou não o e-mail (sem enumeração) |
 | E07 | `GET /public/me/slots` | P6 | RN19; horários livres para ela escolher: `{ items: [{ slotId, startAt, endAt, matchesPeriod }] }`; `INVALID_STATE` (409) fora do estado permitido |
 | E08 | `POST /public/me/book` | P6 | RN19; `{ slotId }` com `Idempotency-Key`; o sistema escolhe mentora e mesa e cria a mentoria já `confirmed`; 409 `SLOT_UNAVAILABLE` se o horário acabou de ser ocupado |
-| E09 | `POST /public/me/feedback` | P6 | Avaliação depois da mentoria concluída: `{ event, talk, mentoring, comment? }`, notas inteiras de 1 a 5 e comentário opcional de até 1.000 caracteres. Só com a participante `done`; uma por participante, sem edição (coleção `feedbacks`, `_id` = menteeId). 409 `INVALID_STATE` fora de `done` ou se já enviou. Devolve o estado de E03, que traz `feedback` (notas, comentário, data) ou null. A anonimização (E36) apaga a avaliação |
+| E09 | `POST /public/me/feedback` | P6 | Avaliação depois da mentoria concluída: `{ event, talk, mentoring, comment? }`, notas inteiras de 1 a 5 e comentário opcional de até 1.000 caracteres. Só com a participante `done` (inclusive concluída por atendimento fora da mesa, RN21: grava `walkInId` e `mentorId`); uma por participante, sem edição (coleção `feedbacks`, `_id` = menteeId). 409 `INVALID_STATE` fora de `done` ou se já enviou. Devolve o estado de E03, que traz `feedback` (notas, comentário, data) ou null. A anonimização (E36) apaga a avaliação |
 | E06 | `GET /public/calendar.ics?t=<token>` | P6, e-mail 3 | Só para mentoria confirmada; `text/calendar`; `UID` = id da mentoria raiz da cadeia de moves (estável); 404 em qualquer outro status |
 | E48 | `GET /l/:code` (rota da API `/api/l/:code`; link público `<PUBLIC_BASE_URL>/l/<código>`) | E-mails, P5 | Público, sem login e sem CSRF; não executa ação. Sempre 302 sem corpo, com `Location` relativo: `kind = personal` → `/mentoria/minha?t=<token>`, `kind = calendar` → `/api/public/calendar.ics?t=<token>`, com o token derivado na hora do `tokenVersion` atual. Código inexistente, formato inválido (o parâmetro aceita qualquer texto de até 64 caracteres, sem 422), revogado (`tokenVersion` do link ≠ atual), vencido (`expireAt` já passou) ou de participante que não existe mais → 302 para `/mentoria/minha` (P6 mostra "Link inválido"), resposta idêntica nos cinco casos. Cabeçalhos `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Rate limit próprio por IP: 600 por minuto. Código E48 escolhido depois de E47. Regras em Notificações > Links curtos |
 
@@ -315,19 +323,22 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E26 | `PATCH /mentor/appointments/:id` | M6 | `{ action: "confirm_in_person" \| "start" \| "finish" \| "no_show" \| "cancel", reason? }`; RN08–RN10 |
 | E27 | `GET /mentor/stream` (SSE) | M4, M6 | Eventos `queue.added`, `queue.removed`, `appointment.updated` |
 | E28 | `PATCH /mentor/profile` | M2 | Nome, LinkedIn, celular (`phone`), foto, áreas, bio |
+| E50 | `GET /mentor/mentees/search?q=` | M7 | RN21; Atlas Search tolerante a erro de digitação (mesmo pipeline de E22, `typoTolerant`), `q` de 2 a 200 caracteres, todas as situações menos `cancelled`, até 20 itens, sem contato. Cada item: participante (visão da mentora), `situation` (`waiting` \| `scheduled` \| `done` \| `no_show` \| `walked_in_by_me`) e `startAt` da mentoria marcada (`scheduled`); o texto ("Na fila", "Mentoria agendada às 14h20", "Já atendida", "Atendida por você fora da mesa") fica com a tela. Falha do `$search`: 503 |
+| E51 | `POST /mentor/walk-ins` | M7 | RN21; `{ menteeId, note? }` ou `{ newMentee: { name, email, phone?, area }, consentAccepted: true, note? }`, com `Idempotency-Key` e limite de 30 por minuto por sessão. Uma transação: cadastro rápido (se for o caso), efeito na fila, `walk_ins` e auditoria. 201 `{ walkIn, outcome: existing \| created \| linked \| reactivated, linkedExisting, name, previousStatus, status }`. 409 `CONFLICT` (par mentora × participante repetido), 409 `INVALID_STATE` (participante cancelada), 404, 422. Corrida no cadastro com o mesmo e-mail: uma inscrição só; as outras requisições ligam o atendimento a ela |
+| E52 | `GET /mentor/walk-ins` | M6 | RN21; atendimentos fora da mesa da mentora no evento (sem os removidos), do mais recente ao mais antigo, com a participante sem contato |
 
 ### Admin e super admin
 
 | Código | Método e rota | Telas | Papel |
 | --- | --- | --- | --- |
-| E30 | `GET /admin/dashboard` | A1 | Admin |
-| E31 | `GET /admin/mentors`, `POST /admin/mentors` | A2, A3 | Admin; POST devolve a senha provisória uma única vez; `phone` (celular) opcional |
+| E30 | `GET /admin/dashboard` | A1 | Admin; `counts.walkIns` = atendimentos fora da mesa (RN21), à parte de `done` (mentorias concluídas na mesa) |
+| E31 | `GET /admin/mentors`, `POST /admin/mentors` | A2, A3 | Admin; GET traz `walkInCount` (atendimentos fora da mesa, RN21) por mentora; POST devolve a senha provisória uma única vez; `phone` (celular) opcional |
 | E32 | `PATCH /admin/mentors/:id` | A3 | Admin; desativar segue RN12; papel admin só por super admin; `phone` (celular) opcional, `null` apaga |
 | E33 | `POST /admin/mentors/import` (multipart CSV, `?dryRun=true`) | A3 | Admin; prévia linha a linha, depois confirma. Colunas: `nome`, `email`, `linkedin`, `organizacao`, `areas`, `disponibilidade` e `celular` (opcional; aceita também `whatsapp`, o nome antigo; telefone com DDD, inválido é erro da linha; sem a coluna, o telefone de quem já existe não muda) |
 | E34 | `POST /admin/mentors/:id/reset-password` | A2, A3 | Admin |
-| E35 | `GET /admin/mentees?status=&area=&priority=&q=&cursor=` | A4 | Admin |
+| E35 | `GET /admin/mentees?status=&area=&priority=&q=&cursor=` | A4 | Admin; o detalhe (`/admin/mentees/:id`) traz na linha do tempo os atendimentos fora da mesa (`walk_in`) e as remoções (`walk_in_deleted`) |
 | E36 | `PATCH /admin/mentees/:id` | A4 | Admin; prioridade, cancelar, reenviar link |
-| E37 | `GET /admin/mentees/export.csv` | A4 | Admin; mesmos filtros do E35 |
+| E37 | `GET /admin/mentees/export.csv` | A4 | Admin; mesmos filtros do E35; a última coluna, `fora_da_mesa`, lista as mentoras que atenderam a participante fora da mesa (RN21), separadas por " / " |
 | E38 | `GET /admin/schedule` (+ SSE `/admin/stream`) | A5 | Admin; grade mesa × horário |
 | E39 | `POST /admin/appointments`, `PATCH /admin/appointments/:id` | A4, A5 | Admin; criar em nome de uma mentora, mover, cancelar, no-show, confirmar |
 | E40 | `GET /admin/tables`, `PUT /admin/tables` | A6 | Super admin |
@@ -337,7 +348,8 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E44 | `GET /admin/notifications`, `POST /admin/notifications/:id/retry` | A9 | Admin |
 | E45 | `GET /admin/audit` | A9 | Admin |
 | E46 | `GET /admin/email-preview/:tipo` | A7 | Admin; renderiza um dos 9 layouts de e-mail com dados de exemplo |
-| E49 | `GET /admin/feedback` | A10 | Admin; resultado da avaliação (E09): `total` de respostas, `doneCount` (participantes com mentoria concluída, para a taxa de resposta), `summary` com média (uma casa decimal, null sem respostas) e `counts` (quantas deram nota 1 a 5) de `event`, `talk` e `mentoring`, e `items` com todas as respostas (participante, mentora, notas, comentário, data), da mais recente para a mais antiga. Sem paginação: no máximo uma por participante. Código E49 escolhido depois de E48 |
+| E53 | `GET /admin/walk-ins?mentorId=&menteeId=`, `DELETE /admin/walk-ins/:id` | A4 | Admin; RN21. GET: atendimentos fora da mesa ativos com mentora, participante (nome, e-mail, status), hora, nota e `previousMenteeStatus`. DELETE: remoção lógica (`deletedAt`, `deletedBy`), auditada (`walk_in.delete`); devolve `{ ok, restoredToQueue }` (volta à fila pela RN21). Removido não conta mais em E30, E31, E37 nem aparece em E52 |
+| E49 | `GET /admin/feedback` | A10 | Admin; resultado da avaliação (E09): `total` de respostas, `doneCount` (participantes com mentoria concluída, para a taxa de resposta), `summary` com média (uma casa decimal, null sem respostas) e `counts` (quantas deram nota 1 a 5) de `event`, `talk` e `mentoring`, e `items` com todas as respostas (participante, mentora (a do atendimento fora da mesa quando ela foi concluída assim, RN21), notas, comentário, data), da mais recente para a mais antiga. Sem paginação: no máximo uma por participante. Código E49 escolhido depois de E48 |
 
 ### Webhooks
 
@@ -441,7 +453,8 @@ db.mentees.createSearchIndex("mentees_text", "search", {
 - **Consistência:** os índices de busca são atualizados de forma assíncrona, com segundos de atraso. Por isso o `$match` de status vem depois da busca e usa o documento atual. Área e prioridade entram no filtro do `$search` e de novo no `$match`; o período (fora do índice) só no `$match`, por isso a busca pega 200 candidatos quando ele é filtrado. A SSE continua removendo cards, e o convite segue protegido pelo índice único (seção Concorrência).
 - **Erros de digitação:** "filipe", "felpe", "fleipe", "phelipe" e "fil" encontram "Felipe"; sem acento encontra com acento (`lucene.portuguese` e `foldDiacritics`). Teste em `busca-api-e22.test.ts`.
 - **Contato fora da busca:** a projeção sem `email` e `phone` vale também nos resultados de busca da mentora. Só E35 (admin) devolve contato.
-- **Falha da busca:** se o `$search` falhar (ex.: índice em construção), E22, E31 e E35 respondem 503 (`code: INTERNAL`, `Retry-After: 5`) e a tela mostra o estado de erro com "tentar de novo". A busca nunca causa erro 500.
+- **Atendimento fora da mesa (E50, RN21):** mesmo pipeline das participantes, com o filtro de status `in` (todas menos `cancelled`) no `$search` e de novo no `$match` sobre o documento atual, até 20 itens. Desempenho medido no atlas-local com 500 participantes em `RN21-desempenho.test.ts` (E51 p95 < 300 ms, E50 p95 < 500 ms, inscrição nova aparece no `$search` em menos de 1 s).
+- **Falha da busca:** se o `$search` falhar (ex.: índice em construção), E22, E31, E35 e E50 respondem 503 (`code: INTERNAL`, `Retry-After: 5`) e a tela mostra o estado de erro com "tentar de novo". A busca nunca causa erro 500.
 - **Limites do `q`:** de 2 a 200 caracteres; resultado de busca traz no máximo 50 itens, sem cursor. O CSV de E37 com `q` continua com o filtro por expressão regular, para não truncar em 50 linhas.
 - **Ambientes:** o banco da aplicação é sempre o Atlas (`MONGODB_URI`); o usuário do banco só tem `readWrite`, então a API não roda `collMod` quando o validador não mudou. Os testes de integração usam o `mongodb-atlas-local` (`MONGODB_URI_TEST`), que executa `$search`.
 

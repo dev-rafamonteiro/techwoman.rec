@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E25Response, type E26Body, type MentorAppointmentView, type MenteeStaffView, type MentorStreamEvent, type Slot } from '@tw/shared';
+import { ENDPOINTS, MENTOR_STREAM_EVENT_TYPES, type E25Response, type E52Response, type E26Body, type MentorAppointmentView, type MenteeStaffView, type MentorStreamEvent, type Slot } from '@tw/shared';
 import {
   ApiError, AreaBadge, Button, ConnectionBar, Countdown, EmptyState, ErrorState, Overlay, SkeletonList, StatusBadge, TextArea,
   call, formatDayShort, formatTime, LinkButton, useEventStream, usePolling, useQuery, useToast,
@@ -9,6 +9,7 @@ import { noShowAllowed, startsSoon } from './lib/format';
 import '../public/public.css';
 import { M5ScheduleDrawer } from './M5ScheduleDrawer';
 import { M6PickMentee } from './M6PickMentee';
+import { M7ForaDaMesa } from './M7-ForaDaMesa';
 import './mentora.css';
 import './m4.css';
 import './m6.css';
@@ -35,6 +36,14 @@ export default function M6Agenda() {
   // horário livre tocado → lista de participantes → M5 já nesse horário
   const [pickSlot, setPickSlot] = useState<Slot | null>(null);
   const [chosen, setChosen] = useState<MenteeStaffView | null>(null);
+  // RN21 · atendimentos fora da mesa (E52) e a gaveta M7
+  const [walkIns, setWalkIns] = useState<E52Response['items'] | null>(null);
+  const [walkInOpen, setWalkInOpen] = useState(false);
+  const closeWalkIn = useCallback(() => setWalkInOpen(false), []);
+  const loadWalkIns = useCallback(async () => {
+    try { setWalkIns((await call(ENDPOINTS.E52)).items); } catch { /* a lista é secundária; a agenda segue */ }
+  }, []);
+  useEffect(() => { void loadWalkIns(); }, [loadWalkIns]);
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNowMs(Date.now()), 15000);
@@ -90,9 +99,36 @@ export default function M6Agenda() {
     }
   }
 
+  const walkInSection = (
+    <section className="m6-walkins" aria-labelledby="m6-walkins-title" data-testid="m6-walkins">
+      <div className="m6-walkins__head">
+        <h2 id="m6-walkins-title" className="m6-walkins__title">Atendimentos fora da mesa de hoje</h2>
+        <Button variant="secondary" size="sm" onClick={() => setWalkInOpen(true)} data-testid="m6-walkin-open">Registrar atendimento fora da mesa</Button>
+      </div>
+      {!walkIns ? null : walkIns.length === 0 ? (
+        <p className="mt-hint">Conversou com alguém fora das mesas? Registre para a conversa contar.</p>
+      ) : (
+        <ul className="m6-walkins__list" data-testid="m6-walkins-list">
+          {walkIns.map((w) => (
+            <li key={w.id} className="m6-walkins__item">
+              <span className="m6-walkins__time">{formatTime(w.at)}</span>
+              <div className="m6-walkins__body">
+                <strong>{w.mentee.name}</strong>
+                <AreaBadge label={areaLabel(w.mentee.area)} />
+                {w.note && <p className="m6-card__note">“{w.note}”</p>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <M7ForaDaMesa open={walkInOpen} onClose={closeWalkIn} areas={areas} areaLabel={areaLabel}
+        onDone={() => { setWalkInOpen(false); void loadWalkIns(); }} />
+    </section>
+  );
+
   if (error && !data) return <div className="tw-page"><ErrorState error={error} onRetry={() => void load()} /></div>;
   if (!data) return <div className="tw-page"><SkeletonList rows={5} height={100} /></div>;
-  if (data.slots.length === 0) return <div className="tw-page"><EmptyState title="Você ainda não marcou horários" text="Marque sua disponibilidade para aparecer aqui." action={<LinkButton to="/mentora/disponibilidade">Ir para Disponibilidade</LinkButton>} /></div>;
+  if (data.slots.length === 0) return <div className="tw-page"><EmptyState title="Você ainda não marcou horários" text="Marque sua disponibilidade para aparecer aqui." action={<LinkButton to="/mentora/disponibilidade">Ir para Disponibilidade</LinkButton>} />{walkInSection}</div>;
 
   const serverOffset = new Date(data.serverNow).getTime() - Date.now();
   const now = nowMs + serverOffset;
@@ -179,6 +215,7 @@ export default function M6Agenda() {
         </span>
       </header>
       <div className="mt-live"><ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} /></div>
+      {walkInSection}
       <ol className="m6-timeline">
         {rows.map((row) => (
           <li key={row.slot.id} className={`m6-row${new Date(row.slot.endAt).getTime() <= now ? ' m6-row--past' : ''}`}

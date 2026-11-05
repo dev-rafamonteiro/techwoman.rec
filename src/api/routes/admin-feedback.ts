@@ -17,9 +17,16 @@ export function registerAdminFeedbackRoutes(app: FastifyInstance, ctx: AppContex
       ctx.c.mentees.find({ _id: { $in: docs.map((d) => d._id) } }, { projection: { name: 1 } }).toArray(),
       ctx.c.appointments.find({ _id: { $in: docs.flatMap((d) => (d.appointmentId ? [d.appointmentId] : [])) } }, { projection: { mentorId: 1 } }).toArray(),
     ]);
-    const mentors = await ctx.c.users.find({ _id: { $in: appts.map((a) => a.mentorId) } }, { projection: { name: 1 } }).toArray();
+    // `mentorId` na avaliação (atendimento fora da mesa, RN21, e avaliações novas); nas antigas, a da mentoria
+    const mentorIds = [...appts.map((a) => a.mentorId), ...docs.flatMap((d) => (d.mentorId ? [d.mentorId] : []))];
+    const mentors = await ctx.c.users.find({ _id: { $in: mentorIds } }, { projection: { name: 1 } }).toArray();
     const menteeName = new Map(mentees.map((m) => [String(m._id), m.name]));
-    const mentorOf = new Map(appts.map((a) => [String(a._id), mentors.find((u) => u._id.equals(a.mentorId))?.name ?? null]));
+    const userName = new Map(mentors.map((u) => [String(u._id), u.name]));
+    const apptMentor = new Map(appts.map((a) => [String(a._id), String(a.mentorId)]));
+    const mentorNameOf = (d: (typeof docs)[number]): string | null => {
+      const mid = d.mentorId ? String(d.mentorId) : d.appointmentId ? apptMentor.get(String(d.appointmentId)) : undefined;
+      return mid ? (userName.get(mid) ?? null) : null;
+    };
 
     const summary = Object.fromEntries(
       FEEDBACK_ITEMS.map((k) => {
@@ -38,7 +45,7 @@ export function registerAdminFeedbackRoutes(app: FastifyInstance, ctx: AppContex
       items: docs.map((d) => ({
         menteeId: String(d._id),
         menteeName: menteeName.get(String(d._id)) ?? 'Participante',
-        mentorName: d.appointmentId ? (mentorOf.get(String(d.appointmentId)) ?? null) : null,
+        mentorName: mentorNameOf(d),
         ratings: d.ratings,
         comment: d.comment,
         createdAt: iso(d.createdAt),

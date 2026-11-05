@@ -112,6 +112,7 @@ export default function A2Mentoras() {
     ) : '—'), text: (m) => m.themes.map((t, i) => [t, ...(m.themeDomains[i] ?? [])].join(': ')).join(' | ') },
     { key: 'slots', header: 'Horários disp.', render: (m) => m.availableSlots, text: (m) => m.availableSlots },
     { key: 'appts', header: 'Confirm. / concl.', render: (m) => `${m.confirmedCount} / ${m.doneCount}`, text: (m) => `${m.confirmedCount}/${m.doneCount}` },
+    { key: 'walkins', header: 'Fora da mesa', render: (m) => m.walkInCount, text: (m) => m.walkInCount },
     { key: 'last', header: 'Último acesso', render: (m) => (m.lastLoginAt ? lastAccess(m.lastLoginAt) : '—'), text: (m) => m.lastLoginAt ?? '' },
     {
       key: 'status', header: 'Status',

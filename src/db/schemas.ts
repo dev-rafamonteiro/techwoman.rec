@@ -78,7 +78,8 @@ export const menteesSchema: Schema = strictObject(
       bsonType: ['object', 'null'],
       required: ['version', 'acceptedAt'],
       additionalProperties: false,
-      properties: { version: str, acceptedAt: date },
+      // collectedBy: mentora que colheu o aceite no cadastro rápido (RN21)
+      properties: { version: str, acceptedAt: date, collectedBy: oid },
     },
     status: enumOf(MENTEE_STATUSES),
     priority: bool,

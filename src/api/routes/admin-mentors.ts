@@ -27,7 +27,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     const event = await loadEvent(ctx);
     const eid = event._id;
     const { appointments: ap, mentees: me, users, tables } = ctx.c;
-    const [byStatus, menteeByStatus, byArea, byHour, activeTables, mentors, occupied, futureBooked] = await Promise.all([
+    const [byStatus, menteeByStatus, byArea, byHour, activeTables, mentors, occupied, futureBooked, walkIns] = await Promise.all([
       ap.aggregate<{ _id: string; n: number }>([{ $match: { eventId: eid } }, { $group: { _id: '$status', n: { $sum: 1 } } }]).toArray(),
       me.aggregate<{ _id: string; n: number }>([{ $match: { eventId: eid } }, { $group: { _id: '$status', n: { $sum: 1 } } }]).toArray(),
       me.aggregate<{ _id: string; n: number }>([{ $match: { eventId: eid } }, { $group: { _id: '$area', n: { $sum: 1 } } }]).toArray(),
@@ -36,6 +36,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       users.find({ roles: 'mentor', status: 'active' }, { projection: { availability: 1, lastLoginAt: 1 } }).toArray(),
       ap.countDocuments({ eventId: eid, status: { $in: [...ACTIVE] }, startAt: { $lte: now }, endAt: { $gt: now } }),
       ap.find({ eventId: eid, slotLock: true, startAt: { $gt: now } }, { projection: { slotId: 1 } }).toArray(),
+      ctx.c.walkIns.countDocuments({ eventId: eid, deletedAt: null }),
     ]);
     const cnt = (list: { _id: string; n: number }[], k: string) => list.find((x) => x._id === k)?.n ?? 0;
     const registered = menteeByStatus.reduce((s, x) => s + x.n, 0);
@@ -77,6 +78,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         confirmed: cnt(byStatus, 'confirmed') + cnt(byStatus, 'in_progress'),
         done: cnt(byStatus, 'done'),
         noShow: cnt(byStatus, 'no_show'),
+        walkIns,
       },
       tables: { occupiedNow: occupied, total: activeTables },
       remainingCapacity,
@@ -113,12 +115,20 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         { $group: { _id: { m: '$mentorId', s: '$status' }, n: { $sum: 1 } } },
       ])
       .toArray();
+    // RN21: atendimentos fora da mesa, à parte das mentorias na mesa
+    const walkIns = await ctx.c.walkIns
+      .aggregate<{ _id: ObjectId; n: number }>([
+        { $match: { eventId: ctx.config.eventId, mentorId: { $in: users.map((u) => u._id) }, deletedAt: null } },
+        { $group: { _id: '$mentorId', n: { $sum: 1 } } },
+      ])
+      .toArray();
     const n = (id: ObjectId, ...st: string[]) => counts.filter((c) => c._id.m.equals(id) && st.includes(c._id.s)).reduce((s, c) => s + c.n, 0);
     const items: MentorListItem[] = users.map((u) => ({
       ...toUserView(u),
       availableSlots: u.availability.length,
       confirmedCount: n(u._id, 'confirmed', 'in_progress'),
       doneCount: n(u._id, 'done'),
+      walkInCount: walkIns.find((w) => w._id.equals(u._id))?.n ?? 0,
       neverLoggedIn: u.lastLoginAt === null,
     }));
     return { items };

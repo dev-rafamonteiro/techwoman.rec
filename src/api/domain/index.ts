@@ -11,3 +11,4 @@ export * from './reminder.js';
 export * from './audit.js';
 export * from './invariants.js';
 export * from './self-book.js';
+export * from './walk-in.js';

@@ -11,6 +11,7 @@ import { registerInviteRoutes } from './invite.js';
 import { registerMentorRoutes } from './mentor.js';
 import { registerPublicRoutes } from './public.js';
 import { registerShortLinkRoutes } from './short-links.js';
+import { registerWalkInRoutes } from './walk-ins.js';
 
 export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerPublicRoutes(app, ctx); // E01–E09
@@ -24,4 +25,5 @@ export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerEmailPreviewRoutes(app, ctx); // E46
   registerShortLinkRoutes(app, ctx); // E48
   registerAdminFeedbackRoutes(app, ctx); // E49
+  registerWalkInRoutes(app, ctx); // E50–E53 (RN21)
 }

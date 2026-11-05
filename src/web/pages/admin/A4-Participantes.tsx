@@ -126,6 +126,8 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
   const toast = useToast();
   const ref = useRef<HTMLElement>(null);
   const d = useQuery((s) => call(ENDPOINTS.E35Detail, { params: { id }, signal: s }), [id]);
+  // RN21: atendimentos fora da mesa ativos dela (E53), com remoção
+  const walkIns = useQuery((s) => call(ENDPOINTS.E53List, { query: { menteeId: id }, signal: s }), [id]);
   const [busy, setBusy] = useState(false);
   const [scheduling, setScheduling] = useState(false);
 
@@ -146,6 +148,16 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
       await call(ENDPOINTS.E36, { params: { id }, body });
       toast.success(ok);
       await Promise.all([onChanged(), d.refetch()]);
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  };
+
+  const removeWalkIn = async (walkInId: string, mentorName: string) => {
+    if (!window.confirm(`Remover o atendimento fora da mesa com ${mentorName}?`)) return;
+    setBusy(true);
+    try {
+      const r = await call(ENDPOINTS.E53Delete, { params: { id: walkInId } });
+      toast.success(r.restoredToQueue ? 'Atendimento removido. Ela voltou para a fila.' : 'Atendimento removido.');
+      await Promise.all([onChanged(), d.refetch(), walkIns.refetch()]);
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 
@@ -182,6 +194,18 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
                 <ol className="a4-timeline">{d.data.timeline.map((t, i) => <li key={i}><time dateTime={t.at}>{formatTime(t.at)}</time><span>{t.label}</span></li>)}</ol>
               )}
             </section>
+            {walkIns.status === 'success' && walkIns.data.items.length > 0 && (
+              <section className="a4-sec" data-testid="a4-walkins"><h3>Atendimentos fora da mesa</h3>
+                <ul className="a4-notifs">
+                  {walkIns.data.items.map((w) => (
+                    <li key={w.id}>
+                      <span>{formatTime(w.at)} · {w.mentor.name}{w.note ? ` · “${w.note}”` : ''}</span>
+                      <button type="button" className="a4-act a4-act--danger" disabled={busy} onClick={() => void removeWalkIn(w.id, w.mentor.name)}>Remover</button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             <section className="a4-sec"><h3>Notificações enviadas</h3>
               {d.data.notifications.length === 0 ? <p>Nenhuma notificação.</p> : (
                 <ul className="a4-notifs">

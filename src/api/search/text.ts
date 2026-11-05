@@ -46,11 +46,15 @@ export interface MenteeSearch {
   eventId: string;
   /** Sempre `waiting` na fila da mentora; opcional no admin. */
   status?: string;
+  /** Um dos status (E50: todos menos `cancelled`); alternativa a `status`. */
+  statusIn?: string[];
   areas?: string[];
   priority?: boolean;
   period?: string;
   /** E35: inclui e-mail e telefone na busca e na resposta. */
   admin?: boolean;
+  /** Máximo de itens (padrão e teto: SEARCH_RESULT_LIMIT). */
+  limit?: number;
 }
 
 const STAFF_FIELDS = { name: 1, area: 1, preferredPeriod: 1, linkedin: 1, note: 1, priority: 1, priorityReason: 1, status: 1, queuedAt: 1 };
@@ -71,11 +75,13 @@ export function menteeSearchPipeline(s: MenteeSearch): Document[] {
   }
   const filter: Document[] = [equals('eventId', s.eventId)];
   if (s.status) filter.push(equals('status', s.status));
+  if (s.statusIn?.length) filter.push({ in: { path: 'status', value: s.statusIn } });
   if (s.areas?.length) filter.push({ in: { path: 'area', value: s.areas } });
   if (s.priority) filter.push(equals('priority', true));
 
   const current: Document = { eventId: s.eventId };
   if (s.status) current['status'] = s.status;
+  if (s.statusIn?.length) current['status'] = { $in: s.statusIn };
   if (s.areas?.length) current['area'] = { $in: s.areas };
   if (s.priority) current['priority'] = true;
   if (s.period) current['preferredPeriod'] = s.period;
@@ -84,7 +90,7 @@ export function menteeSearchPipeline(s: MenteeSearch): Document[] {
     { $search: { index: SEARCH_INDEX.mentees, compound: { should, filter, minimumShouldMatch: 1 } } },
     { $limit: s.period ? 200 : 100 },
     { $match: current },
-    { $limit: SEARCH_RESULT_LIMIT },
+    { $limit: Math.min(s.limit ?? SEARCH_RESULT_LIMIT, SEARCH_RESULT_LIMIT) },
     { $project: s.admin ? ADMIN_FIELDS : STAFF_FIELDS },
   ];
 }

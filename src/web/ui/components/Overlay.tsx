@@ -7,12 +7,16 @@ import { createPortal } from 'react-dom';
  */
 export function Overlay({ title, open, onClose, children, side }: { title: string; open: boolean; onClose: () => void; children: ReactNode; side?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
+  // `onClose` num ref: o efeito de foco roda só ao abrir/fechar, não a cada render de quem chama (senão o foco sai
+  // do campo em que se digita quando a página de trás atualiza, ex.: o relógio e o SSE do M6)
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
     ref.current?.focus();
     const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closeRef.current();
       if (e.key === 'Tab' && ref.current) {
         const f = ref.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])');
         if (f.length === 0) return;
@@ -29,7 +33,7 @@ export function Overlay({ title, open, onClose, children, side }: { title: strin
       document.body.style.overflow = overflow;
       prev?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return createPortal(
     <div className={`tw-overlay${side ? ' tw-overlay--side' : ''}`} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
