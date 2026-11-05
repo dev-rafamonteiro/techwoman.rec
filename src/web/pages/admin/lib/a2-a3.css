@@ -101,6 +101,10 @@ img.a3f-avatar { border-style: solid; }
 .a3f-disp .tw-slot small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .a3f-foot { flex: 1 1 100%; }
 .a3f-error { flex: 1 1 100%; background: var(--tw-red-100); color: var(--tw-red-900); border-radius: 12px; padding: 12px 14px; font-weight: 700; }
+.a3f-warn { flex: 1 1 100%; background: var(--tw-orange-100); color: var(--tw-orange-900); border-radius: 12px; padding: 12px 14px; font-weight: 600; }
+.a3f-warn a { color: inherit; font-weight: 800; }
+.a3f-warn { scroll-margin-top: 16px; }
+.a3f-warn:focus { outline: none; }
 .a3f-done { background: var(--tw-plum-950); color: var(--tw-white); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 14px; }
 .a3f-done__title { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--tw-mint-200); }
 .a3f-done p { margin: 0; color: var(--tw-lilac-150); }

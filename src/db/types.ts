@@ -282,3 +282,17 @@ export interface WalkInDoc {
   deletedAt: Date | null;
   deletedBy: ObjectId | null;
 }
+
+/**
+ * RN22 · Trava por horário da disponibilidade (coleção `slot_counters`, `_id` = `<eventId>:<slotId>`). Toda gravação
+ * de E21 que ADICIONA um horário incrementa `n` desse horário dentro da transação, antes de contar as mentoras: duas
+ * mentoras salvando o mesmo horário ao mesmo tempo geram conflito de escrita no mesmo documento, e a que perde repete
+ * a transação e reconta já vendo a outra. `n` não é a contagem de mentoras, só o contador de gravações.
+ */
+export interface SlotCounterDoc {
+  _id: string;
+  eventId: string;
+  slotId: string;
+  n: number;
+  updatedAt: Date;
+}

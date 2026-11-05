@@ -19,3 +19,7 @@
 .m3-savebar .tw-btn { flex: 1; max-width: 260px; min-height: 48px; font-size: var(--text-md); }
 .m3-savebar__state { font-size: var(--text-xs); font-weight: 700; color: var(--color-ink-muted); }
 .m3-savebar__state--dirty { color: var(--tw-orange-900); }
+/* lotado (RN22): cinza, sem o escuro da mentoria marcada */
+.m3 .tw-slot[data-full] { border: 1.5px solid var(--color-border); background: var(--tw-gray-100); color: var(--tw-gray-800); box-shadow: none; }
+.m3 .tw-slot[data-full] small { color: var(--tw-gray-800); }
+.m3-legend .full { background: var(--tw-gray-100); border: 1.5px solid var(--color-border); }

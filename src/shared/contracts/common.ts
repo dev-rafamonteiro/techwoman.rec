@@ -146,6 +146,7 @@ export const ERROR_CODES = [
   'TOO_EARLY',
   // regras de configuração
   'SLOT_IN_USE',
+  'SLOT_FULL',
   'GRID_LOCKED',
   'TABLE_IN_USE',
   'MENTOR_HAS_APPOINTMENTS',
@@ -194,6 +195,7 @@ export const ERROR_HTTP_STATUS: Record<ErrorCode, number> = {
   INVALID_STATE: 409,
   TOO_EARLY: 409,
   SLOT_IN_USE: 409,
+  SLOT_FULL: 409,
   GRID_LOCKED: 409,
   TABLE_IN_USE: 409,
   MENTOR_HAS_APPOINTMENTS: 409,

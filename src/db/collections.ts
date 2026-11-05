@@ -11,6 +11,7 @@ import type {
   ShortLinkDoc,
   TableDoc,
   UserDoc,
+  SlotCounterDoc,
   WalkInDoc,
 } from './types.js';
 
@@ -27,6 +28,7 @@ export const COLLECTIONS = {
   shortLinks: 'short_links',
   feedbacks: 'feedbacks',
   walkIns: 'walk_ins',
+  slotCounters: 'slot_counters',
 } as const;
 
 export interface Collections {
@@ -42,6 +44,7 @@ export interface Collections {
   shortLinks: Collection<ShortLinkDoc>;
   feedbacks: Collection<FeedbackDoc>;
   walkIns: Collection<WalkInDoc>;
+  slotCounters: Collection<SlotCounterDoc>;
 }
 
 export function getCollections(db: Db): Collections {
@@ -58,5 +61,6 @@ export function getCollections(db: Db): Collections {
     shortLinks: db.collection<ShortLinkDoc>(COLLECTIONS.shortLinks),
     feedbacks: db.collection<FeedbackDoc>(COLLECTIONS.feedbacks),
     walkIns: db.collection<WalkInDoc>(COLLECTIONS.walkIns),
+    slotCounters: db.collection<SlotCounterDoc>(COLLECTIONS.slotCounters),
   };
 }

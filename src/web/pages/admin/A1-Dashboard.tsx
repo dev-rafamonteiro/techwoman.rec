@@ -32,6 +32,7 @@ export default function A1Dashboard() {
   const now = new Date(d.serverNow).getTime();
   const expiringSoon = d.attention.filter((a) => a.kind === 'invite_expiring' && new Date(a.at).getTime() - now < 3 * 60000).length;
   const neverLogged = d.mentors.total - d.mentors.loggedIn;
+  const over = d.overCapacitySlots;
   // [chave, rótulo, valor, nota, tom]: tons do design (n neutro, o laranja, m menta, g cinza, r vermelho, p roxo escuro)
   const kpis: [string, string, string | number, string, string][] = [
     ['registered', 'Inscritas', d.counts.registered, '', 'n'],
@@ -42,7 +43,8 @@ export default function A1Dashboard() {
     ['walkins', 'Atendimentos fora da mesa', d.counts.walkIns, '', 'g'],
     ['noshow', 'Não compareceu', d.counts.noShow, '', 'r'],
     ['tables', 'Mesas ocupadas agora', `${d.tables.occupiedNow}/${d.tables.total}`, '', 'p'],
-    ['capacity', 'Sessões livres hoje', d.remainingCapacity, 'capacidade restante', 'n'],
+    // RN22: horário com mais mentoras do que mesas (só por ação do admin) vira nota laranja no mesmo card
+    ['capacity', 'Sessões livres hoje', d.remainingCapacity, over.length ? `Mais mentoras que mesas: ${over.map((s) => formatTime(s.startAt)).slice(0, 3).join(', ')}${over.length > 3 ? '…' : ''}` : 'capacidade restante', over.length ? 'o' : 'n'],
     ['mentors', 'Mentoras com login', `${d.mentors.loggedIn}/${d.mentors.total}`, neverLogged > 0 ? `${neverLogged} nunca ${neverLogged === 1 ? 'acessou' : 'acessaram'}` : '', 'n'],
   ];
   const hours = d.registeredByHour.map((h) => ({ label: formatTime(h.hour).replace(/h00$/, 'h'), value: h.count }));

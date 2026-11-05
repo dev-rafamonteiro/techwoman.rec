@@ -12,6 +12,7 @@ import {
   UserStatusSchema,
 } from './common.js';
 import { UserViewSchema } from './entities.js';
+import { SlotCapacityInfoSchema } from './E21-mentor-availability-put.js';
 
 /**
  * E32 · PATCH /admin/mentors/:id · A3
@@ -36,7 +37,14 @@ export const E32BodySchema = z
   })
   .strict();
 export type E32Body = z.infer<typeof E32BodySchema>;
-export const E32ResponseSchema = z.object({ user: UserViewSchema });
+export const E32ResponseSchema = z.object({
+  user: UserViewSchema,
+  /**
+   * RN22 · O admin pode passar do limite de mentoras por horário: os horários da disponibilidade dela que ficaram com
+   * mais mentoras ativas do que mesas ativas voltam aqui (vazio = nenhum). A3 mostra um aviso.
+   */
+  warnings: z.object({ overCapacity: z.array(SlotCapacityInfoSchema) }),
+});
 export type E32Response = z.infer<typeof E32ResponseSchema>;
 
 /** `details` do erro MENTOR_HAS_APPOINTMENTS (RN12). */

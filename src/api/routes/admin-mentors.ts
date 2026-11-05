@@ -11,7 +11,8 @@ import { enqueueStaffPassword } from '../lib/outbox.js';
 import { mentorSearchPipeline, runSearch } from '../search/text.js';
 import { respond, route } from '../lib/route.js';
 import { iso, toUserView } from '../lib/views.js';
-import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers } from '../domain/index.js';
+import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers, overCapacitySlots } from '../domain/index.js';
+import { ensureSlotCounters, slotCapacity, toSlotCapacityInfo, touchSlotCounters } from '../services/slot-capacity.js';
 
 const ACTIVE = ['invited', 'confirmed', 'in_progress'] as const;
 
@@ -43,11 +44,15 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     const bookedBySlot = new Map<string, number>();
     for (const a of futureBooked) bookedBySlot.set(a.slotId, (bookedBySlot.get(a.slotId) ?? 0) + 1);
     let remainingCapacity = 0;
+    const mentorsBySlot = new Map<string, number>();
     for (const s of event.slots) {
       if (s.startAt.getTime() <= now.getTime()) continue;
       const mentorsHere = mentors.filter((m) => m.availability.includes(s.id)).length;
+      mentorsBySlot.set(s.id, mentorsHere);
       remainingCapacity += Math.max(0, Math.min(activeTables, mentorsHere) - (bookedBySlot.get(s.id) ?? 0));
     }
+    // RN22: horários futuros com mais mentoras do que mesas (só por ação do admin ou dado anterior à regra)
+    const overCapacity = toSlotCapacityInfo(event, overCapacitySlots(mentorsBySlot, activeTables, [...mentorsBySlot.keys()]));
     const label = new Map(event.areas.map((a) => [a.key, a.label]));
 
     const [expiring, late, priorityWaiting] = await Promise.all([
@@ -82,6 +87,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       },
       tables: { occupiedNow: occupied, total: activeTables },
       remainingCapacity,
+      overCapacitySlots: overCapacity,
       mentors: { loggedIn: mentors.filter((m) => m.lastLoginAt).length, total: mentors.length },
       registeredByArea: byArea.map((a) => ({ area: a._id, label: label.get(a._id) ?? a._id, count: a.n })),
       registeredByHour: byHour.map((h) => ({ hour: iso(h._id), count: h.n })),
@@ -188,10 +194,12 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     return respond(201, { user: toUserView(doc), provisionalPassword: password });
   });
 
-  // E32 · PATCH /admin/mentors/:id · RN11, RN12
+  // E32 · PATCH /admin/mentors/:id · RN11, RN12, RN22 (o admin pode passar do limite; a resposta avisa)
   route(app, ctx, E32, async ({ req, user, params, body }) => {
     const event = await loadEvent(ctx);
     const id = oid(params.id);
+    const validIds = new Set(event.slots.map((s) => s.id));
+    if (body.availability) await ensureSlotCounters(ctx, event._id, [...new Set(body.availability)].filter((s) => validIds.has(s)));
     if (body.alsoAdmin !== undefined && !canGrantAdminRole(user.roles)) throw new AppError('FORBIDDEN', 'Só super admin pode alterar o papel de admin.');
     const updated = await runTxn(ctx, async (session) => {
       const target = await ctx.c.users.findOne({ _id: id, roles: 'mentor' }, { session });
@@ -220,6 +228,8 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         const check = checkAvailabilityUpdate({ current: target.availability, next, appointments: active.map((a) => ({ slotId: a.slotId, status: a.status })), validSlotIds: event.slots.map((s) => s.id) });
         if (!check.ok) throw fromRuleError(check);
         set['availability'] = event.slots.map((s) => s.id).filter((s) => next.includes(s));
+        // RN22: mesma trava de E21, para a mentora que salva ao mesmo tempo recontar já com esta gravação
+        await touchSlotCounters(ctx, session, event._id, next.filter((s) => !target.availability.includes(s)));
       }
       if (body.alsoAdmin !== undefined) {
         const hasAdmin = target.roles.includes('admin');
@@ -263,7 +273,13 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       await writeAudit(ctx, session, { actor: actorForRoute(req, 'admin'), action: body.status === 'disabled' ? 'mentor.disable' : body.status === 'active' && target.status === 'disabled' ? 'mentor.enable' : 'mentor.update', entity: 'user', entityId: id, before: { status: target.status }, after: { fields: Object.keys(set).filter((k) => k !== 'updatedAt'), status: set['status'] ?? target.status }, ip: req.ip });
       return after!;
     });
-    return { user: toUserView(updated) };
+    // RN22: aviso (não bloqueia) dos horários dela com mais mentoras ativas do que mesas ativas
+    let overCapacity: ReturnType<typeof toSlotCapacityInfo> = [];
+    if (updated.status === 'active' && updated.availability.length) {
+      const { capacity, counts } = await slotCapacity(ctx, event._id, { slotIds: updated.availability });
+      overCapacity = toSlotCapacityInfo(event, overCapacitySlots(counts, capacity, updated.availability));
+    }
+    return { user: toUserView(updated), warnings: { overCapacity } };
   });
 
   // E33 · POST /admin/mentors/import (multipart CSV, ?dryRun=true)

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AreaKeySchema, defineEndpoint, IdSchema, IsoDateTimeSchema } from './common.js';
+import { SlotCapacityInfoSchema } from './E21-mentor-availability-put.js';
 
 /** E30 · GET /admin/dashboard · A1 · atualização a cada 15 s */
 export const AttentionItemSchema = z.object({
@@ -28,6 +29,8 @@ export const E30ResponseSchema = z.object({
   tables: z.object({ occupiedNow: z.number().int(), total: z.number().int() }),
   /** Sessões livres restantes no dia (capacidade). */
   remainingCapacity: z.number().int(),
+  /** RN22 · Horários futuros com mais mentoras ativas disponíveis do que mesas ativas (só o admin consegue isso, por E32/E33). */
+  overCapacitySlots: z.array(SlotCapacityInfoSchema),
   mentors: z.object({ loggedIn: z.number().int(), total: z.number().int() }),
   registeredByArea: z.array(z.object({ area: AreaKeySchema, label: z.string(), count: z.number().int() })),
   registeredByHour: z.array(z.object({ hour: IsoDateTimeSchema, count: z.number().int() })),

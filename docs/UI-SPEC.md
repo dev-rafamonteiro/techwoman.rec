@@ -170,6 +170,8 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 - Grade vertical com todos os horários do dia (ex.: 9h00, 9h45, 10h30… definidos em A7). Cada horário é um botão liga/desliga "Disponível".
 - Atalhos: "Manhã inteira", "Tarde inteira", "Limpar".
 - Horário com mentoria já marcada aparece travado, com o nome da participante; não pode ser desligado sem antes cancelar a mentoria em M6.
+- **Limite por horário (RN22):** horário que ela não marcou e que já tem uma mentora para cada mesa ativa aparece cinza, "Lotado", e não pode ser ligado (os atalhos também o pulam); legenda ganha "Lotado" e a dica "Horário lotado já tem uma mentora para cada mesa. Se alguém desmarcar, ele volta a ficar livre.". Horário livre com 5 vagas ou menos mostra "N vagas" ("1 vaga") no lugar de "Indisponível". Os horários dela continuam liga/desliga, mesmo lotados (pode desmarcar e remarcar antes de salvar).
+- Se outro salvar antes e o horário lotar (409 `SLOT_FULL`), a tela mostra a mensagem da API ("O horário 10h30 já está lotado (23 de 23 mesas). Desmarcamos esse horário; salve de novo."), tira só os horários lotados da seleção, mantém as outras escolhas não salvas e relê **E20** só para atualizar a lotação (se essa leitura falhar, a tela fica como está). Depois de salvar, a lotação ("Lotado", "N vagas") passa a vir da resposta do E21.
 - Salvar envia para **E21** (carga inicial via **E20**). Aviso se a mentora tentar entrar em M4 sem nenhum horário disponível.
 
 ### M4 · Participantes aguardando
@@ -226,7 +228,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A1 · Dashboard
 
-- **Indicadores (E30):** inscritas, aguardando, convites pendentes, confirmadas, concluídas (na mesa), atendimentos fora da mesa (RN21, contador separado), não compareceu, ocupação das mesas agora (ex.: 14/20), capacidade restante do dia (sessões livres), mentoras com login feito / total.
+- **Indicadores (E30):** inscritas, aguardando, convites pendentes, confirmadas, concluídas (na mesa), atendimentos fora da mesa (RN21, contador separado), não compareceu, ocupação das mesas agora (ex.: 14/20), capacidade restante do dia (sessões livres; com horário acima do limite de mesas (RN22, só por ação do admin) a nota do card fica laranja: "Mais mentoras que mesas: 10h30, 11h15"), mentoras com login feito / total.
 - Gráfico de barras "Inscritas por área" e linha "Inscrições por hora".
 - Lista "Precisa de atenção": convites prestes a expirar, mesas com mentoria atrasada, participantes com prioridade há mais de 30 min na fila.
 - Atualização automática a cada 15 s.
@@ -242,6 +244,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 **Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
 
+- **Limite por horário (RN22):** o admin pode marcar horário lotado (não há bloqueio). Ao salvar a edição (E32), se algum horário dela ficou com mais mentoras ativas do que mesas ativas, a tela não volta para a lista: mostra o aviso laranja "Salvo, mas acima do limite de mesas. O horário 10h30 (24 mentoras para 23 mesas) tem mais mentoras disponíveis do que mesas ativas. No dia, alguma pode ficar sem mesa." com o link "Voltar para a lista". Como o botão Salvar fica no pé do formulário, a tela rola até o aviso e põe o foco nele, e o toast diz "Mentora atualizada, mas com horário acima do limite de mesas."
 - Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail" (layout de e-mail "Acesso da mentora", senha válida por 72 h). A mentora troca no primeiro acesso (M2).
 - **Redefinir senha (E34):** confirma e mostra a nova senha provisória uma única vez.
 

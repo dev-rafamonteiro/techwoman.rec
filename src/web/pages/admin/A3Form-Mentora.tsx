@@ -1,6 +1,6 @@
-import { useEffect, useId, useState, type FormEvent, type InputHTMLAttributes } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type InputHTMLAttributes } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ENDPOINTS, MENTOR_BIO_MAX, MENTOR_THEME_MAX, type UserView } from '@tw/shared';
+import { ENDPOINTS, MENTOR_BIO_MAX, MENTOR_THEME_MAX, type SlotCapacityInfo, type UserView } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, ErrorState, LinkButton, SkeletonList, SlotToggleGrid,
   call, formatTime, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useQuery, useToast,
@@ -81,6 +81,15 @@ export default function A3FormMentora() {
   const [saving, setSaving] = useState(false);
   const [secret, setSecret] = useState<{ password: string; email: string; name: string; emailed: boolean } | null>(null);
   const [loaded, setLoaded] = useState(false);
+  // RN22: horários dela acima do limite depois de salvar (o admin pode passar do limite; só avisa)
+  const [overCapacity, setOverCapacity] = useState<SlotCapacityInfo[]>([]);
+  // o botão Salvar fica no pé do formulário: leva o aviso (que fica no topo) para a vista e o foco para ele
+  const overRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!overCapacity.length || !overRef.current) return;
+    overRef.current.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    overRef.current.focus({ preventScroll: true });
+  }, [overCapacity]);
 
   const mentor = mentors.status === 'success' && mentors.data ? mentors.data.items.find((m) => m.id === id) : undefined;
   useEffect(() => {
@@ -116,9 +125,15 @@ export default function A3FormMentora() {
     };
     try {
       if (editing) {
-        await call(ENDPOINTS.E32, { params: { id: id! }, body: { ...common, ...(isSuper ? { alsoAdmin: f.alsoAdmin } : {}) } });
-        toast.success('Mentora atualizada.');
-        nav('/admin/mentoras');
+        const r = await call(ENDPOINTS.E32, { params: { id: id! }, body: { ...common, ...(isSuper ? { alsoAdmin: f.alsoAdmin } : {}) } });
+        // com aviso de lotação fica na tela para o admin ler (e desmarcar, se quiser)
+        if (r.warnings.overCapacity.length) {
+          toast.success('Mentora atualizada, mas com horário acima do limite de mesas.');
+          setOverCapacity(r.warnings.overCapacity);
+        } else {
+          toast.success('Mentora atualizada.');
+          nav('/admin/mentoras');
+        }
       } else {
         const r = await call(ENDPOINTS.E31Create, {
           body: { ...common, email: f.email.trim(), alsoAdmin: isSuper && f.alsoAdmin, sendPasswordByEmail: f.sendPasswordByEmail },
@@ -145,6 +160,14 @@ export default function A3FormMentora() {
       {secret ? <CreatedCard {...secret} /> : (
         <form className="a3f-form" aria-label={editing ? 'Edição de mentora' : 'Cadastro de mentora'} onSubmit={submit} noValidate data-testid="a3-form">
           {errors.form && <div className="a3f-error" role="alert">{errors.form}</div>}
+          {overCapacity.length > 0 && (
+            <div className="a3f-warn" role="status" tabIndex={-1} ref={overRef} data-testid="a3-over-capacity">
+              <strong>Salvo, mas acima do limite de mesas.</strong>{' '}
+              {overCapacity.length === 1 ? 'O horário' : 'Os horários'} {overCapacity.map((s) => `${formatTime(s.startAt)} (${s.mentorsAvailable} ${s.mentorsAvailable === 1 ? 'mentora' : 'mentoras'} para ${s.capacity} ${s.capacity === 1 ? 'mesa' : 'mesas'})`).join(', ')}{' '}
+              {overCapacity.length === 1 ? 'tem' : 'têm'} mais mentoras disponíveis do que mesas ativas. No dia, alguma pode ficar sem mesa.{' '}
+              <Link to="/admin/mentoras">Voltar para a lista</Link>
+            </div>
+          )}
           <div className="a23-card a3f-card">
             <h2>Dados</h2>
             <Field label="Nome completo" value={f.name} onChange={(e) => set('name', e.target.value)} error={errors.name} autoComplete="off" />
