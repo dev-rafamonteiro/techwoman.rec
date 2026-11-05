@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
-import { E01, E02, E03, E04, E05, E06, E07, E08, E09, type E01Response } from '@tw/shared';
+import { E01, E02, E03, E04, E05, E06, E07, E08, E09, E54, type E01Response, type E54Response } from '@tw/shared';
 import { menteeToken, personalPath } from '../lib/tokens.js';
 import { getOrCreateShortLink, shortLinkExpireAt, shortPath } from '../lib/short-links.js';
-import type { MenteeDoc } from '@tw/db';
+import type { MenteeDoc, UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, isDuplicateKey } from '../lib/errors.js';
 import { RAW, respond, route } from '../lib/route.js';
@@ -16,7 +16,14 @@ import { buildMenteeState } from '../services/mentee-state.js';
 import { insertNewMentee, newMenteeDoc } from '../services/mentee-registration.js';
 import { listSelfBookSlots, selfBook } from '../services/self-book.js';
 import { applyTransition } from '../services/transitions.js';
-import { canUpdatePreferredPeriod, isRegistrationOpen, normalizeEmail, registrationOutcome } from '../domain/index.js';
+import { slotCapacity } from '../services/slot-capacity.js';
+import { canUpdatePreferredPeriod, isRegistrationOpen, normalizeEmail, registrationOutcome, remainingSlotCapacity } from '../domain/index.js';
+
+/** Foto pública: só caminho do próprio site (`/mentoras/...`) ou https; o resto (http, `//host`, `/\\host`, `javascript:`) vira null. */
+const safePhotoUrl = (v: string | null): string | null => (v && (/^\/(?![/\\])/.test(v) || /^https:\/\//i.test(v)) ? v : null);
+
+/** Campos que E54 lê de `users`: nada de e-mail, telefone, disponibilidade nem dados de login sai do banco. */
+const PUBLIC_MENTOR_PROJECTION = { name: 1, photoUrl: 1, organization: 1, areas: 1, themes: 1, bio: 1, linkedin: 1 } as const;
 
 export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): void {
   // E01 · GET /public/event
@@ -44,6 +51,49 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
     };
     return body;
   });
+
+  // E54 · GET /public/mentors · P7 · perfis públicos das mentoras ativas e números do programa (cache curto, sem login)
+  route(
+    app,
+    ctx,
+    E54,
+    async () => {
+      const now = ctx.now();
+      const event = await loadEvent(ctx);
+      const [mentors, { capacity, counts }, booked] = await Promise.all([
+        ctx.c.users
+          .find({ roles: 'mentor', status: 'active' }, { projection: PUBLIC_MENTOR_PROJECTION })
+          .toArray() as Promise<Pick<UserDoc, '_id' | keyof typeof PUBLIC_MENTOR_PROJECTION>[]>,
+        slotCapacity(ctx, event._id),
+        ctx.c.appointments.find({ eventId: event._id, slotLock: true, startAt: { $gt: now } }, { projection: { slotId: 1 } }).toArray(),
+      ]);
+      const bookedBySlot = new Map<string, number>();
+      for (const a of booked) bookedBySlot.set(a.slotId, (bookedBySlot.get(a.slotId) ?? 0) + 1);
+      const label = new Map(event.areas.map((a) => [a.key, a.label]));
+      const items: E54Response['items'] = mentors
+        .map((m) => ({
+          id: String(m._id),
+          name: m.name,
+          photoUrl: safePhotoUrl(m.photoUrl),
+          organization: m.organization?.trim() || null,
+          areas: m.areas.map((key) => ({ key, label: label.get(key) ?? key })),
+          themes: [...new Set((m.themes ?? []).map((t) => t.trim()).filter(Boolean))],
+          bio: m.bio?.trim() || null,
+          linkedin: normalizeLinkedin(m.linkedin) ?? null,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+      const body: E54Response = {
+        items,
+        stats: {
+          mentorCount: items.length,
+          slotMinutes: event.slotMinutes,
+          availableSlots: remainingSlotCapacity({ slots: event.slots, now, activeTables: capacity, mentorsBySlot: counts, bookedBySlot }),
+        },
+      };
+      return respond(200, body, { 'Cache-Control': 'public, max-age=60' });
+    },
+    // sem limite próprio, como E01: vale o global (6000/min por IP), pois a sala inteira pode abrir P7 pelo mesmo Wi-Fi
+  );
 
   // E02 · POST /public/mentees · RN01, RN02
   route(

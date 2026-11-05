@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { ENDPOINTS } from '@tw/shared';
 import { Brand, CalendarIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, PinFilledIcon, PinIcon, SkeletonList, call, useQuery } from '../../ui';
 import './public.css';
@@ -114,7 +115,7 @@ export default function P1Home() {
             <div className="tw-card tw-p1__stat"><strong>Mesas</strong><b>No local do evento</b><p>Você recebe o número da mesa junto com o horário.</p></div>
             <div className="tw-card tw-p1__stat"><strong>Celular</strong><b>Você confirma por lá</b><p>Avisamos por e-mail quando chegar o convite.</p></div>
           </div>
-          <div className="tw-row">{cta('tw-btn--dark')}<span className="tw-pub__muted" style={{ maxWidth: 420 }}>A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</span></div>
+          <div className="tw-row">{cta('tw-btn--dark')}<LinkButton to="/mentoras" size="lg" variant="secondary" data-testid="p1-mentoras">Conheça as mentoras</LinkButton><span className="tw-pub__muted" style={{ maxWidth: 420 }}>A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</span></div>
         </div>
       </section>
 
@@ -159,7 +160,7 @@ export default function P1Home() {
         <div className="tw-pub__wrap tw-row" style={{ justifyContent: 'space-between' }}>
           <span>© 2026 Tech Woman · <a href="mailto:contato@techwoman.rec.br">contato@techwoman.rec.br</a></span>
           <span className="tw-row">{SOCIAL.map(([n, u]) => <a key={n} href={u} target="_blank" rel="noopener noreferrer">{n}</a>)}</span>
-          <span className="tw-row"><a href="#evento">O evento</a><a href="#mentoria">Mentoria</a><a href="/jornada">Jornada</a><a href="/privacidade">Aviso de privacidade</a></span>
+          <span className="tw-row"><a href="#evento">O evento</a><a href="#mentoria">Mentoria</a><Link to="/mentoras">As mentoras</Link><a href="/jornada">Jornada</a><a href="/privacidade">Aviso de privacidade</a></span>
         </div>
       </footer>
     </div>

@@ -73,6 +73,25 @@ export function fullSlotsForAdditions(input: {
     .filter((s) => s.mentorsAvailable >= s.capacity);
 }
 
+/**
+ * Vagas que ainda restam nos horários futuros (E30 `remainingCapacity`, E54 `availableSlots`): por horário que começa
+ * depois de `now`, max(0, min(mesas ativas, mentoras disponíveis) - mentorias que ocupam o horário).
+ */
+export function remainingSlotCapacity(input: {
+  slots: readonly { id: string; startAt: Date }[];
+  now: Date;
+  activeTables: number;
+  mentorsBySlot: ReadonlyMap<string, number>;
+  bookedBySlot: ReadonlyMap<string, number>;
+}): number {
+  let total = 0;
+  for (const s of input.slots) {
+    if (s.startAt.getTime() <= input.now.getTime()) continue;
+    total += Math.max(0, Math.min(input.activeTables, input.mentorsBySlot.get(s.id) ?? 0) - (input.bookedBySlot.get(s.id) ?? 0));
+  }
+  return total;
+}
+
 /** RN22 · Horários com mais mentoras disponíveis do que mesas ativas (aviso do admin em E30 e E32). */
 export function overCapacitySlots(counts: ReadonlyMap<string, number>, capacity: number, slotIds: readonly string[]): SlotCapacity[] {
   return slotIds.map((s) => ({ slotId: s, mentorsAvailable: counts.get(s) ?? 0, capacity })).filter((s) => s.mentorsAvailable > s.capacity);

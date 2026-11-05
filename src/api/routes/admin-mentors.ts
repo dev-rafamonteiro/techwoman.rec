@@ -11,7 +11,7 @@ import { enqueueStaffPassword } from '../lib/outbox.js';
 import { mentorSearchPipeline, runSearch } from '../search/text.js';
 import { respond, route } from '../lib/route.js';
 import { iso, toUserView } from '../lib/views.js';
-import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers, overCapacitySlots } from '../domain/index.js';
+import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers, overCapacitySlots, remainingSlotCapacity } from '../domain/index.js';
 import { ensureSlotCounters, slotCapacity, toSlotCapacityInfo, touchSlotCounters } from '../services/slot-capacity.js';
 
 const ACTIVE = ['invited', 'confirmed', 'in_progress'] as const;
@@ -43,14 +43,12 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     const registered = menteeByStatus.reduce((s, x) => s + x.n, 0);
     const bookedBySlot = new Map<string, number>();
     for (const a of futureBooked) bookedBySlot.set(a.slotId, (bookedBySlot.get(a.slotId) ?? 0) + 1);
-    let remainingCapacity = 0;
     const mentorsBySlot = new Map<string, number>();
     for (const s of event.slots) {
       if (s.startAt.getTime() <= now.getTime()) continue;
-      const mentorsHere = mentors.filter((m) => m.availability.includes(s.id)).length;
-      mentorsBySlot.set(s.id, mentorsHere);
-      remainingCapacity += Math.max(0, Math.min(activeTables, mentorsHere) - (bookedBySlot.get(s.id) ?? 0));
+      mentorsBySlot.set(s.id, mentors.filter((m) => m.availability.includes(s.id)).length);
     }
+    const remainingCapacity = remainingSlotCapacity({ slots: event.slots, now, activeTables, mentorsBySlot, bookedBySlot });
     // RN22: horários futuros com mais mentoras do que mesas (só por ação do admin ou dado anterior à regra)
     const overCapacity = toSlotCapacityInfo(event, overCapacitySlots(mentorsBySlot, activeTables, [...mentorsBySlot.keys()]));
     const label = new Map(event.areas.map((a) => [a.key, a.label]));

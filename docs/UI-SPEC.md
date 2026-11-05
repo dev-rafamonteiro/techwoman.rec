@@ -62,6 +62,7 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 | P4 | Inscrição na mentoria | `/mentoria/inscricao` | Público | Nova |
 | P5 | Inscrição recebida | `/mentoria/inscricao/ok` | Público | Nova |
 | P6 | Minha mentoria | `/mentoria/minha?t=<token>` (as mensagens e P5 levam para cá pelo link curto `/l/<código>`, E48) | Participante (link pessoal) | Nova |
+| P7 | As mentoras | `/mentoras` | Público | Nova |
 | M1 | Login | `/entrar` | Mentora, admin | Nova |
 | M2 | Primeiro acesso / troca de senha | `/entrar/nova-senha` | Mentora, admin | Nova |
 | M3 | Minha disponibilidade | `/mentora/disponibilidade` | Mentora | Nova |
@@ -82,7 +83,7 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 
 **Menu do admin (lateral):** Dashboard · Participantes · Avaliações · Mapa de mesas · Mentoras · Mesas · Evento · Administradores · Logs. Itens sem permissão não aparecem.
 
-## Telas da participante (P1–P6)
+## Telas da participante (P1–P7)
 
 A jornada é QR Code → gamificação → resultado → inscrição → link pessoal, onde ela confirma o horário proposto pela mentora.
 
@@ -148,6 +149,21 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | Concluída | Agradecimento (concluída num atendimento fora da mesa, RN21, sem mentoria na mesa: "Você fez uma mentoria com {mentora}." antes do agradecimento, vindo de `walkIn` de E03) e o cartão "Como foi sua experiência?": notas de 1 a 5 em estrelas para O evento, A palestra e A mentoria (obrigatórias; abaixo de cada uma, o nome da nota: Muito ruim, Ruim, Regular, Boa, Excelente) e o campo livre "Quer contar mais?" (opcional, até 1.000 caracteres, com contador). Enviar sem as três notas mostra "Dê uma nota para o evento, a palestra e a mentoria." Depois de enviada (ou ao reabrir a página), o cartão vira "Obrigada pela avaliação!" com as notas e o comentário, só para leitura | Enviar avaliação (**E09**) |
 | Não compareceu / Cancelada | Mensagem neutra | Fazer nova inscrição, se o evento ainda estiver aberto |
 | Link inválido | "Não encontramos sua inscrição" | Reenviar link por e-mail (**E05**) |
+
+### P7 · As mentoras (nova)
+
+Página pública e responsiva que apresenta as mentoras do programa, com dados de **E54** (sem login). Visual acolhedor e contemporâneo, nas cores da marca: roxo escuro e lilás como base, detalhes em laranja e verde-menta; títulos em Unbounded e texto em Manrope (tokens de `components.css`, sem cor nova).
+
+- Cabeçalho (fundo roxo escuro, fixo no topo): marca à esquerda; links Início (`/`), As mentoras (esta página, `aria-current`) e Começar minha jornada (P2); botão "Voltar ao evento" para a home do evento (P1, `/`). No celular, como em P1, ficam a marca e o botão.
+- Hero com o gradiente roxo: sobretítulo "Mentoria Tech Woman", título "Experiências que abrem caminhos.", texto convidando a conhecer as profissionais e o link "Conheça as mentoras ↓" (âncora `#mentoras`); ao lado, destaque circular laranja com a quantidade de mentoras (`stats.mentorCount`).
+- Introdução (fundo lilás claro): "Uma conversa pode transformar uma possibilidade em caminho.", texto curto e três indicadores: duração da conversa (`stats.slotMinutes` min), número de profissionais (`stats.mentorCount`) e vagas disponíveis (`stats.availableSlots`: vagas que ainda restam nos horários futuros; o rótulo é "vagas", não "horários", porque cada horário soma uma vaga por mesa livre). Enquanto carrega, os números mostram "—".
+- Diretório (`id="mentoras"`): título "Nossas mentoras", campo de busca "Busque por nome, especialidade, empresa ou tema" (placeholder "Ex.: dados, Java, liderança"), botão "Limpar busca" quando há texto e a contagem "23 mentoras" / "2 de 23 mentoras" em `aria-live="polite"`. A busca roda no navegador, sem recarregar e sem nova chamada: procura cada palavra digitada no nome, na empresa, no rótulo das áreas, nos temas e na bio, sem diferenciar acento e maiúscula (`src/web/pages/public/lib/mentoras.ts`).
+- Cartão da mentora: foto circular (`photoUrl`, com `alt` "Foto de {nome}" e carregamento tardio; sem foto, ou se o arquivo falhar, as iniciais do primeiro e do último nome sobre um fundo roxo); empresa em etiqueta; nome; especialidade (rótulos das áreas, separados por " · "); bio curta; temas em etiquetas verde-menta; "Ver perfil no LinkedIn ↗" quando houver (nova aba, `rel="noopener noreferrer"`, "abre em nova aba" escrito). Grade de 3 colunas em telas grandes, 2 entre 768 e 980 px e 1 no celular. Nunca mostra e-mail, telefone nem horários da mentora.
+- Estados: carregando (6 cartões em esqueleto, anunciados como "Carregando mentoras"); erro (estado de erro padrão com "Tentar de novo"); nenhuma mentora cadastrada ("Nenhuma mentora cadastrada ainda"); busca sem resultado ("Nenhuma mentora encontrada", "Tente outro nome, empresa, área ou tema." e "Ver todas as mentoras").
+- Chamada final (fundo roxo escuro): "Venha trocar, aprender e construir novas possibilidades." e o botão "Começar minha jornada" (P2). Rodapé com a marca e "Voltar ao início".
+- Acessibilidade: tudo por teclado, foco visível (roxo nas áreas claras, verde-menta nas roxas), busca em `role="search"` com rótulo visível, alvos de 44 px, leitura confortável no celular (margem lateral `--page-gutter`, sem rolagem horizontal).
+- Entradas: link "As mentoras" no rodapé de P1 (o menu do cabeçalho de P1 segue com as quatro âncoras, para caber no tablet) e o botão "Conheça as mentoras" no bloco Mentoria de P1.
+- Fotos: arquivos em `src/web/public/mentoras/`, referenciados no `photoUrl` do cadastro da mentora (A3). P7 só mostra foto com endereço https ou caminho do próprio site (`/mentoras/...`); uma foto `http://` aceita em A3 aparece em P7 como iniciais. Não há busca automática de foto no LinkedIn (o LinkedIn bloqueia).
 
 ## Telas da mentora (M1–M7)
 
@@ -340,7 +356,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 ## Medição de uso (analytics)
 
-Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha` e `/privacidade`. As telas da mentora (M1–M7, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A10) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
+Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha`, P7 `/mentoras` e `/privacidade`. As telas da mentora (M1–M7, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A10) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
 
 Cada tela pública conta um pageview ao abrir. Eventos por tela (propriedades só de categoria; nunca nome, e-mail, telefone, LinkedIn, comentário, token ou ids):
 

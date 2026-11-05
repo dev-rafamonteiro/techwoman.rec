@@ -23,6 +23,7 @@ export const PUBLIC_ROUTES: Readonly<Record<string, string>> = {
   '/mentoria/inscricao/ok': 'P5 · Inscrição recebida',
   '/mentoria/minha': 'P6 · Minha mentoria',
   '/privacidade': 'Privacidade',
+  '/mentoras': 'P7 · As mentoras',
 };
 
 /** Caminho sem query, sem hash e sem barra final (exceto a raiz). */
