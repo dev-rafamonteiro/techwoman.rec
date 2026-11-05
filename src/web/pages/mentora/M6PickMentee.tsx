@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ENDPOINTS, localMinutesOfDay, type MenteeStaffView, type PreferredPeriod, type Slot } from '@tw/shared';
-import { ApiError, Button, EmptyState, ErrorState, MenteeCard, Overlay, PERIOD_LABELS, SelectField, SkeletonList, TextField, call, formatTime, useAuth } from '../../ui';
+import { ApiError, Button, EmptyState, ErrorState, MenteeCard, Overlay, SelectField, SkeletonList, TextField, call, formatTime, useAuth } from '../../ui';
 
 type ConcretePeriod = Exclude<PreferredPeriod, 'any'>;
+/** Filtro de M6: manhã, tarde (início e fim da tarde juntos) ou qualquer horário (toda a fila, sem filtro de período). */
+type PickPeriod = 'morning' | 'afternoon' | 'any';
+const PICK_PERIODS: { key: PickPeriod; label: string; periods: PreferredPeriod[] | null }[] = [
+  { key: 'morning', label: 'Manhã', periods: ['morning', 'any'] },
+  { key: 'afternoon', label: 'Tarde', periods: ['early_afternoon', 'late_afternoon', 'any'] },
+  { key: 'any', label: 'Qualquer horário', periods: null },
+];
 const SEARCH_MIN = 2;
 const SEARCH_MAX = 200;
 const sortQueue = (a: MenteeStaffView, b: MenteeStaffView) =>
@@ -15,8 +22,9 @@ export function periodOfSlot(startAt: string, timezone: string): ConcretePeriod 
 }
 
 /**
- * M6 · horário livre → escolher participante. Lista a fila (E22) já filtrada pelo período do horário tocado,
- * somando quem marcou "Qualquer horário" (também serve). Escolher abre o M5 nesse horário (fluxo normal de convite).
+ * M6 · horário livre → escolher participante. Lista a fila (E22) já filtrada pelo período do horário tocado (manhã
+ * ou tarde), somando quem marcou "Qualquer horário" (também serve); "Qualquer horário" no filtro mostra a fila toda.
+ * Escolher abre o M5 nesse horário (fluxo normal de convite).
  */
 export function M6PickMentee({ slot, timezone, open, onClose, onPick, areaLabel }: {
   slot: Slot | null;
@@ -27,7 +35,7 @@ export function M6PickMentee({ slot, timezone, open, onClose, onPick, areaLabel 
   areaLabel: (key: string) => string;
 }) {
   const { user } = useAuth();
-  const [period, setPeriod] = useState<ConcretePeriod>('morning');
+  const [period, setPeriod] = useState<PickPeriod>('morning');
   const [mineOnly, setMineOnly] = useState(true);
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
@@ -37,7 +45,7 @@ export function M6PickMentee({ slot, timezone, open, onClose, onPick, areaLabel 
   // ao abrir: período do horário pré-selecionado e filtros limpos
   useEffect(() => {
     if (!open || !slot) return;
-    setPeriod(periodOfSlot(slot.startAt, timezone));
+    setPeriod(periodOfSlot(slot.startAt, timezone) === 'morning' ? 'morning' : 'afternoon');
     setMineOnly(true);
     setSearch('');
     setQ('');
@@ -53,12 +61,12 @@ export function M6PickMentee({ slot, timezone, open, onClose, onPick, areaLabel 
     setItems(null);
     try {
       const base = { ...(areas ? { area: areas } : {}), ...(q ? { q } : {}) };
-      const [exact, any] = await Promise.all([
-        call(ENDPOINTS.E22, { query: { ...base, period } }),
-        call(ENDPOINTS.E22, { query: { ...base, period: 'any' as const } }),
-      ]);
+      const periods = PICK_PERIODS.find((p) => p.key === period)!.periods;
+      const pages = await Promise.all(
+        periods ? periods.map((p) => call(ENDPOINTS.E22, { query: { ...base, period: p } })) : [call(ENDPOINTS.E22, { query: base })],
+      );
       const seen = new Set<string>();
-      const merged = [...exact.items, ...any.items].filter((m) => (seen.has(m.id) ? false : (seen.add(m.id), true)));
+      const merged = pages.flatMap((page) => page.items).filter((m) => (seen.has(m.id) ? false : (seen.add(m.id), true)));
       // com busca, a ordem é a relevância do servidor; sem busca, a ordem da fila (RN03)
       setItems(q ? merged : merged.sort(sortQueue));
       setError(null);
@@ -78,10 +86,11 @@ export function M6PickMentee({ slot, timezone, open, onClose, onPick, areaLabel 
     <Overlay title={`Escolher participante · ${when}`} open={open} onClose={onClose}>
       <div className="tw-stack" data-testid="m6-pick">
         <p className="mt-hint">
-          Quem prefere {PERIOD_LABELS[period].toLowerCase()} ou marcou "Qualquer horário". Ao escolher, você define a mesa e envia o convite para as {when}.
+          {period === 'any' ? 'Todas as participantes aguardando, de qualquer período.' : `Quem prefere a ${period === 'morning' ? 'manhã' : 'tarde'} ou marcou "Qualquer horário".`}
+          {' '}Ao escolher, você define a mesa e envia o convite para as {when}.
         </p>
-        <SelectField label="Período" value={period} onChange={(e) => setPeriod(e.target.value as ConcretePeriod)} data-testid="m6-pick-period">
-          {(['morning', 'early_afternoon', 'late_afternoon'] as const).map((k) => <option key={k} value={k}>{PERIOD_LABELS[k]}</option>)}
+        <SelectField label="Período" value={period} onChange={(e) => setPeriod(e.target.value as PickPeriod)} data-testid="m6-pick-period">
+          {PICK_PERIODS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
         </SelectField>
         <div className="mt-chips">
           <button type="button" className="tw-chip" aria-pressed={mineOnly} onClick={() => setMineOnly((v) => !v)} data-testid="m6-pick-mine">Só minhas áreas</button>
@@ -93,7 +102,7 @@ export function M6PickMentee({ slot, timezone, open, onClose, onPick, areaLabel 
         ) : !items ? (
           <SkeletonList rows={3} height={110} />
         ) : items.length === 0 ? (
-          <EmptyState title="Ninguém aguardando nesse período" text={mineOnly ? 'Tente incluir todas as áreas ou outro período.' : 'Tente outro período.'}
+          <EmptyState title="Ninguém aguardando nesse período" text={mineOnly ? 'Tente incluir todas as áreas ou outro período.' : period === 'any' ? 'A fila está vazia agora.' : 'Tente outro período.'}
             action={mineOnly ? <Button variant="secondary" onClick={() => setMineOnly(false)}>Ver todas as áreas</Button> : undefined} />
         ) : (
           <ul className="m4-list" data-testid="m6-pick-list">

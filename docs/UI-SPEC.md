@@ -205,6 +205,7 @@ Gaveta de baixo para cima no celular, modal no desktop.
 - **Ações por card (E26):**
   - Convite enviado: "Cancelar convite"; "Confirmar presencialmente" (quando a participante está na mesa e não conseguiu confirmar pelo celular).
   - Confirmada: "Iniciar" / "Concluir", "Não compareceu" (liberado 10 min após o início), "Cancelar" com motivo.
+- **Horário livre:** "+ Escolher participante" abre a lista da fila (E22) com filtro "Período": Manhã, Tarde (início e fim da tarde juntos) ou Qualquer horário (a fila toda). Manhã e Tarde somam quem marcou "Qualquer horário"; ao abrir, vem selecionado o período do horário tocado. Escolher abre o M5 nesse horário.
 - Destaque visual da próxima mentoria e aviso "Começa em 5 min".
 - Dados: **E25**, atualização em tempo real por **E27**.
 
