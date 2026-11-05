@@ -3,10 +3,11 @@ import { loadApi } from "../helpers/app.js";
 import { bootApi, type Booted } from "../helpers/boot.js";
 import { RateLimiter } from "../../src/api/worker/rate-limit.js";
 import { RateLimitError } from "../../src/api/worker/notifier.js";
+import { CHANNEL_OFF_REASON } from "../../src/api/worker/outbox.js";
 
 const api = await loadApi();
 
-describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("worker: prioridade, limite do provedor (429) e canais separados", () => {
+describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("worker: prioridade, limite do provedor (429) e canal antigo de WhatsApp", () => {
   let b: Booted;
   beforeAll(async () => {
     b = await bootApi(api!, "worker-limite", { mentors: 2, mentees: 6 });
@@ -37,18 +38,17 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("worker: prioridade
     expect(types.filter((t: string) => t === "registered")).toHaveLength(20);
   });
 
-  it("429: volta para a fila sem gastar tentativa, espera o Retry-After e pausa só o canal de e-mail", async () => {
+  it("429: volta para a fila sem gastar tentativa, espera o Retry-After e pausa o canal de e-mail", async () => {
     await drain();
-    await outbox().insertMany([base(100), base(101), base(102), base(103, { channel: "whatsapp", to: "+5581999990000" })] as never);
-    // 429 só no 1º e-mail (os canais rodam em paralelo; o WhatsApp não pode levar o 429 no lugar)
+    await outbox().insertMany([base(100), base(101), base(102)] as never);
     const n = mk();
     let hits = 0;
     const send = n.send.bind(n);
     n.send = async (m: any) => {
-      if (m.channel === "email" && hits++ === 0) throw new RateLimitError("HTTP 429 limite simulado", 5_000);
+      if (hits++ === 0) throw new RateLimitError("HTTP 429 limite simulado", 5_000);
       return send(m);
     };
-    const limiters = { email: new RateLimiter(100), whatsapp: new RateLimiter(100) };
+    const limiters = { email: new RateLimiter(100) };
     const r = await api!.processOutbox!(b.t.db, { notifier: n, now: b.clock.now, limiters } as never);
     expect((r as any).rateLimited).toBe(1);
     const limited = (await outbox().find({ channel: "email", status: "pending" }).toArray());
@@ -59,8 +59,37 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("worker: prioridade
     expect(hit.lastError).toMatch(/429/);
     expect(hit.nextAttemptAt.getTime() - b.clock.now.getTime()).toBe(5_000);
     expect(limiters.email.isPaused()).toBe(true);
-    // WhatsApp não para por causa do e-mail
-    expect(n.sent.filter((m: any) => m.channel === "whatsapp")).toHaveLength(1);
+    expect(n.sent).toHaveLength(0);
+  });
+
+  it("item antigo de WhatsApp pendente (canal removido): vira skipped sem envio, nunca volta, e não segura os e-mails", async () => {
+    await drain();
+    const legacy = (i: number, extra: Record<string, unknown> = {}) =>
+      base(i, { channel: "whatsapp", to: "+5581999990000", type: "invite", payload: { minutesBefore: 15 }, ...extra });
+    await outbox().insertMany([
+      legacy(500),
+      // preso em `sending` por um worker antigo que caiu: a mesma limpeza depois do releaseStuck
+      legacy(501, { type: "presence_confirmed", status: "sending", lockedAt: new Date(0), lockedBy: "worker-antigo" }),
+      // agendado para depois: também sai da fila já
+      legacy(502, { type: "reminder", nextAttemptAt: new Date(b.clock.now.getTime() + 60 * 60_000) }),
+      base(503),
+      base(504),
+    ] as never);
+    const n = mk();
+    const r = await api!.processOutbox!(b.t.db, { notifier: n, now: b.clock.now, limiters: { email: new RateLimiter(100) } } as never);
+    expect(n.sent.map((m: any) => [m.channel, m.to]).sort()).toEqual([["email", "fila503@exemplo.test"], ["email", "fila504@exemplo.test"]]);
+    expect(r.skipped).toBeGreaterThanOrEqual(2);
+    for (const i of [500, 502]) {
+      const d = (await outbox().findOne({ dedupeKey: `registered:fila:${i}:whatsapp` }))!;
+      expect(d, String(i)).toMatchObject({ status: "skipped", lastError: CHANNEL_OFF_REASON, payload: {}, attempts: 0, lockedAt: null, lockedBy: null });
+    }
+    // o preso em `sending` só é devolvido pelo releaseStuck do laço de produção; aqui simula o que ele faz
+    await outbox().updateOne({ dedupeKey: "registered:fila:501:whatsapp" }, { $set: { status: "pending", lockedAt: null, lockedBy: null } });
+    const n2 = mk();
+    await api!.processOutbox!(b.t.db, { notifier: n2, now: new Date(b.clock.now.getTime() + 2 * 60 * 60_000) });
+    expect(n2.sent).toHaveLength(0);
+    expect(await outbox().countDocuments({ channel: "whatsapp", status: { $ne: "skipped" } })).toBe(0);
+    expect(await outbox().countDocuments({ channel: "email", status: "sent" })).toBe(2);
   });
 
   it("muitos 429 seguidos nunca viram failed; quando o provedor libera, tudo sai", async () => {

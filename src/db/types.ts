@@ -34,6 +34,7 @@ export interface EventDoc {
   minLeadMinutes: number;
   registrationOpen: boolean;
   areas: { key: string; label: string }[];
+  /** Textos das mensagens de WhatsApp, legado (canal removido em 2026-11-05): continua gravado, ninguém lê. */
   templates: {
     registered: string;
     invite: string;
@@ -44,10 +45,13 @@ export interface EventDoc {
   };
   /** Assuntos de e-mail editados em A7 (por id de layout); ausente = assunto padrão. */
   emailSubjects?: Partial<Record<string, string>>;
-  /** Lembretes antes de cada mentoria (A7); ausente = um lembrete 15 min antes pelo WhatsApp (RN15). */
+  /**
+   * Lembretes antes de cada mentoria (A7), sempre por e-mail; ausente = um lembrete 15 min antes (RN15). Eventos antigos
+   * podem ter `whatsapp` em `channels` (legado): a API ignora o canal e grava sempre `['email']`.
+   */
   reminders?: { minutesBefore: number; channels: ('email' | 'whatsapp')[] }[];
-  /** Título e texto das List Messages do WhatsApp (A7); ausente = padrão de `@tw/shared` (RN18, RN20). */
-  whatsappLists?: { invite: { title: string; description: string }; presence: { title: string; description: string } };
+  /** Menus do WhatsApp (RN18, RN20), legado: removidos em 2026-11-05; ninguém lê e E41 apaga ao salvar. */
+  whatsappLists?: unknown;
   consentVersion: string;
   version: number;
   updatedAt: Date;
@@ -62,7 +66,7 @@ export interface UserDoc {
   mustChangePassword: boolean;
   status: UserStatus;
   linkedin: string | null;
-  /** WhatsApp da mentora (E.164), opcional; ausente em contas antigas = sem telefone (avisos só por e-mail). */
+  /** Celular da mentora (E.164), opcional; ausente em contas antigas = sem telefone. Os avisos vão só por e-mail. */
   phone?: string | null;
   organization: string | null;
   areas: string[];
@@ -215,41 +219,6 @@ export interface IdempotencyDoc {
   state: 'in_progress' | 'done';
   response: { status: number; body: unknown } | null;
   createdAt: Date;
-}
-
-export type PresenceCheckStatus = 'pending' | 'confirmed' | 'cancelled' | 'closed';
-export type PresenceInterpretation = 'confirm' | 'cancel';
-/** `invite` = convite (RN20); `presence` = confirmação de presença (RN18). */
-export type PresenceCheckKind = 'invite' | 'presence';
-
-/**
- * Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença
- * (RN18; o lembrete substitui o registro do convite). Sem validador.
- */
-export interface PresenceCheckDoc {
-  /** = appointmentId */
-  _id: ObjectId;
-  /** Ausente (registros antigos) = `presence`. */
-  kind?: PresenceCheckKind;
-  menteeId: ObjectId;
-  /** Só dígitos, ex.: `5511996604159`. */
-  phone: string;
-  /** Hash final do id da mensagem enviada pelo WAHA (`true_<chatId>_<hash>`). */
-  messageId: string;
-  status: PresenceCheckStatus;
-  sentAt: Date;
-  answeredAt: Date | null;
-  answer: { kind: 'list' | 'text'; text: string | null; interpretation: PresenceInterpretation | null } | null;
-}
-
-/** Mensagem recebida do WAHA já processada (deduplicação do webhook E47). Sem validador; TTL em `expireAt`. */
-export interface WhatsappInboundDoc {
-  /** Hash final do id da mensagem recebida. */
-  _id: string;
-  receivedAt: Date;
-  expireAt: Date;
-  phone: string;
-  result: PresenceInterpretation | 'unclear' | 'ignored';
 }
 
 /** `personal` leva a P6 (`/mentoria/minha?t=`); `calendar` leva ao `.ics` de E06. */

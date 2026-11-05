@@ -62,7 +62,7 @@ export function phoneFromE164(v: string | null | undefined): string {
   return maskPhone((v ?? '').replace(/^\+55/, ''));
 }
 
-/** WhatsApp opcional (mentora): vazio vale; senão a mesma regra da API (`normalizePhoneBR`). */
+/** Celular opcional (mentora): vazio vale; senão a mesma regra da API (`normalizePhoneBR`). */
 export function optionalPhoneError(v: string): string | undefined {
   return !v.trim() || normalizePhoneBR(v) ? undefined : 'Telefone inválido. Informe DDD e número.';
 }

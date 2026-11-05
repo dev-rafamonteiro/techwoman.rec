@@ -29,9 +29,10 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier || !api?.expireInvit
     expect(sent.text).toMatch(/http\S+\/l\/[0-9A-Za-z]{7}/);
     expect(sent.text).not.toContain("/mentoria/minha?t=");
     const items = await outbox().find({ type: "invite" }).toArray();
+    expect(items.map((i) => i.channel)).toEqual(["email"]);
     for (const it of items) {
       expect(["sent", "skipped"]).toContain(it.status);
-      expect(it.dedupeKey).toMatch(/^invite:[0-9a-f]{24}:(email|whatsapp)$/);
+      expect(it.dedupeKey).toMatch(/^invite:[0-9a-f]{24}:email$/);
     }
     // rodar de novo não reenvia
     const again = mk();

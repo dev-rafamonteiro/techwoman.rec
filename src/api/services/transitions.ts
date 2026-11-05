@@ -1,5 +1,4 @@
 import { ObjectId, type ClientSession } from 'mongodb';
-import type { OutboxChannel } from '@tw/shared';
 import type { AppointmentDoc, MenteeDoc } from '@tw/db';
 import type { AppContext } from '../ctx.js';
 import { AppError, fromRuleError } from '../lib/errors.js';
@@ -15,11 +14,6 @@ export interface ApplyTransitionInput {
   scope?: { mentorId?: ObjectId; menteeId?: ObjectId };
   reason?: string | null;
   ip?: string | null;
-  /**
-   * Restringe os canais do aviso `plan.notify` à participante (interseção com os disponíveis); RN18 "Não vou": só
-   * e-mail. Não vale para o aviso à mentora (`plan.notifyMentor`).
-   */
-  notifyChannels?: readonly OutboxChannel[];
 }
 
 export interface AppliedTransition {
@@ -85,12 +79,6 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     }
     throw new AppError('INVALID_STATE', 'A mentoria mudou de situação. Atualize a tela.');
   }
-  // RN18/RN20: saiu de `invited` ou de `confirmed` por qualquer caminho, o convite ou o pedido de presença pendente
-  // deixa de valer (senão um texto qualquer dela cairia nele em E47)
-  if ((plan.from === 'invited' || plan.from === 'confirmed') && plan.appointmentTo !== plan.from) {
-    await c.presenceChecks.updateOne({ _id: appt._id, status: 'pending' }, { $set: { status: 'closed' } }, { session });
-  }
-
   const menteeSet: Record<string, unknown> = { status: plan.menteeTo, updatedAt: now };
   if (plan.priority) {
     menteeSet['priority'] = plan.priority.value;
@@ -116,13 +104,12 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
       type: plan.notify, mentee, appointmentId: appt._id,
       // inscrição cancelada pela participante: dedupe pela version dela depois do cancelamento
       ...(plan.notify === 'registration_cancelled' ? { dedupeSuffix: mentee.version } : {}),
-      ...(input.notifyChannels ? { channels: input.notifyChannels } : {}),
     });
   }
   if (plan.notifyMentor) {
-    // aviso à mentora (PLAN, Notificações > Aviso à mentora): canais dela, sem `notifyChannels`; mentora removida ou
-    // desativada (sem acesso ao painel do link), nada
-    const mentor = await c.users.findOne({ _id: appt.mentorId, status: 'active' }, { session, projection: { email: 1, phone: 1 } });
+    // aviso à mentora (PLAN, Notificações > Aviso à mentora), por e-mail; mentora removida ou desativada (sem acesso ao
+    // painel do link), nada
+    const mentor = await c.users.findOne({ _id: appt.mentorId, status: 'active' }, { session, projection: { email: 1 } });
     if (mentor) await enqueueMentorNotifications(ctx, session, { mentor, appointmentId: appt._id, reason: plan.notifyMentor });
   }
   if (plan.scheduleReminder) {

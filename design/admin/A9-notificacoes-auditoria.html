@@ -48,7 +48,7 @@ button,input,select{font-family:inherit}
 
 <sc-if value="{{isN}}" hint-placeholder-val="{{ true }}">
 <div style="display: flex; flex-wrap: wrap; gap: 10px">
-<sc-raw-select aria-label="Canal" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option>Todos os canais</option><option>E-mail</option><option>WhatsApp</option></sc-raw-select>
+<sc-raw-select aria-label="Canal" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option>Todos os canais</option><option>E-mail</option></sc-raw-select>
 <sc-raw-select aria-label="Status" value="{{fN}}" sc-camel-on-change="{{onFN}}" style="min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 10px; background: #FFFFFF; color: #3D0A45; font-size: 15px"><option value="todos">Todos os status</option><option value="Na fila">Na fila</option><option value="Enviada">Enviada</option><option value="Falhou">Falhou</option></sc-raw-select>
 <input type="search" aria-label="Buscar destinatária" placeholder="Buscar destinatária" style="flex: 1 1 220px; min-height: 44px; box-sizing: border-box; border: 2px solid #EBCFF0; border-radius: 12px; padding: 0 14px; font-size: 15px; background: #FFFFFF; color: #3D0A45">
 <button type="button" style="cursor: pointer; min-height: 44px; border: 2px solid #EBCFF0; border-radius: 12px; background: #FFFFFF; color: #8A1F96; font-weight: 700; padding: 0 14px">Exportar CSV</button>
@@ -102,13 +102,10 @@ var MENU = [['Dashboard', 'AdminDashboard.dc.html'], ['Participantes', 'AdminPar
 function menu(ativo) { return MENU.map(function (m) { var on = m[0] === ativo; return { label: m[0], href: m[1], current: on ? 'page' : 'false', bg: on ? '#F26430' : 'transparent', fg: on ? '#3D0A45' : '#F1D9F5', dot: on ? '#3D0A45' : '#8A2A94' }; }); }
 var NST = { 'Na fila': ['#EFE8F0', '#3D0A45'], 'Enviada': ['#C9F4EE', '#1F4A44'], 'Falhou': ['#FBDADA', '#8A1C1C'] };
 var N = [
-  ['13h24', 'WhatsApp', 'Carla Souza', 'Lembrete (15 min antes)', 'Na fila', 0],
+  ['13h24', 'E-mail', 'Carla Souza', 'Lembrete (15 min antes)', 'Na fila', 0],
   ['13h21', 'E-mail', 'Joana Lima', 'Convite de horário', 'Enviada', 1],
-  ['13h21', 'WhatsApp', 'Joana Lima', 'Convite de horário', 'Enviada', 1],
   ['13h19', 'E-mail', 'Renata Alves', 'Inscrição recebida', 'Enviada', 1],
-  ['13h19', 'WhatsApp', 'Renata Alves', 'Inscrição recebida', 'Falhou', 3],
-  ['12h58', 'WhatsApp', 'Beatriz Nunes', 'Convite de horário', 'Falhou', 3],
-  ['12h58', 'E-mail', 'Beatriz Nunes', 'Convite de horário', 'Enviada', 1],
+  ['12h58', 'E-mail', 'Beatriz Nunes', 'Convite de horário', 'Falhou', 3],
   ['12h40', 'E-mail', 'Mirela Santos', 'Convite expirado', 'Enviada', 1]
 ];
 var AST = { 'Login': ['#EFE8F0', '#3D0A45'], 'Convite': ['#FFE1D3', '#8A3210'], 'Cancelamento': ['#FBDADA', '#8A1C1C'], 'Override do admin': ['#5B1466', '#FFFFFF'], 'Cadastro de mentora': ['#F6E4F8', '#8A1F96'], 'Confirmação': ['#C9F4EE', '#1F4A44'] };

@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import QRCode from 'qrcode';
 import {
   E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg, E43Create, E43List, E43Patch, E44Health, E44List, E44Retry, E45,
-  DEFAULT_REMINDERS, DEFAULT_WHATSAPP_LISTS, generateSlots, invalidWhatsappListVariable, type EventConfig,
+  generateSlots, normalizeReminders, type EventConfig,
 } from '@tw/shared';
 import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, type EventDoc, type UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
@@ -37,10 +37,9 @@ export function toEventConfig(ev: EventDoc): EventConfig {
     minLeadMinutes: ev.minLeadMinutes,
     registrationOpen: ev.registrationOpen,
     areas: ev.areas,
-    templates: ev.templates,
     emailSubjects: ev.emailSubjects ?? {},
-    reminders: ev.reminders?.length ? ev.reminders : DEFAULT_REMINDERS,
-    whatsappLists: ev.whatsappLists ?? DEFAULT_WHATSAPP_LISTS,
+    // eventos antigos podem ter `whatsapp` nos canais: o lembrete vai sempre por e-mail
+    reminders: normalizeReminders(ev.reminders),
     version: ev.version,
   };
 }
@@ -114,8 +113,6 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
       if (!check.ok) throw fromRuleError(check);
       const badSubject = invalidSubjectVariable(body.emailSubjects);
       if (badSubject) throw new AppError('VALIDATION_ERROR', `O assunto usa {{${badSubject.variable}}}, que não existe neste e-mail.`, { details: { field: `emailSubjects.${badSubject.layout}` } });
-      const badListVar = body.whatsappLists ? invalidWhatsappListVariable(body.whatsappLists) : null;
-      if (badListVar) throw new AppError('VALIDATION_ERROR', `O menu do WhatsApp usa {${badListVar.variable}}, que não existe nessa mensagem.`, { details: { field: badListVar.field } });
       const areaKeys = new Set(body.areas.map((a) => a.key));
       if (areaKeys.size !== body.areas.length) throw new AppError('VALIDATION_ERROR', 'Áreas com chave repetida.');
       const res = await ctx.c.events.findOneAndUpdate(
@@ -125,8 +122,13 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
             name: body.name, date: body.date, location: body.location, timezone: body.timezone, startTime: body.startTime, endTime: body.endTime,
             slotMinutes: body.slotMinutes, gapMinutes: body.gapMinutes, slots: slots.map((s) => ({ id: s.id, startAt: s.startAt, endAt: s.endAt })),
             responseWindowMinutes: body.responseWindowMinutes, minLeadMinutes: body.minLeadMinutes, registrationOpen: body.registrationOpen,
-            areas: body.areas, templates: body.templates, ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}), ...(body.reminders ? { reminders: [...body.reminders].sort((x, y) => y.minutesBefore - x.minutesBefore) } : {}), ...(body.whatsappLists ? { whatsappLists: body.whatsappLists } : {}), updatedAt: ctx.now(),
+            areas: body.areas, ...(body.templates ? { templates: body.templates } : {}), ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}),
+            // lembretes sempre por e-mail (canal `whatsapp` de uma aba antiga do A7 é ignorado)
+            ...(body.reminders ? { reminders: normalizeReminders(body.reminders).sort((x, y) => y.minutesBefore - x.minutesBefore) } : {}),
+            updatedAt: ctx.now(),
           },
+          // menus do WhatsApp (removidos em 2026-11-05): o campo antigo sai do evento no primeiro salvamento
+          $unset: { whatsappLists: '' },
           $inc: { version: 1 },
         },
         { session, returnDocument: 'after' },
@@ -255,6 +257,8 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
     const id = oid(params.id);
     const now = ctx.now();
     const current = await ctx.c.outbox.findOne({ _id: id, status: 'failed' });
+    // item antigo de WhatsApp (canal removido em 2026-11-05): não volta para a fila
+    if (current && current.channel !== 'email') throw new AppError('INVALID_STATE', 'O envio pelo WhatsApp foi desativado; esta notificação não pode ser reenviada.');
     if (current?.type === 'staff_password') {
       // a senha cifrada já foi apagada: o reenvio gera uma nova senha provisória (e invalida a anterior)
       if (!current.userId) throw new AppError('INVALID_STATE', 'Notificação sem usuário de destino.');

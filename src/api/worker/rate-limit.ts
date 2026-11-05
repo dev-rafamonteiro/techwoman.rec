@@ -54,7 +54,7 @@ export type RateLimiters = Partial<Record<OutboxChannel, RateLimiter>>;
 /** Padrão do e-mail: 8/s, abaixo dos 10/s do Resend (o que sobra absorve o relógio de cada lado). */
 export const DEFAULT_EMAIL_MAX_PER_SEC = 8;
 
-/** EMAIL_MAX_PER_SEC (padrão 8) e WHATSAPP_MAX_PER_SEC (padrão sem limite); 0 desliga o limite do canal. */
+/** EMAIL_MAX_PER_SEC (padrão 8); 0 desliga o limite. */
 export function rateLimitersFromEnv(env: NodeJS.ProcessEnv): RateLimiters {
   const read = (name: string, def: number) => {
     const raw = env[name];
@@ -64,17 +64,16 @@ export function rateLimitersFromEnv(env: NodeJS.ProcessEnv): RateLimiters {
     return n;
   };
   const email = read('EMAIL_MAX_PER_SEC', DEFAULT_EMAIL_MAX_PER_SEC);
-  const whatsapp = read('WHATSAPP_MAX_PER_SEC', 0);
-  return { ...(email > 0 ? { email: new RateLimiter(email) } : {}), ...(whatsapp > 0 ? { whatsapp: new RateLimiter(whatsapp) } : {}) };
+  return email > 0 ? { email: new RateLimiter(email) } : {};
 }
 
 /**
  * EMAIL_CONCURRENCY (padrão 4): envios de e-mail simultâneos, para a latência do provedor (~100 ms) não segurar o ritmo
- * abaixo do limite. O WhatsApp fica em 1 para as mensagens de uma pessoa não trocarem de ordem.
+ * abaixo do limite.
  */
 export function concurrencyFromEnv(env: NodeJS.ProcessEnv): Partial<Record<OutboxChannel, number>> {
   const raw = env['EMAIL_CONCURRENCY'];
   const n = raw === undefined || raw === '' ? 4 : Number(raw);
   if (!Number.isInteger(n) || n < 1 || n > 20) throw new Error(`EMAIL_CONCURRENCY inválido: "${raw}" (1 a 20)`);
-  return { email: n, whatsapp: 1 };
+  return { email: n };
 }

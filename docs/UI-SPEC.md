@@ -116,7 +116,7 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 | --- | --- | --- | --- |
 | Nome completo | Texto | Sim |  |
 | E-mail | E-mail | Sim | Uma inscrição por e-mail |
-| WhatsApp | Telefone com DDD | Sim | Máscara (00) 00000-0000 |
+| Celular | Telefone com DDD | Sim | Máscara (00) 00000-0000 |
 | LinkedIn | URL | Não | Aceita só o usuário ou a URL completa |
 | Área de interesse | Seleção | Sim | Pré-preenchida com o resultado de P3; editável |
 | Período preferido | Opções | Sim | Manhã, Início da tarde, Fim da tarde, Qualquer horário |
@@ -130,7 +130,7 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 
 ### P5 · Inscrição recebida (nova)
 
-- Mensagem: "Recebemos sua inscrição! Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail e WhatsApp."
+- Mensagem: "Recebemos sua inscrição! Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail."
 - Botão "Acompanhar minha mentoria" abre P6 (navegação interna pelo `personalPath` de **E02**).
 - Sugestão "Salve este link" com botão copiar: mostra e copia o link curto (origem do site + `shortPath` de **E02**, ex.: `https://techwoman.dev/l/IEO31Kd`). `personalPath` e `shortPath` ficam juntos no estado da navegação e no `sessionStorage`, para P5 continuar certa depois de recarregar.
 
@@ -143,7 +143,7 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | Aguardando mentora | Área, período preferido, posição neutra ("Sua inscrição está ativa") | Editar período preferido; Cancelar inscrição (**E04**) |
 | Horário proposto | Card com mentora (nome, foto opcional, LinkedIn), mesa, horário, duração 40 min e contador "Responda até 14h05" | Aceitar; Recusar com motivo: Horário não serve / Não tenho mais interesse (**E04**) |
 | Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**): abre a escolha "Trocar de horário" (`reschedule`, RN19: cancela esta mentoria, volta à fila com prioridade e mostra os horários livres) ou "Não tenho mais interesse" (`cancel`, encerra a inscrição) |
-| Recusada por horário (inclui quem trocou de horário ou disse "Não poderei ir" no WhatsApp) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
+| Recusada por horário (inclui quem trocou de horário) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
 | Proposta expirada | "O prazo para responder terminou e o horário foi liberado. Você continua na fila." | — |
 | Concluída | Agradecimento e o cartão "Como foi sua experiência?": notas de 1 a 5 em estrelas para O evento, A palestra e A mentoria (obrigatórias; abaixo de cada uma, o nome da nota: Muito ruim, Ruim, Regular, Boa, Excelente) e o campo livre "Quer contar mais?" (opcional, até 1.000 caracteres, com contador). Enviar sem as três notas mostra "Dê uma nota para o evento, a palestra e a mentoria." Depois de enviada (ou ao reabrir a página), o cartão vira "Obrigada pela avaliação!" com as notas e o comentário, só para leitura | Enviar avaliação (**E09**) |
 | Não compareceu / Cancelada | Mensagem neutra | Fazer nova inscrição, se o evento ainda estiver aberto |
@@ -163,7 +163,7 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 
 - Aparece obrigatoriamente no primeiro login com senha provisória.
 - Campos: nova senha, confirmar senha; regras visíveis (mínimo 10 caracteres). Envia para **E13**.
-- Na mesma tela, a mentora confere nome, LinkedIn, WhatsApp (opcional, telefone com DDD, máscara (00) 00000-0000, nota "Para avisar quando uma participante liberar seu horário. Sem WhatsApp, o aviso vai só por e-mail."), foto (opcional) e áreas de atuação (**E28**).
+- Na mesma tela, a mentora confere nome, LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000), foto (opcional) e áreas de atuação (**E28**).
 
 ### M3 · Minha disponibilidade
 
@@ -228,16 +228,16 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A3 · Cadastro de mentora e importação
 
-**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, WhatsApp (opcional, telefone com DDD, máscara (00) 00000-0000, nota "Para avisar a mentora quando uma participante liberar o horário dela. Sem WhatsApp, o aviso vai só por e-mail."; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
+**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
 
 - Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail" (layout de e-mail "Acesso da mentora", senha válida por 72 h). A mentora troca no primeiro acesso (M2).
 - **Redefinir senha (E34):** confirma e mostra a nova senha provisória uma única vez.
 
-**Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade, whatsapp; a coluna whatsapp é opcional, telefone com DDD); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
+**Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade, celular; a coluna celular é opcional, telefone com DDD, e planilhas antigas com a coluna whatsapp continuam aceitas); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
 
 ### A4 · Participantes
 
-- Tabela: nome, e-mail, WhatsApp, área, período preferido, status, prioridade, mentora, mesa, horário, inscrita em.
+- Tabela: nome, e-mail, celular, área, período preferido, status, prioridade, mentora, mesa, horário, inscrita em.
 - Filtros por status, área, prioridade e período; busca livre por nome, e-mail, telefone ou assunto do comentário.
 - Detalhe em painel lateral: dados completos, linha do tempo de eventos (inscrição, convite, recusa, confirmação…) e notificações enviadas.
 - **Ações (E36):** marcar/desmarcar prioridade, cancelar inscrição, reenviar link pessoal, agendar manualmente (abre o mesmo componente de M5 escolhendo também a mentora).
@@ -260,10 +260,9 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Nome, data, local, fuso (America/Recife), hora de início e de fim, duração da sessão (40 min), intervalo entre sessões (5 min). Prévia ao vivo da grade de horários gerada.
 - Prazo para a participante responder ao convite (15 min) e antecedência mínima para convite (10 min antes do horário).
-- Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min por e-mail e WhatsApp. Sem WhatsApp disponível, vai só por e-mail.
-- Menus do WhatsApp (List Message), dois blocos: "Convite (menu do WhatsApp)" e "Confirmação de presença (menu do WhatsApp)". Cada um tem dois campos editáveis, Título e Texto (`events.whatsappLists`), e ao lado uma prévia ao vivo no estilo do WhatsApp com o rodapé "Se preferir, responda SIM ou NÃO", o botão "Responder" e as duas opções, fixos e não editáveis (convite: "Aceito" / "Não posso"; presença: "Sim, confirmo" / "Não poderei ir"), com a nota "As opções e o rodapé são fixos: as respostas da participante dependem deles." Variáveis do convite: {nome} {mentora} {horario} {mesa} {prazo} {link}; da presença: {nome} {mentora} {horario} {mesa} {minutos} {link}. Na prévia, as variáveis aparecem com dados de exemplo.
-- Nos textos do WhatsApp, "Convite de horário" leva a nota "Usado quando o WhatsApp sai em texto simples (sem menu)" e "Lembrete" leva "Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença".
-- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 9 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
+- Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440); "+ Adicionar lembrete" e remover. Todos vão por e-mail, sem escolha de canal. Padrão: 15 min.
+- Menus do WhatsApp (List Message) e textos do WhatsApp: removidos em 2026-11-05 (só e-mail).
+- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável) e assuntos dos e-mails, com as variáveis `{{variavel}}` de cada layout; botão "Prévia dos e-mails" que abre cada um dos 9 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
 - Alterar a grade (data, fuso, hora de início e de fim, duração e intervalo) é bloqueado enquanto houver mentoria marcada ou realizada, ou seja, com `slotLock` (convidada, confirmada, em andamento, concluída ou sem comparecimento), o mesmo critério da RN16 em E41. Com o bloqueio, esses campos ficam desabilitados e aparece o aviso com a quantidade de mentorias; se o E41 ainda assim responder `GRID_LOCKED`, a tela mostra o erro acima do formulário. Dados: **E41** (bloqueio calculado com **E38**), QR Code: **E42**.
 
@@ -274,7 +273,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A9 · Notificações e auditoria
 
-- Aba **Notificações (E44):** canal, destinatária, modelo, status (na fila, enviada, falhou), tentativas e botão "Reenviar".
+- Aba **Notificações (E44):** canal (sempre e-mail; registros antigos de WhatsApp aparecem como "WhatsApp" no histórico), destinatária, modelo, status (na fila, enviada, falhou), tentativas e botão "Reenviar" (só em linhas de e-mail).
 - Aba **Auditoria (E45):** quem fez o quê e quando (login, cadastro de mentora, convite, cancelamento, override do admin), com filtro por usuário e ação.
 
 ### A10 · Avaliações
@@ -305,30 +304,23 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 **Estados obrigatórios em toda tela com dados:** carregando (esqueleto), vazio (texto + próxima ação), erro (mensagem + tentar de novo), sem permissão ("Você não tem acesso a esta área"), sessão expirada (volta para M1 mantendo a rota de retorno).
 
-**Mensagens enviadas: o e-mail usa os 9 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos). `{link_inscricao}` (e `link_inscricao` no e-mail) é `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token). Nos avisos à mentora, `{link_painel}` (e `link_painel` no e-mail) é `<PUBLIC_BASE_URL>/entrar` (M1, sem token) e `{mentora}` é o nome dela:**
+**Mensagens enviadas: todas vão só por e-mail (o WhatsApp foi removido em 2026-11-05) e usam os 9 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o texto base abaixo resume o conteúdo de cada uma. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos). `{link_inscricao}` (e `link_inscricao` no e-mail) é `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token). Nos avisos à mentora, `{link_painel}` (e `link_painel` no e-mail) é `<PUBLIC_BASE_URL>/entrar` (M1, sem token) e `{mentora}` é o nome dela:**
 
 | Momento | Canal | Texto base |
 | --- | --- | --- |
-| Inscrição recebida | E-mail + WhatsApp | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
+| Inscrição recebida | E-mail | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
 | Convite de horário | E-mail | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
-| Convite de horário (RN20; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Aceito" e "Não posso" (descrição "Você conta o motivo na sua página") |
-| Resposta ao convite: aceitou | WhatsApp | A mensagem de Confirmação normal |
-| Resposta ao convite: não pode (texto fixo) | WhatsApp | "Tudo bem, {nome}! Para recusar, conte o motivo na sua página: {link}. Se for o horário, você continua na fila com prioridade." |
-| Resposta ao convite: não está mais disponível (texto fixo) | WhatsApp | "Este convite não está mais disponível. Veja como está sua inscrição: {link}" |
-| Resposta ao convite: não entendida (texto fixo) | WhatsApp | "Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO." |
-| Confirmação | E-mail + WhatsApp | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
-| Lembrete (antes da mentoria, tempos e canais configurados em A7; padrão 15 min) | WhatsApp e/ou e-mail | "Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!" |
-| Primeiro lembrete pelo WhatsApp: confirmação de presença (RN18; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Sim, confirmo" e "Não poderei ir" (descrição "Você poderá escolher outro horário") |
-| Resposta: confirmou (texto fixo) | WhatsApp | "Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}." |
-| Resposta: não poderá ir (texto fixo) | WhatsApp | "Tudo bem, {nome}. Sua mentoria das {horario} foi cancelada e você continua na fila com prioridade. Se quiser, escolha um novo horário aqui: {link}" |
-| Resposta: não entendida (texto fixo) | WhatsApp | "Não entendi. Responda SIM para confirmar ou NÃO para cancelar sua mentoria das {horario}." |
-| Convite expirado | E-mail e WhatsApp | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
-| Cancelamento pela mentora | E-mail + WhatsApp | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
-| Inscrição cancelada pela participante (texto fixo) | E-mail + WhatsApp | "Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}" |
-| Horário liberado pela participante (recusa "Horário não serve", "Trocar de horário" em P6 ou "Não vou" no WhatsApp; texto fixo) | E-mail e WhatsApp (pelo "Não vou" do WhatsApp, só e-mail) | "Tudo bem, {nome}. O horário das {horario} foi liberado e você continua na fila com prioridade. Se quiser, escolha outro horário na sua página: {link}" |
-| Aviso à mentora: participante cancelou a mentoria confirmada ("Cancelar" ou "Trocar de horário" em P6, "Não vou" no WhatsApp; texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda: {link_painel}" |
-| Aviso à mentora: participante recusou o convite (qualquer motivo; texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
-| Aviso à mentora: participante cancelou a inscrição com convite pendente (texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
+| Convite de horário pelo menu do WhatsApp (RN20) e respostas ao convite | — | Removido em 2026-11-05 (só e-mail). A participante aceita ou recusa na sua página (P6). |
+| Confirmação | E-mail | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
+| Lembrete (antes da mentoria, tempos configurados em A7; padrão 15 min) | E-mail | "Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!" |
+| Confirmação de presença pelo menu do WhatsApp (RN18) e respostas | — | Removido em 2026-11-05 (só e-mail). |
+| Convite expirado | E-mail | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
+| Cancelamento pela mentora | E-mail | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
+| Inscrição cancelada pela participante (texto fixo) | E-mail | "Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}" |
+| Horário liberado pela participante (recusa "Horário não serve" ou "Trocar de horário" em P6; texto fixo) | E-mail | "Tudo bem, {nome}. O horário das {horario} foi liberado e você continua na fila com prioridade. Se quiser, escolha outro horário na sua página: {link}" |
+| Aviso à mentora: participante cancelou a mentoria confirmada ("Cancelar" ou "Trocar de horário" em P6; texto fixo) | E-mail (layout 9) | "Oi, {mentora}. {nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda: {link_painel}" |
+| Aviso à mentora: participante recusou o convite (qualquer motivo; texto fixo) | E-mail (layout 9) | "Oi, {mentora}. {nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
+| Aviso à mentora: participante cancelou a inscrição com convite pendente (texto fixo) | E-mail (layout 9) | "Oi, {mentora}. {nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
 | E-mail do aviso à mentora (layout 9; selo "PARA MENTORAS"; título "Seu horário das {horario} ficou livre"; card com Mesa, Horário e Participante; botão "Abrir minha agenda"; nota "O horário já aparece livre no seu painel.") | E-mail | Parágrafo "Oi, {mentora}." seguido de `motivo`: confirmada cancelada "{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda."; convite recusado "{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; inscrição cancelada "{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila." |
 
 ## Medição de uso (analytics)

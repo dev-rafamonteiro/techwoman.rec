@@ -42,7 +42,7 @@ export function formatEventDate(date: string): string {
 
 const isEmailType = (t: OutboxType): t is EmailOutboxType => t in EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
 
-/** Layout 9: frase do motivo (`{{motivo}}`), a mesma do WhatsApp (`MENTOR_SLOT_RELEASED_TEXT`). */
+/** Layout 9: frase do motivo (`{{motivo}}`), de `MENTOR_SLOT_RELEASED_TEXT`. */
 function mentorMotivo(reason: MentorSlotReleasedReason, v: Record<string, string>): string {
   return `${MENTOR_SLOT_RELEASED_TEXT[reason].replace(/\{(\w+)\}/g, (m, k: string) => v[k] ?? m)}.`;
 }

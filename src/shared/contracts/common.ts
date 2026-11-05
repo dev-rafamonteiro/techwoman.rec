@@ -12,8 +12,6 @@ export const HEADERS = {
   idempotencyKey: 'Idempotency-Key',
   requestedWith: 'X-Requested-With',
   turnstile: 'X-Turnstile-Token',
-  /** E47: HMAC-SHA512 em hex do corpo bruto, assinado pelo WAHA (chave WAHA_WEBHOOK_HMAC_KEY). */
-  wahaHmac: 'X-Webhook-Hmac',
 } as const;
 
 /** Valor exigido no header X-Requested-With nas rotas que escrevem (proteção CSRF). */
@@ -67,9 +65,28 @@ export const OUTBOX_STATUSES = ['pending', 'sending', 'sent', 'failed', 'skipped
 export const OutboxStatusSchema = z.enum(OUTBOX_STATUSES);
 export type OutboxStatus = z.infer<typeof OutboxStatusSchema>;
 
+/**
+ * Canais que aparecem na outbox. `whatsapp` é legado, só leitura (canal removido em 2026-11-05): linhas antigas
+ * continuam listadas em A4/A9, mas nada grava itens novos nele e o worker descarta os pendentes (`skipped`).
+ */
 export const OUTBOX_CHANNELS = ['email', 'whatsapp'] as const;
 export const OutboxChannelSchema = z.enum(OUTBOX_CHANNELS);
 export type OutboxChannel = z.infer<typeof OutboxChannelSchema>;
+/** Canais em uso: só e-mail. O worker e a saúde da fila (E44) olham só para estes. */
+export const ACTIVE_OUTBOX_CHANNELS = ['email'] as const satisfies readonly OutboxChannel[];
+
+/**
+ * Tipos legados, só leitura: respostas pelo WhatsApp à presença (RN18) e ao convite (RN20), removidas em 2026-11-05
+ * (só e-mail). Ficam em OUTBOX_TYPES para A4/A9 listarem as linhas antigas; nada grava esses tipos.
+ */
+export const LEGACY_OUTBOX_TYPES = [
+  'presence_confirmed',
+  'presence_cancelled',
+  'presence_unclear',
+  'invite_closed',
+  'invite_decline_link',
+  'invite_unclear',
+] as const;
 
 export const OUTBOX_TYPES = [
   'registered',
@@ -81,19 +98,12 @@ export const OUTBOX_TYPES = [
   'moved',
   // inscrição cancelada pela própria participante (E04 cancel ou recusa "Não tenho mais interesse")
   'registration_cancelled',
-  // horário liberado pela própria participante, que volta à fila com prioridade (E04 decline schedule/reschedule, RN18 "Não vou")
+  // horário liberado pela própria participante, que volta à fila com prioridade (E04 decline schedule/reschedule)
   'slot_released',
   // aviso à mentora: a participante liberou o horário dela (cancelou a confirmada, recusou ou cancelou com convite pendente)
   'mentor_slot_released',
   'staff_password',
-  // respostas à confirmação de presença pelo WhatsApp (RN18)
-  'presence_confirmed',
-  'presence_cancelled',
-  'presence_unclear',
-  // respostas ao convite pelo WhatsApp (RN20)
-  'invite_closed',
-  'invite_decline_link',
-  'invite_unclear',
+  ...LEGACY_OUTBOX_TYPES,
 ] as const;
 export const OutboxTypeSchema = z.enum(OUTBOX_TYPES);
 export type OutboxType = z.infer<typeof OutboxTypeSchema>;
@@ -104,8 +114,8 @@ export type MentorSlotReleasedReason = (typeof MENTOR_SLOT_RELEASED_REASONS)[num
 export const isMentorSlotReleasedReason = (v: unknown): v is MentorSlotReleasedReason =>
   (MENTOR_SLOT_RELEASED_REASONS as readonly unknown[]).includes(v);
 /**
- * Frase do motivo do aviso à mentora, a mesma no e-mail (`{{motivo}}` do layout 9) e no WhatsApp (UI-SPEC, Mensagens
- * enviadas). Placeholders `{nome}`, `{horario}` e `{mesa}`; sem ponto final, que cada canal fecha do seu jeito.
+ * Frase do motivo do aviso à mentora, no e-mail (`{{motivo}}` do layout 9; UI-SPEC, Mensagens enviadas).
+ * Placeholders `{nome}`, `{horario}` e `{mesa}`; sem ponto final, que o e-mail acrescenta.
  */
 export const MENTOR_SLOT_RELEASED_TEXT: Record<MentorSlotReleasedReason, string> = {
   confirmed_cancelled: '{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda',
@@ -304,7 +314,7 @@ export interface EndpointDef<
   readonly idempotent?: boolean;
   /** Exige Turnstile (header X-Turnstile-Token ou campo do corpo). */
   readonly turnstile?: boolean;
-  /** `false`: rota pública que escreve sem a checagem anti-CSRF (webhook de servidor, E47). */
+  /** `false`: rota pública que escreve sem a checagem anti-CSRF (webhook de servidor). */
   readonly csrf?: false;
   readonly params?: Params;
   readonly query?: Query;

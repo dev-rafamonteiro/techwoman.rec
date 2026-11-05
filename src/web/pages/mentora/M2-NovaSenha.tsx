@@ -92,8 +92,7 @@ export default function M2NovaSenha() {
           onChange={(e) => { setName(e.target.value); setProfileTouched(true); }} data-testid="m2-name" />
         <TextField label="LinkedIn" optional value={linkedin} placeholder="seu-usuario ou link do perfil"
           onChange={(e) => { setLinkedin(e.target.value); setProfileTouched(true); }} data-testid="m2-linkedin" />
-        <TextField label="WhatsApp" optional type="tel" inputMode="tel" autoComplete="tel" value={phone} error={shown('phone')} placeholder="(00) 00000-0000"
-          hint="Para avisar quando uma participante liberar seu horário. Sem WhatsApp, o aviso vai só por e-mail."
+        <TextField label="Celular" optional type="tel" inputMode="tel" autoComplete="tel" value={phone} error={shown('phone')} placeholder="(00) 00000-0000"
           onChange={(e) => { setPhone(maskPhone(e.target.value)); setProfileTouched(true); }} data-testid="m2-phone" />
         <TextField label="Foto" optional type="url" value={photoUrl} error={shown('photo')} placeholder="https://"
           onChange={(e) => { setPhotoUrl(e.target.value); setProfileTouched(true); }} data-testid="m2-photo" />

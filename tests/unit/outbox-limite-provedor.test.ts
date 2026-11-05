@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OUTBOX_TYPES } from "@tw/shared";
+import { LEGACY_OUTBOX_TYPES, OUTBOX_TYPES } from "@tw/shared";
 import { RateLimiter, rateLimitersFromEnv } from "../../src/api/worker/rate-limit.js";
 import { RateLimitError, retryAfterMs } from "../../src/api/worker/notifier.js";
 import { PRIORITY_TIERS } from "../../src/api/worker/outbox.js";
@@ -36,11 +36,11 @@ describe("outbox: limite do provedor (Resend 10/s)", () => {
     expect(l.isPaused()).toBe(false);
   });
 
-  it("EMAIL_MAX_PER_SEC padrão 8; 0 desliga; WhatsApp sem limite por padrão; valor inválido recusa", () => {
+  it("EMAIL_MAX_PER_SEC padrão 8; 0 desliga; só o e-mail tem limitador; valor inválido recusa", () => {
     expect(rateLimitersFromEnv({}).email?.perSec).toBe(8);
-    expect(rateLimitersFromEnv({}).whatsapp).toBeUndefined();
+    expect(Object.keys(rateLimitersFromEnv({}))).toEqual(["email"]);
     expect(rateLimitersFromEnv({ EMAIL_MAX_PER_SEC: "0" }).email).toBeUndefined();
-    expect(rateLimitersFromEnv({ EMAIL_MAX_PER_SEC: "4", WHATSAPP_MAX_PER_SEC: "2" }).whatsapp?.perSec).toBe(2);
+    expect(rateLimitersFromEnv({ EMAIL_MAX_PER_SEC: "4" }).email?.perSec).toBe(4);
     expect(() => rateLimitersFromEnv({ EMAIL_MAX_PER_SEC: "muito" })).toThrow(/EMAIL_MAX_PER_SEC/);
   });
 
@@ -60,11 +60,13 @@ describe("outbox: limite do provedor (Resend 10/s)", () => {
     expect(new RateLimitError("HTTP 429", Number.NaN).retryAfterMs).toBe(1000);
   });
 
-  it("faixas de prioridade: convite primeiro, inscrição recebida por último, todo tipo em uma faixa", () => {
-    expect(PRIORITY_TIERS[0]).toContain("invite");
+  it("faixas de prioridade: convite primeiro, inscrição recebida por último, todo tipo ativo em uma faixa", () => {
+    expect(PRIORITY_TIERS[0]).toEqual(["invite"]);
     expect(PRIORITY_TIERS.at(-1)).toContain("registered");
     const all = PRIORITY_TIERS.flat();
-    for (const t of OUTBOX_TYPES) expect(all, `falta ${t}`).toContain(t);
+    const legacy: readonly string[] = LEGACY_OUTBOX_TYPES;
+    // tipos legados (respostas pelo WhatsApp) não são mais gravados: ficam fora das faixas
+    for (const t of OUTBOX_TYPES) if (!legacy.includes(t)) expect(all, `falta ${t}`).toContain(t);
     expect(new Set(all).size).toBe(all.length);
   });
 });

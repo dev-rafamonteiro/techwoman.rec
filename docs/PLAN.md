@@ -42,20 +42,20 @@ A requisição entra pelo Cloudflare, atravessa o túnel até o Nginx e chega à
 | `cloudflared` | cloudflare/cloudflared | Túnel de saída para o Cloudflare; nenhuma porta publicada no host | `edge` |
 | `web` | nginx:alpine + build do front | Serve a SPA e faz proxy de `/api/*` e do link curto `/l/*` (E48) para a API; cabeçalhos de segurança | `edge`, `app` |
 | `api` | node:24-alpine (multi-stage, usuário não root) | REST, autenticação, regras de agenda, SSE | `app`, `egress` |
-| `worker` | mesma imagem da API, comando diferente | Consome `outbox`, envia e-mail/WhatsApp, expira convites, dispara lembretes | `egress` |
+| `worker` | mesma imagem da API, comando diferente | Consome `outbox`, envia e-mail, expira convites, dispara lembretes | `egress` |
 | `mongo-local` (só perfil `dev`) | mongodb/mongodb-atlas-local | Banco local com replica set para transações e Change Streams | `app` |
 
 **Redes:**
 
 - `edge`: ponte entre túnel e Nginx.
 - `app`: marcada `internal: true`; sem saída para a internet. Só `web` → `api`.
-- `egress`: saída para Atlas (IP da VM liberado na Access List) e para os provedores de mensagem.
+- `egress`: saída para Atlas (IP da VM liberado na Access List) e para o provedor de e-mail.
 
-**Variante com Nginx Proxy Manager (`ops/compose.npm.yaml`):** em servidor que já tem o Nginx Proxy Manager (NPM) na rede docker externa `npm_network`, o `cloudflared` fica de fora (ele está no profile `tunnel` e só sobe com `--profile tunnel`) e a subida é `docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build`. Containers com nome fixo: `techwoman-web` (redes `edge`, `app` e `npm_network`), `techwoman-api` (`app`, `egress`; não entra na `npm_network`) e `techwoman-worker` (`egress`, `npm_network`). O fluxo é NPM (TLS de `techwoman.dev`) → `http://techwoman-web:8080` → nginx do projeto → `api:3000`, sem porta publicada no host. O worker fala com o WAHA pelo container (`http://waha:3000`) e o WAHA chama o webhook pelo container (`http://techwoman-web:8080/api/webhooks/waha`), sem passar pelo domínio. O nginx do projeto continua necessário: serve o build do SPA, aplica os cabeçalhos de segurança/CSP e faz o `/l/` do encurtador; o NPM só termina o TLS e repassa tudo. O IP real do cliente vem de um único cabeçalho confiável, escolhido por `CLIENT_IP_HEADER` no web (o entrypoint gera `/tmp/client-ip.conf`): `x-real-ip` nesta variante (o NPM sobrescreve o `X-Real-IP` com o IP do cliente; o `CF-Connecting-IP` é ignorado porque o cliente o forjaria) e `cf` no Cloudflare Tunnel (`CF-Connecting-IP`, posto pela borda); sem o cabeçalho, vale o peer. Se a Cloudflare passar a fazer proxy na frente do NPM, o `X-Real-IP` vira o IP da borda: o NPM precisa então de `real_ip_header CF-Connecting-IP` com `set_real_ip_from` das faixas da Cloudflare. Com `container_name` fixo não há `--scale api=N`.
+**Variante com Nginx Proxy Manager (`ops/compose.npm.yaml`):** em servidor que já tem o Nginx Proxy Manager (NPM) na rede docker externa `npm_network`, o `cloudflared` fica de fora (ele está no profile `tunnel` e só sobe com `--profile tunnel`) e a subida é `docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build`. Containers com nome fixo: `techwoman-web` (redes `edge`, `app` e `npm_network`), `techwoman-api` (`app`, `egress`; não entra na `npm_network`) e `techwoman-worker` (`egress`, `npm_network`). O fluxo é NPM (TLS de `techwoman.dev`) → `http://techwoman-web:8080` → nginx do projeto → `api:3000`, sem porta publicada no host. O nginx do projeto continua necessário: serve o build do SPA, aplica os cabeçalhos de segurança/CSP e faz o `/l/` do encurtador; o NPM só termina o TLS e repassa tudo. O IP real do cliente vem de um único cabeçalho confiável, escolhido por `CLIENT_IP_HEADER` no web (o entrypoint gera `/tmp/client-ip.conf`): `x-real-ip` nesta variante (o NPM sobrescreve o `X-Real-IP` com o IP do cliente; o `CF-Connecting-IP` é ignorado porque o cliente o forjaria) e `cf` no Cloudflare Tunnel (`CF-Connecting-IP`, posto pela borda); sem o cabeçalho, vale o peer. Se a Cloudflare passar a fazer proxy na frente do NPM, o `X-Real-IP` vira o IP da borda: o NPM precisa então de `real_ip_header CF-Connecting-IP` com `set_real_ip_from` das faixas da Cloudflare. Com `container_name` fixo não há `--scale api=N`.
 
 **Analytics:** o Umami roda numa stack separada (`ops/analytics/compose.yaml`, projeto `umami`), fora das redes do app e da `npm_network`; o NPM o alcança só pela rede `umami_edge`. Ver Analytics (Umami).
 
-**Regras de container:** filesystem somente leitura (`read_only: true` + `tmpfs` para `/tmp`), `no-new-privileges`, limites de CPU e memória por serviço, `healthcheck` em todos, segredos via Docker secrets (URI do Atlas, chave JWT, chaves de e-mail/WhatsApp/Turnstile), nunca em variável no `compose.yaml`.
+**Regras de container:** filesystem somente leitura (`read_only: true` + `tmpfs` para `/tmp`), `no-new-privileges`, limites de CPU e memória por serviço, `healthcheck` em todos, segredos via Docker secrets (URI do Atlas, chave JWT, chaves de e-mail/Turnstile), nunca em variável no `compose.yaml`.
 
 **Escala no dia:** `docker compose up -d --scale api=4`. O Nginx resolve `api` pelo DNS interno do Docker e distribui as requisições. A API é sem estado (sessão no Mongo), então qualquer réplica atende qualquer requisição, inclusive SSE.
 
@@ -88,7 +88,7 @@ services:
     build: ./api
     command: ["node", "dist/worker.js"]
     read_only: true
-    secrets: [mongo_uri, email_api_key, whatsapp_token, waha_api_key]
+    secrets: [mongo_uri, email_api_key]
     networks: [egress]
   mongo-local:
     image: mongodb/mongodb-atlas-local:latest
@@ -152,9 +152,9 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
 | `appointments` | Convites e mentorias (mesa × horário × mentora × participante) | M5, M6, A5, P6 |
 | `outbox` | Notificações a enviar e lembretes agendados | A9 |
 | `audit_logs` | Trilha de auditoria | A9 |
-| `presence_checks` | Pergunta enviada pelo WhatsApp com resposta direta, uma por mentoria: convite (RN20) e confirmação de presença (RN18) | P6, A9 |
-| `whatsapp_inbound` | Mensagens recebidas do WAHA já processadas (deduplicação, TTL de 7 dias) | — |
-| `short_links` | Links curtos `/l/<código>` que levam ao link pessoal ou ao `.ics` da participante (E48) | P5, e-mails, WhatsApp |
+| `presence_checks` | Removida em 2026-11-05 (só e-mail; era a pergunta da RN18/RN20 pelo WhatsApp). A API não lê nem grava mais; dados antigos podem continuar no Atlas e a coleção pode ser apagada manualmente | — |
+| `whatsapp_inbound` | Removida em 2026-11-05 (só e-mail; era a deduplicação do E47). Dados antigos podem continuar no Atlas (o TTL de 7 dias limpa) e a coleção pode ser apagada manualmente | — |
+| `short_links` | Links curtos `/l/<código>` que levam ao link pessoal ou ao `.ics` da participante (E48) | P5, e-mails |
 | `feedbacks` | Avaliação da participante depois da mentoria concluída (E09, E49) | P6, A10 |
 
 ### events
@@ -168,18 +168,17 @@ São oito coleções principais (mais a auxiliar \`idempotency\_keys\`, com TTL)
   "responseWindowMinutes": 15, "minLeadMinutes": 10,
   "registrationOpen": true,
   "areas": [ { "key": "dados", "label": "Dados" } ],
-  "templates": { "invite": "{mentora} quer te mentorar às {horario}..." },
   "version": 3
 }
 ```
 
-`whatsappLists` (opcional; ausente = `DEFAULT_WHATSAPP_LISTS` em `@tw/shared`): título e texto editáveis em A7 das List Messages do WhatsApp, `{ invite: { title, description }, presence: { title, description } }`. `title` até 60 caracteres e `description` até 1000. Variáveis aceitas: no `invite`, `{nome}`, `{mentora}`, `{horario}`, `{mesa}`, `{prazo}` e `{link}`; no `presence`, `{nome}`, `{mentora}`, `{horario}`, `{mesa}`, `{minutos}` e `{link}`. E41 recusa variável desconhecida (`VALIDATION_ERROR` com `field` = `whatsappLists.<lista>.<campo>`). Rodapé, botão e opções (texto e `rowId`) continuam fixos no código, porque as decisões de E47 dependem deles; se o texto do convite não tiver `{link}`, o worker acrescenta "Detalhes: <link>" numa linha nova.
+`whatsappLists` e `templates`: removidos em 2026-11-05 (só e-mail). Eram os textos das mensagens do WhatsApp editados em A7. Documentos antigos podem ainda ter os campos: a leitura ignora, GET de E41 não devolve mais `templates` e salvar A7 apaga `whatsappLists`. `reminders[].channels` antigo com `whatsapp` é lido e salvo como `["email"]`.
 
 `slots` é recalculado ao salvar A7 e gravado em UTC; a API recusa a mudança se algum `appointment` ativo usar um horário que deixaria de existir.
 
 ### users
 
-Campos: `name`, `email` (minúsculo), `roles`, `passwordHash` (argon2id), `mustChangePassword`, `status` (`active` | `disabled`), `linkedin`, `phone` (WhatsApp da mentora, E.164, opcional: mesmo formato e normalização do telefone da participante, `normalizePhoneBR` de `@tw/shared`; ausente ou `null` = sem telefone, os avisos à mentora vão só por e-mail; editável em A3 por E31/E32, na importação E33 pela coluna `whatsapp` e pela própria mentora em M2 por E28; só ela e o admin veem), `organization` (interno), `areas[]`, `bio`, `photoUrl`, `availability[]` (ids de slot), `lastLoginAt`, `failedLogins`, `lockedUntil`, `createdBy`.
+Campos: `name`, `email` (minúsculo), `roles`, `passwordHash` (argon2id), `mustChangePassword`, `status` (`active` | `disabled`), `linkedin`, `phone` (celular da mentora, E.164, opcional: mesmo formato e normalização do telefone da participante, `normalizePhoneBR` de `@tw/shared`; ausente ou `null` = sem telefone; não decide nenhum aviso, que vai sempre por e-mail; editável em A3 por E31/E32, na importação E33 pela coluna `celular` (ou `whatsapp`, nome antigo) e pela própria mentora em M2 por E28; só ela e o admin veem), `organization` (interno), `areas[]`, `bio`, `photoUrl`, `availability[]` (ids de slot), `lastLoginAt`, `failedLogins`, `lockedUntil`, `createdBy`.
 
 ### mentees
 
@@ -199,10 +198,9 @@ As duas travas são campos booleanos mantidos junto com o status:
 
 ### outbox e audit\_logs
 
-- `outbox`: `type`, `channel` (`email` | `whatsapp`), `to`, `menteeId`, `appointmentId`, `payload`, `status` (`pending` | `sending` | `sent` | `failed` | `skipped`), `attempts`, `nextAttemptAt`, `lastError`, `dedupeKey`.
+- `outbox`: `type`, `channel` (`email`; `whatsapp` só em itens antigos, de antes de 2026-11-05), `to`, `menteeId`, `appointmentId`, `payload`, `status` (`pending` | `sending` | `sent` | `failed` | `skipped`), `attempts`, `nextAttemptAt`, `lastError`, `dedupeKey`.
 - `audit_logs`: `at`, `actorId`, `actorRole`, `action`, `entity`, `entityId`, `before`, `after`, `ip`.
-- `presence_checks` (sem validador; `_id` = `appointmentId`): `kind` (`invite` | `presence`; ausente = `presence`), `menteeId`, `phone` (só dígitos, ex.: `5511996604159`), `messageId` (hash final do id da mensagem no WAHA), `status` (`pending` | `confirmed` | `cancelled` | `closed`), `sentAt`, `answeredAt`, `answer{kind: "list" | "text", text, interpretation: "confirm" | "cancel" | null}`. Índice `{ phone: 1, status: 1, sentAt: -1 }`.
-- `whatsapp_inbound` (sem validador; `_id` = hash final do id da mensagem recebida): `receivedAt`, `expireAt` (TTL), `phone`, `result` (`confirm` | `cancel` | `unclear` | `ignored`). Serve só para descartar o mesmo evento reenviado pelo WAHA.
+- `presence_checks` e `whatsapp_inbound`: removidas em 2026-11-05 (só e-mail). O código não usa mais; os dados e índices antigos no Atlas (`presence_phone_status_sent`, `wa_inbound_ttl`) podem ser apagados manualmente. Os validadores do MongoDB não mudaram: `outbox.channel` ainda aceita `whatsapp` para não exigir `collMod` no Atlas.
 - `short_links` (sem validador; `_id` = código de 7 caracteres base62): `menteeId`, `kind` (`personal` | `calendar`), `tokenVersion` (o da participante quando o link foi criado), `createdAt`, `expireAt` (fim do evento + 7 dias; TTL). O token não é gravado: E48 o deriva na hora. Regras em Notificações > Links curtos.
 - `feedbacks` (sem validador; `_id` = menteeId, o que já garante uma avaliação por participante): `eventId`, `appointmentId` (a mentoria concluída), `ratings` (`event`, `talk`, `mentoring`, inteiros de 1 a 5), `comment` (texto ou null), `createdAt`. Índice `feedback_event_created` (`eventId`, `createdAt` decrescente) para A10. Apagada na anonimização.
 
@@ -269,20 +267,12 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
 12. **RN12 · Desativar mentora.** Bloqueado enquanto ela tiver mentorias futuras ativas; a API devolve a lista para o admin realocar ou cancelar. Desativar revoga todas as sessões dela.
 13. **RN13 · Mesa sugerida.** Em M5, sugere a mesa da mentoria anterior mais próxima da mentora, se estiver livre no horário escolhido; senão, a mesa livre de menor número.
 14. **RN14 · Período preferido.** Manhã = horários que começam antes de 12h00; início da tarde = 12h00 a 14h59; fim da tarde = 15h00 em diante (horário de Recife). Só pode ser alterado enquanto a participante está `waiting`.
-15. **RN15 · Lembretes.** Ao confirmar (ou mover), agenda na `outbox` um lembrete por regra configurada em A7 (`events.reminders`: até 10, cada uma com minutos antes do início, de 1 a 1440, e canais e-mail/WhatsApp; padrão: um lembrete 15 min antes pelo WhatsApp). Regras cujo horário já passou são puladas; se todas passaram e a mentoria não começou, sai um só, agora. WhatsApp indisponível (desligado ou sem telefone) cai para e-mail. No envio, o worker confere o status atual e descarta (`skipped`) se não estiver mais `confirmed`. As regras valem para as mentorias confirmadas depois de salvas.
+15. **RN15 · Lembretes.** Ao confirmar (ou mover), agenda na `outbox` um lembrete por e-mail por regra configurada em A7 (`events.reminders`: até 10, cada uma com minutos antes do início, de 1 a 1440; padrão: um lembrete 15 min antes). Regras cujo horário já passou são puladas; se todas passaram e a mentoria não começou, sai um só, agora. No envio, o worker confere o status atual e descarta (`skipped`) se não estiver mais `confirmed`. As regras valem para as mentorias confirmadas depois de salvas.
 16. **RN16 · Mudança de grade.** Alterar data, fuso, horários, duração ou intervalo do evento é recusado se existir qualquer mentoria com `slotLock` (invited, confirmed, in_progress, done, no_show): as concluídas e as sem comparecimento continuam apontando para o horário (`slotId`/`startAt`) e ficariam órfãs se a grade fosse gerada de novo. A tela A7 aplica o mesmo critério.
 17. **RN17 · Auditoria.** Toda escrita feita por staff e toda mudança de status gera um registro em `audit_logs`.
-18. **RN18 · Confirmação de presença pelo WhatsApp.** O primeiro lembrete de cada mentoria (pela ordem de envio) que sai pelo WhatsApp vai como List Message pedindo a confirmação de presença (título e texto de `events.whatsappLists.presence`, editáveis em A7; rodapé, botão e opções fixos); os demais lembretes são texto. A marca vem de `enqueueReminders`, no item `whatsapp` desse lembrete (`payload.presenceCheck: true`); o gêmeo por e-mail, se houver, continua lembrete comum. Os minutos do texto ("faltam X minutos") são calculados no envio: `ceil((startAt − agora) / 60 s)`. As opções da lista têm `rowId` `confirmar:<appointmentId>` e `cancelar:<appointmentId>`. Ao enviar, o worker grava `presence_checks` (`pending`, `messageId`, `phone`). Resposta recebida em E47:
-    - Toque na lista: o `rowId` diz a mentoria. Texto digitado: procura o `presence_checks` `pending` mais recente do telefone (`_data.Info.SenderAlt` ou `from`, sem `@…` e sem `:N`) e interpreta o texto (sim/não, com frases comuns; dúvida ou sinais dos dois lados = não entendido). Sem `pending` para o telefone: ignora, sem resposta.
-    - Confirmar: `presence_checks.status = confirmed`; a mentoria continua `confirmed`; envia `presence_confirmed`.
-    - Cancelar: se a mentoria ainda está `confirmed` e não começou, aplica a transição `mentee_reschedule` (RN19) com ator participante; `presence_checks.status = cancelled`; envia `presence_cancelled` com o link pessoal. Se a mentoria já não está `confirmed`, marca `closed` e não responde.
-    - Não entendido: mantém `pending` e envia `presence_unclear`.
-    - Mesma mensagem recebida de novo (o WAHA repete o webhook): descartada por `whatsapp_inbound`.
-19. **RN19 · Trocar de horário pela participante.** A transição `mentee_reschedule` (de `confirmed`, antes do início) cancela a mentoria (mesa e horário livres na hora) e devolve a participante à fila com `priority = true`, `priorityReason = "declined_schedule"`, `lastOutcome = "declined_schedule"` e o `queuedAt` original. Vem do "Não poderei ir" do WhatsApp (RN18) ou do "Trocar de horário" em P6 (E04 `reschedule`). Uma participante `waiting` com `lastOutcome = "declined_schedule"` pode escolher sozinha um horário livre pelo link pessoal: E07 lista os horários futuros (respeitando `minLeadMinutes`) em que existe mentora ativa da área dela, com o horário na disponibilidade, sem mentoria ativa nele, e uma mesa ativa livre; `matchesPeriod` marca os do período preferido (RN14). E08 reconfere tudo na transação, escolhe a mentora com menos mentorias ativas no evento (empate: nome), a mesa pela RN13, e cria a mentoria já `confirmed` (`createdBy` = a mentora escolhida, `confirmedBy` e `history` com ator participante, auditoria `appointment.self_book`); a participante vira `confirmed` sem prioridade, e saem `confirmed` e os lembretes (RN15, RN18). Mentoras e admins continuam podendo convidá-la pela fila enquanto ela não escolhe.
-20. **RN20 · Convite pelo WhatsApp com resposta direta.** O item `whatsapp` do `invite` sai como List Message (título e texto de `events.whatsappLists.invite`, editáveis em A7; rodapé, botão e opções fixos, UI-SPEC) com as opções "Aceito" (`rowId` `aceitar:<appointmentId>`) e "Não posso" (`recusar:<appointmentId>`). Ao enviar, o worker grava `presence_checks` com `kind = invite`, `pending` (o lembrete de presença da mesma mentoria, depois, substitui o registro com `kind = presence`). Resposta recebida em E47, com a mesma correlação da RN18 (`rowId`, ou texto pelo `pending` mais recente do telefone, de qualquer `kind`):
-    - Aceito (ou texto de confirmação): se o convite ainda está `invited` e não venceu, aplica `accept` com ator participante, como E04 (sai a `confirmed` normal, que é a resposta, e os lembretes); `presence_checks.status = confirmed`. Se não está mais `invited` ou venceu: `closed` e envia `invite_closed`.
-    - Não posso (ou texto de recusa): não muda nada no sistema; envia `invite_decline_link` com o link pessoal, onde ela recusa com o motivo (RN06). O registro continua `pending`: ela ainda pode tocar "Aceito" enquanto o convite valer.
-    - Não entendido: mantém `pending` e envia `invite_unclear`.
+18. **RN18 · Confirmação de presença pelo WhatsApp.** Removido em 2026-11-05 (só e-mail).
+19. **RN19 · Trocar de horário pela participante.** A transição `mentee_reschedule` (de `confirmed`, antes do início) cancela a mentoria (mesa e horário livres na hora) e devolve a participante à fila com `priority = true`, `priorityReason = "declined_schedule"`, `lastOutcome = "declined_schedule"` e o `queuedAt` original. Vem do "Trocar de horário" em P6 (E04 `reschedule`). Uma participante `waiting` com `lastOutcome = "declined_schedule"` pode escolher sozinha um horário livre pelo link pessoal: E07 lista os horários futuros (respeitando `minLeadMinutes`) em que existe mentora ativa da área dela, com o horário na disponibilidade, sem mentoria ativa nele, e uma mesa ativa livre; `matchesPeriod` marca os do período preferido (RN14). E08 reconfere tudo na transação, escolhe a mentora com menos mentorias ativas no evento (empate: nome), a mesa pela RN13, e cria a mentoria já `confirmed` (`createdBy` = a mentora escolhida, `confirmedBy` e `history` com ator participante, auditoria `appointment.self_book`); a participante vira `confirmed` sem prioridade, e saem `confirmed` e os lembretes (RN15). Mentoras e admins continuam podendo convidá-la pela fila enquanto ela não escolhe.
+20. **RN20 · Convite pelo WhatsApp com resposta direta.** Removido em 2026-11-05 (só e-mail).
 
 ## API REST ligada às telas
 
@@ -301,7 +291,7 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E08 | `POST /public/me/book` | P6 | RN19; `{ slotId }` com `Idempotency-Key`; o sistema escolhe mentora e mesa e cria a mentoria já `confirmed`; 409 `SLOT_UNAVAILABLE` se o horário acabou de ser ocupado |
 | E09 | `POST /public/me/feedback` | P6 | Avaliação depois da mentoria concluída: `{ event, talk, mentoring, comment? }`, notas inteiras de 1 a 5 e comentário opcional de até 1.000 caracteres. Só com a participante `done`; uma por participante, sem edição (coleção `feedbacks`, `_id` = menteeId). 409 `INVALID_STATE` fora de `done` ou se já enviou. Devolve o estado de E03, que traz `feedback` (notas, comentário, data) ou null. A anonimização (E36) apaga a avaliação |
 | E06 | `GET /public/calendar.ics?t=<token>` | P6, e-mail 3 | Só para mentoria confirmada; `text/calendar`; `UID` = id da mentoria raiz da cadeia de moves (estável); 404 em qualquer outro status |
-| E48 | `GET /l/:code` (rota da API `/api/l/:code`; link público `<PUBLIC_BASE_URL>/l/<código>`) | E-mails, WhatsApp, P5 | Público, sem login e sem CSRF; não executa ação. Sempre 302 sem corpo, com `Location` relativo: `kind = personal` → `/mentoria/minha?t=<token>`, `kind = calendar` → `/api/public/calendar.ics?t=<token>`, com o token derivado na hora do `tokenVersion` atual. Código inexistente, formato inválido (o parâmetro aceita qualquer texto de até 64 caracteres, sem 422), revogado (`tokenVersion` do link ≠ atual), vencido (`expireAt` já passou) ou de participante que não existe mais → 302 para `/mentoria/minha` (P6 mostra "Link inválido"), resposta idêntica nos cinco casos. Cabeçalhos `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Rate limit próprio por IP: 600 por minuto. Código E48 escolhido depois de E47. Regras em Notificações > Links curtos |
+| E48 | `GET /l/:code` (rota da API `/api/l/:code`; link público `<PUBLIC_BASE_URL>/l/<código>`) | E-mails, P5 | Público, sem login e sem CSRF; não executa ação. Sempre 302 sem corpo, com `Location` relativo: `kind = personal` → `/mentoria/minha?t=<token>`, `kind = calendar` → `/api/public/calendar.ics?t=<token>`, com o token derivado na hora do `tokenVersion` atual. Código inexistente, formato inválido (o parâmetro aceita qualquer texto de até 64 caracteres, sem 422), revogado (`tokenVersion` do link ≠ atual), vencido (`expireAt` já passou) ou de participante que não existe mais → 302 para `/mentoria/minha` (P6 mostra "Link inválido"), resposta idêntica nos cinco casos. Cabeçalhos `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Rate limit próprio por IP: 600 por minuto. Código E48 escolhido depois de E47. Regras em Notificações > Links curtos |
 
 ### Autenticação
 
@@ -324,16 +314,16 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 | E25 | `GET /mentor/appointments` | M6 | Agenda do dia da mentora |
 | E26 | `PATCH /mentor/appointments/:id` | M6 | `{ action: "confirm_in_person" \| "start" \| "finish" \| "no_show" \| "cancel", reason? }`; RN08–RN10 |
 | E27 | `GET /mentor/stream` (SSE) | M4, M6 | Eventos `queue.added`, `queue.removed`, `appointment.updated` |
-| E28 | `PATCH /mentor/profile` | M2 | Nome, LinkedIn, WhatsApp (`phone`), foto, áreas, bio |
+| E28 | `PATCH /mentor/profile` | M2 | Nome, LinkedIn, celular (`phone`), foto, áreas, bio |
 
 ### Admin e super admin
 
 | Código | Método e rota | Telas | Papel |
 | --- | --- | --- | --- |
 | E30 | `GET /admin/dashboard` | A1 | Admin |
-| E31 | `GET /admin/mentors`, `POST /admin/mentors` | A2, A3 | Admin; POST devolve a senha provisória uma única vez; `phone` (WhatsApp) opcional |
-| E32 | `PATCH /admin/mentors/:id` | A3 | Admin; desativar segue RN12; papel admin só por super admin; `phone` (WhatsApp) opcional, `null` apaga |
-| E33 | `POST /admin/mentors/import` (multipart CSV, `?dryRun=true`) | A3 | Admin; prévia linha a linha, depois confirma. Colunas: `nome`, `email`, `linkedin`, `organizacao`, `areas`, `disponibilidade` e `whatsapp` (opcional; telefone com DDD, inválido é erro da linha; sem a coluna, o telefone de quem já existe não muda) |
+| E31 | `GET /admin/mentors`, `POST /admin/mentors` | A2, A3 | Admin; POST devolve a senha provisória uma única vez; `phone` (celular) opcional |
+| E32 | `PATCH /admin/mentors/:id` | A3 | Admin; desativar segue RN12; papel admin só por super admin; `phone` (celular) opcional, `null` apaga |
+| E33 | `POST /admin/mentors/import` (multipart CSV, `?dryRun=true`) | A3 | Admin; prévia linha a linha, depois confirma. Colunas: `nome`, `email`, `linkedin`, `organizacao`, `areas`, `disponibilidade` e `celular` (opcional; aceita também `whatsapp`, o nome antigo; telefone com DDD, inválido é erro da linha; sem a coluna, o telefone de quem já existe não muda) |
 | E34 | `POST /admin/mentors/:id/reset-password` | A2, A3 | Admin |
 | E35 | `GET /admin/mentees?status=&area=&priority=&q=&cursor=` | A4 | Admin |
 | E36 | `PATCH /admin/mentees/:id` | A4 | Admin; prioridade, cancelar, reenviar link |
@@ -353,7 +343,7 @@ Cada endpoint tem um código E-xx, o mesmo citado nas telas do SDD 1; todas as r
 
 | Código | Rota | Origem | Regras |
 | --- | --- | --- | --- |
-| E47 | `POST /webhooks/waha` | WAHA (webhook da sessão) | Sem CSRF e sem login. Valida `X-Webhook-Hmac` (HMAC-SHA512 em hex do corpo bruto, UTF-8, chave `WAHA_WEBHOOK_HMAC_KEY`, comparação em tempo constante) antes de ler o JSON; inválida → 401. Responde 200 em menos de 10 s. Só trata `event: "message"` que não seja `fromMe` nem de grupo (`@g.us`); RN18 |
+| E47 | `POST /webhooks/waha` | — | Removido em 2026-11-05 (só e-mail); a rota não existe mais (404) |
 
 **Mover mentoria (E39 com `action: "move"`)** é feito na mesma transação: o registro antigo vira `cancelled` (sem prioridade, motivo `moved`) e um novo nasce `confirmed`, mantendo a confirmação da participante, que recebe aviso com o novo horário/mesa.
 
@@ -464,58 +454,55 @@ db.mentees.createSearchIndex("mentees_text", "search", {
 
 ## Notificações
 
-E-mail é o canal obrigatório do MVP e WhatsApp entra como segundo canal se os modelos de mensagem forem aprovados a tempo; a página pessoal (P6) funciona mesmo que nenhuma mensagem chegue. Com WhatsApp ligado, todo aviso à participante sai pelos dois canais, para que nenhum dependa só do WhatsApp; a exceção são as respostas a um toque no próprio WhatsApp (`presence_*`, `invite_*`), e o `slot_released` desse mesmo toque, que vai só por e-mail para ela não receber duas mensagens no WhatsApp. `notifyChannels` (entrada opcional de `applyTransition`) restringe os canais do aviso da transição à participante: vale a interseção com os canais disponíveis. O aviso à mentora (`mentor_slot_released`) segue a mesma regra de canais com o telefone dela (`users.phone`): e-mail, mais WhatsApp se ligado e se ela tiver telefone; `notifyChannels` não vale para ele.
+Todo aviso sai só por e-mail: o WhatsApp foi removido em 2026-11-05. A página pessoal (P6) funciona mesmo que nenhuma mensagem chegue. O aviso à mentora (`mentor_slot_released`) também vai por e-mail; o telefone dela (`users.phone`) não muda nada no envio.
 
 **Fluxo:** a API grava na `outbox` dentro da mesma transação da mudança de status (padrão outbox); o `worker` lê as pendentes, envia e marca o resultado. Nada é enviado direto de dentro da requisição HTTP.
 
-**Aviso à mentora:** o plano da transição (`planTransition`) traz `notifyMentor` (motivo do `mentor_slot_released`, um de `MENTOR_SLOT_RELEASED_REASONS` em `@tw/shared`, ou null), preenchido só com ator participante: `mentee_cancel` de `confirmed` e `mentee_reschedule` → `confirmed_cancelled`; `decline_schedule` e `decline_no_interest` → `invite_declined`; `mentee_cancel` de `invited` → `invite_cancelled`. `applyTransition` lê a mentora da mentoria e grava o aviso com `enqueueMentorNotifications` (`src/api/lib/outbox.ts`), separado do aviso à participante e sem `notifyChannels`. Uma mensagem que chegue pelo WhatsApp do telefone da mentora em E47 não acha `presence_checks` `pending` (eles só existem para a participante) e é ignorada.
+**Aviso à mentora:** o plano da transição (`planTransition`) traz `notifyMentor` (motivo do `mentor_slot_released`, um de `MENTOR_SLOT_RELEASED_REASONS` em `@tw/shared`, ou null), preenchido só com ator participante: `mentee_cancel` de `confirmed` e `mentee_reschedule` → `confirmed_cancelled`; `decline_schedule` e `decline_no_interest` → `invite_declined`; `mentee_cancel` de `invited` → `invite_cancelled`. `applyTransition` lê a mentora da mentoria e grava o aviso com `enqueueMentorNotifications` (`src/api/lib/outbox.ts`), separado do aviso à participante.
 
-| Gatilho | Tipo | Canais | `dedupeKey` |
+| Gatilho | Tipo | Canal | `dedupeKey` |
 | --- | --- | --- | --- |
-| Inscrição criada ou link reenviado | `registered` | E-mail, WhatsApp | `registered:<menteeId>:<n>` |
-| Convite criado (no WhatsApp, List Message com resposta direta, RN20) | `invite` | E-mail, WhatsApp | `invite:<appointmentId>` |
-| Confirmada | `confirmed` | E-mail, WhatsApp | `confirmed:<appointmentId>` |
-| Lembretes antes da mentoria (A7, até 10; padrão 15 min por e-mail e WhatsApp); o primeiro pelo WhatsApp é a List Message de presença (RN18) | `reminder` | Canais da regra (WhatsApp sem telefone ou desligado vira e-mail) | `reminder:<appointmentId>:<minutos>` |
-| Convite expirado | `expired` | E-mail, WhatsApp | `expired:<appointmentId>` |
-| Cancelada pela mentora/admin ou movida | `cancelled` / `moved` | E-mail, WhatsApp | `cancelled:<appointmentId>` |
-| Inscrição cancelada pela própria participante (E04 `cancel`, ou recusa do convite com "Não tenho mais interesse") | `registration_cancelled` | E-mail, WhatsApp | `registration_cancelled:<menteeId>:<version da participante depois do cancelamento>` |
-| Horário liberado pela própria participante, que volta à fila com prioridade (E04 `decline` com motivo `schedule`, E04 `reschedule` de P6, ou "Não vou" no WhatsApp, RN18) | `slot_released` | E-mail, WhatsApp (pelo "Não vou" do WhatsApp, só e-mail: a resposta `presence_cancelled` já vai pelo WhatsApp; E47 passa `notifyChannels: ["email"]` para `applyTransition`) | `slot_released:<appointmentId>` |
-| Horário da mentora liberado pela participante (só quando ela mesma age, nunca mentora/admin nem expiração): mentoria confirmada cancelada por ela (E04 `cancel` ou `reschedule` de P6, "Não vou" no WhatsApp, RN18), convite recusado (E04 `decline`, qualquer motivo) ou inscrição cancelada com convite pendente (E04 `cancel`) | `mentor_slot_released` (para a mentora: `userId` = mentora, `menteeId` = null, `appointmentId` = a mentoria; `payload.reason` = `confirmed_cancelled` \| `invite_declined` \| `invite_cancelled`) | E-mail, WhatsApp (se ligado e `users.phone` preenchido; o "Não vou" do WhatsApp não restringe este aviso) | `mentor_slot_released:<appointmentId>` |
+| Inscrição criada ou link reenviado | `registered` | E-mail | `registered:<menteeId>:<n>` |
+| Convite criado | `invite` | E-mail | `invite:<appointmentId>` |
+| Confirmada | `confirmed` | E-mail | `confirmed:<appointmentId>` |
+| Lembretes antes da mentoria (A7, até 10; padrão 15 min antes) | `reminder` | E-mail | `reminder:<appointmentId>:<minutos>` |
+| Convite expirado | `expired` | E-mail | `expired:<appointmentId>` |
+| Cancelada pela mentora/admin ou movida | `cancelled` / `moved` | E-mail | `cancelled:<appointmentId>` |
+| Inscrição cancelada pela própria participante (E04 `cancel`, ou recusa do convite com "Não tenho mais interesse") | `registration_cancelled` | E-mail | `registration_cancelled:<menteeId>:<version da participante depois do cancelamento>` |
+| Horário liberado pela própria participante, que volta à fila com prioridade (E04 `decline` com motivo `schedule` ou E04 `reschedule` de P6) | `slot_released` | E-mail | `slot_released:<appointmentId>` |
+| Horário da mentora liberado pela participante (só quando ela mesma age, nunca mentora/admin nem expiração): mentoria confirmada cancelada por ela (E04 `cancel` ou `reschedule` de P6), convite recusado (E04 `decline`, qualquer motivo) ou inscrição cancelada com convite pendente (E04 `cancel`) | `mentor_slot_released` (para a mentora: `userId` = mentora, `menteeId` = null, `appointmentId` = a mentoria; `payload.reason` = `confirmed_cancelled` \| `invite_declined` \| `invite_cancelled`) | E-mail | `mentor_slot_released:<appointmentId>` |
 | Senha provisória enviada pelo admin | `staff_password` | E-mail | `pwd:<userId>:<n>` |
-| Resposta à confirmação de presença (RN18) | `presence_confirmed` / `presence_cancelled` / `presence_unclear` | WhatsApp | `presence:<id da mensagem recebida>` |
-| Resposta ao convite pelo WhatsApp (RN20) | `invite_closed` / `invite_decline_link` / `invite_unclear` | WhatsApp | `presence:<id da mensagem recebida>` |
+| Resposta à confirmação de presença (RN18, removida em 2026-11-05) | `presence_confirmed` / `presence_cancelled` / `presence_unclear` | — (só itens antigos) | `presence:<id da mensagem recebida>` |
+| Resposta ao convite pelo WhatsApp (RN20, removida em 2026-11-05) | `invite_closed` / `invite_decline_link` / `invite_unclear` | — (só itens antigos) | `presence:<id da mensagem recebida>` |
 
 **Worker:**
 
-- Laço a cada 2 s: e-mail e WhatsApp em paralelo, cada canal com até 50 itens com `status: "pending"` e `nextAttemptAt <= agora`, trocando para `sending` com `findOneAndUpdate` (cada item é processado por um só worker, mesmo com mais de uma réplica).
-- Prioridade quando a fila acumula: 1) convite e respostas no WhatsApp; 2) confirmação, mudança, cancelamento, expiração, lembrete, horário liberado, aviso à mentora, inscrição cancelada; 3) inscrição recebida e senha provisória. Dentro da faixa, o mais antigo primeiro (índice `outbox_claim_lane`).
-- Ritmo por canal: `EMAIL_MAX_PER_SEC` (padrão 8, abaixo dos 10/s do Resend; 0 = sem limite) e `WHATSAPP_MAX_PER_SEC` (padrão sem limite), com até `EMAIL_CONCURRENCY` envios de e-mail simultâneos (padrão 4; WhatsApp sempre 1, para não trocar a ordem das mensagens). O limite vale por réplica: com N workers, divida por N.
+- Laço a cada 2 s: até 50 itens de e-mail com `status: "pending"` e `nextAttemptAt <= agora`, trocando para `sending` com `findOneAndUpdate` (cada item é processado por um só worker, mesmo com mais de uma réplica). Itens antigos pendentes com `channel = whatsapp` viram `skipped` com `lastError = "canal desativado"` a cada ciclo, sem envio e sem nova tentativa. Lembrete antigo só no WhatsApp (regra de A7 sem e-mail) ganha antes uma cópia no e-mail, no mesmo horário, se ainda não houver item no e-mail com a mesma `dedupeKey`.
+- Prioridade quando a fila acumula: 1) convite; 2) confirmação, mudança, cancelamento, expiração, lembrete, horário liberado, aviso à mentora, inscrição cancelada; 3) inscrição recebida e senha provisória. Dentro da faixa, o mais antigo primeiro (índice `outbox_claim_lane`).
+- Ritmo: `EMAIL_MAX_PER_SEC` (padrão 8, abaixo dos 10/s do Resend; 0 = sem limite), com até `EMAIL_CONCURRENCY` envios simultâneos (padrão 4). O limite vale por réplica: com N workers, divida por N.
 - Limite do provedor (HTTP 429, throttling do SES/SMTP 421/454): o item volta para `pending` sem contar a tentativa, com `nextAttemptAt` = `Retry-After` (ou 1 s; cota diária/mensal, 5 min), e o canal pausa até lá. Nunca vira `failed` por isso.
-- Saúde da fila (E44 `GET /admin/notifications/health`, painel no topo de A9): por canal, quantos estão vencidos, agendados, enviando e com falha, há quanto tempo espera o mais antigo e se o provedor está limitando. Mais de 120 s de espera = atrasada (aviso em A9 e `warn` no log do worker a cada 30 s).
+- Saúde da fila (E44 `GET /admin/notifications/health`, painel no topo de A9): para o e-mail, quantos estão vencidos, agendados, enviando e com falha, há quanto tempo espera o mais antigo e se o provedor está limitando. Mais de 120 s de espera = atrasada (aviso em A9 e `warn` no log do worker a cada 30 s).
 - Antes de enviar, relê a mentoria; se o status não combina mais com a mensagem (ex.: lembrete de mentoria cancelada), marca `skipped`. `registration_cancelled` só sai se a participante ainda estiver `cancelled` (se ela se inscreveu de novo antes do envio, o item vira `skipped`). `slot_released` só sai se a participante ainda estiver `waiting` (se já recebeu outro convite, foi confirmada ou cancelou antes do envio, o item vira `skipped`). `mentor_slot_released` só exige que a mentoria exista (sem ela, `skipped`); o worker lê a mentora por `userId` e o nome da participante pelo `menteeId` da mentoria, e como o item não tem `menteeId`, nenhum link com o token da participante entra na mensagem.
-- Falha: até 5 tentativas com espera de 30 s, 1, 2, 4 e 8 min; depois `failed`, visível em A9 com "Reenviar". Teste de carga: `TW_LOAD=1 npm run test:integration -- outbox-carga`.
+- Falha: até 5 tentativas com espera de 30 s, 1, 2, 4 e 8 min; depois `failed`, visível em A9 com "Reenviar" (só itens de e-mail; item antigo de WhatsApp é recusado com `INVALID_STATE`). Teste de carga: `TW_LOAD=1 npm run test:integration -- outbox-carga`.
 - Itens presos em `sending` há mais de 2 min voltam para `pending`.
 - No mesmo laço roda a expiração de convites (RN07).
 
 **Provedores (interface `Notifier`, trocável por variável de ambiente):**
 
 - E-mail: serviço transacional (ex.: Amazon SES ou Resend) com domínio techwoman.dev verificado (SPF, DKIM, DMARC).
-- WhatsApp: `WHATSAPP_TRANSPORT=waha | cloud` (padrão `cloud`).
-  - `waha`: WAHA (WhatsApp HTTP API, engine GOWS), envio direto. Texto por `POST {WAHA_URL}/api/sendText` e a List Message de presença por `POST {WAHA_URL}/api/sendList` (`sendButtons` não existe no GOWS), com `X-Api-Key` = `WAHA_API_KEY`/`WAHA_API_KEY_FILE` e `session` = `WAHA_SESSION` (padrão `default`); `chatId` = telefone só com dígitos + `@c.us`. O envio devolve o id da mensagem (`true_<chatId>_<hash>`); o worker guarda o `<hash>`. Respostas chegam por E47: a sessão do WAHA precisa ter, em `config.webhooks`, a URL pública de E47 com `events: ["message"]` e `hmac.key` = `WAHA_WEBHOOK_HMAC_KEY`/`WAHA_WEBHOOK_HMAC_KEY_FILE` (só a API lê essa chave). Em dev, WAHA local em `http://host.containers.internal:3000`. Erros: 400/401/404 e 501 são permanentes; rede, 5xx, 408 e 429 tentam de novo.
-  - `cloud`: WhatsApp Business Cloud API (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`), só texto; exige modelos aprovados.
-  - `WHATSAPP_ENABLED=true` liga o canal; desligado, tudo vai por e-mail.
-- Os textos vêm dos modelos de A7 (o lembrete aceita também `{minutos}`); as variáveis são substituídas no worker. As List Messages (convite e presença), as respostas (`presence_*`, `invite_*`) a inscrição cancelada pela participante (`registration_cancelled`), o horário liberado por ela (`slot_released`) e o aviso à mentora (`mentor_slot_released`, um texto por `payload.reason`) têm texto fixo no código (UI-SPEC, Mensagens enviadas). Todo link de mensagem com o token da participante sai como link curto `<PUBLIC_BASE_URL>/l/<código>` (E48), que redireciona para P6 (ou para E06, no `link_agenda`).
+- WhatsApp: removido em 2026-11-05; só sai e-mail. As variáveis `WHATSAPP_*` e `WAHA_*` e os segredos do WAHA não são mais lidos.
+- Os textos são os layouts de e-mail (abaixo); em A7 só se editam os assuntos. A inscrição cancelada pela participante (`registration_cancelled`), o horário liberado por ela (`slot_released`) e o aviso à mentora (`mentor_slot_released`, um texto por `payload.reason`) seguem a UI-SPEC, Mensagens enviadas. Todo link de mensagem com o token da participante sai como link curto `<PUBLIC_BASE_URL>/l/<código>` (E48), que redireciona para P6 (ou para E06, no `link_agenda`).
 
 **Arquivo .ics:** gerado pelo endpoint E06 e também anexado ao e-mail de confirmação (detalhes em Layouts de e-mail, abaixo).
 
 ### Links curtos
 
-Todo link com o token da participante que o sistema envia ou mostra (e-mails, WhatsApp, P5) sai curto: `<PUBLIC_BASE_URL>/l/<código>`, ex.: `https://techwoman.dev/l/IEO31Kd`. E48 redireciona para o link longo. Links sem token (`link_login`, `link_painel`, `link_privacidade`, `link_inscricao`) ficam como estão.
+Todo link com o token da participante que o sistema envia ou mostra (e-mails, P5) sai curto: `<PUBLIC_BASE_URL>/l/<código>`, ex.: `https://techwoman.dev/l/IEO31Kd`. E48 redireciona para o link longo. Links sem token (`link_login`, `link_painel`, `link_privacidade`, `link_inscricao`) ficam como estão.
 
 - **Código:** 7 caracteres do alfabeto base62 (`0-9A-Za-z`), sorteados um a um com `crypto.randomInt` (sem viés de módulo); cerca de 3,5 × 10¹² combinações. É credencial equivalente ao token.
-- **Tipos (`kind`):** `personal` leva a P6 (`/mentoria/minha?t=<token>`) e vale para `link_minha_mentoria` e o `{link}` do WhatsApp; `calendar` leva a E06 (`/api/public/calendar.ics?t=<token>`) e vale só para `link_agenda` (layout 3: `confirmed`, `moved`, `reminder`).
+- **Tipos (`kind`):** `personal` leva a P6 (`/mentoria/minha?t=<token>`) e vale para `link_minha_mentoria`; `calendar` leva a E06 (`/api/public/calendar.ics?t=<token>`) e vale só para `link_agenda` (layout 3: `confirmed`, `moved`, `reminder`).
 - **Um código por participante, tipo e versão do token:** get-or-create pelo índice único `short_link_mentee_kind_version`. Procura `{ menteeId, kind, tokenVersion }`; se não houver, insere com código novo. Duplicate key nesse índice (corrida da mesma participante) → relê e usa o existente; duplicate key no `_id` (código já usado) → sorteia outro, até 5 tentativas. Reenviar o link devolve o mesmo código.
-- **Onde nasce:** no worker, ao processar cada item da `outbox` (depois da checagem de `skipped` e antes de renderizar; erro de banco aqui segue o retry normal, não vira `failed` de renderização), e em E02, depois do commit da transação da inscrição (nunca dentro dela, onde um duplicate key abortaria a inscrição). As funções que montam o e-mail e o WhatsApp recebem os links prontos.
+- **Onde nasce:** no worker, ao processar cada item da `outbox` (depois da checagem de `skipped` e antes de renderizar; erro de banco aqui segue o retry normal, não vira `failed` de renderização), e em E02, depois do commit da transação da inscrição (nunca dentro dela, onde um duplicate key abortaria a inscrição). A função que monta o e-mail recebe os links prontos.
 - **Revogação:** E48 compara o `tokenVersion` gravado no link com o atual da participante. Mudou (ex.: anonimização em E36) ou a participante não existe mais → link inválido. A versão nova ganha código novo no próximo envio. Links longos já enviados antes desta mudança continuam válidos (sem migração); itens da `outbox` reenviados depois já saem curtos, porque o link é montado no envio.
 - **Validade:** `expireAt` = fim do evento (`date` + `endTime` no `timezone` de `events`) + 7 dias, gravado na criação. O índice TTL `short_link_ttl` apaga o documento depois disso, e E48 também confere `expireAt` (o TTL do MongoDB roda a cada minuto). Quando E41 muda `date`, `endTime` ou `timezone`, a mesma transação recalcula `expireAt` de todos os `short_links`.
 - **Roteamento:** a rota da API é `/api/l/:code`; o caminho público `/l/` não é rota do React.
@@ -530,25 +517,25 @@ Todo link com o token da participante que o sistema envia ou mostra (e-mails, Wh
 - [ ] Código inexistente, formato inválido e `tokenVersion` antigo (depois de E36 anonimizar) dão a mesma resposta.
 - [ ] Get-or-create idempotente: reenviar o mesmo tipo reaproveita o código; corrida em paralelo gera um só documento por `menteeId` + `kind` + `tokenVersion`.
 - [ ] `short_links` não guarda o token; anonimizar em E36 apaga os links da participante.
-- [ ] E-mails e WhatsApp saem com `/l/<código>` no lugar de `/mentoria/minha?t=`.
+- [ ] E-mails saem com `/l/<código>` no lugar de `/mentoria/minha?t=`.
 - [ ] Rate limit por IP de E48.
 - [ ] `expireAt` = fim do evento + 7 dias; link vencido dá a mesma resposta de inexistente; E41 mudando a data recalcula `expireAt`.
 
 ### Layouts de e-mail
 
-Os 9 layouts HTML do design substituem o e-mail em texto simples enviado hoje. O worker preenche as variáveis e envia HTML com versão em texto; o WhatsApp continua usando os textos de A7.
+Os 9 layouts HTML do design substituem o e-mail em texto simples enviado hoje. O worker preenche as variáveis e envia HTML com versão em texto.
 
 | # | Layout | Tipo na `outbox` | Disparado por | Assunto | Variáveis próprias |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Inscrição recebida | `registered` | E02 cria a inscrição ou reenvia o link (RN01) | Recebemos sua inscrição na mentoria do Tech Woman | `nome`, `link_minha_mentoria` |
 | 2 | Convite de horário | `invite` | E24, E39 | {{mentora\_nome}} quer te mentorar às {{horario}} | `nome`, `mentora_nome`, `mentora_linkedin`, `mesa`, `horario`, `prazo`, `link_minha_mentoria` |
-| 3 | Confirmação | `confirmed`, `moved`, `reminder` (só o fallback do WhatsApp) | E04 aceitar, E26 confirmar presencial, E39 mover, lembrete RN15 | Combinado: {{horario}} na {{mesa}} (movida: "Sua mentoria mudou"; lembrete: "Sua mentoria começa às {{horario}}") | `nome`, `mentora_nome`, `mesa`, `horario`, `link_minha_mentoria`, `link_agenda` + anexo `.ics` |
+| 3 | Confirmação | `confirmed`, `moved`, `reminder` | E04 aceitar, E26 confirmar presencial, E39 mover, lembrete RN15 | Combinado: {{horario}} na {{mesa}} (movida: "Sua mentoria mudou"; lembrete: "Sua mentoria começa às {{horario}}") | `nome`, `mentora_nome`, `mesa`, `horario`, `link_minha_mentoria`, `link_agenda` + anexo `.ics` |
 | 4 | Convite expirado | `expired` | Worker (RN07) | O prazo para confirmar sua mentoria terminou | `nome`, `link_minha_mentoria` |
 | 5 | Cancelamento pela mentora | `cancelled` | E26 ou E39 com cancelamento (RN10) | Sua mentoria das {{horario}} foi cancelada | `nome`, `horario`, `link_minha_mentoria` |
 | 6 | Acesso da mentora | `staff_password` | A3 "Enviar por e-mail" (E31, E34) e importação (E33) | Seu acesso ao painel de mentoras do Tech Woman | `mentora_nome`, `email_login`, `senha_provisoria`, `link_login`, `validade_senha` |
 | 7 | Inscrição cancelada | `registration_cancelled` | E04 cancel / decline no_interest | Sua inscrição na mentoria do Tech Woman foi cancelada | `nome`, `link_inscricao` |
-| 8 | Horário liberado | `slot_released` | E04 decline schedule / reschedule, "Não vou" no WhatsApp (RN18, só o e-mail) | Seu horário das {{horario}} foi liberado | `nome`, `horario`, `link_minha_mentoria` |
-| 9 | Aviso à mentora | `mentor_slot_released` | Participante cancela a mentoria confirmada, recusa o convite ou cancela a inscrição com convite pendente (E04, "Não vou" no WhatsApp) | Por `payload.reason`: `confirmed_cancelled` "{{nome}} cancelou a mentoria das {{horario}}"; `invite_declined` "{{nome}} recusou o convite das {{horario}}"; `invite_cancelled` "Convite das {{horario}} encerrado" | `mentora_nome`, `nome`, `horario`, `mesa`, `link_painel`, `motivo` |
+| 8 | Horário liberado | `slot_released` | E04 decline schedule / reschedule | Seu horário das {{horario}} foi liberado | `nome`, `horario`, `link_minha_mentoria` |
+| 9 | Aviso à mentora | `mentor_slot_released` | Participante cancela a mentoria confirmada, recusa o convite ou cancela a inscrição com convite pendente (E04) | Por `payload.reason`: `confirmed_cancelled` "{{nome}} cancelou a mentoria das {{horario}}"; `invite_declined` "{{nome}} recusou o convite das {{horario}}"; `invite_cancelled` "Convite das {{horario}} encerrado" | `mentora_nome`, `nome`, `horario`, `mesa`, `link_painel`, `motivo` |
 
 Variáveis comuns a todos: `evento_nome`, `evento_data`, `evento_local`, `link_privacidade`, `ano`.
 
@@ -567,7 +554,7 @@ Layout 3 (confirmação, mudança e lembrete): além do texto do design, um segu
 - **Adicionar à agenda (layout 3):** o botão aponta para E06 pelo link curto de `kind = calendar`; E06 devolve `text/calendar` da mentoria confirmada: título, mesa, horário em America/Recife, 40 min, local do evento. O mesmo `.ics` vai anexado (`METHOD:PUBLISH`, `UID` = id da mentoria raiz da cadeia `movedFromId`, que não muda quando a mentoria é movida, e `SEQUENCE` = número de moves, para a agenda atualizar o evento em vez de duplicar).
 - **Senha provisória (layout 6):** nunca fica em texto puro no banco. Na `outbox`, a senha vai cifrada (AES-256-GCM, chave no Docker secret `outbox_key`); o worker decifra só no envio e remove o campo (`$unset`) ao marcar `sent` ou `failed`. Logs e A9 mostram "senha oculta". A senha provisória vale 72 h (`users.tempPasswordExpiresAt`); depois disso o login orienta a pedir nova senha ao admin.
 - **Remetente:** `Tech Woman <mentoria@techwoman.dev>`, com Reply-To configurável. Nenhuma menção ao Bradesco.
-- **Prévia:** E46 renderiza qualquer layout com dados de exemplo; A7 usa isso no botão "Prévia dos e-mails". O HTML é fixo no código; em A7 só se editam os assuntos (`events.emailSubjects`, por id de layout, validados contra as variáveis do layout em E41) e os textos do WhatsApp.
+- **Prévia:** E46 renderiza qualquer layout com dados de exemplo; A7 usa isso no botão "Prévia dos e-mails". O HTML é fixo no código; em A7 só se editam os assuntos (`events.emailSubjects`, por id de layout, validados contra as variáveis do layout em E41).
 - **Transporte:** `EMAIL_TRANSPORT=smtp | ses | resend` (`EMAIL_PROVIDER` aceito como nome antigo). SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`/`SMTP_PASS_FILE`, `SMTP_SECURE`; SES: `AWS_REGION`; `EMAIL_REPLY_TO` opcional. Em dev, o container Mailpit (perfil `dev`, rede `egress`) recebe todos os e-mails via SMTP e mostra numa interface web; nada sai para fora.
 
 **Testes dos e-mails**
@@ -607,7 +594,7 @@ O sistema guarda nome, e-mail, telefone e LinkedIn de cerca de 2.500 pessoas, en
 
 - Consentimento explícito em P4, com versão do texto e data gravadas.
 - Finalidade única: organizar a mentoria do evento. Dados não são usados para outro fim nem compartilhados com patrocinadores.
-- Mentoras não veem e-mail nem telefone das participantes (projeção por papel), nem nos resultados de busca. O WhatsApp da própria mentora (`users.phone`) só aparece para ela (M2) e para o admin (A3).
+- Mentoras não veem e-mail nem telefone das participantes (projeção por papel), nem nos resultados de busca. O celular da própria mentora (`users.phone`) só aparece para ela (M2) e para o admin (A3).
 - Exportação CSV (E37) registrada na auditoria.
 - Retenção: 30 dias após o evento, um job anonimiza `mentees` (mantém área e status para estatística) e apaga `outbox` e `short_links`. Prazo a validar com a organização.
 - Pedido de exclusão: admin cancela e anonimiza a participante em A4 (E36 `anonymize`, que na mesma transação incrementa `tokenVersion` e apaga a `outbox` e os `short_links` dela).
@@ -667,7 +654,7 @@ Medição de uso anônima e sem cookies, com Umami self-hosted em `analytics.tec
 - Nenhuma porta publicada no host. Volume do Postgres: `umami_db` (nome fixo, fora do prefixo do projeto).
 - `umami_internal` (`internal: true`): só `umami` ↔ `umami-db`.
 - `umami_edge` (externa, criada antes com `docker network create --internal umami_edge`): só `umami` e o Nginx Proxy Manager (`docker network connect umami_edge nginx-proxy-manager`). Se o container do NPM for recriado, o `network connect` precisa ser refeito. Como as duas redes são `internal`, o Umami não tem saída para a internet; o NPM continua com a saída das redes dele.
-- Isolamento: o Umami não entra na `npm_network` nem em rede `techwoman_*`; não enxerga web, api, worker, WAHA nem o Atlas. O NPM só fala com ele por `http://umami:3000`.
+- Isolamento: o Umami não entra na `npm_network` nem em rede `techwoman_*`; não enxerga web, api, worker nem o Atlas. O NPM só fala com ele por `http://umami:3000`.
 - Telemetria e checagem de versão desligadas (`DISABLE_TELEMETRY=1`, `DISABLE_UPDATES=1`). `COLLECT_API_ENDPOINT` não é usado (com ele o Umami reescreveria o `script.js` na partida, o que falha com filesystem somente leitura).
 - Endurecimento: `read_only: true`; `umami` com `tmpfs` em `/tmp` e `/app/.next/cache` e `cap_drop: [ALL]`; `umami-db` com `tmpfs` em `/tmp` e `/var/run/postgresql`, `cap_drop: [ALL]` e `cap_add` só de `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETUID`, `SETGID` (o entrypoint do Postgres parte como root e cai para o uid 70); `no-new-privileges`; `restart: unless-stopped`; log `json-file` com `max-size: 10m` e `max-file: 3`. Healthchecks: `curl` em `http://127.0.0.1:3000/api/heartbeat` no `umami` e `pg_isready` no `umami-db`. Testado com Podman: os dois sobem saudáveis assim, inclusive com volume vazio.
 
@@ -778,7 +765,7 @@ Desligar o analytics: esvazie `UMAMI_WEBSITE_ID` e recrie o web. Sempre passe `-
 
 ## Cronograma até 14/11 e pendências
 
-São três semanas até o evento: o código congela em Nov 12, 2026 e o evento acontece em Nov 14, 2026; a aprovação do WhatsApp corre em paralelo desde já porque não depende do time.
+São três semanas até o evento: o código congela em Nov 12, 2026 e o evento acontece em Nov 14, 2026. As notificações saem só por e-mail (o WhatsApp foi removido em 2026-11-05).
 
 &#91;embedded content: cronograma · 7 frentes e 3 marcos até o evento\]
 
@@ -789,7 +776,7 @@ Admin e inscrição vêm antes do painel da mentora porque a importação da lis
 - [ ] Rafaela: lista oficial das \~50 mentoras (nome, e-mail, LinkedIn, organização, horários) no modelo CSV de A3.
 - [ ] Rafaela: confirmar campos da inscrição (data de nascimento entra?) e a lista final de áreas da gamificação.
 - [ ] Confirmar horário de término do evento (assumido 18h00; o site do evento diz "das 9h em diante").
-- [ ] Definir provedor de e-mail e abrir a conta WhatsApp Business com os modelos de mensagem.
+- [ ] Definir provedor de e-mail.
 - [ ] Texto do aviso de privacidade e quem é a controladora dos dados (sem citar o Bradesco).
 - [ ] Confirmar a stack do front atual hospedado no Cloudflare para decidir se as telas novas entram no mesmo projeto.
 - [ ] Quem opera o painel admin no dia (contas de admin a criar em A8).

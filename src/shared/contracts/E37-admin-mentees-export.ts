@@ -9,7 +9,7 @@ export type E37Query = z.input<typeof E37QuerySchema>;
 export const E37_CSV_COLUMNS = [
   'nome',
   'email',
-  'whatsapp',
+  'celular',
   'linkedin',
   'area',
   'periodo',

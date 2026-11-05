@@ -9,9 +9,11 @@ export type E41GetResponse = z.infer<typeof E41GetResponseSchema>;
 /**
  * E41 · PUT /admin/event · A7 · RN16 (GRID_LOCKED se mexer em horários/duração/intervalo com mentoria ativa).
  * `version` é o da leitura (concorrência otimista; CONFLICT se mudou). `slots` é recalculado no servidor.
+ * `whatsappLists` (menus do WhatsApp, removidos em 2026-11-05) ainda é aceito para uma aba antiga do A7 não levar 422,
+ * mas é ignorado.
  */
 export const E41PutBodySchema = EventConfigSchema.omit({ id: true, slots: true })
-  .extend({ areas: z.array(AreaSchema).min(1).max(30) })
+  .extend({ areas: z.array(AreaSchema).min(1).max(30), whatsappLists: z.unknown().optional() })
   .strict();
 export type E41PutBody = z.input<typeof E41PutBodySchema>;
 export const E41PutResponseSchema = E41GetResponseSchema;

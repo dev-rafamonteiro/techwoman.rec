@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseOptionalPhone } from "../../src/api/lib/normalize.js";
 import { optionalPhoneError, phoneFromE164 } from "../../src/web/ui/format.js";
 
-/** WhatsApp opcional da mentora (M2, A3; E28, E31, E32): o formulário recusa o mesmo que a API. */
+/** Celular opcional da mentora (M2, A3; E28, E31, E32): o formulário recusa o mesmo que a API. */
 describe("telefone da mentora", () => {
   const casos: [string, boolean][] = [
     ["(81) 98888-7777", true],

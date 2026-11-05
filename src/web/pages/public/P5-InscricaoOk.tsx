@@ -41,7 +41,7 @@ export default function P5InscricaoOk() {
         <span className="tw-shape tw-shape--half" />
       </div>
       <h1 className="tw-title">Recebemos sua inscrição!</h1>
-      <p>Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail e WhatsApp.</p>
+      <p>Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail.</p>
       {path && <LinkButton to={path} size="lg" block data-testid="p5-track">Acompanhar minha mentoria</LinkButton>}
       {link && (
         <div className="tw-linkbox">

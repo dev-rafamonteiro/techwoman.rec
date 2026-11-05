@@ -1,4 +1,4 @@
-import { OUTBOX_CHANNELS, type E44HealthResponse, type OutboxLaneHealth } from '@tw/shared';
+import { ACTIVE_OUTBOX_CHANNELS, type E44HealthResponse, type OutboxLaneHealth } from '@tw/shared';
 import type { AppContext } from '../ctx.js';
 
 /** Item vencido esperando mais que isso = fila travada ou lenta (A9 e log do worker). */
@@ -15,11 +15,11 @@ export async function outboxHealth(ctx: AppContext): Promise<E44HealthResponse> 
         { $group: { _id: { ch: '$channel', k: { $cond: [{ $and: [{ $eq: ['$status', 'pending'] }, { $gt: ['$nextAttemptAt', now] }] }, 'scheduled', '$status'] } }, n: { $sum: 1 } } },
       ])
       .toArray(),
-    Promise.all(OUTBOX_CHANNELS.map((channel) => ctx.c.outbox.findOne({ eventId, status: 'pending', channel, nextAttemptAt: { $lte: now } }, { sort: { nextAttemptAt: 1 }, projection: { nextAttemptAt: 1 } }))),
-    Promise.all(OUTBOX_CHANNELS.map((channel) => ctx.c.outbox.countDocuments({ eventId, status: 'pending', channel, lastError: /^HTTP 429|rate exceeded|throttl/i }, { limit: 1 }))),
+    Promise.all(ACTIVE_OUTBOX_CHANNELS.map((channel) => ctx.c.outbox.findOne({ eventId, status: 'pending', channel, nextAttemptAt: { $lte: now } }, { sort: { nextAttemptAt: 1 }, projection: { nextAttemptAt: 1 } }))),
+    Promise.all(ACTIVE_OUTBOX_CHANNELS.map((channel) => ctx.c.outbox.countDocuments({ eventId, status: 'pending', channel, lastError: /^HTTP 429|rate exceeded|throttl/i }, { limit: 1 }))),
   ]);
   const n = (ch: string, k: string) => counts.find((c) => c._id.ch === ch && c._id.k === k)?.n ?? 0;
-  const channels: OutboxLaneHealth[] = OUTBOX_CHANNELS.map((channel, i) => {
+  const channels: OutboxLaneHealth[] = ACTIVE_OUTBOX_CHANNELS.map((channel, i) => {
     const o = oldest[i];
     return {
       channel,

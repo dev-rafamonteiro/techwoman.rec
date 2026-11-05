@@ -1,11 +1,11 @@
-import type { Db } from 'mongodb';
+import { ObjectId, type Db } from 'mongodb';
 import type { OutboxDoc } from '@tw/db';
-import { OUTBOX_CHANNELS, type OutboxChannel, type OutboxType } from '@tw/shared';
+import { ACTIVE_OUTBOX_CHANNELS, type OutboxChannel, type OutboxType } from '@tw/shared';
 import type { Config } from '../config.js';
 import type { AppContext } from '../ctx.js';
 import { shouldSendReminder } from '../domain/index.js';
-import { NotifierError, RateLimitError, type Notifier, type NotifierMessage, type NotifierResult } from './notifier.js';
-import { render } from './render.js';
+import { NotifierError, RateLimitError, type Notifier, type NotifierMessage } from './notifier.js';
+import { isDuplicateKey } from '../lib/errors.js';
 import { openSecret } from '../lib/secret-box.js';
 import { getOrCreateShortLink, shortLink, shortLinkExpireAt } from '../lib/short-links.js';
 import { icsIdentity } from '../notifications/ics.js';
@@ -30,11 +30,11 @@ export interface OutboxResult {
 }
 
 /**
- * Ordem de saída quando a fila acumula: primeiro o que expira em minutos (convite e respostas no WhatsApp), depois o
- * que muda a agenda de alguém, depois os avisos que não têm hora. Tipos fora da lista saem por último.
+ * Ordem de saída quando a fila acumula: primeiro o que expira em minutos (convite), depois o que muda a agenda de
+ * alguém, depois os avisos que não têm hora. Tipos fora da lista saem por último.
  */
 export const PRIORITY_TIERS: readonly (readonly OutboxType[])[] = [
-  ['invite', 'presence_confirmed', 'presence_cancelled', 'presence_unclear', 'invite_closed', 'invite_decline_link', 'invite_unclear'],
+  ['invite'],
   ['confirmed', 'moved', 'cancelled', 'expired', 'reminder', 'slot_released', 'mentor_slot_released', 'registration_cancelled'],
   ['registered', 'staff_password'],
 ];
@@ -47,6 +47,54 @@ export async function releaseStuck(ctx: AppContext): Promise<number> {
   const r = await ctx.c.outbox.updateMany(
     { status: 'sending', lockedAt: { $lt: new Date(ctx.now().getTime() - STUCK_AFTER_MS) } },
     { $set: { status: 'pending', lockedAt: null, lockedBy: null } },
+  );
+  return r.modifiedCount;
+}
+
+/** Motivo gravado nos itens de canal desligado (WhatsApp, removido em 2026-11-05). */
+export const CHANNEL_OFF_REASON = 'canal desativado';
+
+/**
+ * Itens antigos de canal que não existe mais (`whatsapp`) ainda pendentes viram `skipped`, sem envio nem nova
+ * tentativa. Roda a cada iteração, antes do claim (que só olha os canais ativos); `releaseStuck` já devolveu a
+ * `pending` os que ficaram presos em `sending`.
+ *
+ * Lembrete de regra só WhatsApp (gravado antes de 2026-11-05) não tinha item irmão no e-mail: antes de descartar,
+ * ganha uma cópia no e-mail no mesmo horário, para a mentoria confirmada não perder o lembrete. Os demais tipos
+ * sempre saíam também por e-mail (ou eram respostas do WhatsApp, sem equivalente).
+ */
+export async function skipInactiveChannels(ctx: AppContext): Promise<number> {
+  const orphans = await ctx.c.outbox
+    .find({ status: 'pending', type: 'reminder', channel: { $nin: [...ACTIVE_OUTBOX_CHANNELS] } })
+    .toArray();
+  for (const item of orphans) {
+    const dedupeKey = item.dedupeKey.replace(/:[^:]+$/, ':email');
+    if (dedupeKey === item.dedupeKey || (await ctx.c.outbox.countDocuments({ dedupeKey }, { limit: 1 }))) continue;
+    const mentee = item.menteeId ? await ctx.c.mentees.findOne({ _id: item.menteeId }, { projection: { email: 1 } }) : null;
+    if (!mentee?.email) continue;
+    const { presenceCheck: _presence, ...payload } = item.payload ?? {};
+    try {
+      await ctx.c.outbox.insertOne({
+        ...item,
+        _id: new ObjectId(),
+        channel: 'email',
+        to: mentee.email,
+        payload,
+        attempts: 0,
+        lockedAt: null,
+        lockedBy: null,
+        sentAt: null,
+        lastError: null,
+        dedupeKey,
+        createdAt: ctx.now(),
+      });
+    } catch (err) {
+      if (!isDuplicateKey(err)) throw err; // outro worker já criou a cópia
+    }
+  }
+  const r = await ctx.c.outbox.updateMany(
+    { status: 'pending', channel: { $nin: [...ACTIVE_OUTBOX_CHANNELS] } },
+    { $set: { status: 'skipped', lastError: CHANNEL_OFF_REASON, lockedAt: null, lockedBy: null, payload: {} }, $unset: { secret: '' } },
   );
   return r.modifiedCount;
 }
@@ -87,6 +135,12 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
   // estados finais apagam a senha cifrada da outbox (PLAN, "Senha provisória")
   const done = (set: Partial<OutboxDoc>, terminal = true) =>
     c.outbox.updateOne({ _id: item._id, status: 'sending' }, { $set: set, ...(terminal ? { $unset: { secret: '' as const } } : {}) });
+  // canal desligado (item antigo de `whatsapp` que escapou de `skipInactiveChannels`): descarta sem enviar
+  if (item.channel !== 'email') {
+    await done({ status: 'skipped', lastError: CHANNEL_OFF_REASON, lockedAt: null, lockedBy: null, payload: {} });
+    res.skipped++;
+    return;
+  }
   const [event, mentee, appt] = await Promise.all([
     c.events.findOne({ _id: item.eventId }),
     item.menteeId ? c.mentees.findOne({ _id: item.menteeId }) : null,
@@ -110,54 +164,42 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     // aviso à mentora: o item não tem `menteeId` (sem links com o token dela); o nome vem da mentoria
     item.type === 'mentor_slot_released' && appt ? c.mentees.findOne({ _id: appt.menteeId }, { projection: { name: 1 } }) : null,
   ]);
-  // RN18: o lembrete marcado em `enqueueReminders` vai como List Message de presença; RN20: o convite também vai como
-  // List Message (só o WAHA tem lista e resposta)
-  const listable = item.channel === 'whatsapp' && ctx.config.whatsappTransport === 'waha' && !!appt && !!item.menteeId;
-  const listKind: 'presence' | 'invite' | null = !listable ? null
-    : item.type === 'reminder' && item.payload['presenceCheck'] === true ? 'presence'
-    : item.type === 'invite' ? 'invite'
-    : null;
   // links curtos (E48), uma vez por item e fora do try do render: erro de banco aqui sobe e o laço devolve o item
   // à fila (retry normal, não `failed`)
   const base = ctx.config.publicBaseUrl;
   const expireAt = shortLinkExpireAt(event);
-  // `link_agenda` só existe no e-mail (layout 3)
+  // `link_agenda` só nos layouts com `.ics` (layout 3)
   const links = mentee
     ? {
         personal: shortLink(base, await getOrCreateShortLink(c, mentee, 'personal', expireAt, ctx.now())),
-        calendar: item.channel === 'email' && WITH_ICS.has(item.type) ? shortLink(base, await getOrCreateShortLink(c, mentee, 'calendar', expireAt, ctx.now())) : null,
+        calendar: WITH_ICS.has(item.type) ? shortLink(base, await getOrCreateShortLink(c, mentee, 'calendar', expireAt, ctx.now())) : null,
       }
     : null;
-  let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments' | 'list'>;
+  let message: Pick<NotifierMessage, 'subject' | 'text' | 'html' | 'attachments'>;
   try {
-    if (item.channel === 'email') {
-      let provisionalPassword: string | null = null;
-      if (item.type === 'staff_password') {
-        if (!item.secret) return await fail('senha provisória indisponível; reenvie para gerar outra');
-        try {
-          provisionalPassword = openSecret(ctx.config.outboxKey, item.secret, item.dedupeKey);
-        } catch {
-          return await fail('senha provisória ilegível (chave da outbox diferente?)');
-        }
+    let provisionalPassword: string | null = null;
+    if (item.type === 'staff_password') {
+      if (!item.secret) return await fail('senha provisória indisponível; reenvie para gerar outra');
+      try {
+        provisionalPassword = openSecret(ctx.config.outboxKey, item.secret, item.dedupeKey);
+      } catch {
+        return await fail('senha provisória ilegível (chave da outbox diferente?)');
       }
-      const email = buildEmailMessage({
-        item, event, mentee: mentee ?? apptMentee, appointment: appt, mentor, table, staffUser, provisionalPassword,
-        baseUrl: ctx.config.publicBaseUrl,
-        links,
-        tempPasswordHours: ctx.config.tempPasswordHours,
-        ics: appt && WITH_ICS.has(item.type) ? await icsIdentity(c.appointments, appt) : { uid: '', sequence: 0 },
-      });
-      message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
-    } else {
-      message = render({ item, event, mentee: mentee ?? apptMentee, appointment: appt, mentor, table, links, baseUrl: ctx.config.publicBaseUrl, now: ctx.now(), ...(listKind ? { list: listKind } : {}) });
     }
+    const email = buildEmailMessage({
+      item, event, mentee: mentee ?? apptMentee, appointment: appt, mentor, table, staffUser, provisionalPassword,
+      baseUrl: ctx.config.publicBaseUrl,
+      links,
+      tempPasswordHours: ctx.config.tempPasswordHours,
+      ics: appt && WITH_ICS.has(item.type) ? await icsIdentity(c.appointments, appt) : { uid: '', sequence: 0 },
+    });
+    message = { subject: email.subject, text: email.text, html: email.html, ...(email.attachments.length ? { attachments: email.attachments } : {}) };
   } catch (err) {
     if (err instanceof RenderError) return await fail(`render: ${err.message}`);
     throw err;
   }
-  let sent: NotifierResult | void;
   try {
-    sent = await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
+    await notifier.send({ channel: item.channel, to: item.to, type: item.type, ...message, idempotencyKey: item.dedupeKey, payload: item.payload });
   } catch (err) {
     const text = (err instanceof Error ? err.message : String(err)).slice(0, 300);
     if (err instanceof RateLimitError) {
@@ -183,19 +225,6 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
       res.retried++;
     }
     return;
-  }
-  if (listKind && message.list) {
-    // a mensagem já saiu: falha ao gravar não pode devolver o item para a fila (sairia de novo). O lembrete de
-    // presença substitui o registro do convite da mesma mentoria (RN20).
-    try {
-      await c.presenceChecks.replaceOne(
-        { _id: appt!._id },
-        { kind: listKind, menteeId: item.menteeId!, phone: item.to.replace(/\D/g, ''), messageId: sent?.providerMessageId ?? '', status: 'pending', sentAt: ctx.now(), answeredAt: null, answer: null },
-        { upsert: true },
-      );
-    } catch (err) {
-      ctx.log.error({ outboxId: String(item._id), err: (err as Error).message }, 'presence_checks não gravado');
-    }
   }
   await done({ status: 'sent', sentAt: ctx.now(), lastError: null, lockedAt: null, lockedBy: null, payload: {} });
   res.sent++;
@@ -263,13 +292,14 @@ async function sendOne(ctx: AppContext, channel: OutboxChannel, item: OutboxDoc,
 }
 
 /**
- * Uma iteração do laço de 2 s: e-mail e WhatsApp em paralelo, cada um com até 50 itens (claim atômico `pending` ->
+ * Uma iteração do laço de 2 s: um lote por canal ativo (só e-mail), com até 50 itens (claim atômico `pending` ->
  * `sending`, cada item por um só worker), em ordem de prioridade e no ritmo do limitador do canal. Falha: até 6 envios
  * no total com esperas de 30 s, 1, 2, 4 e 8 min; depois `failed` (A9: "Reenviar"). Limite do provedor (429) não conta.
  */
 export async function processOutboxCtx(ctx: AppContext, opts: OutboxRunOptions): Promise<OutboxResult> {
   const res: OutboxResult = { sent: 0, failed: 0, skipped: 0, retried: 0, rateLimited: 0 };
-  await Promise.all(OUTBOX_CHANNELS.map((ch) => processLane(ctx, ch, opts, res)));
+  res.skipped += await skipInactiveChannels(ctx);
+  await Promise.all(ACTIVE_OUTBOX_CHANNELS.map((ch) => processLane(ctx, ch, opts, res)));
   return res;
 }
 

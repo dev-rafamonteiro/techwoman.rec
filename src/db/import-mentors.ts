@@ -56,7 +56,8 @@ const NameSchema = z.string().trim().min(2).max(120);
 
 /**
  * Importa mentoras de um CSV (A3, E33). Colunas: nome, email, linkedin, organizacao, areas, disponibilidade
- * (listas separadas por `;`, `|` ou `,`) e whatsapp (opcional; sem a coluna, o telefone de quem já existe não muda). Aceita separador `,` ou `;` e BOM. Com `dryRun` só valida (prévia linha a linha).
+ * (listas separadas por `;`, `|` ou `,`) e celular (opcional; `whatsapp` é o nome antigo da mesma coluna; sem ela, o
+ * telefone de quem já existe não muda). Aceita separador `,` ou `;` e BOM. Com `dryRun` só valida (prévia linha a linha).
  * Sem `dryRun` grava e devolve as senhas provisórias (uma única vez).
  */
 export async function importMentors(db: Db, csvText: string, opts: ImportOptions): Promise<E33Response> {
@@ -64,7 +65,7 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
   const now = opts.now ?? new Date();
   const onExisting = opts.onExisting ?? 'skip';
 
-  const KNOWN = ['nome', 'email', 'linkedin', 'organizacao', 'areas', 'disponibilidade', 'whatsapp'] as const;
+  const KNOWN = ['nome', 'email', 'linkedin', 'organizacao', 'areas', 'disponibilidade', 'celular', 'whatsapp'] as const;
   let table: string[][];
   try {
     table = parse(csvText, {
@@ -90,7 +91,8 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
     }
     return r;
   });
-  const hasPhone = header.includes('whatsapp');
+  // `celular` é a coluna do modelo; `whatsapp` vem de planilhas antigas (mesmo conteúdo)
+  const hasPhone = header.includes('celular') || header.includes('whatsapp');
   if (records.length > 500) throw new ImportFormatError('Máximo de 500 linhas por importação.');
 
   const emails = records.map((r) => (r['email'] ?? '').toLowerCase());
@@ -122,10 +124,10 @@ export async function importMentors(db: Db, csvText: string, opts: ImportOptions
       else errors.push(`Horário inexistente na grade: ${tok}`);
     }
     const linkedin = (r['linkedin'] ?? '').trim();
-    // WhatsApp opcional, mesma regra do telefone da participante (E.164)
-    const phoneRaw = (r['whatsapp'] ?? '').trim();
+    // celular opcional, mesma regra do telefone da participante (E.164)
+    const phoneRaw = (r['celular'] || r['whatsapp'] || '').trim();
     const phone = phoneRaw ? normalizePhoneBR(phoneRaw) : null;
-    if (phoneRaw && !phone) errors.push('WhatsApp inválido. Informe DDD e número.');
+    if (phoneRaw && !phone) errors.push('Celular inválido. Informe DDD e número.');
     const organization = (r['organizacao'] ?? '').trim();
     const exists = email.success && existingByEmail.has(emailV);
     return {

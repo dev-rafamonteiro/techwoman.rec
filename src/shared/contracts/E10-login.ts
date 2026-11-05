@@ -12,7 +12,7 @@ export const SessionUserSchema = z.object({
   homePath: z.string(),
   /** Perfil atual (M2 confere; M4 usa `areas` no filtro padrão). */
   linkedin: z.string().nullable(),
-  /** WhatsApp da própria mentora (E.164), para os avisos `mentor_slot_released`. */
+  /** Celular da própria mentora (E.164), opcional; os avisos `mentor_slot_released` vão só por e-mail. */
   phone: z.string().nullable(),
   photoUrl: z.string().nullable(),
   areas: z.array(z.string()),

@@ -36,7 +36,7 @@ export default function A9NotificacoesAuditoria() {
   };
   return (
     <div className="tw-page tw-stack a79 a9">
-      <PageHead title="Notificações e auditoria" sub="Envios de e-mail e WhatsApp e o registro de quem fez o quê." />
+      <PageHead title="Notificações e auditoria" sub="Envios de e-mail e o registro de quem fez o quê." />
       <div className="a9-tabs" role="tablist" aria-label="Tipo de registro" onKeyDown={onKey}>
         {tabs.map(([k, label]) => (
           <button key={k} type="button" role="tab" id={`tab-${k}`} aria-selected={tab === k} aria-controls={`p-${k}`} tabIndex={tab === k ? 0 : -1} onClick={() => setTab(k)}>
@@ -108,7 +108,7 @@ function Notifications({ onRetried }: { onRetried: () => void }) {
     { key: 'type', header: 'Modelo', render: (i) => (i.type === 'staff_password' ? `${TYPE_PT[i.type]} · senha oculta` : TYPE_PT[i.type]), text: (i) => TYPE_PT[i.type] },
     { key: 'status', header: 'Status', render: (i) => <><span className={`a79-pill ${STATUS_TONE[i.status]}`} title={i.lastError ?? undefined}>{STATUS_PT[i.status]}</span>{i.lastError && <small>{i.lastError}</small>}</>, text: (i) => STATUS_PT[i.status] },
     { key: 'att', header: 'Tentativas', render: (i) => i.attempts, text: (i) => i.attempts },
-    { key: 'act', header: 'Ação', render: (i) => (i.status === 'failed' ? <button type="button" className="a79-rowbtn" disabled={busy === i.id} aria-busy={busy === i.id || undefined} onClick={() => void retry(i)}>{busy === i.id && <span className="tw-spinner" aria-hidden="true" />}Reenviar</button> : null) },
+    { key: 'act', header: 'Ação', render: (i) => (i.status === 'failed' && i.channel === 'email' ? <button type="button" className="a79-rowbtn" disabled={busy === i.id} aria-busy={busy === i.id || undefined} onClick={() => void retry(i)}>{busy === i.id && <span className="tw-spinner" aria-hidden="true" />}Reenviar</button> : null) },
   ];
   const filters = (
     <>

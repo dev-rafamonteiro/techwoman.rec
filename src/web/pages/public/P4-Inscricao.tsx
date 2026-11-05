@@ -154,8 +154,8 @@ export default function P4Inscricao() {
           onChange={(e) => set('name', e.target.value)} onBlur={() => touch('name')} data-testid="p4-name" />
         <TextField label="E-mail" placeholder="voce@email.com" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} error={shown('email')} ok={values.email && !errors.email ? 'Uma inscrição por e-mail' : undefined}
           onChange={(e) => { set('email', e.target.value); setAlready(false); }} onBlur={() => touch('email')} data-testid="p4-email" />
-        <TextField label="WhatsApp" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" value={values.phone}
-          error={shown('phone')} ok={values.phone && !errors.phone ? 'Vamos avisar o convite por aqui' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
+        <TextField label="Celular" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" value={values.phone}
+          error={shown('phone')} ok={values.phone && !errors.phone ? 'Número válido' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
         <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
           error={shown('linkedin')} ok={values.linkedin && !errors.linkedin ? 'A mentora verá seu perfil' : undefined} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
         <SelectField label="Área de interesse" hint="Preenchida com o resultado da sua jornada. Pode trocar." name="area" value={effArea} error={shown('area')}

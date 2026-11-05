@@ -10,7 +10,7 @@ export type TransitionAction =
   | 'decline_schedule' // E04: recusa "Horário não serve" (RN06)
   | 'decline_no_interest' // E04: recusa "Não tenho mais interesse" (RN06)
   | 'mentee_cancel' // E04: a própria participante cancela
-  | 'mentee_reschedule' // E04 `reschedule` ou "Não poderei ir" no WhatsApp: troca de horário (RN19)
+  | 'mentee_reschedule' // E04 `reschedule`: troca de horário (RN19)
   | 'confirm_in_person' // E26/E39: RN08
   | 'start' // E26: opcional
   | 'finish' // E26
@@ -137,9 +137,8 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
     }
     case 'mentee_reschedule': {
       // RN19 · só `confirmed` e antes do início; mesa e horário livres na hora; volta à fila com prioridade e o
-      // `queuedAt` original. Aviso `slot_released` (horário liberado) por e-mail e WhatsApp; pelo "Não vou" do WhatsApp
-      // (RN18) E47 restringe ao e-mail (`notifyChannels`), porque a resposta presence_cancelled já vai pelo WhatsApp.
-      // A mentora recebe `mentor_slot_released` (`confirmed_cancelled`) pelos canais dela, sem essa restrição.
+      // `queuedAt` original. Aviso `slot_released` (horário liberado) por e-mail; a mentora recebe
+      // `mentor_slot_released` (`confirmed_cancelled`), também por e-mail.
       if (from !== 'confirmed') return invalid(from, 'trocar de horário');
       if (now.getTime() >= i.appointment.startAt.getTime()) return fail('INVALID_STATE', 'A mentoria já começou; não é possível trocar de horário.');
       return plan(from, 'cancelled', 'waiting', 'appointment.reschedule', {

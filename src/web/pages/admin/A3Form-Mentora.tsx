@@ -150,8 +150,7 @@ export default function A3FormMentora() {
             <Field label="Nome completo" value={f.name} onChange={(e) => set('name', e.target.value)} error={errors.name} autoComplete="off" />
             <Field label="E-mail" note="(login)" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} error={errors.email} disabled={editing} hint={editing ? 'O e-mail de login não pode ser alterado.' : undefined} />
             <Field label="LinkedIn" note="(opcional)" value={f.linkedin} onChange={(e) => set('linkedin', e.target.value)} />
-            <Field label="WhatsApp" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone}
-              hint="Para avisar a mentora quando uma participante liberar o horário dela. Sem WhatsApp, o aviso vai só por e-mail." data-testid="a3-phone" />
+            <Field label="Celular" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone} data-testid="a3-phone" />
             <Field label="Organização" note="(uso interno, nunca aparece para a participante)" placeholder="Onde ela trabalha" value={f.organization} onChange={(e) => set('organization', e.target.value)} />
             <Field label="Tema comercial 1" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1" />
             <Field label="Domínios do tema 1" note="(separados por ;)" value={f.domains1} onChange={(e) => set('domains1', e.target.value)} data-testid="a3-domains1" />

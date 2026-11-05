@@ -66,7 +66,7 @@ export default function A4Participantes() {
   const columns: Column<MenteeAdminView>[] = [
     { key: 'name', header: 'Nome', render: (m) => <span className={`a4-name${m.id === openId ? ' a4-name--sel' : ''}`}>{m.name}{m.priority && <PriorityBadge />}</span>, text: (m) => `${m.name}${m.priority ? ' (prioridade)' : ''}` },
     { key: 'email', header: 'E-mail', render: (m) => <span className="a4-muted">{m.email}</span>, text: (m) => m.email },
-    { key: 'phone', header: 'WhatsApp', render: (m) => <span className="a4-nowrap">{phoneFmt(m.phone)}</span>, text: (m) => phoneFmt(m.phone) },
+    { key: 'phone', header: 'Celular', render: (m) => <span className="a4-nowrap">{phoneFmt(m.phone)}</span>, text: (m) => phoneFmt(m.phone) },
     { key: 'area', header: 'Área', render: (m) => areaLabel(m.area), text: (m) => areaLabel(m.area) },
     { key: 'period', header: 'Período', render: (m) => PERIOD_LABELS[m.preferredPeriod], text: (m) => PERIOD_LABELS[m.preferredPeriod] },
     { key: 'status', header: 'Status', render: (m) => <StatusBadge status={STATUS_BADGE[m.status]} />, text: (m) => STATUS_LOOK[m.status].label },
@@ -167,7 +167,7 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
           <div className="tw-stack" style={{ gap: 16 }} data-testid="mentee-panel">
             <dl className="a4-dl">
               <dt>E-mail</dt><dd>{m.email}</dd>
-              <dt>WhatsApp</dt><dd>{phoneFmt(m.phone)}</dd>
+              <dt>Celular</dt><dd>{phoneFmt(m.phone)}</dd>
               <dt>LinkedIn</dt><dd>{m.linkedin ? <a href={linkedinUrl(m.linkedin)} target="_blank" rel="noopener noreferrer">{m.linkedin.replace(/^https?:\/\/(www\.)?/i, '')}</a> : '—'}</dd>
               <dt>Área</dt><dd>{areaLabel(m.area)}{score != null ? ` · jornada: ${score} pts` : ''}</dd>
               <dt>Período</dt><dd>{PERIOD_LABELS[m.preferredPeriod]}</dd>
