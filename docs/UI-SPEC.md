@@ -69,6 +69,7 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 | M4 | Participantes aguardando | `/mentora/aguardando` | Mentora | Nova |
 | M5 | Agendar mentoria | painel sobre M4 | Mentora | Nova |
 | M6 | Minha agenda | `/mentora/agenda` | Mentora | Nova |
+| M7 | Atendimento fora da mesa | gaveta sobre M6 | Mentora | Nova |
 | A1 | Dashboard | `/admin` | Admin, super admin | Nova |
 | A2 | Mentoras | `/admin/mentoras` | Admin, super admin | Nova |
 | A3 | Cadastro de mentora e importação | `/admin/mentoras/nova`, `/admin/mentoras/:id`, `/admin/mentoras/importar` | Admin, super admin | Nova |
