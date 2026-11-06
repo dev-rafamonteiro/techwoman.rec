@@ -15,7 +15,7 @@ x-logging: &logging
 
 services:
   umami:
-    image: ghcr.io/umami-software/umami:3.4.0
+    image: ghcr.io/umami-software/umami:3.4.1
     environment:
       DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?defina UMAMI_DB_PASSWORD}@umami-db:5432/umami
       APP_SECRET: ${UMAMI_APP_SECRET:?defina UMAMI_APP_SECRET}
