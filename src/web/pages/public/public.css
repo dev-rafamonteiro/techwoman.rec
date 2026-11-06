@@ -2,9 +2,11 @@
 .tw-pub { min-height: 100vh; background: var(--color-bg); color: var(--color-ink); font-family: var(--font-body); }
 .tw-pub__head { background: var(--tw-plum-950); color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px var(--page-gutter); position: sticky; top: 0; z-index: 5; }
 .tw-pub__nav { display: none; gap: 20px; }
-.tw-pub__nav a { color: #fff; text-decoration: none; font-weight: 600; }
+.tw-pub__nav a { color: #fff; text-decoration: none; font-weight: 600; white-space: nowrap; }
 .tw-pub__nav a:focus-visible, .tw-pub a:focus-visible { outline: 3px solid var(--tw-lilac-400); outline-offset: 2px; }
 @media (min-width: 768px) { .tw-pub__nav { display: flex; } }
+/* tablet: as cinco entradas do menu de P1 cabem numa linha com o botão */
+@media (min-width: 768px) and (max-width: 1023px) { .tw-pub__nav { gap: 14px; } }
 .tw-pub__xp { font-family: var(--font-display); font-weight: 800; color: var(--tw-lilac-300); }
 .tw-pub__back { color: #fff; font-weight: 600; text-decoration: underline; }
 .tw-pub__hero { background: var(--gradient-hero); color: #fff; padding: 40px var(--page-gutter) 48px; }

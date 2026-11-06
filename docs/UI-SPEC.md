@@ -163,7 +163,7 @@ Página pública e responsiva que apresenta as mentoras do programa, com dados d
 - Estados: carregando (6 cartões em esqueleto, anunciados como "Carregando mentoras"); erro (estado de erro padrão com "Tentar de novo"); nenhuma mentora cadastrada ("Nenhuma mentora cadastrada ainda"); busca sem resultado ("Nenhuma mentora encontrada", "Tente outro nome, empresa, área ou tema." e "Ver todas as mentoras").
 - Chamada final (fundo roxo escuro): "Venha trocar, aprender e construir novas possibilidades." e o botão "Começar minha jornada" (P2). Rodapé com a marca e "Voltar ao início".
 - Acessibilidade: tudo por teclado, foco visível (roxo nas áreas claras, verde-menta nas roxas), busca em `role="search"` com rótulo visível, alvos de 44 px, leitura confortável no celular (margem lateral `--page-gutter`, sem rolagem horizontal).
-- Entradas: link "As mentoras" no rodapé de P1 (o menu do cabeçalho de P1 segue com as quatro âncoras, para caber no tablet) e o botão "Conheça as mentoras" no bloco Mentoria de P1.
+- Entradas: link "Mentoras" no menu do cabeçalho de P1 (depois das quatro âncoras), link "As mentoras" no rodapé de P1 e o botão "Conheça as mentoras" no bloco Mentoria de P1.
 - Fotos: arquivos em `src/web/public/mentoras/`, referenciados no `photoUrl` do cadastro da mentora (A3). P7 só mostra foto com endereço https ou caminho do próprio site (`/mentoras/...`); uma foto `http://` aceita em A3 aparece em P7 como iniciais. Não há busca automática de foto no LinkedIn (o LinkedIn bloqueia).
 
 ## Telas da mentora (M1–M7)

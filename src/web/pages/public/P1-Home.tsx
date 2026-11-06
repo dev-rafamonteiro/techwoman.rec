@@ -40,7 +40,7 @@ export default function P1Home() {
       <header className="tw-pub__head">
         <Brand height={44} />
         <nav className="tw-pub__nav" aria-label="Seções">
-          <a href="#evento">O evento</a><a href="#como-funciona">Como funciona</a><a href="#mentoria">Mentoria</a><a href="#local">Local</a>
+          <a href="#evento">O evento</a><a href="#como-funciona">Como funciona</a><a href="#mentoria">Mentoria</a><a href="#local">Local</a><Link to="/mentoras">Mentoras</Link>
         </nav>
         <LinkButton to="/jornada" size="sm">Começar minha jornada</LinkButton>
       </header>
