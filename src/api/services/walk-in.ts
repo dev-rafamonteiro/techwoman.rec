@@ -1,14 +1,16 @@
-import { ObjectId } from 'mongodb';
-import type { E51Body, E51Response, MenteeStatus } from '@tw/shared';
-import type { MenteeDoc, UserDoc, WalkInDoc } from '@tw/db';
+import { ObjectId, type ClientSession } from 'mongodb';
+import type { E51Body, E51Response, MenteeStatus, ScheduledTable } from '@tw/shared';
+import type { AppointmentDoc, MenteeDoc, UserDoc, WalkInDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, isDuplicateKey, notFound } from '../lib/errors.js';
 import { writeAudit } from '../lib/audit.js';
 import { normalizePhoneBR } from '../lib/normalize.js';
-import { enqueueMenteeNotifications } from '../lib/outbox.js';
+import { enqueueWalkInNotification } from '../lib/outbox.js';
+import { tableLabel } from '../notifications/ics.js';
 import type { IdemHandle } from '../lib/idempotency.js';
 import { iso, toMenteeStaffView } from '../lib/views.js';
-import { isLiveMentee, normalizeEmail, walkInQueueEffect, type Actor } from '../domain/index.js';
+import { isActiveAppointment, isLiveMentee, normalizeEmail, walkInEffect, type Actor } from '../domain/index.js';
+import { applyTransition } from './transitions.js';
 import { insertNewMentee, newMenteeDoc, type MenteeFields } from './mentee-registration.js';
 
 export const WALK_IN_DUPLICATE_MESSAGE = 'Você já registrou um atendimento fora da mesa com esta participante.';
@@ -17,9 +19,20 @@ export const toWalkInView = (w: WalkInDoc, mentee: MenteeDoc) => ({ id: String(w
 
 const keyPatternOf = (err: unknown): Record<string, unknown> => (err as { keyPattern?: Record<string, unknown> }).keyPattern ?? {};
 
+/** Mentoria na mesa da participante (convite ou confirmada), com mesa e mentora, para M7 (E50) e a resposta de E51. */
+export async function scheduledTableOf(ctx: AppContext, appt: AppointmentDoc, session?: ClientSession): Promise<ScheduledTable> {
+  const opt = session ? { session } : {};
+  const [table, mentor] = await Promise.all([
+    ctx.c.tables.findOne({ _id: appt.tableId }, { ...opt, projection: { name: 1, number: 1 } }),
+    ctx.c.users.findOne({ _id: appt.mentorId }, { ...opt, projection: { name: 1 } }),
+  ]);
+  return { appointmentId: String(appt._id), startAt: iso(appt.startAt), tableLabel: table ? tableLabel(table) : 'Mesa', mentorName: mentor?.name ?? 'Mentora' };
+}
+
 /**
- * RN21 · E51: registra o atendimento fora da mesa em uma transação: cadastro rápido (se for o caso), efeito na fila,
- * `walk_ins` e auditoria. Não cria mentoria nem usa mesa ou horário (RN16 e os índices de agenda não mudam).
+ * RN21 · E51: registra o atendimento fora da mesa em uma transação: cadastro rápido (se for o caso), efeito na
+ * inscrição, `walk_ins`, e-mail `walk_in_done` e auditoria. Não cria mentoria nem usa mesa ou horário. A participante
+ * sempre termina `done` (atendida, fora da fila); convite ou mentoria confirmada na mesa é cancelada (`walk_in_cancel`).
  * Corrida no cadastro rápido com o mesmo e-mail (RN01): quem perde vê a inscrição vencedora na nova tentativa e o
  * atendimento vai para ela (`linked`).
  */
@@ -61,6 +74,7 @@ export async function createWalkIn(
       let mentee: MenteeDoc;
       let outcome: E51Response['outcome'];
       let previousStatus: MenteeStatus | null;
+      let cancelledAppointment: ScheduledTable | null = null;
 
       if (menteeId) {
         const m = await ctx.c.mentees.findOne({ _id: menteeId, eventId: event._id }, { session });
@@ -72,13 +86,13 @@ export async function createWalkIn(
         const f = { ...fields!, consent: { version: event.consentVersion, acceptedAt: now, collectedBy: mentor._id } };
         const existing = await ctx.c.mentees.findOne({ eventId: event._id, emailNorm: normalizeEmail(f.email) }, { session });
         if (!existing) {
-          // cadastro novo já concluído: ela acabou de ser atendida; recebe o link pessoal (P6) para avaliar
+          // cadastro novo já concluído: ela acabou de ser atendida; o e-mail `walk_in_done` leva o link pessoal (P6)
           mentee = newMenteeDoc(ctx, f, { status: 'done', now });
-          await insertNewMentee(ctx, session, mentee, { actor, action: 'mentee.register_by_staff', ip, after: { walkIn: true } });
+          await insertNewMentee(ctx, session, mentee, { actor, action: 'mentee.register_by_staff', ip, after: { walkIn: true }, registered: false });
           outcome = 'created';
           previousStatus = null;
         } else if (!isLiveMentee(existing.status)) {
-          // RN01: inscrição cancelada ou `no_show` com o mesmo e-mail volta, já concluída, com os dados novos e o link reenviado
+          // RN01: inscrição cancelada ou `no_show` com o mesmo e-mail volta, já concluída, com os dados novos
           const m = await ctx.c.mentees.findOneAndUpdate(
             { _id: existing._id, status: { $in: ['cancelled', 'no_show'] } },
             {
@@ -88,13 +102,12 @@ export async function createWalkIn(
             { session, returnDocument: 'after' },
           );
           if (!m) throw new AppError('CONFLICT', 'A inscrição mudou. Tente de novo.');
-          await enqueueMenteeNotifications(ctx, session, { type: 'registered', mentee: m, dedupeSuffix: m.linkSendCount });
           await writeAudit(ctx, session, { actor, action: 'mentee.register_by_staff', entity: 'mentee', entityId: m._id, before: { status: existing.status }, after: { status: 'done', walkIn: true }, ip });
           mentee = m;
           outcome = 'reactivated';
           previousStatus = existing.status;
         } else {
-          // RN01: o e-mail já está inscrito; o atendimento vai para a inscrição existente, sem e-mail
+          // RN01: o e-mail já está inscrito; o atendimento vai para a inscrição existente (sem mudar os dados dela)
           mentee = existing;
           outcome = 'linked';
           previousStatus = existing.status;
@@ -105,22 +118,32 @@ export async function createWalkIn(
       if (dup) throw new AppError('CONFLICT', WALK_IN_DUPLICATE_MESSAGE);
 
       if (outcome === 'existing' || outcome === 'linked') {
-        const effect = walkInQueueEffect(mentee.status);
+        const effect = walkInEffect(mentee.status);
         if (!effect.ok) throw new AppError('INVALID_STATE', 'Esta inscrição foi cancelada. Faça um cadastro novo.');
-        if (effect.leavesQueue) {
-          // saiu da fila: o Change Stream tira o card do M4 das outras mentoras
+        const appt = effect.cancelsAppointment && mentee.currentAppointmentId
+          ? await ctx.c.appointments.findOne({ _id: mentee.currentAppointmentId, menteeId: mentee._id }, { session })
+          : null;
+        if (appt && isActiveAppointment(appt.status)) {
+          // mentoria na mesa (convite ou confirmada): cancelada pela máquina de estados (travas, histórico, aviso à
+          // mentora da mesa e auditoria); a participante fica `done` sem aviso de cancelamento
+          cancelledAppointment = await scheduledTableOf(ctx, appt, session);
+          const applied = await applyTransition(ctx, session, { appointmentId: appt._id, action: 'walk_in_cancel', actor, scope: { menteeId: mentee._id }, ip });
+          mentee = applied!.mentee;
+          await writeAudit(ctx, session, { actor, action: 'mentee.walk_in_done', entity: 'mentee', entityId: mentee._id, before: { status: previousStatus }, after: { status: 'done', cancelledAppointmentId: String(appt._id) }, ip });
+        } else if (effect.changes) {
+          // saiu da fila (ou do `no_show`): o Change Stream tira o card do M4 das outras mentoras
           const m = await ctx.c.mentees.findOneAndUpdate(
-            { _id: mentee._id, status: 'waiting' },
-            { $set: { status: effect.next, updatedAt: now }, $inc: { version: 1 } },
+            { _id: mentee._id, status: mentee.status },
+            { $set: { status: 'done', currentAppointmentId: null, lastOutcome: null, priority: false, priorityReason: null, updatedAt: now }, $inc: { version: 1 } },
             { session, returnDocument: 'after' },
           );
           if (!m) throw new AppError('CONFLICT', 'A participante acabou de mudar de situação. Busque de novo.');
-          await writeAudit(ctx, session, { actor, action: 'mentee.walk_in_done', entity: 'mentee', entityId: m._id, before: { status: 'waiting' }, after: { status: 'done' }, ip });
+          await writeAudit(ctx, session, { actor, action: 'mentee.walk_in_done', entity: 'mentee', entityId: m._id, before: { status: previousStatus }, after: { status: 'done' }, ip });
           mentee = m;
         }
       }
 
-      const walkIn: WalkInDoc = {
+  const walkIn: WalkInDoc = {
         _id: new ObjectId(),
         eventId: event._id,
         menteeId: mentee._id,
@@ -134,12 +157,14 @@ export async function createWalkIn(
         deletedBy: null,
       };
       await ctx.c.walkIns.insertOne(walkIn, { session });
+      // um e-mail por atendimento (dedupe pelo id do atendimento): agradecimento, mentora, LinkedIn e link pessoal
+      await enqueueWalkInNotification(ctx, session, { type: 'walk_in_done', mentee, walkInId: walkIn._id });
       await writeAudit(ctx, session, {
         actor,
         action: 'walk_in.create',
         entity: 'walk_in',
         entityId: walkIn._id,
-        after: { menteeId: String(mentee._id), outcome, previousStatus, status: mentee.status, note: note !== null },
+        after: { menteeId: String(mentee._id), outcome, previousStatus, status: mentee.status, note: note !== null, cancelledAppointmentId: cancelledAppointment?.appointmentId ?? null },
         ip,
       });
       const res: E51Response = {
@@ -149,6 +174,7 @@ export async function createWalkIn(
         name: mentee.name,
         previousStatus,
         status: mentee.status,
+        cancelledAppointment,
       };
       await idem?.markDone(session, { status: 201, body: res });
       return res;

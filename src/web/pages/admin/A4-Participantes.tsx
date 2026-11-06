@@ -151,12 +151,14 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 
-  const removeWalkIn = async (walkInId: string, mentorName: string) => {
-    if (!window.confirm(`Remover o atendimento fora da mesa com ${mentorName}?`)) return;
+  // RN21: sem outro atendimento fora da mesa nem mentoria na mesa, remover descadastra a participante (E53)
+  const removeWalkIn = async (walkInId: string, mentorName: string, deregisters: boolean) => {
+    const warn = deregisters ? ' A participante será descadastrada e receberá um e-mail pedindo nova inscrição.' : '';
+    if (!window.confirm(`Remover o atendimento fora da mesa com ${mentorName}?${warn}`)) return;
     setBusy(true);
     try {
       const r = await call(ENDPOINTS.E53Delete, { params: { id: walkInId } });
-      toast.success(r.restoredToQueue ? 'Atendimento removido. Ela voltou para a fila.' : 'Atendimento removido.');
+      toast.success(r.deregistered ? 'Atendimento removido. A participante foi descadastrada e vai receber um e-mail pedindo nova inscrição.' : 'Atendimento removido.');
       await Promise.all([onChanged(), d.refetch(), walkIns.refetch()]);
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
@@ -200,7 +202,7 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
                   {walkIns.data.items.map((w) => (
                     <li key={w.id}>
                       <span>{formatTime(w.at)} · {w.mentor.name}{w.note ? ` · “${w.note}”` : ''}</span>
-                      <button type="button" className="a4-act a4-act--danger" disabled={busy} onClick={() => void removeWalkIn(w.id, w.mentor.name)}>Remover</button>
+                      <button type="button" className="a4-act a4-act--danger" disabled={busy} onClick={() => void removeWalkIn(w.id, w.mentor.name, walkIns.data.items.length === 1 && !m.mentorName && m.status !== 'cancelled')}>Remover</button>
                     </li>
                   ))}
                 </ul>

@@ -1,4 +1,4 @@
-// Gera os 9 pares .html (CSS inline via juice) + .txt a partir de emails.mjs e layout.mjs.
+// Gera os 11 pares .html (CSS inline via juice) + .txt a partir de emails.mjs e layout.mjs.
 //   node src/api/notifications/templates/email/build.mjs            -> grava os arquivos aqui
 //   node .../build.mjs --preview <dir>                              -> também renderiza com fixtures/sample-data.json em <dir>
 // Falha se um {{...}} usado não pertencer às variáveis do e-mail (própria + comuns).
@@ -10,7 +10,9 @@ import { COMMON_VARS, EMAILS } from './emails.mjs';
 import { renderHtml, renderText } from './layout.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const placeholders = (s) => [...s.matchAll(/\{\{([a-z_]+)\}\}/g)].map((m) => m[1]);
+const placeholders = (s) => [...s.matchAll(/\{\{[#/]?([a-z_]+)\}\}/g)].map((m) => m[1]);
+// trechos opcionais {{#var}}...{{/var}}: somem com a variável vazia (mesma regra de render.ts)
+const sections = (s, data) => s.replace(/\{\{#([a-z_]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, k, inner) => (data[k] ? inner : ''));
 const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 const previewIdx = process.argv.indexOf('--preview');
@@ -32,7 +34,7 @@ for (const e of EMAILS) {
   if (previewDir) {
     mkdirSync(previewDir, { recursive: true });
     const data = { ...sample.common, ...sample.templates[e.id] };
-    const fill = (s, esc) => s.replace(/\{\{([a-z_]+)\}\}/g, (_, k) => { if (!(k in data)) throw new Error(`${e.id}: sem dado para ${k}`); return esc ? escapeHtml(data[k]) : data[k]; });
+    const fill = (s, esc) => sections(s, data).replace(/\{\{([a-z_]+)\}\}/g, (_, k) => { if (!(k in data)) throw new Error(`${e.id}: sem dado para ${k}`); return esc ? escapeHtml(data[k]) : data[k]; });
     writeFileSync(join(previewDir, `${e.id}.html`), fill(html, true));
     writeFileSync(join(previewDir, `${e.id}.txt`), fill(txt, false));
   }

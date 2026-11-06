@@ -42,15 +42,16 @@ export function newMenteeDoc(ctx: AppContext, fields: MenteeFields, opts: { stat
 
 /**
  * Grava a inscrição nova, o e-mail com o link pessoal (`registered`) e a auditoria na transação em andamento.
- * Duplicate key (`mentee_event_email`) sobe para quem chamou tratar a corrida (RN01).
+ * `registered: false` no cadastro rápido do atendimento fora da mesa (E51): ela recebe só o `walk_in_done`, que já
+ * leva o link pessoal. Duplicate key (`mentee_event_email`) sobe para quem chamou tratar a corrida (RN01).
  */
 export async function insertNewMentee(
   ctx: AppContext,
   session: ClientSession,
   doc: MenteeDoc,
-  audit: { actor: Actor; action: 'mentee.register' | 'mentee.register_by_staff'; ip: string | null; after?: Record<string, unknown> },
+  audit: { actor: Actor; action: 'mentee.register' | 'mentee.register_by_staff'; ip: string | null; after?: Record<string, unknown>; registered?: boolean },
 ): Promise<void> {
   await ctx.c.mentees.insertOne(doc, { session });
-  await enqueueMenteeNotifications(ctx, session, { type: 'registered', mentee: doc, dedupeSuffix: doc.linkSendCount });
+  if (audit.registered !== false) await enqueueMenteeNotifications(ctx, session, { type: 'registered', mentee: doc, dedupeSuffix: doc.linkSendCount });
   await writeAudit(ctx, session, { actor: audit.actor, action: audit.action, entity: 'mentee', entityId: doc._id, after: { status: doc.status, area: doc.area, ...audit.after }, ip: audit.ip });
 }

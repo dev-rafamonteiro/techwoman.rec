@@ -53,6 +53,17 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     const overCapacity = toSlotCapacityInfo(event, overCapacitySlots(mentorsBySlot, activeTables, [...mentorsBySlot.keys()]));
     const label = new Map(event.areas.map((a) => [a.key, a.label]));
 
+    // RN21: atendidas = participantes `done` (cada uma conta uma vez); fora da mesa = `done` sem mentoria concluída na
+    // mesa e com atendimento fora da mesa ativo; na mesa = o resto
+    const [doneAtTable, walkedIn] = await Promise.all([
+      ap.distinct('menteeId', { eventId: eid, status: 'done' }),
+      ctx.c.walkIns.distinct('menteeId', { eventId: eid, deletedAt: null }),
+    ]);
+    const atTableSet = new Set(doneAtTable.map(String));
+    const walkInOnlyIds = walkedIn.filter((x) => !atTableSet.has(String(x)));
+    const attendedWalkIn = walkInOnlyIds.length ? await me.countDocuments({ eventId: eid, status: 'done', _id: { $in: walkInOnlyIds } }) : 0;
+    const attendedTotal = cnt(menteeByStatus, 'done');
+
     const [expiring, late, priorityWaiting] = await Promise.all([
       ap.find({ eventId: eid, status: 'invited', expiresAt: { $gt: now, $lte: new Date(now.getTime() + 3 * 60_000) } }).limit(20).toArray(),
       ap.find({ eventId: eid, status: 'confirmed', startAt: { $lte: new Date(now.getTime() - 5 * 60_000) }, endAt: { $gt: now } }).limit(20).toArray(),
@@ -82,6 +93,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         done: cnt(byStatus, 'done'),
         noShow: cnt(byStatus, 'no_show'),
         walkIns,
+        attended: { total: attendedTotal, atTable: attendedTotal - attendedWalkIn, walkIn: attendedWalkIn },
       },
       tables: { occupiedNow: occupied, total: activeTables },
       remainingCapacity,
@@ -127,14 +139,20 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       ])
       .toArray();
     const n = (id: ObjectId, ...st: string[]) => counts.filter((c) => c._id.m.equals(id) && st.includes(c._id.s)).reduce((s, c) => s + c.n, 0);
-    const items: MentorListItem[] = users.map((u) => ({
-      ...toUserView(u),
-      availableSlots: u.availability.length,
-      confirmedCount: n(u._id, 'confirmed', 'in_progress'),
-      doneCount: n(u._id, 'done'),
-      walkInCount: walkIns.find((w) => w._id.equals(u._id))?.n ?? 0,
-      neverLoggedIn: u.lastLoginAt === null,
-    }));
+    const items: MentorListItem[] = users.map((u) => {
+      const doneCount = n(u._id, 'done');
+      const walkInCount = walkIns.find((w) => w._id.equals(u._id))?.n ?? 0;
+      return {
+        ...toUserView(u),
+        availableSlots: u.availability.length,
+        confirmedCount: n(u._id, 'confirmed', 'in_progress'),
+        doneCount,
+        walkInCount,
+        // RN21: atendimentos concluídos = na mesa + fora da mesa
+        attendedCount: doneCount + walkInCount,
+        neverLoggedIn: u.lastLoginAt === null,
+      };
+    });
     return { items };
   });
 

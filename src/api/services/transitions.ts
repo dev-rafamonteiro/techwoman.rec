@@ -50,7 +50,8 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
   const plan = planned;
 
   const filter: Record<string, unknown> = { _id: appt._id, status: plan.from };
-  if (plan.from === 'invited') filter['expiresAt'] = input.action === 'expire' ? { $lte: now } : { $gt: now };
+  // `walk_in_cancel` (RN21) cancela o convite mesmo com o prazo vencido: o worker ainda não o expirou
+  if (plan.from === 'invited' && input.action !== 'walk_in_cancel') filter['expiresAt'] = input.action === 'expire' ? { $lte: now } : { $gt: now };
 
   const set: Record<string, unknown> = { status: plan.appointmentTo, updatedAt: now };
   if (plan.respondedAt) set['respondedAt'] = now;
@@ -92,6 +93,10 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
   if ((plan.menteeTo === 'waiting' || plan.menteeTo === 'cancelled') && input.action !== 'move_cancel') {
     menteeSet['currentAppointmentId'] = null;
   }
+  if (input.action === 'walk_in_cancel') {
+    // RN21: atendida fora da mesa; a mentoria cancelada não é mais a dela (P6 mostra o atendimento) e sai da fila de vez
+    Object.assign(menteeSet, { currentAppointmentId: null, lastOutcome: null, priority: false, priorityReason: null });
+  }
   const mentee = await c.mentees.findOneAndUpdate(
     { _id: appt.menteeId },
     { $set: menteeSet, $inc: { version: 1 } },
@@ -106,7 +111,9 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
       ...(plan.notify === 'registration_cancelled' ? { dedupeSuffix: mentee.version } : {}),
     });
   }
-  if (plan.notifyMentor) {
+  // RN21: a mentora que registrou o atendimento fora da mesa não recebe aviso da própria mentoria cancelada
+  const selfWalkIn = input.action === 'walk_in_cancel' && input.actor.userId !== null && String(appt.mentorId) === String(input.actor.userId);
+  if (plan.notifyMentor && !selfWalkIn) {
     // aviso à mentora (PLAN, Notificações > Aviso à mentora), por e-mail; mentora removida ou desativada (sem acesso ao
     // painel do link), nada
     const mentor = await c.users.findOne({ _id: appt.mentorId, status: 'active' }, { session, projection: { email: 1 } });

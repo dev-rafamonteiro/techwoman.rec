@@ -205,11 +205,15 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
     const nameOf = new Map(walkInMentors.map((u) => [String(u._id), u.name]));
     const walkInsOf = new Map<string, string[]>();
     for (const w of walkIns) walkInsOf.set(String(w.menteeId), [...(walkInsOf.get(String(w.menteeId)) ?? []), nameOf.get(String(w.mentorId)) ?? 'Mentora']);
+    // RN21: concluída só pelo atendimento fora da mesa (sem mentoria na mesa): status "done (fora da mesa)" e, em
+    // `mentora`, a mentora do atendimento mais recente
+    const walkInOnly = (r: (typeof rows)[number]) => r.status === 'done' && !r.mentorName && walkInsOf.has(r.id);
+    const statusOf = (r: (typeof rows)[number]) => (walkInOnly(r) ? 'done (fora da mesa)' : r.status);
     const periodLabel: Record<string, string> = { morning: 'Manhã', early_afternoon: 'Início da tarde', late_afternoon: 'Fim da tarde', any: 'Qualquer horário' };
     const lines = [csvLine([...E37_CSV_COLUMNS])];
     for (const r of rows) {
       lines.push(
-        csvLine([r.name, r.email, r.phone, r.linkedin, r.area, periodLabel[r.preferredPeriod], r.status, r.priority ? 'sim' : 'não', r.mentorName, r.table?.number, r.slot?.startAt, r.createdAt, walkInsOf.get(r.id)?.join(' / ')]),
+        csvLine([r.name, r.email, r.phone, r.linkedin, r.area, periodLabel[r.preferredPeriod], statusOf(r), r.priority ? 'sim' : 'não', r.mentorName ?? (walkInOnly(r) ? walkInsOf.get(r.id)?.at(-1) : undefined), r.table?.number, r.slot?.startAt, r.createdAt, walkInsOf.get(r.id)?.join(' / ')]),
       );
     }
     await writeAudit(ctx, undefined, { actor: actorForRoute(req, 'admin'), action: 'mentee.export', entity: 'mentee', after: { rows: rows.length, filters: query }, ip: req.ip });

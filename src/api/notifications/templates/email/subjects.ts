@@ -13,6 +13,8 @@ export const EMAIL_TEMPLATE_IDS = [
   '07-inscricao-cancelada',
   '08-horario-liberado',
   '09-aviso-mentora',
+  '10-atendimento-fora-da-mesa',
+  '11-atendimento-removido',
 ] as const;
 
 export type EmailTemplateId = (typeof EMAIL_TEMPLATE_IDS)[number];
@@ -31,6 +33,9 @@ export const EMAIL_TEMPLATE_VARS = {
   '07-inscricao-cancelada': ['nome', 'link_inscricao'],
   '08-horario-liberado': ['nome', 'horario', 'link_minha_mentoria'],
   '09-aviso-mentora': ['mentora_nome', 'nome', 'horario', 'mesa', 'link_painel', 'motivo'],
+  // `mentora_organizacao` e `mentora_linkedin` podem vir vazias: o trecho `{{#var}}...{{/var}}` some
+  '10-atendimento-fora-da-mesa': ['nome', 'mentora_nome', 'mentora_organizacao', 'mentora_linkedin', 'link_minha_mentoria'],
+  '11-atendimento-removido': ['nome', 'link_inscricao'],
 } as const satisfies Record<EmailTemplateId, readonly string[]>;
 
 /** Tipo da `outbox` -> layout. */
@@ -46,6 +51,8 @@ export const EMAIL_TEMPLATE_BY_OUTBOX_TYPE = {
   registration_cancelled: '07-inscricao-cancelada',
   slot_released: '08-horario-liberado',
   mentor_slot_released: '09-aviso-mentora',
+  walk_in_done: '10-atendimento-fora-da-mesa',
+  walk_in_removed: '11-atendimento-removido',
 } as const satisfies Record<string, EmailTemplateId>;
 
 export type EmailOutboxType = keyof typeof EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
@@ -62,6 +69,8 @@ export const EMAIL_SUBJECTS: Record<EmailTemplateId, string> = {
   '08-horario-liberado': 'Seu horário das {{horario}} foi liberado',
   // padrão = motivo `confirmed_cancelled`; os outros motivos em MENTOR_SLOT_RELEASED_SUBJECTS
   '09-aviso-mentora': '{{nome}} cancelou a mentoria das {{horario}}',
+  '10-atendimento-fora-da-mesa': 'Obrigada pela conversa com {{mentora_nome}}',
+  '11-atendimento-removido': 'Sua inscrição na mentoria do Tech Woman foi removida',
 };
 
 /** Variantes do layout 3 por tipo da `outbox`. */
@@ -75,6 +84,7 @@ export const MENTOR_SLOT_RELEASED_SUBJECTS = {
   confirmed_cancelled: EMAIL_SUBJECTS['09-aviso-mentora'],
   invite_declined: '{{nome}} recusou o convite das {{horario}}',
   invite_cancelled: 'Convite das {{horario}} encerrado',
+  walked_in_elsewhere: '{{nome}} foi atendida fora da mesa',
 } as const satisfies Record<MentorSlotReleasedReason, string>;
 
 /** Assunto padrão (com placeholders) para um tipo da `outbox`; `reason` = `payload.reason` do aviso à mentora. */

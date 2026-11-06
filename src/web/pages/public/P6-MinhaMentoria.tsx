@@ -418,7 +418,21 @@ export default function P6MinhaMentoria() {
     body = (
       <>
         {/* RN21: concluída num atendimento fora da mesa (sem mentoria na mesa) */}
-        {!ap && me.walkIn && <p data-testid="p6-walkin">Você fez uma mentoria com {me.walkIn.mentorName}.</p>}
+        {!ap && me.walkIn && (
+          <>
+            <p data-testid="p6-walkin">Você foi atendida por {me.walkIn.mentorName}{me.walkIn.mentorOrganization ? ` (${me.walkIn.mentorOrganization})` : ''} fora das mesas.</p>
+            <Card>
+              <div className="tw-mentorrow">
+                <span className="tw-avatar" aria-hidden="true">{me.walkIn.mentorName.charAt(0)}</span>
+                <div>
+                  <strong>{me.walkIn.mentorName}</strong>
+                  {me.walkIn.mentorOrganization && <small>{me.walkIn.mentorOrganization}</small>}
+                </div>
+                {me.walkIn.mentorLinkedin && <a className="tw-link" href={me.walkIn.mentorLinkedin} target="_blank" rel="noopener noreferrer" data-testid="p6-walkin-linkedin">LinkedIn</a>}
+              </div>
+            </Card>
+          </>
+        )}
         <p data-testid="p6-final">Esperamos que a conversa tenha aberto caminhos.{me.feedback ? '' : ' Conte como foi para nós.'}</p>
         <Feedback sent={me.feedback} onSent={(next) => { setMe(next); setFreshAt(Date.now()); }} />
       </>

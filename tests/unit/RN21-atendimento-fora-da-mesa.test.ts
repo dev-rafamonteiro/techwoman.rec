@@ -1,27 +1,39 @@
 import { describe, expect, it } from "vitest";
 import { E51BodySchema } from "@tw/shared";
-import { shouldRestoreToQueue, walkInQueueEffect, walkInSituation } from "@tw/api/domain";
+import { planTransition, shouldDeregisterOnWalkInRemoval, walkInEffect, walkInSituation } from "@tw/api/domain";
 
-describe("RN21 · atendimento fora da mesa: efeito na fila", () => {
-  it("aguardando vira concluída e sai da fila", () => {
-    expect(walkInQueueEffect("waiting")).toEqual({ ok: true, next: "done", leavesQueue: true });
+describe("RN21 · atendimento fora da mesa: ela sempre termina atendida e fora da fila", () => {
+  it.each(["waiting", "no_show"] as const)("%s vira concluída", (status) => {
+    expect(walkInEffect(status)).toEqual({ ok: true, next: "done", changes: true, cancelsAppointment: false });
   });
-  it.each(["invited", "confirmed", "done", "no_show"] as const)("%s não muda (a mentoria da mesa continua)", (status) => {
-    expect(walkInQueueEffect(status)).toEqual({ ok: true, next: status, leavesQueue: false });
+  it.each(["invited", "confirmed"] as const)("%s: a mentoria da mesa é cancelada e ela vira concluída", (status) => {
+    expect(walkInEffect(status)).toEqual({ ok: true, next: "done", changes: true, cancelsAppointment: true });
   });
-  it("cancelada não pode ser escolhida", () => expect(walkInQueueEffect("cancelled")).toEqual({ ok: false }));
+  it("já concluída fica como está", () => expect(walkInEffect("done")).toEqual({ ok: true, next: "done", changes: false, cancelsAppointment: false }));
+  it("cancelada não pode ser escolhida", () => expect(walkInEffect("cancelled")).toEqual({ ok: false }));
 });
 
-describe("RN21 · remoção pelo admin (E53): volta à fila só quando saiu dela pelo atendimento", () => {
-  const base = { previousMenteeStatus: "waiting" as const, currentStatus: "done" as const, hasAppointment: false, otherActiveWalkIns: 0 };
-  it("aguardava, está concluída, sem mentoria nem outro atendimento -> volta", () => expect(shouldRestoreToQueue(base)).toBe(true));
+describe("RN21 · walk_in_cancel na máquina de estados", () => {
+  const now = new Date("2026-11-14T13:00:00Z");
+  const actor = { userId: "507f1f77bcf86cd799439011", role: "mentor" as const };
+  it.each(["invited", "confirmed", "in_progress"] as const)("%s -> cancelada, travas liberadas, participante done, sem aviso a ela e com aviso à mentora", (status) => {
+    const p = planTransition({ action: "walk_in_cancel", appointment: { status, startAt: new Date("2026-11-14T14:00:00Z"), expiresAt: new Date("2026-11-14T12:00:00Z") }, now, actor });
+    expect(p).toMatchObject({ ok: true, appointmentTo: "cancelled", menteeTo: "done", locks: { slotLock: false, menteeLock: false }, notify: null, notifyMentor: "walked_in_elsewhere" });
+  });
+  it.each(["done", "no_show", "cancelled", "declined", "expired"] as const)("%s não pode", (status) => {
+    const p = planTransition({ action: "walk_in_cancel", appointment: { status, startAt: now, expiresAt: null }, now, actor });
+    expect(p).toMatchObject({ ok: false, code: "INVALID_STATE" });
+  });
+});
+
+describe("RN21 · remoção pelo admin (E53): descadastra quem foi atendida só por este atendimento", () => {
+  const base = { currentStatus: "done" as const, otherActiveWalkIns: 0, tableAppointments: 0 };
+  it("concluída, sem outro atendimento nem mentoria na mesa -> descadastra", () => expect(shouldDeregisterOnWalkInRemoval(base)).toBe(true));
   it.each([
-    ["estava confirmada antes", { previousMenteeStatus: "confirmed" as const }],
-    ["foi cadastrada no atendimento", { previousMenteeStatus: null }],
-    ["já não está concluída", { currentStatus: "cancelled" as const }],
-    ["tem mentoria na mesa", { hasAppointment: true }],
     ["outra mentora também a atendeu", { otherActiveWalkIns: 1 }],
-  ])("não volta: %s", (_l, over) => expect(shouldRestoreToQueue({ ...base, ...over })).toBe(false));
+    ["tem mentoria na mesa (ativa ou concluída)", { tableAppointments: 1 }],
+    ["já está cancelada (ex.: anonimizada)", { currentStatus: "cancelled" as const }],
+  ])("não descadastra: %s", (_l, over) => expect(shouldDeregisterOnWalkInRemoval({ ...base, ...over })).toBe(false));
 });
 
 describe("RN21 · situação mostrada em M7 (E50)", () => {

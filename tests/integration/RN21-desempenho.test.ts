@@ -89,7 +89,9 @@ describe.skipIf(!api)("RN21 · desempenho (500 participantes, mongo-local)", () 
     expect(outcomes).toHaveLength(4);
     const m = (await c.mentees.findOne({ emailNorm: email }))!;
     expect(await c.walkIns.countDocuments({ menteeId: m._id, deletedAt: null })).toBe(4);
-    expect(await c.outbox.countDocuments({ menteeId: m._id, type: "registered" })).toBe(1);
+    // um e-mail `walk_in_done` por atendimento (dedupe pelo id do atendimento) e nenhum `registered`
+    expect(await c.outbox.countDocuments({ menteeId: m._id, type: "registered" })).toBe(0);
+    expect(await c.outbox.countDocuments({ menteeId: m._id, type: "walk_in_done" as never })).toBe(4);
   });
 
   it("E51 · 20 cadastros rápidos simultâneos distintos: todos 201", async () => {

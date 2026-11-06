@@ -1,0 +1,25 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[ATENDIMENTO CONCLUÍDO]
+
+Obrigada por participar, {{nome}}!
+
+Você foi atendida por {{mentora_nome}}{{#mentora_organizacao}} ({{mentora_organizacao}}){{/mentora_organizacao}} fora das mesas, aqui no evento. Sua mentoria no Tech Woman está registrada como concluída.
+
+Na sua página pessoal você vê com quem conversou e avalia a mentoria. Leva menos de um minuto.
+
+MENTORA: {{mentora_nome}}
+
+Ver minha página e avaliar: {{link_minha_mentoria}}{{#mentora_linkedin}}
+Ver o LinkedIn de {{mentora_nome}}: {{mentora_linkedin}}{{/mentora_linkedin}}
+
+Sua avaliação ajuda a organização a melhorar as próximas edições.
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_minha_mentoria}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque se inscreveu na mentoria do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

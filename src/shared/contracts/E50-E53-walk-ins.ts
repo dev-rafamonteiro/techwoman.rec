@@ -21,7 +21,8 @@ export const WALK_IN_SEARCH_LIMIT = 20;
 /**
  * Situação da participante para a mentora decidir em M7 (o texto fica com a tela):
  * - `waiting`: "Na fila";
- * - `scheduled`: convite ou mentoria confirmada; `startAt` = início ("Mentoria agendada às 14h20");
+ * - `scheduled`: convite ou mentoria confirmada; `scheduled` traz horário, mesa e mentora (M7 avisa que o registro
+ *   cancela essa mentoria);
  * - `done`: "Já atendida"; `no_show`: "Não compareceu";
  * - `walked_in_by_me`: a mentora já registrou atendimento fora da mesa com ela (E51 devolveria 409).
  */
@@ -38,6 +39,15 @@ export const WalkInViewSchema = z.object({
 });
 export type WalkInView = z.infer<typeof WalkInViewSchema>;
 
+/** Mentoria na mesa (convite ou confirmada) da participante: horário, mesa ("Mesa 7") e mentora. */
+export const ScheduledTableSchema = z.object({
+  appointmentId: IdSchema,
+  startAt: IsoDateTimeSchema,
+  tableLabel: z.string(),
+  mentorName: z.string(),
+});
+export type ScheduledTable = z.infer<typeof ScheduledTableSchema>;
+
 /** E50 · GET /mentor/mentees/search?q= · M7 · RN21 · busca tolerante a erro, todas as situações menos `cancelled`, sem contato */
 export const E50QuerySchema = z.object({ q: SearchQSchema }).strict();
 export type E50Query = z.input<typeof E50QuerySchema>;
@@ -49,6 +59,8 @@ export const E50ResponseSchema = z.object({
       situation: WalkInSituationSchema,
       /** Início da mentoria agendada (`scheduled`); null nas outras situações. */
       startAt: IsoDateTimeSchema.nullable(),
+      /** Mentoria na mesa que o registro vai cancelar (`scheduled`); null nas outras situações. */
+      scheduled: ScheduledTableSchema.nullable(),
     }),
   ),
 });
@@ -81,6 +93,7 @@ const note = z.string().trim().max(WALK_IN_NOTE_MAX).optional();
  * E51 · POST /mentor/walk-ins · M7 · RN21 · aceita Idempotency-Key
  * Corpo: participante já inscrita (`menteeId`) ou cadastro rápido (`newMentee` + `consentAccepted: true`).
  * 409 CONFLICT se a mentora já registrou atendimento com a participante; 409 INVALID_STATE se ela está cancelada.
+ * A participante sempre termina `done` (atendida) e fora da fila; convite ou mentoria confirmada na mesa é cancelada.
  */
 export const E51BodySchema = z.union([
   z.object({ menteeId: IdSchema, note }).strict(),
@@ -89,9 +102,9 @@ export const E51BodySchema = z.union([
 export type E51Body = z.infer<typeof E51BodySchema>;
 
 /**
- * 201. `outcome`: `existing` (escolhida pela busca), `created` (cadastro novo, recebe o link por e-mail),
- * `linked` (o e-mail do cadastro já estava inscrito: o atendimento foi para a inscrição existente, RN01) ou
- * `reactivated` (o e-mail era de uma inscrição cancelada ou `no_show`, que volta como concluída e recebe o link).
+ * 201. `outcome`: `existing` (escolhida pela busca), `created` (cadastro novo), `linked` (o e-mail do cadastro já
+ * estava inscrito: o atendimento foi para a inscrição existente, RN01) ou `reactivated` (o e-mail era de uma inscrição
+ * cancelada ou `no_show`, que volta como concluída). Em todos, ela recebe o e-mail `walk_in_done` (layout 10).
  */
 export const E51ResponseSchema = z.object({
   walkIn: WalkInViewSchema,
@@ -99,9 +112,11 @@ export const E51ResponseSchema = z.object({
   linkedExisting: z.boolean(),
   /** Nome da participante (no `linked`, o nome da inscrição que já existia). */
   name: z.string(),
-  /** Status da participante antes e depois (`waiting` -> `done` sai da fila). */
+  /** Status da participante antes e depois (sempre `done`: atendida e fora da fila). */
   previousStatus: MenteeStatusSchema.nullable(),
   status: MenteeStatusSchema,
+  /** Mentoria na mesa cancelada por este registro (mesmo se a tela não sabia dela, numa corrida); null se não havia. */
+  cancelledAppointment: ScheduledTableSchema.nullable(),
 });
 export type E51Response = z.infer<typeof E51ResponseSchema>;
 
@@ -157,9 +172,9 @@ export const E53List = defineEndpoint({
 });
 
 /**
- * E53 · DELETE /admin/walk-ins/:id · remoção lógica (`deletedAt`), auditada. Se a participante saiu da fila por este
- * atendimento (`previousMenteeStatus = waiting`), continua `done`, não tem mentoria nem outro atendimento ativo, volta
- * para `waiting` com o `queuedAt` e a prioridade de antes.
+ * E53 · DELETE /admin/walk-ins/:id · remoção lógica (`deletedAt`), auditada. Sem outro atendimento ativo e sem mentoria
+ * na mesa ativa ou concluída, a participante é descadastrada (`cancelled`, fora dos números) e recebe o e-mail
+ * `walk_in_removed` pedindo nova inscrição (`deregistered: true`).
  */
 export const E53Delete = defineEndpoint({
   code: 'E53',
@@ -168,5 +183,5 @@ export const E53Delete = defineEndpoint({
   auth: 'staff',
   roles: ['admin', 'super_admin'],
   params: IdParamsSchema,
-  response: OkSchema.extend({ restoredToQueue: z.boolean() }),
+  response: OkSchema.extend({ deregistered: z.boolean() }),
 });

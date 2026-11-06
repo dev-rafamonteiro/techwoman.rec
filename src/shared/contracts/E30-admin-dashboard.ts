@@ -23,8 +23,13 @@ export const E30ResponseSchema = z.object({
     confirmed: z.number().int(),
     done: z.number().int(),
     noShow: z.number().int(),
-    /** RN21 · atendimentos fora da mesa (sem os removidos), separados das mentorias na mesa (`done`). */
+    /** RN21 · atendimentos fora da mesa (registros, sem os removidos), separados das mentorias na mesa (`done`). */
     walkIns: z.number().int(),
+    /**
+     * RN21 · participantes atendidas (status `done`), sem contar ninguém duas vezes: `total` = `atTable` (concluídas
+     * numa mentoria na mesa) + `walkIn` (concluídas só por atendimento fora da mesa).
+     */
+    attended: z.object({ total: z.number().int(), atTable: z.number().int(), walkIn: z.number().int() }),
   }),
   tables: z.object({ occupiedNow: z.number().int(), total: z.number().int() }),
   /** Sessões livres restantes no dia (capacidade). */

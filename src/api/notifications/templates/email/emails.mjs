@@ -1,6 +1,7 @@
-// Conteúdo dos 9 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 11 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
-// {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail".
+// {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail". Trecho opcional:
+// `{{#variavel}}...{{/variavel}}` some quando a variável vem vazia (render.ts).
 
 export const COMMON_VARS = ['evento_nome', 'evento_data', 'evento_local', 'link_privacidade', 'ano'];
 
@@ -133,5 +134,39 @@ export const EMAILS = [
     botao: ['Abrir minha agenda', 'link_painel'],
     nota: 'O horário já aparece livre no seu painel.',
     linkFallback: 'link_painel',
+  },
+  {
+    // RN21 · atendida fora da mesa (walk_in_done): organização e LinkedIn da mentora são opcionais (trechos {{#...}})
+    id: '10-atendimento-fora-da-mesa',
+    vars: ['nome', 'mentora_nome', 'mentora_organizacao', 'mentora_linkedin', 'link_minha_mentoria'],
+    preheader: 'Conte como foi a conversa com {{mentora_nome}}.',
+    selo: ['ATENDIMENTO CONCLUÍDO', ...SELO.menta],
+    titulo: 'Obrigada por participar, {{nome}}!',
+    paragrafos: [
+      'Você foi atendida por {{mentora_nome}}{{#mentora_organizacao}} ({{mentora_organizacao}}){{/mentora_organizacao}} fora das mesas, aqui no evento. Sua mentoria no Tech Woman está registrada como concluída.',
+      'Na sua página pessoal você vê com quem conversou e avalia a mentoria. Leva menos de um minuto.',
+    ],
+    card: [['MENTORA', '{{mentora_nome}}']],
+    botao: ['Ver minha página e avaliar', 'link_minha_mentoria'],
+    // botão secundário só quando a mentora tem LinkedIn
+    sec: ['Ver o LinkedIn de {{mentora_nome}}', 'mentora_linkedin'],
+    secOpcional: true,
+    nota: 'Sua avaliação ajuda a organização a melhorar as próximas edições.',
+    linkFallback: 'link_minha_mentoria',
+  },
+  {
+    // RN21 · atendimento fora da mesa removido pelo admin (walk_in_removed): a inscrição foi desfeita
+    id: '11-atendimento-removido',
+    vars: ['nome', 'link_inscricao'],
+    preheader: 'Se ainda quiser a mentoria, faça uma nova inscrição.',
+    selo: ['INSCRIÇÃO REMOVIDA', ...SELO.neutro],
+    titulo: 'Sua inscrição foi removida',
+    paragrafos: [
+      'Oi, {{nome}}. A organização removeu o registro do seu atendimento fora da mesa e, com ele, sua inscrição na mentoria do Tech Woman.',
+      'Se você ainda quer participar da mentoria, faça uma nova inscrição. Leva poucos minutos.',
+    ],
+    botao: ['Fazer nova inscrição', 'link_inscricao'],
+    nota: 'Acha que foi um engano? Procure a organização no balcão de apoio.',
+    linkFallback: 'link_inscricao',
   },
 ];

@@ -31,10 +31,21 @@ const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '
 export const escapeHtml = (v: string) => v.replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]!);
 
 const PLACEHOLDER = /\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g;
+/** Trecho opcional `{{#variavel}}...{{/variavel}}`: some quando a variável é vazia (ex.: LinkedIn da mentora no layout 10). */
+const SECTION = /\{\{#([A-Za-z0-9_]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+
+/** Resolve os trechos opcionais; variável não informada é erro, como nos placeholders. */
+export function applySections(src: string, vars: Readonly<Record<string, string | undefined>>, where: string): string {
+  return src.replace(SECTION, (_m, name: string, inner: string) => {
+    const v = vars[name];
+    if (v === undefined) throw new RenderError(`variável "${name}" ausente em ${where}`);
+    return v === '' ? '' : inner;
+  });
+}
 
 /** Troca `{{variavel}}`; variável não informada é erro. `escape` aplica escape de HTML (só no `.html`). */
 export function fillPlaceholders(src: string, vars: Readonly<Record<string, string | undefined>>, escape: boolean, where: string): string {
-  const out = src.replace(PLACEHOLDER, (_m, name: string) => {
+  const out = applySections(src, vars, where).replace(PLACEHOLDER, (_m, name: string) => {
     const v = vars[name];
     if (v === undefined) throw new RenderError(`variável "${name}" ausente em ${where}`);
     return escape ? escapeHtml(v) : v;
@@ -52,7 +63,7 @@ export interface RenderedEmail {
 }
 
 /**
- * Renderiza um dos 9 layouts. Todas as variáveis declaradas do layout e as comuns precisam estar em `vars`
+ * Renderiza um dos 11 layouts. Todas as variáveis declaradas do layout e as comuns precisam estar em `vars`
  * (mesmo que o HTML não use alguma); `subjectTemplate` substitui o assunto padrão.
  */
 export function renderEmail(id: EmailTemplateId, vars: Readonly<Record<string, string | undefined>>, subjectTemplate?: string): RenderedEmail {

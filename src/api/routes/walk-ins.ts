@@ -8,12 +8,13 @@ import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { respond, route } from '../lib/route.js';
 import { iso, toMenteeStaffView } from '../lib/views.js';
 import { menteeSearchPipeline, runSearch } from '../search/text.js';
-import { createWalkIn, toWalkInView } from '../services/walk-in.js';
-import { shouldRestoreToQueue, walkInSituation } from '../domain/index.js';
+import { createWalkIn, scheduledTableOf, toWalkInView } from '../services/walk-in.js';
+import { enqueueWalkInNotification } from '../lib/outbox.js';
+import { shouldDeregisterOnWalkInRemoval, walkInSituation } from '../domain/index.js';
 
 /** E50 procura em todas as situações menos `cancelled` (RN21). */
 const SEARCHABLE = MENTEE_STATUSES.filter((s) => s !== 'cancelled');
-/** Mentorias na mesa que ainda a prendem; `no_show` antigo não conta (RN01: ela pode ter voltado à fila depois). */
+/** Mentorias na mesa ativas ou concluídas: com uma delas, remover o atendimento não descadastra ninguém (`no_show` antigo não conta). */
 const ACTIVE_OR_DONE = ['invited', 'confirmed', 'in_progress', 'done'] as const;
 
 /** RN21 · atendimento fora da mesa: E50–E52 (mentora) e E53 (admin). */
@@ -35,16 +36,17 @@ export function registerWalkInRoutes(app: FastifyInstance, ctx: AppContext): voi
     const ids = found.map((m) => m._id);
     // a projeção da busca não traz `currentAppointmentId`: a mentoria marcada vem pela participante
     const [appts, mine] = await Promise.all([
-      ctx.c.appointments.find({ eventId: event._id, menteeId: { $in: ids }, menteeLock: true }, { projection: { menteeId: 1, startAt: 1 } }).toArray(),
+      ctx.c.appointments.find({ eventId: event._id, menteeId: { $in: ids }, menteeLock: true }).toArray(),
       ctx.c.walkIns.find({ eventId: event._id, mentorId: user._id, menteeId: { $in: ids }, deletedAt: null }, { projection: { menteeId: 1 } }).toArray(),
     ]);
-    const startOf = new Map(appts.map((a) => [String(a.menteeId), a.startAt]));
+    // M7 avisa antes de confirmar que o registro cancela a mentoria da mesa (horário, mesa e mentora)
+    const scheduledOf = new Map(await Promise.all(appts.map(async (a) => [String(a.menteeId), await scheduledTableOf(ctx, a)] as const)));
     const mineSet = new Set(mine.map((w) => String(w.menteeId)));
     const body: E50Response = {
       items: found.map((m) => {
         const situation = walkInSituation({ status: m.status, walkedInByMe: mineSet.has(String(m._id)) });
-        const startAt = situation === 'scheduled' ? startOf.get(String(m._id)) : undefined;
-        return { mentee: toMenteeStaffView(m), situation, startAt: startAt ? iso(startAt) : null };
+        const scheduled = situation === 'scheduled' ? (scheduledOf.get(String(m._id)) ?? null) : null;
+        return { mentee: toMenteeStaffView(m), situation, startAt: scheduled?.startAt ?? null, scheduled };
       }),
     };
     return body;
@@ -99,7 +101,7 @@ export function registerWalkInRoutes(app: FastifyInstance, ctx: AppContext): voi
     return body;
   });
 
-  // E53 · DELETE /admin/walk-ins/:id · remoção lógica; devolve à fila quem saiu dela por este atendimento
+  // E53 · DELETE /admin/walk-ins/:id · remoção lógica; descadastra a participante atendida só por este atendimento
   route(app, ctx, E53Delete, async ({ req, user, params }) => {
     const event = await loadEvent(ctx);
     const id = oid(params.id);
@@ -113,21 +115,31 @@ export function registerWalkInRoutes(app: FastifyInstance, ctx: AppContext): voi
       );
       if (!w) throw notFound('Atendimento');
       const m = await ctx.c.mentees.findOne({ _id: w.menteeId }, { session });
-      let restoredToQueue = false;
+      let deregistered = false;
       if (m) {
-        const [appts, others] = await Promise.all([
+        const [tableAppointments, others] = await Promise.all([
           ctx.c.appointments.countDocuments({ menteeId: m._id, status: { $in: [...ACTIVE_OR_DONE] } }, { session }),
           ctx.c.walkIns.countDocuments({ eventId: event._id, menteeId: m._id, deletedAt: null }, { session }),
         ]);
-        if (shouldRestoreToQueue({ previousMenteeStatus: w.previousMenteeStatus, currentStatus: m.status, hasAppointment: appts > 0 || m.currentAppointmentId !== null, otherActiveWalkIns: others })) {
-          // `queuedAt` e prioridade nunca foram mexidos pelo atendimento: ela volta ao mesmo lugar da fila (RN03)
-          const r = await ctx.c.mentees.updateOne({ _id: m._id, status: 'done' }, { $set: { status: 'waiting', updatedAt: now }, $inc: { version: 1 } }, { session });
-          restoredToQueue = r.modifiedCount === 1;
-          if (restoredToQueue) await writeAudit(ctx, session, { actor, action: 'mentee.walk_in_restore', entity: 'mentee', entityId: m._id, before: { status: 'done' }, after: { status: 'waiting' }, ip: req.ip });
+        if (shouldDeregisterOnWalkInRemoval({ currentStatus: m.status, otherActiveWalkIns: others, tableAppointments })) {
+          // descadastrada: sai dos números (E30, E31, E37, E49) e pode se inscrever de novo por P4 (E02 reativa, RN01)
+          const r = await ctx.c.mentees.findOneAndUpdate(
+            { _id: m._id, status: m.status },
+            { $set: { status: 'cancelled', currentAppointmentId: null, priority: false, priorityReason: null, lastOutcome: null, updatedAt: now }, $inc: { version: 1 } },
+            { session, returnDocument: 'after' },
+          );
+          if (!r) throw new AppError('CONFLICT', 'A participante acabou de mudar de situação. Tente de novo.');
+          deregistered = true;
+          // nenhuma mentoria dela segura a participante (menteeLock), para ela poder ser convidada depois da nova inscrição
+          await ctx.c.appointments.updateMany({ menteeId: m._id, menteeLock: true }, { $unset: { menteeLock: '' } }, { session });
+          // a avaliação dela só podia ser deste atendimento (sem mentoria na mesa nem outro atendimento): sai junto
+          await ctx.c.feedbacks.deleteOne({ _id: m._id }, { session });
+          await enqueueWalkInNotification(ctx, session, { type: 'walk_in_removed', mentee: r, walkInId: w._id });
+          await writeAudit(ctx, session, { actor, action: 'mentee.walk_in_deregister', entity: 'mentee', entityId: m._id, before: { status: m.status }, after: { status: 'cancelled' }, ip: req.ip });
         }
       }
-      await writeAudit(ctx, session, { actor, action: 'walk_in.delete', entity: 'walk_in', entityId: w._id, before: { menteeId: String(w.menteeId), mentorId: String(w.mentorId), previousMenteeStatus: w.previousMenteeStatus }, after: { restoredToQueue }, ip: req.ip });
-      return { ok: true as const, restoredToQueue };
+      await writeAudit(ctx, session, { actor, action: 'walk_in.delete', entity: 'walk_in', entityId: w._id, before: { menteeId: String(w.menteeId), mentorId: String(w.mentorId), previousMenteeStatus: w.previousMenteeStatus }, after: { deregistered }, ip: req.ip });
+      return { ok: true as const, deregistered };
     });
   });
 }

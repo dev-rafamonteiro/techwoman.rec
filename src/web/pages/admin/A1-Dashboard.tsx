@@ -39,8 +39,9 @@ export default function A1Dashboard() {
     ['waiting', 'Aguardando', d.counts.waiting, '', 'n'],
     ['invites', 'Convites pendentes', d.counts.invitesPending, expiringSoon ? `${expiringSoon} ${expiringSoon === 1 ? 'expira' : 'expiram'} em < 3 min` : '', 'o'],
     ['confirmed', 'Confirmadas', d.counts.confirmed, '', 'm'],
-    ['done', 'Concluídas', d.counts.done, 'na mesa', 'g'],
-    ['walkins', 'Atendimentos fora da mesa', d.counts.walkIns, '', 'g'],
+    // RN21: atendidas (cada participante uma vez), com a divisão na mesa / fora da mesa
+    ['done', 'Concluídas', d.counts.attended.total, `${d.counts.attended.atTable} na mesa · ${d.counts.attended.walkIn} fora da mesa`, 'g'],
+    ['walkins', 'Atendimentos fora da mesa', d.counts.walkIns, 'registros das mentoras', 'g'],
     ['noshow', 'Não compareceu', d.counts.noShow, '', 'r'],
     ['tables', 'Mesas ocupadas agora', `${d.tables.occupiedNow}/${d.tables.total}`, '', 'p'],
     // RN22: horário com mais mentoras do que mesas (só por ação do admin) vira nota laranja no mesmo card

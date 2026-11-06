@@ -36,7 +36,7 @@ export interface OutboxResult {
 export const PRIORITY_TIERS: readonly (readonly OutboxType[])[] = [
   ['invite'],
   ['confirmed', 'moved', 'cancelled', 'expired', 'reminder', 'slot_released', 'mentor_slot_released', 'registration_cancelled'],
-  ['registered', 'staff_password'],
+  ['registered', 'staff_password', 'walk_in_done', 'walk_in_removed'],
 ];
 
 /** Tempo máximo esperando a vez no limitador dentro de uma iteração (o resto fica para a próxima). */
@@ -100,7 +100,13 @@ export async function skipInactiveChannels(ctx: AppContext): Promise<number> {
 }
 
 /** Decide se a mensagem ainda faz sentido (relê a mentoria). Devolve o motivo do descarte ou null. */
-function skipReason(item: OutboxDoc, ctx: AppContext, appt: { status: string; expiresAt: Date | null } | null, menteeStatus: string | null): string | null {
+function skipReason(
+  item: OutboxDoc,
+  ctx: AppContext,
+  appt: { status: string; expiresAt: Date | null } | null,
+  menteeStatus: string | null,
+  walkIn: { deletedAt: Date | null } | null,
+): string | null {
   const lapsed = appt?.status === 'invited' && appt.expiresAt !== null && appt.expiresAt <= ctx.now();
   switch (item.type) {
     case 'invite':
@@ -118,6 +124,13 @@ function skipReason(item: OutboxDoc, ctx: AppContext, appt: { status: string; ex
     case 'slot_released':
       // já recebeu outro convite, foi confirmada ou cancelou antes do envio: o aviso de horário liberado não sai
       return menteeStatus === 'waiting' ? null : 'participante não está mais na fila';
+    case 'walk_in_done':
+      // RN21: atendimento removido pelo admin (ou inscrição desfeita) antes do envio: o agradecimento não sai
+      if (!walkIn || walkIn.deletedAt) return 'atendimento fora da mesa removido';
+      return menteeStatus === 'done' ? null : 'participante não está mais atendida';
+    case 'walk_in_removed':
+      // se ela já se inscreveu de novo antes do envio, o pedido de nova inscrição não sai
+      return menteeStatus === 'cancelled' ? null : 'participante já se inscreveu de novo';
     case 'mentor_slot_released':
       // aviso à mentora: o horário já foi liberado na transação; só precisa da mentoria para montar o texto
       return appt ? null : 'mentoria não encontrada';
@@ -141,12 +154,15 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     res.skipped++;
     return;
   }
-  const [event, mentee, appt] = await Promise.all([
+  // RN21: atendimento fora da mesa do e-mail (`payload.walkInId`): diz se ainda vale e quem é a mentora (layout 10)
+  const walkInId = item.type === 'walk_in_done' && typeof item.payload?.['walkInId'] === 'string' && ObjectId.isValid(item.payload['walkInId']) ? new ObjectId(item.payload['walkInId']) : null;
+  const [event, mentee, appt, walkIn] = await Promise.all([
     c.events.findOne({ _id: item.eventId }),
     item.menteeId ? c.mentees.findOne({ _id: item.menteeId }) : null,
     item.appointmentId ? c.appointments.findOne({ _id: item.appointmentId }) : null,
+    walkInId ? c.walkIns.findOne({ _id: walkInId }) : null,
   ]);
-  const reason = skipReason(item, ctx, appt, mentee?.status ?? null);
+  const reason = skipReason(item, ctx, appt, mentee?.status ?? null, walkIn);
   if (reason || !event) {
     await done({ status: 'skipped', lastError: reason ?? 'evento não encontrado', payload: {} });
     res.skipped++;
@@ -157,7 +173,7 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     res.failed++;
   };
   const [mentor, table, staffUser, apptMentee] = await Promise.all([
-    appt ? c.users.findOne({ _id: appt.mentorId }) : null,
+    appt ? c.users.findOne({ _id: appt.mentorId }) : walkIn ? c.users.findOne({ _id: walkIn.mentorId }) : null,
     appt ? c.tables.findOne({ _id: appt.tableId }) : null,
     // destinatária do layout 6; no aviso à mentora `userId` é a própria mentora, já lida acima
     item.type === 'staff_password' && item.userId ? c.users.findOne({ _id: item.userId }) : null,

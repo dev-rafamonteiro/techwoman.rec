@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { ENDPOINTS, SEARCH_Q_MAX, SEARCH_Q_MIN, WALK_IN_NOTE_MAX, type Area, type E50Response, type E51Body, type E51Response, type WalkInSituation } from '@tw/shared';
+import { ENDPOINTS, SEARCH_Q_MAX, SEARCH_Q_MIN, WALK_IN_NOTE_MAX, type Area, type E50Response, type E51Body, type E51Response, type ScheduledTable, type WalkInSituation } from '@tw/shared';
 import { ApiError, Button, CheckboxField, EmptyState, ErrorState, MenteeCard, Overlay, SelectField, SkeletonList, StatusBadge, TextArea, TextField, call, formatTime, maskPhone, useToast, type BadgeStatus } from '../../ui';
 
 type Found = E50Response['items'][number];
@@ -26,12 +26,18 @@ function validate(f: NewForm): Partial<Record<keyof NewForm, string>> {
   return e;
 }
 
-/** Mensagem do toast de sucesso conforme o que a API fez. */
-function successText(r: E51Response): string {
+/** Aviso da mentoria na mesa que o registro cancela (RN21). */
+export function scheduledWarning(name: string, sc: ScheduledTable): string {
+  return `${name} tem mentoria marcada às ${formatTime(sc.startAt)} na ${sc.tableLabel} com ${sc.mentorName}. Ao registrar o atendimento fora da mesa, essa mentoria será cancelada.`;
+}
+
+/** Mensagem do toast de sucesso conforme o que a API fez (ela sempre recebe o e-mail do atendimento). */
+export function successText(r: E51Response): string {
   const first = r.name.split(' ')[0];
-  if (r.outcome === 'created' || r.outcome === 'reactivated') return `Atendimento registrado. ${first} vai receber por e-mail o link da página dela.`;
-  if (r.outcome === 'linked') return `Esse e-mail já estava inscrito: o atendimento foi registrado para ${r.name}.`;
-  return r.previousStatus === 'waiting' ? `Atendimento com ${first} registrado. Ela saiu da fila.` : `Atendimento com ${first} registrado.`;
+  const head = r.outcome === 'linked' ? `Esse e-mail já estava inscrito: o atendimento foi registrado para ${r.name}.` : `Atendimento com ${first} registrado.`;
+  const sc = r.cancelledAppointment;
+  const cancelled = sc ? ` A mentoria das ${formatTime(sc.startAt)} na ${sc.tableLabel} com ${sc.mentorName} foi cancelada.` : '';
+  return `${head}${cancelled} Ela vai receber por e-mail o agradecimento e o link para avaliar a mentoria.`;
 }
 
 /**
@@ -129,9 +135,12 @@ export function M7ForaDaMesa({ open, onClose, onDone, areas, areaLabel }: {
           chosen ? (
             <>
               <MenteeCard mentee={chosen.mentee} areaLabel={areaLabel} variant="full" />
-              <p className="mt-hint">Registra a conversa que você teve com {chosen.mentee.name.split(' ')[0]} fora das mesas.{chosen.situation === 'waiting' ? ' Ela sai da fila de espera.' : ''}</p>
+              <p className="mt-hint">Registra a conversa que você teve com {chosen.mentee.name.split(' ')[0]} fora das mesas. Ela fica como atendida, não entra na fila e recebe por e-mail o agradecimento com o seu nome, o seu LinkedIn e o link para avaliar.</p>
+              {chosen.scheduled && <p className="m7-warning" role="alert" data-testid="m7-scheduled-warning">{scheduledWarning(chosen.mentee.name, chosen.scheduled)}</p>}
               {noteField(note, setNote)}
-              <Button block loading={sending} onClick={() => void submit({ menteeId: chosen.mentee.id, ...(note.trim() ? { note: note.trim() } : {}) })} data-testid="m7-confirm-existing">Registrar atendimento</Button>
+              <Button block variant={chosen.scheduled ? 'danger' : 'primary'} loading={sending} onClick={() => void submit({ menteeId: chosen.mentee.id, ...(note.trim() ? { note: note.trim() } : {}) })} data-testid="m7-confirm-existing">
+                {chosen.scheduled ? 'Cancelar a mentoria e registrar' : 'Registrar atendimento'}
+              </Button>
               <Button variant="ghost" block onClick={() => setChosen(null)}>Voltar à busca</Button>
             </>
           ) : (
@@ -171,7 +180,7 @@ export function M7ForaDaMesa({ open, onClose, onDone, areas, areaLabel }: {
 
         {step === 'new' && (
           <form className="tw-stack" onSubmit={goConfirm} noValidate data-testid="m7-form">
-            <p className="mt-hint">Cadastro rápido: ela recebe por e-mail o link da página dela, onde pode avaliar a mentoria.</p>
+            <p className="mt-hint">Cadastro rápido: ela fica como atendida e recebe por e-mail o agradecimento com o seu nome, o seu LinkedIn e o link da página dela, onde pode avaliar a mentoria.</p>
             <TextField label="Nome" autoComplete="off" maxLength={120} value={form.name} error={shown('name')} onChange={(e) => set('name', e.target.value)} data-testid="m7-name" />
             <TextField label="E-mail" type="email" inputMode="email" autoComplete="off" autoCapitalize="none" maxLength={254} value={form.email} error={shown('email')} onChange={(e) => set('email', e.target.value)} data-testid="m7-email" />
             <TextField label="Celular" optional type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={form.phone} error={shown('phone')} onChange={(e) => set('phone', maskPhone(e.target.value))} data-testid="m7-phone" />

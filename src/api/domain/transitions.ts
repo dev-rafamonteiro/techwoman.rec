@@ -17,7 +17,8 @@ export type TransitionAction =
   | 'no_show' // E26/E39: RN09
   | 'staff_cancel' // E26/E39: RN10
   | 'expire' // worker: RN07
-  | 'move_cancel'; // E39 move: o antigo vira cancelled (motivo "moved"), sem prioridade
+  | 'move_cancel' // E39 move: o antigo vira cancelled (motivo "moved"), sem prioridade
+  | 'walk_in_cancel'; // E51 (RN21): atendida fora da mesa; a mentoria da mesa é cancelada e ela fica `done`
 
 export interface TransitionInput {
   action: TransitionAction;
@@ -190,6 +191,17 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       // RN07 · convite `invited` com expiresAt vencido; volta para waiting sem prioridade.
       if (from !== 'invited' || !isExpiredAt(i.appointment.expiresAt, now)) return invalid(from, 'expirar');
       return plan(from, 'expired', 'waiting', 'appointment.expire', { notify: 'expired', reason: 'expired' });
+    }
+    case 'walk_in_cancel': {
+      // RN21 · atendimento fora da mesa registrado por uma mentora: a mentoria da mesa (convite, mesmo com o prazo
+      // vencido e ainda não expirado pelo worker, confirmada ou em andamento) é cancelada; mesa e horário ficam livres
+      // e a participante termina atendida. Ela não recebe aviso de cancelamento (só o e-mail `walk_in_done`); a
+      // mentora da mesa recebe `mentor_slot_released` (`walked_in_elsewhere`), menos quando é a mesma que registrou.
+      if (from !== 'invited' && from !== 'confirmed' && from !== 'in_progress') return invalid(from, 'cancelar');
+      return plan(from, 'cancelled', 'done', 'appointment.walk_in_cancel', {
+        notifyMentor: 'walked_in_elsewhere',
+        reason: 'walk_in',
+      });
     }
     case 'move_cancel': {
       // E39 mover: só mentoria confirmada (a nova nasce `confirmed`, mantendo a confirmação da participante).

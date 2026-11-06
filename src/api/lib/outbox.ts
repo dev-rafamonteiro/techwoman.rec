@@ -29,6 +29,8 @@ function dedupeBase(i: Omit<EnqueueInput, 'mentee'>, recipientId: ObjectId): str
   if (i.type === 'registered') return `registered:${recipientId}:${i.dedupeSuffix ?? 0}`;
   // `registration_cancelled:<menteeId>:<version da participante depois do cancelamento>` (mesmo vindo de uma mentoria)
   if (i.type === 'registration_cancelled') return `registration_cancelled:${recipientId}:${i.dedupeSuffix}`;
+  // RN21: um e-mail por atendimento fora da mesa (`walk_in_done:<walkInId>`) e por remoção dele (`walk_in_removed:<walkInId>`)
+  if (i.type === 'walk_in_done' || i.type === 'walk_in_removed') return `${i.type}:${i.dedupeSuffix}`;
   return `${i.type}:${i.appointmentId ?? recipientId}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;
 }
 
@@ -86,6 +88,19 @@ export async function enqueueMentorNotifications(
     { type: 'mentor_slot_released', appointmentId: i.appointmentId, payload: { reason: i.reason } },
     { menteeId: null, userId: i.mentor._id, email: i.mentor.email },
   );
+}
+
+/**
+ * RN21 · e-mails do atendimento fora da mesa à participante, na transação do registro (E51) ou da remoção (E53):
+ * `walk_in_done` (layout 10, mentora e link pessoal) ou `walk_in_removed` (layout 11, nova inscrição). `payload.walkInId`
+ * leva o worker ao atendimento (mentora e se ele ainda vale). dedupeKey `<tipo>:<walkInId>:email`.
+ */
+export async function enqueueWalkInNotification(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { type: 'walk_in_done' | 'walk_in_removed'; mentee: Pick<MenteeDoc, '_id' | 'email'>; walkInId: ObjectId },
+): Promise<void> {
+  await enqueueMenteeNotifications(ctx, session, { type: i.type, mentee: i.mentee, dedupeSuffix: String(i.walkInId), payload: { walkInId: String(i.walkInId) } });
 }
 
 /** dedupeKey de `staff_password`: `pwd:<userId>:<n>` (também é o AAD da cifra). */

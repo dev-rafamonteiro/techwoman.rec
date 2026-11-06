@@ -49,3 +49,4 @@
 .m6-walkins__body .m6-card__note { flex-basis: 100%; }
 .m7-email-label { margin: 0; font-weight: 700; }
 .m7-email { margin: 0; font-size: var(--text-3xl); font-weight: 800; color: var(--tw-plum-950); overflow-wrap: anywhere; background: var(--tw-lilac-75); border-radius: var(--radius-sm); padding: var(--space-3); }
+.m7-warning { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--tw-orange-100); color: var(--tw-orange-900); font-weight: 700; font-size: var(--text-base-sm); line-height: 1.4; }

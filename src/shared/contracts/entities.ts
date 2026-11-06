@@ -159,6 +159,8 @@ export const MentorListItemSchema = UserViewSchema.extend({
   doneCount: z.number().int(),
   /** RN21 · atendimentos fora da mesa registrados por ela (contados à parte das mentorias na mesa). */
   walkInCount: z.number().int(),
+  /** RN21 · total de atendimentos concluídos: `doneCount` (na mesa) + `walkInCount` (fora da mesa). */
+  attendedCount: z.number().int(),
   /** Derivado: "Ativa" | "Desativada" | "Nunca acessou" fica a cargo da tela; aqui só o fato. */
   neverLoggedIn: z.boolean(),
 });

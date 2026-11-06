@@ -103,13 +103,17 @@ export const OUTBOX_TYPES = [
   // aviso à mentora: a participante liberou o horário dela (cancelou a confirmada, recusou ou cancelou com convite pendente)
   'mentor_slot_released',
   'staff_password',
+  // RN21 · participante atendida fora da mesa: agradecimento com a mentora (e o LinkedIn dela) e o link pessoal (P6)
+  'walk_in_done',
+  // RN21 · atendimento fora da mesa removido pelo admin (E53): a inscrição foi desfeita e ela é convidada a se inscrever de novo
+  'walk_in_removed',
   ...LEGACY_OUTBOX_TYPES,
 ] as const;
 export const OutboxTypeSchema = z.enum(OUTBOX_TYPES);
 export type OutboxType = z.infer<typeof OutboxTypeSchema>;
 
 /** `payload.reason` do `mentor_slot_released` (PLAN, Notificações > Aviso à mentora). */
-export const MENTOR_SLOT_RELEASED_REASONS = ['confirmed_cancelled', 'invite_declined', 'invite_cancelled'] as const;
+export const MENTOR_SLOT_RELEASED_REASONS = ['confirmed_cancelled', 'invite_declined', 'invite_cancelled', 'walked_in_elsewhere'] as const;
 export type MentorSlotReleasedReason = (typeof MENTOR_SLOT_RELEASED_REASONS)[number];
 export const isMentorSlotReleasedReason = (v: unknown): v is MentorSlotReleasedReason =>
   (MENTOR_SLOT_RELEASED_REASONS as readonly unknown[]).includes(v);
@@ -121,6 +125,8 @@ export const MENTOR_SLOT_RELEASED_TEXT: Record<MentorSlotReleasedReason, string>
   confirmed_cancelled: '{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda',
   invite_declined: '{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila',
   invite_cancelled: '{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila',
+  // RN21 · outra mentora registrou um atendimento fora da mesa com ela: a mentoria da mesa foi cancelada
+  walked_in_elsewhere: '{nome} foi atendida fora da mesa por outra mentora, e a mentoria das {horario} na {mesa} foi cancelada. O horário voltou a ficar livre na sua agenda',
 };
 
 /** Motivos de recusa em E04 (RN06). */

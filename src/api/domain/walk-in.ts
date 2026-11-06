@@ -1,33 +1,38 @@
 import type { MenteeStatus } from '@tw/shared';
 
 /**
- * RN21 · Efeito do atendimento fora da mesa na fila. Quem estava aguardando (`waiting`) teve a participação
- * concluída: vira `done` e sai da fila. Com convite ou mentoria marcada (`invited`, `confirmed`) nada muda: a
- * mentoria da mesa continua de pé. `done` e `no_show` também ficam como estão. `cancelled` não pode ser escolhida.
+ * RN21 · Efeito do atendimento fora da mesa na inscrição. A participante sempre termina atendida (`done`) e fora da
+ * fila: `waiting` e `no_show` viram `done`; com convite ou mentoria confirmada na mesa (`invited`, `confirmed`), a
+ * mentoria da mesa é cancelada (`walk_in_cancel`, libera mesa e horário) e ela vira `done`; `done` fica como está.
+ * `cancelled` não pode ser escolhida (o cadastro rápido com o mesmo e-mail reativa a inscrição já como `done`).
  */
-export function walkInQueueEffect(status: MenteeStatus): { ok: true; next: MenteeStatus; leavesQueue: boolean } | { ok: false } {
-  if (status === 'cancelled') return { ok: false };
-  if (status === 'waiting') return { ok: true, next: 'done', leavesQueue: true };
-  return { ok: true, next: status, leavesQueue: false };
+export function walkInEffect(
+  status: MenteeStatus,
+): { ok: true; next: 'done'; changes: boolean; cancelsAppointment: boolean } | { ok: false } {
+  switch (status) {
+    case 'cancelled':
+      return { ok: false };
+    case 'done':
+      return { ok: true, next: 'done', changes: false, cancelsAppointment: false };
+    case 'invited':
+    case 'confirmed':
+      return { ok: true, next: 'done', changes: true, cancelsAppointment: true };
+    default:
+      return { ok: true, next: 'done', changes: true, cancelsAppointment: false };
+  }
 }
 
 /**
- * RN21 · Remoção do atendimento pelo admin (E53): a participante volta para a fila (com o `queuedAt` e a
- * prioridade de antes, que o atendimento não mexeu) só se saiu dela por este atendimento, continua `done`, não
- * tem mentoria na mesa e não tem outro atendimento fora da mesa ativo.
+ * RN21 · Remoção do atendimento pelo admin (E53): a participante é descadastrada (`cancelled`, sai dos números e
+ * recebe o e-mail pedindo nova inscrição) só se não tem outro atendimento fora da mesa ativo nem mentoria na mesa
+ * ativa ou concluída (quem foi atendida na mesa continua atendida). Já cancelada: nada a fazer.
  */
-export function shouldRestoreToQueue(input: {
-  previousMenteeStatus: MenteeStatus | null;
+export function shouldDeregisterOnWalkInRemoval(input: {
   currentStatus: MenteeStatus;
-  hasAppointment: boolean;
   otherActiveWalkIns: number;
+  tableAppointments: number;
 }): boolean {
-  return (
-    input.previousMenteeStatus === 'waiting' &&
-    input.currentStatus === 'done' &&
-    !input.hasAppointment &&
-    input.otherActiveWalkIns === 0
-  );
+  return input.currentStatus !== 'cancelled' && input.otherActiveWalkIns === 0 && input.tableAppointments === 0;
 }
 
 export type WalkInSituationKind = 'waiting' | 'scheduled' | 'done' | 'no_show' | 'walked_in_by_me';
