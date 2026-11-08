@@ -31,7 +31,7 @@ const TRAILS = [
 /** P1 · Home do evento (E01) */
 export default function P1Home() {
   const ev = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
-  const when = ev.status === 'success' ? longDate(ev.data.date, ev.data.startTime) : 'Sábado, 14 de novembro de 2026, a partir das 9h';
+  const when = ev.status === 'success' ? longDate(ev.data.date, ev.data.startTime) : 'Sábado, 14 de novembro de 2026, a partir das 8h';
   const where = ev.status === 'success' ? ev.data.location : null;
   const cta = (cls = '') => <LinkButton to="/jornada" size="lg" className={cls} data-testid="p1-cta">Começar minha jornada</LinkButton>;
 

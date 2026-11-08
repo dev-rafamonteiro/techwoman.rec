@@ -4,7 +4,7 @@ Oct 23, 2026 · @Felipe
 
 ## Contexto e escopo
 
-Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sábado 14/11/2026, a partir das 9h): inscrição da participante, painel da mentora e painel de super admin. Ele vai para o Claude Design gerar as telas; o comportamento por trás de cada botão está no SDD 2 (Funcional e Backend), referenciado aqui pelos códigos de endpoint **E-xx**.
+Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sábado 14/11/2026, a partir das 8h): inscrição da participante, painel da mentora e painel de super admin. Ele vai para o Claude Design gerar as telas; o comportamento por trás de cada botão está no SDD 2 (Funcional e Backend), referenciado aqui pelos códigos de endpoint **E-xx**.
 
 **O que já existe e fica:** página inicial do evento e a jornada de gamificação que indica a área de afinidade da participante. Essas telas recebem só ajustes pontuais (CTA para a mentoria).
 
