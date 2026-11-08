@@ -103,7 +103,8 @@
 .tw-btn--outline { background: transparent; color: #fff; border: 2px solid #fff; }
 .tw-p1__eyebrow { color: var(--tw-purple-600); font-family: var(--font-display); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; font-size: 13px; }
 .tw-p1__cards { display: grid; gap: 12px; grid-template-columns: 1fr; }
-@media (min-width: 640px) { .tw-p1__cards { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 640px) { .tw-p1__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .tw-p1__cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .tw-p1__ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 8px; }
 .tw-p1__dark { background: var(--tw-plum-800); color: #fff; }
 .tw-p1 .tw-p1__dark .tw-pub__wrap { max-width: 720px; }
