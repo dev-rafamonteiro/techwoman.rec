@@ -193,7 +193,7 @@ describe("layout 10 (RN21: atendida fora da mesa)", () => {
       expect(out).toContain("Você foi atendida por Ana fora das mesas");
     }
     expect(html).not.toMatch(/href=""/);
-    expect(txt).toContain(`Ver minha página e avaliar: ${vars.link_minha_mentoria}\n\nSua avaliação`);
+    expect(txt.replace(/\r\n/g, "\n")).toContain(`Ver minha página e avaliar: ${vars.link_minha_mentoria}\n\nSua avaliação`);
   });
 });
 
