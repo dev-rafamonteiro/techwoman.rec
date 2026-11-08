@@ -56,7 +56,7 @@ export default function M1Login() {
         {error && <div className="tw-card" role="alert" data-testid="m1-error">{error}</div>}
         <TextField label="E-mail" placeholder="voce@email.com" type="email" inputMode="email" autoComplete="username" value={email} error={emailError}
           onChange={(e) => setEmail(e.target.value)} data-testid="m1-email" />
-        <TextField label="Senha" type="password" autoComplete="current-password" value={password}
+        <TextField label="Senha" type="password" showPasswordToggle autoComplete="current-password" value={password}
           onChange={(e) => setPassword(e.target.value)} data-testid="m1-password" />
         <Button type="submit" size="lg" block loading={submitting} data-testid="m1-submit">Entrar</Button>
       </form>

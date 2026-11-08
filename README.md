@@ -19,6 +19,8 @@ npm run db:seed             # evento, mesas e super admin (se SUPER_ADMIN_EMAIL 
 npm run dev                 # api + web com reload
 ```
 
+Opcionalmente, `VITE_API_PROXY` define o destino de todas as chamadas `/api` do frontend local (padrão: `http://localhost:3000`). Para usar a produção, defina `VITE_API_PROXY=https://techwoman.dev` em `.env.local`; nesse caso, ações feitas pelo frontend local também podem alterar dados reais.
+
 O banco da aplicação é sempre o Atlas: `MONGODB_URI` no `.env` aponta para o cluster (banco `techwoman`), tanto no
 host quanto nos containers (`env_file`); o compose não cria banco local para api e worker. O usuário do banco só tem
 `readWrite`: a API não roda `collMod` quando o validador já está igual; se um validador mudar, aplique com um usuário

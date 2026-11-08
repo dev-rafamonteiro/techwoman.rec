@@ -31,6 +31,11 @@
 .tw-field__label { font-weight: 700; font-size: var(--text-md); }
 .tw-field__opt { font-weight: 500; color: var(--color-ink-muted); }
 .tw-input, .tw-select, .tw-textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); color: var(--color-ink); font-family: inherit; font-size: var(--text-lg); }
+.tw-password-field { position: relative; }
+.tw-password-field .tw-input { padding-right: 52px; }
+.tw-password-field__toggle { position: absolute; top: 50%; right: 4px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 8px; transform: translateY(-50%); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--tw-gray-500); cursor: pointer; }
+.tw-password-field__toggle svg { width: 22px; height: 22px; }
+.tw-password-field__toggle:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 .tw-textarea { min-height: 96px; resize: vertical; }
 .tw-input[aria-invalid='true'], .tw-select[aria-invalid='true'], .tw-textarea[aria-invalid='true'] { border-color: var(--tw-red-700); }
 .tw-input[data-ok='true'], .tw-select[data-ok='true'], .tw-textarea[data-ok='true'] { border-color: var(--color-link); }

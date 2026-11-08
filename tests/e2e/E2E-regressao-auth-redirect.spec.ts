@@ -41,6 +41,19 @@ for (const path of STAFF) {
   });
 }
 
+test("senha pode ser revelada e ocultada na tela de login", async ({ browser }, testInfo) => {
+  const page = await newPage(browser, testInfo.project.use.viewport!);
+  await page.goto("/entrar");
+  const password = page.getByTestId("m1-password");
+  const toggle = page.getByRole("button", { name: "Mostrar senha" });
+  await password.fill("Senha-de-Teste-123");
+  await toggle.click();
+  await expect(password).toHaveAttribute("type", "text");
+  await expect(page.getByRole("button", { name: "Ocultar senha" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Ocultar senha" }).click();
+  await expect(password).toHaveAttribute("type", "password");
+});
+
 test("depois do login volta para a rota pedida (next)", async ({ browser }, testInfo) => {
   const page = await newPage(browser, testInfo.project.use.viewport!);
   await page.goto("/mentora/agenda");

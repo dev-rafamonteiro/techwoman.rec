@@ -132,7 +132,8 @@ describe("contratos: aceita/rejeita (E02, E04, E10, E21, E24, E26, E39)", () => 
     expect(E02BodySchema.safeParse({ ...e02, consent: { accepted: false, version: "1" } }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, preferredPeriod: "night" }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, name: "A" }).success).toBe(false);
-    expect(E02BodySchema.safeParse({ ...e02, note: "x".repeat(281) }).success).toBe(false);
+    expect(E02BodySchema.safeParse({ ...e02, note: "x".repeat(295) }).success).toBe(true);
+    expect(E02BodySchema.safeParse({ ...e02, note: "x".repeat(296) }).success).toBe(false);
   });
   it("E04: ações válidas e inválidas (RN06, RN14)", () => {
     expect(E04BodySchema.safeParse({ action: "accept" }).success).toBe(true);

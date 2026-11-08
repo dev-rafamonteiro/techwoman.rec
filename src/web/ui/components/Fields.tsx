@@ -1,4 +1,4 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 
 interface FieldShell {
   label: string;
@@ -29,11 +29,31 @@ function Shell({ id, label, optional, hint, error, ok, children }: FieldShell & 
 const describedBy = (id: string, f: FieldShell) => (f.error || f.ok || f.hint ? `${id}-msg` : undefined);
 
 /** Campo de texto com rótulo, dica e erro por campo (validação em tempo real feita pela tela). */
-export function TextField({ label, optional, hint, error, ok, ...rest }: FieldShell & InputHTMLAttributes<HTMLInputElement>) {
+export function TextField({ label, optional, hint, error, ok, showPasswordToggle, ...rest }: FieldShell & InputHTMLAttributes<HTMLInputElement> & { showPasswordToggle?: boolean }) {
   const id = useId();
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const canRevealPassword = showPasswordToggle && rest.type === 'password';
+  const input = <input {...rest} id={id} type={canRevealPassword && passwordVisible ? 'text' : rest.type} className="tw-input" aria-invalid={error ? true : undefined} data-ok={ok && !error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })} />;
   return (
     <Shell id={id} label={label} optional={optional} hint={hint} error={error} ok={ok}>
-      <input {...rest} id={id} className="tw-input" aria-invalid={error ? true : undefined} data-ok={ok && !error ? true : undefined} aria-describedby={describedBy(id, { label, hint, error, ok })} />
+      {canRevealPassword ? (
+        <div className="tw-password-field">
+          {input}
+          <button
+            type="button"
+            className="tw-password-field__toggle"
+            aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+            aria-pressed={passwordVisible}
+            onClick={() => setPasswordVisible((visible) => !visible)}
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+              <circle cx="12" cy="12" r="3" />
+              {passwordVisible && <path d="m3 3 18 18" />}
+            </svg>
+          </button>
+        </div>
+      ) : input}
     </Shell>
   );
 }

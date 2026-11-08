@@ -109,7 +109,7 @@ export async function seedWorld(db: Db, opts: { mentors?: number; tables?: numbe
   const { mentors = 3, tables = 20, mentees = 10, registrationOpen = true } = opts;
   await createIndexes(db);
   const c = getCollections(db);
-  const event = buildEvent({ registrationOpen });
+  const event = buildEvent({ registrationOpen, startTime: "09:00", endTime: "18:00" });
   await c.events.insertOne(event);
   const tableDocs: TableDoc[] = Array.from({ length: tables }, (_, k) => ({ _id: new ObjectId(), eventId: EVENT_ID, number: k + 1, name: null, location: null, active: true }));
   if (tableDocs.length) await c.tables.insertMany(tableDocs);

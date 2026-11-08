@@ -60,12 +60,10 @@ export default function P7Mentoras() {
     <div className="tw-pub tw-p7" data-testid="p7">
       <header className="tw-pub__head">
         <Brand height={44} />
-        <nav className="tw-pub__nav" aria-label="Navegação da página">
-          <Link to="/">Início</Link>
-          <Link to="/mentoras" aria-current="page">As mentoras</Link>
-          <Link to="/jornada">Começar minha jornada</Link>
+        <nav className="tw-pub__nav" aria-label="Seções">
+          <a href="/#evento">O evento</a><a href="/#como-funciona">Como funciona</a><a href="/#mentoria">Mentoria</a><a href="/#local">Local</a><Link to="/mentoras" aria-current="page">Mentoras</Link>
         </nav>
-        <LinkButton to="/" size="sm">Voltar ao evento</LinkButton>
+        <LinkButton to="/jornada" size="sm">Começar minha jornada</LinkButton>
       </header>
 
       <main>

@@ -1,14 +1,18 @@
 import { Link } from 'react-router-dom';
 import { ENDPOINTS } from '@tw/shared';
-import { Brand, CalendarIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, PinFilledIcon, PinIcon, SkeletonList, call, useQuery } from '../../ui';
+import { Brand, CalendarIcon, ClockIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, PinFilledIcon, PinIcon, SkeletonList, call, useQuery } from '../../ui';
 import './public.css';
 import './p1.css';
 
-function longDate(date: string, startTime: string): string {
+function longDate(date: string): string {
   const d = new Date(`${date}T12:00:00-03:00`);
   const txt = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Recife' }).format(d);
-  const [h, m] = startTime.split(':');
-  return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}, a partir das ${Number(h)}h${m === '00' ? '' : m}`;
+  return `${txt.charAt(0).toUpperCase()}${txt.slice(1)}`;
+}
+
+function formatHour(time: string): string {
+  const [h, m] = time.split(':');
+  return `${Number(h)}h${m === '00' ? '' : m}`;
 }
 
 /** Página oficial do evento (ingresso) e dados fixos do local (UI-SPEC, P1). */
@@ -31,7 +35,9 @@ const TRAILS = [
 /** P1 · Home do evento (E01) */
 export default function P1Home() {
   const ev = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
-  const when = ev.status === 'success' ? longDate(ev.data.date, ev.data.startTime) : 'Sábado, 14 de novembro de 2026, a partir das 9h';
+  const eventDate = ev.status === 'success' ? longDate(ev.data.date) : 'Sábado, 14 de novembro de 2026';
+  const mentoringStart = ev.status === 'success' ? formatHour(ev.data.startTime) : '10h';
+  const mentoringEnd = ev.status === 'success' ? formatHour(ev.data.endTime) : '16h';
   const where = ev.status === 'success' ? ev.data.location : null;
   const cta = (cls = '') => <LinkButton to="/jornada" size="lg" className={cls} data-testid="p1-cta">Começar minha jornada</LinkButton>;
 
@@ -52,8 +58,9 @@ export default function P1Home() {
             <h1>Conectar mulheres, tecnologia e futuros possíveis.</h1>
             <p className="tw-p1__where" data-testid="p1-when">
               <PinFilledIcon size={18} />
-              {when} · Recife
+              {eventDate} · Recife
             </p>
+            <p>Evento: 8h às 18h<br />Sessões de mentoria: {mentoringStart} às {mentoringEnd}</p>
             <p>O Tech Woman é um movimento que nasceu para ampliar a presença feminina no universo da tecnologia e da inovação, fortalecendo a representatividade, o desenvolvimento profissional e as conexões entre mulheres.</p>
             <div className="tw-row">
               {cta()}
@@ -71,7 +78,8 @@ export default function P1Home() {
           {ev.status === 'loading' && <SkeletonList rows={1} height={90} />}
           {ev.status === 'error' && <ErrorState error={ev.error} onRetry={ev.reload} />}
           <div className="tw-p1__cards">
-            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#f26430' }} aria-hidden="true"><CalendarIcon size={20} color="#3D0A45" /></span><h3>Quando</h3><p>{when}</p></div>
+            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#f26430' }} aria-hidden="true"><CalendarIcon size={20} color="#3D0A45" /></span><h3>Data</h3><p>{eventDate}</p></div>
+            <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true"><ClockIcon size={20} color="#3D0A45" /></span><h3>Horário</h3><p>Evento: 8h às 18h<br />Sessões de mentoria: {mentoringStart} às {mentoringEnd}</p></div>
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>{where ? `${where} · ` : ''}Recife</p></div>
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true"><PeopleIcon size={20} color="#3D0A45" /></span><h3>Para quem</h3><p>Mulheres que querem entrar ou crescer na área de tecnologia</p></div>
           </div>

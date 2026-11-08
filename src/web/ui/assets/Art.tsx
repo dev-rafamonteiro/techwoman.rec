@@ -75,6 +75,9 @@ export const PinFilledIcon = ({ size = 22, color = '#F26430' }: IconProps) => (
 export const CalendarIcon = ({ size = 26, color = '#3D0A45' }: IconProps) => (
   <svg {...base(size)} stroke={color} {...stroke}><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
 );
+export const ClockIcon = ({ size = 26, color = '#3D0A45' }: IconProps) => (
+  <svg {...base(size)} stroke={color} {...stroke}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+);
 export const PinIcon = ({ size = 26, color = '#FFFFFF' }: IconProps) => (
   <svg {...base(size)} stroke={color} {...stroke}><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
 );

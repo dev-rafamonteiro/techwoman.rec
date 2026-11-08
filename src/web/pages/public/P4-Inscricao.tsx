@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ENDPOINTS, type PreferredPeriod } from '@tw/shared';
+import { ENDPOINTS, MENTEE_NOTE_MAX, type PreferredPeriod } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, EmptyState, ErrorState, Hero, PERIOD_LABELS, RadioCards, SelectField, SkeletonList,
   TextArea, TextField, call, maskPhone, useQuery,
@@ -12,7 +12,7 @@ import { useTurnstile } from './lib/turnstile';
 import './public.css';
 
 type Field = 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'preferredPeriod' | 'note' | 'consent';
-const NOTE_MAX = 280;
+const NOTE_MAX = MENTEE_NOTE_MAX;
 
 interface Values {
   name: string;

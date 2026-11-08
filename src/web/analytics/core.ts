@@ -4,7 +4,7 @@
  */
 
 /** Versão do Umami de onde saiu src/web/public/a/u.js (mesma tag de ops/analytics/compose.yaml). */
-export const UMAMI_VERSION = '3.4.0';
+export const UMAMI_VERSION = '3.4.1';
 /** SRI do src/web/public/a/u.js; um teste recalcula e compara. Ao trocar o script, atualize os dois. */
 export const UMAMI_SCRIPT_SRI = 'sha384-ZMxgpYfO/phGz4GiYTIZhcauuGKTb2onmOB5gsiigjmBR38DGAmIna5J1Y/dM/13';
 export const UMAMI_SCRIPT_SRC = `/a/u.js?v=${UMAMI_VERSION}`;
