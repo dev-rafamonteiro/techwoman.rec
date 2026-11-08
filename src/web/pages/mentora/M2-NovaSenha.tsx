@@ -78,12 +78,12 @@ export default function M2NovaSenha() {
       <header><h1 className="tw-ptitle">Crie sua senha</h1><p className="tw-psub">É seu primeiro acesso. Troque a senha provisória e confira seus dados.</p></header>
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="m2-form">
         {error && <div className="tw-card" role="alert" data-testid="m2-error">{error}</div>}
-        <TextField label="Senha provisória" type="password" autoComplete="current-password" value={current} error={shown('current')}
+        <TextField label="Senha provisória" type="password" showPasswordToggle autoComplete="current-password" value={current} error={shown('current')}
           onChange={(e) => setCurrent(e.target.value)} data-testid="m2-current" />
-        <TextField label="Nova senha" type="password" autoComplete="new-password" value={pw} error={shown('pw')}
+        <TextField label="Nova senha" type="password" showPasswordToggle autoComplete="new-password" value={pw} error={shown('pw')}
           hint={<>{pw.length >= PASSWORD_MIN_LENGTH ? '✓' : '✗'} Mínimo de {PASSWORD_MIN_LENGTH} caracteres</>}
           onChange={(e) => setPw(e.target.value)} data-testid="m2-new" />
-        <TextField label="Confirmar senha" type="password" autoComplete="new-password" value={confirm} error={shown('confirm')} hint={<>{confirm && confirm === pw ? '✓' : '✗'} Confirmação igual à nova senha</>}
+        <TextField label="Confirmar senha" type="password" showPasswordToggle autoComplete="new-password" value={confirm} error={shown('confirm')} hint={<>{confirm && confirm === pw ? '✓' : '✗'} Confirmação igual à nova senha</>}
           onChange={(e) => setConfirm(e.target.value)} data-testid="m2-confirm" />
 
         {isMentor && (<>
