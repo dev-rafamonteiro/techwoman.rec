@@ -8,7 +8,7 @@ import {
 import { track } from '../../analytics';
 import { FALLBACK_AREAS } from './lib/areas';
 import { loadJourney, savePersonalPath } from './lib/journey';
-import { mountTurnstile, type TurnstileHandle } from './lib/turnstile';
+import { useTurnstile } from './lib/turnstile';
 import './public.css';
 
 type Field = 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'preferredPeriod' | 'note' | 'consent';
@@ -54,21 +54,9 @@ export default function P4Inscricao() {
   const [already, setAlready] = useState(false);
 
   const tsBox = useRef<HTMLDivElement>(null);
-  const ts = useRef<TurnstileHandle | null>(null);
   // O contêiner só existe depois que E01 carrega e as inscrições estão abertas.
   const formReady = event.status === 'success' && event.data.registrationOpen;
-  useEffect(() => {
-    if (!formReady) return;
-    let alive = true;
-    if (tsBox.current) {
-      mountTurnstile(tsBox.current).then((h) => (alive ? (ts.current = h) : h.destroy()), () => undefined);
-    }
-    return () => {
-      alive = false;
-      ts.current?.destroy();
-      ts.current = null;
-    };
-  }, [formReady]);
+  const getToken = useTurnstile(tsBox, formReady);
 
   const errors = validate(values);
   const shown = (f: Field) => (touched[f] ? errors[f] : undefined);
@@ -103,8 +91,7 @@ export default function P4Inscricao() {
     }
     setSubmitting(true);
     try {
-      if (!ts.current) throw new ApiError(0, 'TURNSTILE_FAILED', 'Não foi possível verificar que você é uma pessoa. Recarregue a página e tente de novo.');
-      const turnstileToken = await ts.current.getToken().catch(() => {
+      const turnstileToken = await getToken().catch(() => {
         throw new ApiError(0, 'TURNSTILE_FAILED', 'Não foi possível verificar que você é uma pessoa. Tente de novo.');
       });
       const res = await call(ENDPOINTS.E02, {
@@ -167,8 +154,8 @@ export default function P4Inscricao() {
           onChange={(e) => set('name', e.target.value)} onBlur={() => touch('name')} data-testid="p4-name" />
         <TextField label="E-mail" placeholder="voce@email.com" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} error={shown('email')} ok={values.email && !errors.email ? 'Uma inscrição por e-mail' : undefined}
           onChange={(e) => { set('email', e.target.value); setAlready(false); }} onBlur={() => touch('email')} data-testid="p4-email" />
-        <TextField label="WhatsApp" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" value={values.phone}
-          error={shown('phone')} ok={values.phone && !errors.phone ? 'Vamos avisar o convite por aqui' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
+        <TextField label="Celular" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" value={values.phone}
+          error={shown('phone')} ok={values.phone && !errors.phone ? 'Número válido' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
         <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
           error={shown('linkedin')} ok={values.linkedin && !errors.linkedin ? 'A mentora verá seu perfil' : undefined} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
         <SelectField label="Área de interesse" hint="Preenchida com o resultado da sua jornada. Pode trocar." name="area" value={effArea} error={shown('area')}
@@ -184,7 +171,7 @@ export default function P4Inscricao() {
         <CheckboxField name="consent" checked={values.consent} error={shown('consent')}
           onChange={(e) => { set('consent', e.target.checked); touch('consent'); }} data-testid="p4-consent"
           label={<>Concordo com o uso dos meus dados para organizar a mentoria, conforme o <a className="tw-link" href="/privacidade" target="_blank" rel="noopener noreferrer">aviso de privacidade</a>.</>} />
-        <div ref={tsBox} aria-hidden="true" />
+        <div ref={tsBox} />
         <p className="tw-field__hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Verificação de segurança automática ativa</p>
         <Button type="submit" size="lg" block loading={submitting} data-testid="p4-submit">Quero ser mentorada</Button>
         <p className="tw-field__hint tw-center">A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</p>

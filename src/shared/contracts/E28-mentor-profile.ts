@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AreaKeySchema, defineEndpoint, LinkedinInputSchema, MENTOR_BIO_MAX, PhoneInputSchema } from './common.js';
+import { AreaKeySchema, defineEndpoint, LinkedinInputSchema, MENTOR_BIO_MAX, MentorThemesSchema, PhoneInputSchema } from './common.js';
 import { UserViewSchema } from './entities.js';
 
 /** E28 · PATCH /mentor/profile · M2 */
@@ -7,10 +7,11 @@ export const E28BodySchema = z
   .object({
     name: z.string().trim().min(2).max(120).optional(),
     linkedin: LinkedinInputSchema.nullable().optional(),
-    /** WhatsApp; `null` apaga. */
+    /** Celular; `null` apaga. */
     phone: PhoneInputSchema.nullable().optional(),
     photoUrl: z.string().url().max(500).nullable().optional(),
     areas: z.array(AreaKeySchema).max(20).optional(),
+    themes: MentorThemesSchema.optional(),
     bio: z.string().trim().max(MENTOR_BIO_MAX).nullable().optional(),
   })
   .strict();

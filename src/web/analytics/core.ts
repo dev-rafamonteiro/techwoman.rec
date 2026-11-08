@@ -23,6 +23,7 @@ export const PUBLIC_ROUTES: Readonly<Record<string, string>> = {
   '/mentoria/inscricao/ok': 'P5 · Inscrição recebida',
   '/mentoria/minha': 'P6 · Minha mentoria',
   '/privacidade': 'Privacidade',
+  '/mentoras': 'P7 · As mentoras',
 };
 
 /** Caminho sem query, sem hash e sem barra final (exceto a raiz). */
@@ -70,6 +71,7 @@ export const EVENTS = {
   horario_escolhido: {},
   agenda_adicionada: {},
   preferencia_atualizada: { periodo: isPeriod },
+  avaliacao_enviada: {},
 } as const satisfies Record<string, Record<string, (v: unknown) => boolean>>;
 
 export type EventName = keyof typeof EVENTS;

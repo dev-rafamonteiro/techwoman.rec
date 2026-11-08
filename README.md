@@ -47,9 +47,8 @@ docker compose -f ops/compose.dev.yaml down
 
 E-mail: `api` e `worker` leem `EMAIL_PROVIDER`, `EMAIL_API_KEY` e `EMAIL_FROM` do `.env` da raiz. Com
 `EMAIL_PROVIDER=resend` e a chave preenchida, as notificações saem pelo Resend (domínio `techwoman.dev` verificado);
-sem isso, o worker só registra em log. WhatsApp fica desligado até `WHATSAPP_ENABLED=true` no `.env` da raiz; em dev o
-compose usa `WHATSAPP_TRANSPORT=waha` com o WAHA local (`WAHA_URL=http://host.containers.internal:3000`,
-`WAHA_SESSION=default`) e lê `WAHA_API_KEY` (worker) e `WAHA_WEBHOOK_HMAC_KEY` (api, E47) do `.env` da raiz. Os testes E2E forçam
+sem isso, o worker só registra em log. As notificações são só por e-mail (o WhatsApp foi removido em 2026-11-05;
+o celular da participante continua sendo coletado, mas não dispara aviso). Os testes E2E forçam
 `EMAIL_PROVIDER=console` e não enviam nada.
 
 ### Massa de demonstração
@@ -83,14 +82,13 @@ Para receber de verdade, use `DEMO_EMAIL_TEMPLATE='voce+{slug}@seu-dominio'`. Os
   (só de dev). No host, exporte `OUTBOX_KEY` (ou `OUTBOX_KEY_FILE=ops/secrets/outbox_key`).
 - **Variáveis novas** (`.env.example`, sem valores): `EMAIL_TRANSPORT`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`/`SMTP_PASS_FILE`, `SMTP_SECURE`, `AWS_REGION`,
   `EMAIL_FROM`, `EMAIL_REPLY_TO`, `OUTBOX_KEY`/`OUTBOX_KEY_FILE`, `PUBLIC_BASE_URL`.
-  WhatsApp (RN18): `WHATSAPP_TRANSPORT` (`waha` | `cloud`, padrão `cloud`), `WAHA_URL`, `WAHA_SESSION`, `WAHA_API_KEY`/`WAHA_API_KEY_FILE`
-  (só o worker), `WAHA_WEBHOOK_HMAC_KEY`/`WAHA_WEBHOOK_HMAC_KEY_FILE` (só a API).
 - Nota histórica: `autoEmbed` (voyage-4) não funciona no `mongodb-atlas-local` (8.3.4 e 8.3.13: `voyage-4 not registered yet`); a busca é só full text (`$search`).
 
 Produção (`ops/compose.yaml`): `cloudflared` (profile `tunnel`), `web`, `api`, `worker`; redes `edge`, `app` (`internal: true`) e `egress`;
 nenhuma porta publicada. Segredos em arquivos `ops/secrets/<nome>` (gitignored): `mongo_uri`, `jwt_secret`,
-`turnstile_secret`, `email_api_key`, `outbox_key`, `whatsapp_token`, `waha_api_key`, `waha_webhook_hmac_key`, `cf_tunnel_token`
-(todos precisam existir, mesmo vazios, para o `up`). A aplicação lê `VAR` ou `VAR_FILE`.
+`turnstile_secret`, `email_api_key`, `outbox_key`, `cf_tunnel_token`
+(todos precisam existir, mesmo vazios, para o `up`; `whatsapp_token`, `waha_api_key` e `waha_webhook_hmac_key` não são mais usados
+e podem ser apagados do servidor). A aplicação lê `VAR` ou `VAR_FILE`.
 
 O `cloudflared` está no profile `tunnel` (fora por padrão). Com Cloudflare Tunnel:
 
@@ -105,11 +103,9 @@ docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVE
 ```
 
 - Containers: `techwoman-web` (redes `edge`, `app`, `npm_network`), `techwoman-api` (`app`, `egress`, fora da `npm_network`),
-  `techwoman-worker` (`egress`, `npm_network`). Nenhuma porta publicada no host.
+  `techwoman-worker` (`egress`). Nenhuma porta publicada no host.
 - Fluxo: internet → NPM (TLS de `techwoman.dev`) → `http://techwoman-web:8080` → nginx do projeto → `/api/*` e `/l/*` para `api:3000`.
   No NPM, o proxy host aponta para `techwoman-web`, porta `8080`, esquema `http`.
-- WhatsApp: o worker fala com o WAHA pelo container (`WAHA_URL=http://waha:3000`) e o WAHA chama o webhook pelo container
-  `http://techwoman-web:8080/api/webhooks/waha` (HMAC no `X-Webhook-Hmac`), sem passar pelo domínio.
 - O nginx do projeto continua necessário: serve o build do SPA, aplica os cabeçalhos de segurança/CSP e faz o `/l/` do
   encurtador (E48). O NPM só termina o TLS e repassa tudo. O IP real vem só do `X-Real-IP` (que o NPM
   sobrescreve com o IP do cliente; `CLIENT_IP_HEADER=x-real-ip` no override) e, sem ele, do peer. O `CF-Connecting-IP` é

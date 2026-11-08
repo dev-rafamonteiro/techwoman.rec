@@ -10,6 +10,7 @@ export * from './contracts/E05-resend-link.js';
 export * from './contracts/E06-public-calendar.js';
 export * from './contracts/E07-public-me-slots.js';
 export * from './contracts/E08-public-me-book.js';
+export * from './contracts/E09-public-me-feedback.js';
 export * from './contracts/E10-login.js';
 export * from './contracts/E11-logout.js';
 export * from './contracts/E12-me.js';
@@ -40,8 +41,10 @@ export * from './contracts/E43-admin-users.js';
 export * from './contracts/E44-admin-notifications.js';
 export * from './contracts/E45-admin-audit.js';
 export * from './contracts/E46-admin-email-preview.js';
-export * from './contracts/E47-webhook-waha.js';
 export * from './contracts/E48-short-link.js';
+export * from './contracts/E49-admin-feedback.js';
+export * from './contracts/E50-E53-walk-ins.js';
+export * from './contracts/E54-public-mentors.js';
 
 import type { EndpointDef } from './contracts/common.js';
 import { E01 } from './contracts/E01-public-event.js';
@@ -52,6 +55,7 @@ import { E05 } from './contracts/E05-resend-link.js';
 import { E06 } from './contracts/E06-public-calendar.js';
 import { E07 } from './contracts/E07-public-me-slots.js';
 import { E08 } from './contracts/E08-public-me-book.js';
+import { E09 } from './contracts/E09-public-me-feedback.js';
 import { E10 } from './contracts/E10-login.js';
 import { E11 } from './contracts/E11-logout.js';
 import { E12 } from './contracts/E12-me.js';
@@ -79,21 +83,25 @@ import { E40Get, E40Put } from './contracts/E40-admin-tables.js';
 import { E41Get, E41Put } from './contracts/E41-admin-event.js';
 import { E42Png, E42Svg } from './contracts/E42-admin-event-qrcode.js';
 import { E43Create, E43List, E43Patch } from './contracts/E43-admin-users.js';
-import { E44List, E44Retry } from './contracts/E44-admin-notifications.js';
+import { E44Health, E44List, E44Retry } from './contracts/E44-admin-notifications.js';
 import { E45 } from './contracts/E45-admin-audit.js';
 import { E46 } from './contracts/E46-admin-email-preview.js';
-import { E47 } from './contracts/E47-webhook-waha.js';
 import { E48 } from './contracts/E48-short-link.js';
+import { E49 } from './contracts/E49-admin-feedback.js';
+import { E50, E51, E52, E53Delete, E53List } from './contracts/E50-E53-walk-ins.js';
+import { E54 } from './contracts/E54-public-mentors.js';
 
 /** Todos os endpoints, por nome. Usado pelo cliente HTTP tipado e pelo registro de rotas da API. */
 export const ENDPOINTS = {
-  E01, E02, E03, E04, E05, E06, E07, E08,
+  E01, E02, E03, E04, E05, E06, E07, E08, E09,
   E10, E11, E12, E13,
   E20, E21, E22, E23, E24, E25, E26, E27, E28,
   E30, E31List, E31Create, E32, E33, E34, E35, E35Detail, E36, E37, E38, E38Stream,
   E39Create, E39Patch, E40Get, E40Put, E41Get, E41Put, E42Png, E42Svg,
-  E43List, E43Create, E43Patch, E44List, E44Retry, E45, E46,
-  E47, E48,
+  E43List, E43Create, E43Patch, E44List, E44Retry, E44Health, E45, E46,
+  E48, E49,
+  E50, E51, E52, E53List, E53Delete,
+  E54,
 } as const;
 
 export type EndpointName = keyof typeof ENDPOINTS;

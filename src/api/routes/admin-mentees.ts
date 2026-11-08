@@ -92,15 +92,24 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
     const m = await ctx.c.mentees.findOne({ _id: oid(params.id), eventId: event._id });
     if (!m) throw notFound('Participante');
     const [view] = await enrich(event, [m]);
-    const [appts, outbox] = await Promise.all([
+    const [appts, outbox, walkIns] = await Promise.all([
       ctx.c.appointments.find({ menteeId: m._id }).toArray(),
       ctx.c.outbox.find({ menteeId: m._id }).sort({ createdAt: 1 }).toArray(),
+      ctx.c.walkIns.find({ eventId: event._id, menteeId: m._id }).toArray(),
     ]);
+    const walkInMentors = await ctx.c.users.find({ _id: { $in: walkIns.map((w) => w.mentorId) } }, { projection: { name: 1 } }).toArray();
+    const mentorName = new Map(walkInMentors.map((u) => [String(u._id), u.name]));
     const timeline: E35DetailResponse['timeline'] = [{ at: iso(m.createdAt), kind: 'registered', appointmentId: null, entry: null, label: 'Inscrição' }];
     for (const a of appts) {
       for (const h of a.history) {
         timeline.push({ at: iso(h.at), kind: h.to, appointmentId: String(a._id), entry: { from: h.from, to: h.to, by: { userId: h.by.userId ? String(h.by.userId) : null, role: h.by.role }, at: iso(h.at), reason: h.reason }, label: h.to });
       }
+    }
+    // RN21: atendimentos fora da mesa (e a remoção pelo admin, quando houve)
+    for (const w of walkIns) {
+      const who = mentorName.get(String(w.mentorId)) ?? 'mentora';
+      timeline.push({ at: iso(w.at), kind: 'walk_in', appointmentId: null, entry: null, label: `Atendimento fora da mesa com ${who}${w.note ? `: “${w.note}”` : ''}` });
+      if (w.deletedAt) timeline.push({ at: iso(w.deletedAt), kind: 'walk_in_deleted', appointmentId: null, entry: null, label: `Atendimento fora da mesa com ${who} removido` });
     }
     timeline.sort((x, y) => x.at.localeCompare(y.at));
     return {
@@ -171,6 +180,10 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
           await ctx.c.outbox.deleteMany({ menteeId: id }, { session });
           // LGPD: o $inc de tokenVersion já revoga os links curtos; apagar tira o vínculo do banco
           await ctx.c.shortLinks.deleteMany({ menteeId: id }, { session });
+          // a avaliação (E09) tem comentário livre
+          await ctx.c.feedbacks.deleteMany({ _id: id }, { session });
+          // RN21: a nota da mentora no atendimento fora da mesa é texto livre; o registro fica para os contadores
+          await ctx.c.walkIns.updateMany({ menteeId: id }, { $set: { note: null } }, { session });
           await writeAudit(ctx, session, { actor, action: 'mentee.anonymize', entity: 'mentee', entityId: id, ip: req.ip });
           break;
         }
@@ -186,11 +199,21 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
     const event = await loadEvent(ctx);
     const mentees = await ctx.c.mentees.find(filterOf(query)).sort({ createdAt: 1, _id: 1 }).toArray();
     const rows = await enrich(event, mentees);
+    // RN21: mentoras do atendimento fora da mesa, por participante
+    const walkIns = await ctx.c.walkIns.find({ eventId: event._id, deletedAt: null }, { projection: { menteeId: 1, mentorId: 1 } }).sort({ at: 1 }).toArray();
+    const walkInMentors = await ctx.c.users.find({ _id: { $in: walkIns.map((w) => w.mentorId) } }, { projection: { name: 1 } }).toArray();
+    const nameOf = new Map(walkInMentors.map((u) => [String(u._id), u.name]));
+    const walkInsOf = new Map<string, string[]>();
+    for (const w of walkIns) walkInsOf.set(String(w.menteeId), [...(walkInsOf.get(String(w.menteeId)) ?? []), nameOf.get(String(w.mentorId)) ?? 'Mentora']);
+    // RN21: concluída só pelo atendimento fora da mesa (sem mentoria na mesa): status "done (fora da mesa)" e, em
+    // `mentora`, a mentora do atendimento mais recente
+    const walkInOnly = (r: (typeof rows)[number]) => r.status === 'done' && !r.mentorName && walkInsOf.has(r.id);
+    const statusOf = (r: (typeof rows)[number]) => (walkInOnly(r) ? 'done (fora da mesa)' : r.status);
     const periodLabel: Record<string, string> = { morning: 'Manhã', early_afternoon: 'Início da tarde', late_afternoon: 'Fim da tarde', any: 'Qualquer horário' };
     const lines = [csvLine([...E37_CSV_COLUMNS])];
     for (const r of rows) {
       lines.push(
-        csvLine([r.name, r.email, r.phone, r.linkedin, r.area, periodLabel[r.preferredPeriod], r.status, r.priority ? 'sim' : 'não', r.mentorName, r.table?.number, r.slot?.startAt, r.createdAt]),
+        csvLine([r.name, r.email, r.phone, r.linkedin, r.area, periodLabel[r.preferredPeriod], statusOf(r), r.priority ? 'sim' : 'não', r.mentorName ?? (walkInOnly(r) ? walkInsOf.get(r.id)?.at(-1) : undefined), r.table?.number, r.slot?.startAt, r.createdAt, walkInsOf.get(r.id)?.join(' / ')]),
       );
     }
     await writeAudit(ctx, undefined, { actor: actorForRoute(req, 'admin'), action: 'mentee.export', entity: 'mentee', after: { rows: rows.length, filters: query }, ip: req.ip });

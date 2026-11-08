@@ -84,6 +84,8 @@ export function toUserView(u: UserDoc): UserView {
     phone: u.phone ?? null,
     organization: u.organization,
     areas: u.areas,
+    themes: u.themes ?? [],
+    themeDomains: u.themeDomains ?? [],
     bio: u.bio,
     photoUrl: u.photoUrl,
     availability: u.availability,

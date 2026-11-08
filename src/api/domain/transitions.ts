@@ -10,14 +10,15 @@ export type TransitionAction =
   | 'decline_schedule' // E04: recusa "Horário não serve" (RN06)
   | 'decline_no_interest' // E04: recusa "Não tenho mais interesse" (RN06)
   | 'mentee_cancel' // E04: a própria participante cancela
-  | 'mentee_reschedule' // E04 `reschedule` ou "Não poderei ir" no WhatsApp: troca de horário (RN19)
+  | 'mentee_reschedule' // E04 `reschedule`: troca de horário (RN19)
   | 'confirm_in_person' // E26/E39: RN08
   | 'start' // E26: opcional
   | 'finish' // E26
   | 'no_show' // E26/E39: RN09
   | 'staff_cancel' // E26/E39: RN10
   | 'expire' // worker: RN07
-  | 'move_cancel'; // E39 move: o antigo vira cancelled (motivo "moved"), sem prioridade
+  | 'move_cancel' // E39 move: o antigo vira cancelled (motivo "moved"), sem prioridade
+  | 'walk_in_cancel'; // E51 (RN21): atendida fora da mesa; a mentoria da mesa é cancelada e ela fica `done`
 
 export interface TransitionInput {
   action: TransitionAction;
@@ -137,9 +138,8 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
     }
     case 'mentee_reschedule': {
       // RN19 · só `confirmed` e antes do início; mesa e horário livres na hora; volta à fila com prioridade e o
-      // `queuedAt` original. Aviso `slot_released` (horário liberado) por e-mail e WhatsApp; pelo "Não vou" do WhatsApp
-      // (RN18) E47 restringe ao e-mail (`notifyChannels`), porque a resposta presence_cancelled já vai pelo WhatsApp.
-      // A mentora recebe `mentor_slot_released` (`confirmed_cancelled`) pelos canais dela, sem essa restrição.
+      // `queuedAt` original. Aviso `slot_released` (horário liberado) por e-mail; a mentora recebe
+      // `mentor_slot_released` (`confirmed_cancelled`), também por e-mail.
       if (from !== 'confirmed') return invalid(from, 'trocar de horário');
       if (now.getTime() >= i.appointment.startAt.getTime()) return fail('INVALID_STATE', 'A mentoria já começou; não é possível trocar de horário.');
       return plan(from, 'cancelled', 'waiting', 'appointment.reschedule', {
@@ -191,6 +191,17 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       // RN07 · convite `invited` com expiresAt vencido; volta para waiting sem prioridade.
       if (from !== 'invited' || !isExpiredAt(i.appointment.expiresAt, now)) return invalid(from, 'expirar');
       return plan(from, 'expired', 'waiting', 'appointment.expire', { notify: 'expired', reason: 'expired' });
+    }
+    case 'walk_in_cancel': {
+      // RN21 · atendimento fora da mesa registrado por uma mentora: a mentoria da mesa (convite, mesmo com o prazo
+      // vencido e ainda não expirado pelo worker, confirmada ou em andamento) é cancelada; mesa e horário ficam livres
+      // e a participante termina atendida. Ela não recebe aviso de cancelamento (só o e-mail `walk_in_done`); a
+      // mentora da mesa recebe `mentor_slot_released` (`walked_in_elsewhere`), menos quando é a mesma que registrou.
+      if (from !== 'invited' && from !== 'confirmed' && from !== 'in_progress') return invalid(from, 'cancelar');
+      return plan(from, 'cancelled', 'done', 'appointment.walk_in_cancel', {
+        notifyMentor: 'walked_in_elsewhere',
+        reason: 'walk_in',
+      });
     }
     case 'move_cancel': {
       // E39 mover: só mentoria confirmada (a nova nasce `confirmed`, mantendo a confirmação da participante).

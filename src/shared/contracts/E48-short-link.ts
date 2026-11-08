@@ -9,7 +9,7 @@ export const E48ParamsSchema = z.object({ code: z.string().max(64).catch('') }).
 export type E48Params = z.input<typeof E48ParamsSchema>;
 
 /**
- * E48 · GET /l/:code · e-mails, WhatsApp, P5 · link curto `<PUBLIC_BASE_URL>/l/<código>`
+ * E48 · GET /l/:code · e-mails, P5 · link curto `<PUBLIC_BASE_URL>/l/<código>`
  * Rota da API `/api/l/:code` (Nginx e Vite reescrevem `/l/` para ela). Público, sem CSRF, não executa ação.
  * Sempre 302 sem corpo com `Location` relativo: `personal` → `/mentoria/minha?t=<token>`, `calendar` →
  * `/api/public/calendar.ics?t=<token>`; inexistente, inválido, revogado ou sem participante → `/mentoria/minha`.

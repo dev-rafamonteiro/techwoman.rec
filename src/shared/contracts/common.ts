@@ -12,8 +12,6 @@ export const HEADERS = {
   idempotencyKey: 'Idempotency-Key',
   requestedWith: 'X-Requested-With',
   turnstile: 'X-Turnstile-Token',
-  /** E47: HMAC-SHA512 em hex do corpo bruto, assinado pelo WAHA (chave WAHA_WEBHOOK_HMAC_KEY). */
-  wahaHmac: 'X-Webhook-Hmac',
 } as const;
 
 /** Valor exigido no header X-Requested-With nas rotas que escrevem (proteção CSRF). */
@@ -67,9 +65,28 @@ export const OUTBOX_STATUSES = ['pending', 'sending', 'sent', 'failed', 'skipped
 export const OutboxStatusSchema = z.enum(OUTBOX_STATUSES);
 export type OutboxStatus = z.infer<typeof OutboxStatusSchema>;
 
+/**
+ * Canais que aparecem na outbox. `whatsapp` é legado, só leitura (canal removido em 2026-11-05): linhas antigas
+ * continuam listadas em A4/A9, mas nada grava itens novos nele e o worker descarta os pendentes (`skipped`).
+ */
 export const OUTBOX_CHANNELS = ['email', 'whatsapp'] as const;
 export const OutboxChannelSchema = z.enum(OUTBOX_CHANNELS);
 export type OutboxChannel = z.infer<typeof OutboxChannelSchema>;
+/** Canais em uso: só e-mail. O worker e a saúde da fila (E44) olham só para estes. */
+export const ACTIVE_OUTBOX_CHANNELS = ['email'] as const satisfies readonly OutboxChannel[];
+
+/**
+ * Tipos legados, só leitura: respostas pelo WhatsApp à presença (RN18) e ao convite (RN20), removidas em 2026-11-05
+ * (só e-mail). Ficam em OUTBOX_TYPES para A4/A9 listarem as linhas antigas; nada grava esses tipos.
+ */
+export const LEGACY_OUTBOX_TYPES = [
+  'presence_confirmed',
+  'presence_cancelled',
+  'presence_unclear',
+  'invite_closed',
+  'invite_decline_link',
+  'invite_unclear',
+] as const;
 
 export const OUTBOX_TYPES = [
   'registered',
@@ -81,36 +98,35 @@ export const OUTBOX_TYPES = [
   'moved',
   // inscrição cancelada pela própria participante (E04 cancel ou recusa "Não tenho mais interesse")
   'registration_cancelled',
-  // horário liberado pela própria participante, que volta à fila com prioridade (E04 decline schedule/reschedule, RN18 "Não vou")
+  // horário liberado pela própria participante, que volta à fila com prioridade (E04 decline schedule/reschedule)
   'slot_released',
   // aviso à mentora: a participante liberou o horário dela (cancelou a confirmada, recusou ou cancelou com convite pendente)
   'mentor_slot_released',
   'staff_password',
-  // respostas à confirmação de presença pelo WhatsApp (RN18)
-  'presence_confirmed',
-  'presence_cancelled',
-  'presence_unclear',
-  // respostas ao convite pelo WhatsApp (RN20)
-  'invite_closed',
-  'invite_decline_link',
-  'invite_unclear',
+  // RN21 · participante atendida fora da mesa: agradecimento com a mentora (e o LinkedIn dela) e o link pessoal (P6)
+  'walk_in_done',
+  // RN21 · atendimento fora da mesa removido pelo admin (E53): a inscrição foi desfeita e ela é convidada a se inscrever de novo
+  'walk_in_removed',
+  ...LEGACY_OUTBOX_TYPES,
 ] as const;
 export const OutboxTypeSchema = z.enum(OUTBOX_TYPES);
 export type OutboxType = z.infer<typeof OutboxTypeSchema>;
 
 /** `payload.reason` do `mentor_slot_released` (PLAN, Notificações > Aviso à mentora). */
-export const MENTOR_SLOT_RELEASED_REASONS = ['confirmed_cancelled', 'invite_declined', 'invite_cancelled'] as const;
+export const MENTOR_SLOT_RELEASED_REASONS = ['confirmed_cancelled', 'invite_declined', 'invite_cancelled', 'walked_in_elsewhere'] as const;
 export type MentorSlotReleasedReason = (typeof MENTOR_SLOT_RELEASED_REASONS)[number];
 export const isMentorSlotReleasedReason = (v: unknown): v is MentorSlotReleasedReason =>
   (MENTOR_SLOT_RELEASED_REASONS as readonly unknown[]).includes(v);
 /**
- * Frase do motivo do aviso à mentora, a mesma no e-mail (`{{motivo}}` do layout 9) e no WhatsApp (UI-SPEC, Mensagens
- * enviadas). Placeholders `{nome}`, `{horario}` e `{mesa}`; sem ponto final, que cada canal fecha do seu jeito.
+ * Frase do motivo do aviso à mentora, no e-mail (`{{motivo}}` do layout 9; UI-SPEC, Mensagens enviadas).
+ * Placeholders `{nome}`, `{horario}` e `{mesa}`; sem ponto final, que o e-mail acrescenta.
  */
 export const MENTOR_SLOT_RELEASED_TEXT: Record<MentorSlotReleasedReason, string> = {
   confirmed_cancelled: '{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda',
   invite_declined: '{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila',
   invite_cancelled: '{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila',
+  // RN21 · outra mentora registrou um atendimento fora da mesa com ela: a mentoria da mesa foi cancelada
+  walked_in_elsewhere: '{nome} foi atendida fora da mesa por outra mentora, e a mentoria das {horario} na {mesa} foi cancelada. O horário voltou a ficar livre na sua agenda',
 };
 
 /** Motivos de recusa em E04 (RN06). */
@@ -136,6 +152,7 @@ export const ERROR_CODES = [
   'TOO_EARLY',
   // regras de configuração
   'SLOT_IN_USE',
+  'SLOT_FULL',
   'GRID_LOCKED',
   'TABLE_IN_USE',
   'MENTOR_HAS_APPOINTMENTS',
@@ -184,6 +201,7 @@ export const ERROR_HTTP_STATUS: Record<ErrorCode, number> = {
   INVALID_STATE: 409,
   TOO_EARLY: 409,
   SLOT_IN_USE: 409,
+  SLOT_FULL: 409,
   GRID_LOCKED: 409,
   TABLE_IN_USE: 409,
   MENTOR_HAS_APPOINTMENTS: 409,
@@ -241,7 +259,14 @@ export const PASSWORD_MIN_LENGTH = 10;
 export const PasswordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(128);
 
 export const MENTEE_NOTE_MAX = 280;
-export const MENTOR_BIO_MAX = 200;
+export const MENTOR_BIO_MAX = 1500;
+
+/** Temas comerciais da mentora (Tema 1 e Tema 2), texto livre; substituem as áreas no perfil. */
+export const MENTOR_THEMES_MAX = 2;
+export const MENTOR_THEME_MAX = 120;
+export const MentorThemesSchema = z.array(z.string().trim().min(1).max(MENTOR_THEME_MAX)).max(MENTOR_THEMES_MAX);
+/** Domínios de cada tema (mesmo índice de `themes`). */
+export const MentorThemeDomainsSchema = z.array(z.array(z.string().trim().min(1).max(MENTOR_THEME_MAX)).max(10)).max(MENTOR_THEMES_MAX);
 
 export const SlotSchema = z.object({
   id: SlotIdSchema,
@@ -297,7 +322,7 @@ export interface EndpointDef<
   readonly idempotent?: boolean;
   /** Exige Turnstile (header X-Turnstile-Token ou campo do corpo). */
   readonly turnstile?: boolean;
-  /** `false`: rota pública que escreve sem a checagem anti-CSRF (webhook de servidor, E47). */
+  /** `false`: rota pública que escreve sem a checagem anti-CSRF (webhook de servidor). */
   readonly csrf?: false;
   readonly params?: Params;
   readonly query?: Query;

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
 import type { MenteeDoc } from '@tw/db';
-import { E20, E21, E22, E23, E25, E26, E27, E28, QUEUE_PAGE_SIZE, type E20Response, type E25Response } from '@tw/shared';
+import { E20, E21, E22, E23, E25, E26, E27, E28, QUEUE_PAGE_SIZE, formatTimeBR, type E20Response, type E25Response } from '@tw/shared';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
@@ -12,7 +12,8 @@ import { openSse } from '../lib/sse.js';
 import { RAW, route } from '../lib/route.js';
 import { toMenteeStaffView, toMentorAppointmentView, toSlot, toTableView, toUserView } from '../lib/views.js';
 import { applyTransition } from '../services/transitions.js';
-import { checkAvailabilityUpdate, matchesPeriod, suggestTable } from '../domain/index.js';
+import { checkAvailabilityUpdate, fullSlotsForAdditions, matchesPeriod, slotFullMessage, suggestTable } from '../domain/index.js';
+import { ensureSlotCounters, slotCapacity, toSlotCapacityInfo, touchSlotCounters } from '../services/slot-capacity.js';
 
 const ACTIVE = ['invited', 'confirmed', 'in_progress'] as const;
 
@@ -27,15 +28,20 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
     const appts = await ctx.c.appointments.find({ eventId: event._id, mentorId, status: { $in: [...ACTIVE] } }).toArray();
     const mentees = await ctx.c.mentees.find({ _id: { $in: appts.map((a) => a.menteeId) } }, { projection: { name: 1 } }).toArray();
     const nameOf = new Map(mentees.map((m) => [String(m._id), m.name]));
+    const { capacity, counts } = await slotCapacity(ctx, event._id);
     const av = new Set(availability);
     return {
       timezone: event.timezone,
       slots: event.slots.map((s) => {
         const a = appts.find((x) => x.slotId === s.id);
+        const n = counts.get(s.id) ?? 0;
         return {
           slot: toSlot(s),
           available: av.has(s.id),
           locked: a ? { appointmentId: String(a._id), menteeName: nameOf.get(String(a.menteeId)) ?? '' } : null,
+          mentorsAvailable: n,
+          capacity,
+          full: n >= capacity,
         };
       }),
     };
@@ -44,10 +50,13 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
   // E20 · GET /mentor/availability
   route(app, ctx, E20, async ({ user }) => buildAvailability(user._id, user.availability));
 
-  // E21 · PUT /mentor/availability · RN11
+  // E21 · PUT /mentor/availability · RN11, RN22
   route(app, ctx, E21, async ({ req, user, body }) => {
     const slotIds = [...new Set(body.slotIds)];
     const event = await loadEvent(ctx);
+    const validIds = new Set(event.slots.map((s) => s.id));
+    // RN22: travas dos horários pedidos criadas antes da transação (o snapshot dela precisa enxergá-las)
+    await ensureSlotCounters(ctx, event._id, slotIds.filter((id) => validIds.has(id)));
     const updated = await runTxn(ctx, async (session) => {
       const me = await ctx.c.users.findOne({ _id: user._id }, { session });
       if (!me) throw notFound('Mentora');
@@ -59,6 +68,18 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
         validSlotIds: event.slots.map((s) => s.id),
       });
       if (!check.ok) throw fromRuleError(check);
+      // RN22: só horário ADICIONADO esbarra no limite; a trava vem antes da contagem (conflito de escrita entre saves)
+      const added = slotIds.filter((id) => !me.availability.includes(id));
+      if (added.length) {
+        await touchSlotCounters(ctx, session, event._id, added);
+        const { capacity, counts } = await slotCapacity(ctx, event._id, { session, excludeUserId: me._id, slotIds: added });
+        const full = fullSlotsForAdditions({ current: me.availability, next: added, others: counts, capacity });
+        if (full.length) {
+          const info = toSlotCapacityInfo(event, full);
+          const label = (id: string) => formatTimeBR(event.slots.find((s) => s.id === id)!.startAt, event.timezone);
+          throw new AppError('SLOT_FULL', slotFullMessage(full.map((f) => ({ label: label(f.slotId), mentorsAvailable: f.mentorsAvailable, capacity: f.capacity }))), { details: { slots: info } });
+        }
+      }
       const next = event.slots.map((s) => s.id).filter((id) => slotIds.includes(id));
       await ctx.c.users.updateOne({ _id: me._id }, { $set: { availability: next, updatedAt: ctx.now() } }, { session });
       await writeAudit(ctx, session, { actor: actorForRoute(req, 'mentor'), action: 'availability.update', entity: 'user', entityId: me._id, before: { availability: me.availability }, after: { availability: next }, ip: req.ip });
@@ -224,6 +245,7 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
     if (body.phone !== undefined) set['phone'] = parseOptionalPhone(body.phone);
     if (body.photoUrl !== undefined) set['photoUrl'] = body.photoUrl;
     if (body.bio !== undefined) set['bio'] = body.bio;
+    if (body.themes !== undefined) set['themes'] = body.themes;
     if (body.areas !== undefined) {
       const keys = new Set(event.areas.map((a) => a.key));
       if (body.areas.some((a) => !keys.has(a))) throw new AppError('VALIDATION_ERROR', 'Área desconhecida.', { details: { field: 'areas' } });

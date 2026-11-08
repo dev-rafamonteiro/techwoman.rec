@@ -80,9 +80,11 @@ export function renderHtml(e) {
   const paras = e.paragrafos
     .map((p, i) => `<p class="p${i ? ' p-next' : ''}">${t(p)}</p>`)
     .join('');
-  const sec = e.sec
+  const secBtn = e.sec
     ? `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px"><tr><td class="btn-sec"><a class="btn-sec-a" href="{{${e.sec[1]}}}">${e.sec[0]}</a></td></tr></table>`
     : '';
+  // `secOpcional`: o botão secundário fica dentro de {{#var}}...{{/var}} (some sem o link), dentro da célula do CTA
+  const sec = e.sec && e.secOpcional ? `{{#${e.sec[1]}}}${secBtn}{{/${e.sec[1]}}}` : secBtn;
   return `<!doctype html>
 <html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -139,8 +141,11 @@ export function renderText(e) {
     lines.push('');
   }
   if (e.destaque) lines.push(e.destaque, '');
-  lines.push(`${e.botao[0]}: {{${e.botao[1]}}}`);
-  if (e.sec) lines.push(`${e.sec[0]}: {{${e.sec[1]}}}`);
+  if (e.sec && e.secOpcional) lines.push(`${e.botao[0]}: {{${e.botao[1]}}}{{#${e.sec[1]}}}\n${e.sec[0]}: {{${e.sec[1]}}}{{/${e.sec[1]}}}`);
+  else {
+    lines.push(`${e.botao[0]}: {{${e.botao[1]}}}`);
+    if (e.sec) lines.push(`${e.sec[0]}: {{${e.sec[1]}}}`);
+  }
   lines.push('');
   if (e.nota) lines.push(e.nota, '');
   lines.push(

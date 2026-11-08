@@ -9,7 +9,7 @@ export type E37Query = z.input<typeof E37QuerySchema>;
 export const E37_CSV_COLUMNS = [
   'nome',
   'email',
-  'whatsapp',
+  'celular',
   'linkedin',
   'area',
   'periodo',
@@ -19,6 +19,8 @@ export const E37_CSV_COLUMNS = [
   'mesa',
   'horario',
   'inscrita_em',
+  // RN21 · mentoras que a atenderam fora da mesa (separadas por " / "); vazio quando não houve
+  'fora_da_mesa',
 ] as const;
 
 export const E37 = defineEndpoint({

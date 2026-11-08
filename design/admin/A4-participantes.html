@@ -60,7 +60,7 @@ button,input,select{font-family:inherit}
 <div style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #EBCFF0; border-radius: 18px; overflow-x: auto">
 <sc-raw-table style="width: 100%; min-width: 1060px; border-collapse: collapse; font-size: 14px">
 <sc-raw-thead><sc-raw-tr style="text-align: left; color: #5E3A66; font-size: 13px">
-<sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Nome</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">E-mail</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">WhatsApp</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Área</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Período</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Status</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Mentora</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Mesa</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Horário</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Inscrita</sc-raw-th>
+<sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Nome</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">E-mail</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Celular</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Área</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Período</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Status</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Mentora</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Mesa</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Horário</sc-raw-th><sc-raw-th scope="col" style="padding: 12px; border-bottom: 1px solid #EBCFF0">Inscrita</sc-raw-th>
 </sc-raw-tr></sc-raw-thead>
 <sc-raw-tbody>
 <sc-for list="{{linhas}}" as="r" hint-placeholder-count="10">
@@ -89,7 +89,7 @@ button,input,select{font-family:inherit}
 </div>
 <dl style="margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 14px">
 <dt style="color: #5E3A66">E-mail</dt><dd style="margin: 0; overflow-wrap: anywhere">{{d.email}}</dd>
-<dt style="color: #5E3A66">WhatsApp</dt><dd style="margin: 0">{{d.whats}}</dd>
+<dt style="color: #5E3A66">Celular</dt><dd style="margin: 0">{{d.whats}}</dd>
 <dt style="color: #5E3A66">LinkedIn</dt><dd style="margin: 0"><a href="#linkedin">{{d.linkedin}}</a></dd>
 <dt style="color: #5E3A66">Área</dt><dd style="margin: 0">{{d.area}} · jornada: nível 5</dd>
 <dt style="color: #5E3A66">Período</dt><dd style="margin: 0">{{d.periodo}}</dd>
@@ -146,7 +146,7 @@ var ST = { 'Aguardando': ['#EFE8F0', '#3D0A45'], 'Horário proposto': ['#FFE1D3'
 var P = [
   { id: 'beatriz', nome: 'Beatriz Nunes', email: 'beatriz.n@email.com', whats: '(81) 98812-4410', area: 'Backend', periodo: 'Fim da tarde', status: 'Aguardando', prio: true, mentora: '—', mesa: '—', hora: '—', em: '12h43', linkedin: 'beatriznunes', comentario: 'Quero falar sobre APIs.',
     eventos: [['12h43', 'Inscrição recebida'], ['12h58', 'Convite de Camila · 13h30 · Mesa 4'], ['13h01', 'Recusou: horário não serve'], ['13h01', 'Voltou para a fila com prioridade']],
-    notifs: [['Inscrição recebida · e-mail', 'Enviada', '#1F6B5C'], ['Inscrição recebida · WhatsApp', 'Enviada', '#1F6B5C'], ['Convite · WhatsApp', 'Falhou', '#8A1C1C']] },
+    notifs: [['Inscrição recebida · e-mail', 'Enviada', '#1F6B5C'], ['Convite · e-mail', 'Falhou', '#8A1C1C']] },
   { id: 'joana', nome: 'Joana Lima', email: 'joana@email.com', whats: '(81) 91234-5678', area: 'Backend', periodo: 'Início da tarde', status: 'Horário proposto', prio: false, mentora: 'Ana Ribeiro', mesa: '7', hora: '14h15', em: '13h00' },
   { id: 'carla', nome: 'Carla Souza', email: 'carla.s@email.com', whats: '(81) 99654-1200', area: 'Backend', periodo: 'Início da tarde', status: 'Confirmada', prio: false, mentora: 'Ana Ribeiro', mesa: '7', hora: '13h30', em: '10h12' },
   { id: 'larissa', nome: 'Larissa Melo', email: 'larissa.m@email.com', whats: '(81) 98100-3344', area: 'Cloud', periodo: 'Qualquer horário', status: 'Aguardando', prio: false, mentora: '—', mesa: '—', hora: '—', em: '13h07' },
@@ -190,7 +190,7 @@ class Component extends DCLogic {
       agendando: st.agendando,
       abrirAgenda: function () { self.setState({ agendando: true, msg: '' }); },
       confirmarAgenda: function () { self.setState({ agendando: false, msg: 'Convite enviado: Ana Ribeiro · 15h00 · Mesa 7' }); },
-      reenviar: function () { self.setState({ msg: 'Link pessoal reenviado por e-mail e WhatsApp' }); },
+      reenviar: function () { self.setState({ msg: 'Link pessoal reenviado por e-mail' }); },
       cancelar: function () { self.setState({ msg: 'Inscrição cancelada e participante avisada' }); },
       temMsg: !!st.msg, msg: st.msg
     };

@@ -10,6 +10,9 @@ export const INDEX_NAMES = {
   menteeActive: 'appt_mentee_active',
 } as const;
 
+/** RN21 · um atendimento fora da mesa ativo por mentora e participante (E51 traduz o E11000 em 409). */
+export const WALK_IN_PAIR_INDEX = 'walkin_pair_active';
+
 export type ScheduleConflictCode = 'TABLE_TAKEN' | 'MENTOR_BUSY' | 'MENTEE_TAKEN';
 
 const NAME_TO_CODE: Record<string, ScheduleConflictCode> = {
@@ -65,6 +68,8 @@ const INDEXES: Record<string, IndexDescription[]> = {
   ],
   [COLLECTIONS.outbox]: [
     { key: { status: 1, nextAttemptAt: 1 }, name: 'outbox_status_next' },
+    // claim do worker por canal e faixa de prioridade (status + canal + tipos, mais antigo primeiro)
+    { key: { status: 1, channel: 1, type: 1, nextAttemptAt: 1 }, name: 'outbox_claim_lane' },
     { key: { dedupeKey: 1 }, name: 'outbox_dedupe', unique: true },
     { key: { appointmentId: 1 }, name: 'outbox_appointment' },
     { key: { status: 1, lockedAt: 1 }, name: 'outbox_sending_lock' },
@@ -75,12 +80,18 @@ const INDEXES: Record<string, IndexDescription[]> = {
   ],
   // chaves de idempotência: TTL de 10 min (PLAN)
   [COLLECTIONS.idempotencyKeys]: [{ key: { createdAt: 1 }, name: 'idem_ttl', expireAfterSeconds: 600 }],
-  // RN18: resposta digitada procura o `pending` mais recente do telefone
-  [COLLECTIONS.presenceChecks]: [{ key: { phone: 1, status: 1, sentAt: -1 }, name: 'presence_phone_status_sent' }],
-  // mensagens recebidas do WAHA: some em `expireAt` (7 dias)
-  [COLLECTIONS.whatsappInbound]: [{ key: { expireAt: 1 }, name: 'wa_inbound_ttl', expireAfterSeconds: 0 }],
+  // `presence_checks` e `whatsapp_inbound` (WhatsApp, removido em 2026-11-05) saíram daqui; as coleções e os índices
+  // que já existem no banco ficam como estão (o TTL de `whatsapp_inbound` termina de limpar sozinho)
   // links curtos (E48): um por participante, tipo e versão do token; também serve ao deleteMany por menteeId
   // e somem em `expireAt` (fim do evento + 7 dias)
+  // avaliações (E09): A10 lista por evento, da mais recente
+  [COLLECTIONS.feedbacks]: [{ key: { eventId: 1, createdAt: -1 }, name: 'feedback_event_created' }],
+  // atendimentos fora da mesa (RN21): um ativo por mentora e participante; M6 lista os da mentora; A4 e E53 por participante
+  [COLLECTIONS.walkIns]: [
+    { key: { eventId: 1, mentorId: 1, menteeId: 1 }, name: WALK_IN_PAIR_INDEX, unique: true, partialFilterExpression: { deletedAt: null } },
+    { key: { eventId: 1, mentorId: 1, at: -1 }, name: 'walkin_mentor_at' },
+    { key: { eventId: 1, menteeId: 1 }, name: 'walkin_mentee' },
+  ],
   [COLLECTIONS.shortLinks]: [
     { key: { menteeId: 1, kind: 1, tokenVersion: 1 }, name: 'short_link_mentee_kind_version', unique: true },
     { key: { expireAt: 1 }, name: 'short_link_ttl', expireAfterSeconds: 0 },

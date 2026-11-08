@@ -37,3 +37,34 @@ export const E44Retry = defineEndpoint({
   params: IdParamsSchema,
   response: E44RetryResponseSchema,
 });
+
+/** E44 · GET /admin/notifications/health · A9: a fila está andando? (por canal) */
+export const OutboxLaneHealthSchema = z.object({
+  channel: OutboxChannelSchema,
+  /** Na fila e já na hora de sair (exclui lembretes agendados para depois). */
+  due: z.number().int(),
+  /** Agendados para depois (lembretes, novas tentativas). */
+  scheduled: z.number().int(),
+  sending: z.number().int(),
+  failed: z.number().int(),
+  /** Há quanto tempo o item vencido mais antigo espera (0 se nenhum). */
+  oldestDueSeconds: z.number().int(),
+  /** Há item na fila devolvido por limite do provedor (429/throttling). */
+  rateLimited: z.boolean(),
+});
+export type OutboxLaneHealth = z.infer<typeof OutboxLaneHealthSchema>;
+export const E44HealthResponseSchema = z.object({
+  /** false quando algum canal tem item vencido esperando mais que `alertAfterSeconds`. */
+  ok: z.boolean(),
+  alertAfterSeconds: z.number().int(),
+  channels: z.array(OutboxLaneHealthSchema),
+});
+export type E44HealthResponse = z.infer<typeof E44HealthResponseSchema>;
+export const E44Health = defineEndpoint({
+  code: 'E44',
+  method: 'GET',
+  path: '/admin/notifications/health',
+  auth: 'staff',
+  roles: ['admin', 'super_admin'],
+  response: E44HealthResponseSchema,
+});

@@ -60,6 +60,17 @@
       "mesa": "Mesa 7",
       "link_painel": "https://techwoman.dev/entrar",
       "motivo": "Joana cancelou a mentoria das 14h15 na Mesa 7. O horário voltou a ficar livre na sua agenda."
+    },
+    "10-atendimento-fora-da-mesa": {
+      "nome": "Joana",
+      "mentora_nome": "Ana",
+      "mentora_organizacao": "Empresa Exemplo",
+      "mentora_linkedin": "https://www.linkedin.com/in/ana-exemplo",
+      "link_minha_mentoria": "https://techwoman.dev/l/8f3k2q"
+    },
+    "11-atendimento-removido": {
+      "nome": "Joana",
+      "link_inscricao": "https://techwoman.dev/mentoria/inscricao"
     }
   }
 }

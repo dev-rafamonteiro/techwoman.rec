@@ -41,6 +41,8 @@ Cada e-mail abaixo tem `.html` + `.txt` gerados por `build.mjs` a partir de `ema
 | 06 | card SENHA PROVISÓRIA "lilas-mesa-3851" | `{{senha_provisoria}}` |
 | 06 | botão "Entrar na área da mentora"; link de fallback `techwoman.dev/entrar` | `href="{{link_login}}"`; `{{link_login}}` |
 
+Os layouts 07 a 11 não têm mockup em `Emails.dc.html`: seguem o mesmo layout (selo, título, parágrafos, card, botões e nota de `emails.mjs`). 10 (`walk_in_done`, RN21): `{{nome}}`, `{{mentora_nome}}`, `{{mentora_organizacao}}` e `{{mentora_linkedin}}` (opcionais, em trechos `{{#variavel}}...{{/variavel}}` que somem com o valor vazio) e `{{link_minha_mentoria}}`. 11 (`walk_in_removed`, RN21): `{{nome}}`, `{{link_inscricao}}`.
+
 ## Assuntos: mockup x PLAN (o PLAN vale; está em `subjects.ts`)
 
 | # | Mockup | PLAN (usado) |

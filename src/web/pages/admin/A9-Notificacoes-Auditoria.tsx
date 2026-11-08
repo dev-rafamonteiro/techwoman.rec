@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ENDPOINTS, OUTBOX_CHANNELS, OUTBOX_STATUSES, OUTBOX_TYPES, type AuditEntryView, type OutboxItemView } from '@tw/shared';
+import { ENDPOINTS, OUTBOX_CHANNELS, OUTBOX_STATUSES, OUTBOX_TYPES, type AuditEntryView, type OutboxItemView, type OutboxLaneHealth } from '@tw/shared';
 import { DataTable, ErrorState, SkeletonList, call, formatDateTime, useQuery, useToast, type Column } from '../../ui';
 import { PageHead, errMsg, useDebounced, useTitle } from './lib/common';
 import './lib/a7-a9.css';
@@ -17,7 +17,7 @@ function actionTone(a: string): string {
   return '';
 }
 const ROLE_PT: Record<string, string> = { super_admin: 'Super admin', admin: 'Admin', mentor: 'Mentora', mentee: 'Participante', system: 'Sistema' };
-const TYPE_PT = { registered: 'Inscrição recebida', invite: 'Convite', confirmed: 'Confirmação', reminder: 'Lembrete', expired: 'Convite expirado', cancelled: 'Cancelamento', moved: 'Mudança de horário', registration_cancelled: 'Inscrição cancelada', slot_released: 'Horário liberado', mentor_slot_released: 'Aviso à mentora', staff_password: 'Senha provisória', presence_confirmed: 'Presença confirmada', presence_cancelled: 'Presença: não poderá ir', presence_unclear: 'Presença: resposta não entendida', invite_closed: 'Convite: não está mais disponível', invite_decline_link: 'Convite: link para recusar', invite_unclear: 'Convite: resposta não entendida' } as const;
+const TYPE_PT = { registered: 'Inscrição recebida', invite: 'Convite', confirmed: 'Confirmação', reminder: 'Lembrete', expired: 'Convite expirado', cancelled: 'Cancelamento', moved: 'Mudança de horário', registration_cancelled: 'Inscrição cancelada', slot_released: 'Horário liberado', mentor_slot_released: 'Aviso à mentora', staff_password: 'Senha provisória', walk_in_done: 'Atendimento fora da mesa', walk_in_removed: 'Atendimento fora da mesa removido', presence_confirmed: 'Presença confirmada', presence_cancelled: 'Presença: não poderá ir', presence_unclear: 'Presença: resposta não entendida', invite_closed: 'Convite: não está mais disponível', invite_decline_link: 'Convite: link para recusar', invite_unclear: 'Convite: resposta não entendida' } as const;
 
 /** A9 · Notificações (E44) e Auditoria (E45). */
 export default function A9NotificacoesAuditoria() {
@@ -36,7 +36,7 @@ export default function A9NotificacoesAuditoria() {
   };
   return (
     <div className="tw-page tw-stack a79 a9">
-      <PageHead title="Notificações e auditoria" sub="Envios de e-mail e WhatsApp e o registro de quem fez o quê." />
+      <PageHead title="Notificações e auditoria" sub="Envios de e-mail e o registro de quem fez o quê." />
       <div className="a9-tabs" role="tablist" aria-label="Tipo de registro" onKeyDown={onKey}>
         {tabs.map(([k, label]) => (
           <button key={k} type="button" role="tab" id={`tab-${k}`} aria-selected={tab === k} aria-controls={`p-${k}`} tabIndex={tab === k ? 0 : -1} onClick={() => setTab(k)}>
@@ -46,6 +46,34 @@ export default function A9NotificacoesAuditoria() {
       </div>
       <div role="tabpanel" id={`p-${tab}`} aria-labelledby={`tab-${tab}`}>{tab === 'notif' ? <Notifications onRetried={() => void failed.refetch()} /> : <Audit />}</div>
     </div>
+  );
+}
+
+/** Saúde da fila (E44 health), atualizada a cada 15 s: quanto falta sair, há quanto tempo e se o provedor está limitando. */
+function QueueHealth() {
+  const h = useQuery((signal) => call(ENDPOINTS.E44Health, { signal }), []);
+  useEffect(() => {
+    const t = setInterval(() => void h.refetch(), 15_000);
+    return () => clearInterval(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (h.status !== 'success') return null;
+  const wait = (s: number) => (s < 60 ? `${s} s` : `${Math.floor(s / 60)} min`);
+  const lane = (c: OutboxLaneHealth) => {
+    const late = c.oldestDueSeconds > h.data.alertAfterSeconds;
+    const tone = late ? 'a79-pill--r' : c.rateLimited || c.due > 0 ? 'a79-pill--o' : 'a79-pill--m';
+    const label = late ? `Atrasada (${wait(c.oldestDueSeconds)})` : c.rateLimited ? 'Provedor limitando' : c.due > 0 ? 'Enviando' : 'Em dia';
+    return (
+      <li key={c.channel}>
+        <strong>{c.channel === 'email' ? 'E-mail' : 'WhatsApp'}</strong> <span className={`a79-pill ${tone}`}>{label}</span>
+        <small>{c.due} na fila agora · {c.scheduled} agendadas · {c.failed} falharam</small>
+      </li>
+    );
+  };
+  return (
+    <section className="a9-health" aria-label="Fila de envios">
+      {!h.data.ok && <p role="alert">A fila de envios está atrasada. Se continuar, confira a cota do provedor de e-mail ou troque para o provedor reserva.</p>}
+      <ul>{h.data.channels.map(lane)}</ul>
+    </section>
   );
 }
 
@@ -80,7 +108,7 @@ function Notifications({ onRetried }: { onRetried: () => void }) {
     { key: 'type', header: 'Modelo', render: (i) => (i.type === 'staff_password' ? `${TYPE_PT[i.type]} · senha oculta` : TYPE_PT[i.type]), text: (i) => TYPE_PT[i.type] },
     { key: 'status', header: 'Status', render: (i) => <><span className={`a79-pill ${STATUS_TONE[i.status]}`} title={i.lastError ?? undefined}>{STATUS_PT[i.status]}</span>{i.lastError && <small>{i.lastError}</small>}</>, text: (i) => STATUS_PT[i.status] },
     { key: 'att', header: 'Tentativas', render: (i) => i.attempts, text: (i) => i.attempts },
-    { key: 'act', header: 'Ação', render: (i) => (i.status === 'failed' ? <button type="button" className="a79-rowbtn" disabled={busy === i.id} aria-busy={busy === i.id || undefined} onClick={() => void retry(i)}>{busy === i.id && <span className="tw-spinner" aria-hidden="true" />}Reenviar</button> : null) },
+    { key: 'act', header: 'Ação', render: (i) => (i.status === 'failed' && i.channel === 'email' ? <button type="button" className="a79-rowbtn" disabled={busy === i.id} aria-busy={busy === i.id || undefined} onClick={() => void retry(i)}>{busy === i.id && <span className="tw-spinner" aria-hidden="true" />}Reenviar</button> : null) },
   ];
   const filters = (
     <>
@@ -94,6 +122,7 @@ function Notifications({ onRetried }: { onRetried: () => void }) {
   const rows = [...first.data.items, ...extra].map((i) => patched[i.id] ?? i);
   return (
     <div className="tw-stack">
+      <QueueHealth />
       <DataTable caption="Notificações" columns={columns} rows={rows} rowKey={(i) => i.id} filters={filters} exportName="notificacoes.csv" emptyTitle="Nenhuma notificação" emptyText="Quando houver envios, eles aparecem aqui." />
       {cursor && <button type="button" className="a79-btn a79-btn--line a9-more" onClick={() => void more()}>Carregar mais</button>}
     </div>

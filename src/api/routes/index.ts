@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { AppContext } from '../ctx.js';
 import { registerAdminAppointmentRoutes } from './admin-appointments.js';
 import { registerAdminConfigRoutes } from './admin-config.js';
+import { registerAdminFeedbackRoutes } from './admin-feedback.js';
 import { registerAdminMenteeRoutes } from './admin-mentees.js';
 import { registerAdminMentorRoutes } from './admin-mentors.js';
 import { registerAuthRoutes } from './auth.js';
@@ -10,10 +11,10 @@ import { registerInviteRoutes } from './invite.js';
 import { registerMentorRoutes } from './mentor.js';
 import { registerPublicRoutes } from './public.js';
 import { registerShortLinkRoutes } from './short-links.js';
-import { registerWebhookRoutes } from './webhooks.js';
+import { registerWalkInRoutes } from './walk-ins.js';
 
 export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
-  registerPublicRoutes(app, ctx); // E01–E08
+  registerPublicRoutes(app, ctx); // E01–E09, E54
   registerAuthRoutes(app, ctx); // E10–E13
   registerMentorRoutes(app, ctx); // E20–E28 (E24 em invite.ts)
   registerInviteRoutes(app, ctx); // E24, E39 (POST)
@@ -22,6 +23,7 @@ export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerAdminAppointmentRoutes(app, ctx); // E39 (PATCH)
   registerAdminConfigRoutes(app, ctx); // E40–E45
   registerEmailPreviewRoutes(app, ctx); // E46
-  registerWebhookRoutes(app, ctx); // E47
   registerShortLinkRoutes(app, ctx); // E48
+  registerAdminFeedbackRoutes(app, ctx); // E49
+  registerWalkInRoutes(app, ctx); // E50–E53 (RN21)
 }

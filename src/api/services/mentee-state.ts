@@ -4,6 +4,7 @@ import type { MenteeDoc } from '@tw/db';
 import type { AppContext } from '../ctx.js';
 import { loadEvent } from '../ctx.js';
 import { iso, toMenteeAppointmentView } from '../lib/views.js';
+import { safeLinkedin } from '../notifications/message.js';
 
 const VISIBLE = new Set(['invited', 'confirmed', 'in_progress', 'done']);
 
@@ -21,6 +22,11 @@ export async function buildMenteeState(ctx: AppContext, mentee: MenteeDoc, sessi
       if (mentor && table) appointment = toMenteeAppointmentView(a, mentor, table, event, now);
     }
   }
+  // E09: a avaliação só existe (e só é procurada) depois da mentoria concluída
+  const fb = mentee.status === 'done' ? await ctx.c.feedbacks.findOne({ _id: mentee._id }, opt) : null;
+  // RN21: atendimento fora da mesa mais recente (P6 mostra com quem foi quando ela foi concluída assim)
+  const w = await ctx.c.walkIns.findOne({ eventId: mentee.eventId, menteeId: mentee._id, deletedAt: null }, { ...opt, sort: { at: -1 } });
+  const wMentor = w ? await ctx.c.users.findOne({ _id: w.mentorId }, { ...opt, projection: { name: 1, linkedin: 1, organization: 1 } }) : null;
   return {
     mentee: {
       name: mentee.name,
@@ -32,6 +38,10 @@ export async function buildMenteeState(ctx: AppContext, mentee: MenteeDoc, sessi
     },
     appointment,
     lastOutcome: mentee.status === 'waiting' ? mentee.lastOutcome : null,
+    walkIn: w
+      ? { mentorName: wMentor?.name ?? 'uma mentora', mentorLinkedin: safeLinkedin(wMentor?.linkedin) || null, mentorOrganization: wMentor?.organization?.trim() || null, at: iso(w.at) }
+      : null,
+    feedback: fb ? { ratings: fb.ratings, comment: fb.comment, createdAt: iso(fb.createdAt) } : null,
     event: { registrationOpen: event.registrationOpen, timezone: event.timezone },
     serverNow: iso(now),
   };

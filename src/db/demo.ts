@@ -100,6 +100,7 @@ export async function clearDemo(db: Db, eventId: string, template = DEMO_EMAIL_T
   await c.outbox.deleteMany({ eventId, $or: [{ menteeId: { $in: menteeIds } }, { userId: { $in: userIds } }] });
   await c.sessions.deleteMany({ userId: { $in: userIds } });
   await c.shortLinks.deleteMany({ menteeId: { $in: menteeIds } });
+  await c.feedbacks.deleteMany({ _id: { $in: menteeIds } });
   await c.mentees.deleteMany({ _id: { $in: menteeIds } });
   await c.users.deleteMany({ _id: { $in: userIds } });
   return menteeIds.length + userIds.length;

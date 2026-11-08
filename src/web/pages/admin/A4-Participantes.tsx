@@ -66,7 +66,7 @@ export default function A4Participantes() {
   const columns: Column<MenteeAdminView>[] = [
     { key: 'name', header: 'Nome', render: (m) => <span className={`a4-name${m.id === openId ? ' a4-name--sel' : ''}`}>{m.name}{m.priority && <PriorityBadge />}</span>, text: (m) => `${m.name}${m.priority ? ' (prioridade)' : ''}` },
     { key: 'email', header: 'E-mail', render: (m) => <span className="a4-muted">{m.email}</span>, text: (m) => m.email },
-    { key: 'phone', header: 'WhatsApp', render: (m) => <span className="a4-nowrap">{phoneFmt(m.phone)}</span>, text: (m) => phoneFmt(m.phone) },
+    { key: 'phone', header: 'Celular', render: (m) => <span className="a4-nowrap">{phoneFmt(m.phone)}</span>, text: (m) => phoneFmt(m.phone) },
     { key: 'area', header: 'Área', render: (m) => areaLabel(m.area), text: (m) => areaLabel(m.area) },
     { key: 'period', header: 'Período', render: (m) => PERIOD_LABELS[m.preferredPeriod], text: (m) => PERIOD_LABELS[m.preferredPeriod] },
     { key: 'status', header: 'Status', render: (m) => <StatusBadge status={STATUS_BADGE[m.status]} />, text: (m) => STATUS_LOOK[m.status].label },
@@ -126,6 +126,8 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
   const toast = useToast();
   const ref = useRef<HTMLElement>(null);
   const d = useQuery((s) => call(ENDPOINTS.E35Detail, { params: { id }, signal: s }), [id]);
+  // RN21: atendimentos fora da mesa ativos dela (E53), com remoção
+  const walkIns = useQuery((s) => call(ENDPOINTS.E53List, { query: { menteeId: id }, signal: s }), [id]);
   const [busy, setBusy] = useState(false);
   const [scheduling, setScheduling] = useState(false);
 
@@ -149,6 +151,18 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 
+  // RN21: sem outro atendimento fora da mesa nem mentoria na mesa, remover descadastra a participante (E53)
+  const removeWalkIn = async (walkInId: string, mentorName: string, deregisters: boolean) => {
+    const warn = deregisters ? ' A participante será descadastrada e receberá um e-mail pedindo nova inscrição.' : '';
+    if (!window.confirm(`Remover o atendimento fora da mesa com ${mentorName}?${warn}`)) return;
+    setBusy(true);
+    try {
+      const r = await call(ENDPOINTS.E53Delete, { params: { id: walkInId } });
+      toast.success(r.deregistered ? 'Atendimento removido. A participante foi descadastrada e vai receber um e-mail pedindo nova inscrição.' : 'Atendimento removido.');
+      await Promise.all([onChanged(), d.refetch(), walkIns.refetch()]);
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  };
+
   const m = d.status === 'success' ? d.data.mentee : null;
   const score = m?.quizScores[m.area];
   return (
@@ -167,7 +181,7 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
           <div className="tw-stack" style={{ gap: 16 }} data-testid="mentee-panel">
             <dl className="a4-dl">
               <dt>E-mail</dt><dd>{m.email}</dd>
-              <dt>WhatsApp</dt><dd>{phoneFmt(m.phone)}</dd>
+              <dt>Celular</dt><dd>{phoneFmt(m.phone)}</dd>
               <dt>LinkedIn</dt><dd>{m.linkedin ? <a href={linkedinUrl(m.linkedin)} target="_blank" rel="noopener noreferrer">{m.linkedin.replace(/^https?:\/\/(www\.)?/i, '')}</a> : '—'}</dd>
               <dt>Área</dt><dd>{areaLabel(m.area)}{score != null ? ` · jornada: ${score} pts` : ''}</dd>
               <dt>Período</dt><dd>{PERIOD_LABELS[m.preferredPeriod]}</dd>
@@ -182,6 +196,18 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
                 <ol className="a4-timeline">{d.data.timeline.map((t, i) => <li key={i}><time dateTime={t.at}>{formatTime(t.at)}</time><span>{t.label}</span></li>)}</ol>
               )}
             </section>
+            {walkIns.status === 'success' && walkIns.data.items.length > 0 && (
+              <section className="a4-sec" data-testid="a4-walkins"><h3>Atendimentos fora da mesa</h3>
+                <ul className="a4-notifs">
+                  {walkIns.data.items.map((w) => (
+                    <li key={w.id}>
+                      <span>{formatTime(w.at)} · {w.mentor.name}{w.note ? ` · “${w.note}”` : ''}</span>
+                      <button type="button" className="a4-act a4-act--danger" disabled={busy} onClick={() => void removeWalkIn(w.id, w.mentor.name, walkIns.data.items.length === 1 && !m.mentorName && m.status !== 'cancelled')}>Remover</button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             <section className="a4-sec"><h3>Notificações enviadas</h3>
               {d.data.notifications.length === 0 ? <p>Nenhuma notificação.</p> : (
                 <ul className="a4-notifs">

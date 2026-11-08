@@ -5,11 +5,14 @@ import {
   IdParamsSchema,
   LinkedinInputSchema,
   MENTOR_BIO_MAX,
+  MentorThemeDomainsSchema,
+  MentorThemesSchema,
   PhoneInputSchema,
   SlotIdSchema,
   UserStatusSchema,
 } from './common.js';
 import { UserViewSchema } from './entities.js';
+import { SlotCapacityInfoSchema } from './E21-mentor-availability-put.js';
 
 /**
  * E32 · PATCH /admin/mentors/:id · A3
@@ -20,10 +23,12 @@ export const E32BodySchema = z
   .object({
     name: z.string().trim().min(2).max(120).optional(),
     linkedin: LinkedinInputSchema.nullable().optional(),
-    /** WhatsApp; `null` apaga. */
+    /** Celular; `null` apaga. */
     phone: PhoneInputSchema.nullable().optional(),
     organization: z.string().trim().max(120).nullable().optional(),
     areas: z.array(AreaKeySchema).max(20).optional(),
+    themes: MentorThemesSchema.optional(),
+    themeDomains: MentorThemeDomainsSchema.optional(),
     bio: z.string().trim().max(MENTOR_BIO_MAX).nullable().optional(),
     photoUrl: z.string().url().max(500).nullable().optional(),
     availability: z.array(SlotIdSchema).max(100).optional(),
@@ -32,7 +37,14 @@ export const E32BodySchema = z
   })
   .strict();
 export type E32Body = z.infer<typeof E32BodySchema>;
-export const E32ResponseSchema = z.object({ user: UserViewSchema });
+export const E32ResponseSchema = z.object({
+  user: UserViewSchema,
+  /**
+   * RN22 · O admin pode passar do limite de mentoras por horário: os horários da disponibilidade dela que ficaram com
+   * mais mentoras ativas do que mesas ativas voltam aqui (vazio = nenhum). A3 mostra um aviso.
+   */
+  warnings: z.object({ overCapacity: z.array(SlotCapacityInfoSchema) }),
+});
 export type E32Response = z.infer<typeof E32ResponseSchema>;
 
 /** `details` do erro MENTOR_HAS_APPOINTMENTS (RN12). */

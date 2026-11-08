@@ -92,7 +92,7 @@ export function route<E extends EndpointDef>(
         const raw = req.headers[HEADERS.menteeToken.toLowerCase()];
         mentee = await findMenteeByToken(ctx, Array.isArray(raw) ? raw[0] : raw);
       } else if (isWrite && e.code !== 'E02' && e.code !== 'E05' && e.csrf !== false) {
-        // E10 (login) é público mas usa cookie: exige o header anti-CSRF (o webhook E47 marca `csrf: false`)
+        // E10 (login) é público mas usa cookie: exige o header anti-CSRF (rota com `csrf: false` fica de fora)
         checkCsrf(req, ctx.config);
       }
 

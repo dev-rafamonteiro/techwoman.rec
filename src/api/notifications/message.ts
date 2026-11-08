@@ -3,6 +3,7 @@ import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, TableDoc, UserDoc 
 import type { NotifierAttachment } from '../worker/notifier.js';
 import { buildIcs, ICS_FILENAME, tableLabel } from './ics.js';
 import { renderEmail, RenderError, type RenderedEmail } from './render.js';
+import { normalizeLinkedin } from '../lib/normalize.js';
 import { emailSubjectFor, EMAIL_TEMPLATE_BY_OUTBOX_TYPE, type EmailOutboxType } from './templates/email/subjects.js';
 
 export interface EmailMessageInput {
@@ -12,7 +13,7 @@ export interface EmailMessageInput {
   /** Participante; no aviso à mentora, a da mentoria (só para `nome`, sem links). */
   mentee: MenteeDoc | null;
   appointment: AppointmentDoc | null;
-  /** Mentora da mentoria (layouts 2, 3 e 9). */
+  /** Mentora da mentoria (layouts 2, 3 e 9) ou do atendimento fora da mesa (layout 10). */
   mentor: UserDoc | null;
   table: TableDoc | null;
   /** Destinatária do layout 6. */
@@ -42,9 +43,15 @@ export function formatEventDate(date: string): string {
 
 const isEmailType = (t: OutboxType): t is EmailOutboxType => t in EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
 
-/** Layout 9: frase do motivo (`{{motivo}}`), a mesma do WhatsApp (`MENTOR_SLOT_RELEASED_TEXT`). */
+/** Layout 9: frase do motivo (`{{motivo}}`), de `MENTOR_SLOT_RELEASED_TEXT`. */
 function mentorMotivo(reason: MentorSlotReleasedReason, v: Record<string, string>): string {
   return `${MENTOR_SLOT_RELEASED_TEXT[reason].replace(/\{(\w+)\}/g, (m, k: string) => v[k] ?? m)}.`;
+}
+
+/** LinkedIn da mentora como URL https do linkedin.com, ou '' (sem LinkedIn ou valor fora do padrão). */
+export function safeLinkedin(v: string | null | undefined): string {
+  const url = normalizeLinkedin(v);
+  return url && /^https:\/\/www\.linkedin\.com\//.test(url) ? url : '';
 }
 
 /** Monta assunto, HTML, texto e anexo de um e-mail da outbox. Variável que falta vira `RenderError`. */
@@ -84,6 +91,13 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
   }
   // layout 7: nova inscrição em P4, sem token (E02 reativa a inscrição cancelada)
   if (layout === '07-inscricao-cancelada') vars['link_inscricao'] = `${i.baseUrl}/mentoria/inscricao`;
+  // layout 10 (RN21): organização e LinkedIn opcionais (vazio some do e-mail); LinkedIn só como URL https do linkedin.com
+  if (layout === '10-atendimento-fora-da-mesa' && i.mentor) {
+    vars['mentora_organizacao'] = i.mentor.organization?.trim() ?? '';
+    vars['mentora_linkedin'] = safeLinkedin(i.mentor.linkedin);
+  }
+  // layout 11 (RN21): inscrição desfeita; nova inscrição em P4, sem token
+  if (layout === '11-atendimento-removido') vars['link_inscricao'] = `${i.baseUrl}/mentoria/inscricao`;
   // layout 9: painel da mentora (M1, sem token) e a frase do motivo; motivo desconhecido é erro de renderização
   let reason: MentorSlotReleasedReason | undefined;
   if (layout === '09-aviso-mentora') {

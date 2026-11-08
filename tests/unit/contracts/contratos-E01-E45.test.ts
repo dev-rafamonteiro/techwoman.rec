@@ -15,16 +15,17 @@ import {
   E26BodySchema,
   E39CreateBodySchema,
   E39PatchBodySchema,
+  E54ResponseSchema,
   buildPath,
   fullPath,
 } from "@tw/shared";
 
 const PLAN_CODES = [
-  "E01", "E02", "E03", "E04", "E05", "E07", "E08",
+  "E01", "E02", "E03", "E04", "E05", "E07", "E08", "E09",
   "E10", "E11", "E12", "E13",
   "E20", "E21", "E22", "E23", "E24", "E25", "E26", "E27", "E28",
   "E30", "E31", "E32", "E33", "E34", "E35", "E36", "E37", "E38", "E39",
-  "E40", "E41", "E42", "E43", "E44", "E45", "E47", "E48",
+  "E40", "E41", "E42", "E43", "E44", "E45", "E48", "E49", "E50", "E51", "E52", "E53", "E54",
 ];
 
 /** Todo objeto Zod do corpo precisa ser .strict() (PLAN: segurança, "Zod com strict() em todo corpo"). */
@@ -62,11 +63,10 @@ describe("contratos: catálogo E01–E48", () => {
     }
   });
 
-  it("E04, E08, E24, E26 aceitam Idempotency-Key; E02 exige Turnstile; E47 sem CSRF", () => {
+  it("E04, E08, E24, E26 aceitam Idempotency-Key; E02 exige Turnstile; E47 (webhook do WhatsApp) removido", () => {
     expect(ENDPOINTS.E04.idempotent).toBe(true);
     expect(ENDPOINTS.E08.idempotent).toBe(true);
-    expect(ENDPOINTS.E47.auth).toBe("public");
-    expect(ENDPOINTS.E47.csrf).toBe(false);
+    expect("E47" in ENDPOINTS).toBe(false);
     expect(ENDPOINTS.E24.idempotent).toBe(true);
     expect(ENDPOINTS.E26.idempotent).toBe(true);
     expect(ENDPOINTS.E02.turnstile).toBe(true);
@@ -78,6 +78,17 @@ describe("contratos: catálogo E01–E48", () => {
     const p = ENDPOINTS.E48.params as z.ZodType;
     expect(p.parse({ code: "IEO31Kd" })).toEqual({ code: "IEO31Kd" });
     expect(p.parse({ code: "x".repeat(65) })).toEqual({ code: "" });
+  });
+
+  it("E54: público, GET /public/mentors, sem corpo; o contrato não tem e-mail, telefone nem disponibilidade", () => {
+    expect([ENDPOINTS.E54.auth, ENDPOINTS.E54.method, ENDPOINTS.E54.path]).toEqual(["public", "GET", "/public/mentors"]);
+    expect(ENDPOINTS.E54.body).toBeUndefined();
+    const item = (E54ResponseSchema.shape.items.element as z.ZodObject<z.ZodRawShape>).shape;
+    expect(Object.keys(item).sort()).toEqual(["areas", "bio", "id", "linkedin", "name", "organization", "photoUrl", "themes"]);
+    const ok = { id: "1", name: "Ana", photoUrl: "/mentoras/01.jpg", organization: null, areas: [{ key: "dados", label: "Dados" }], themes: [], bio: null, linkedin: "https://www.linkedin.com/in/ana" };
+    const parsed = E54ResponseSchema.parse({ items: [{ ...ok, email: "a@b.c", phone: "+5581999999999", availability: ["s01"] }], stats: { mentorCount: 1, slotMinutes: 40, availableSlots: 0 } });
+    expect(Object.keys(parsed.items[0]!)).not.toContain("email");
+    expect(() => E54ResponseSchema.parse({ items: [{ ...ok, linkedin: "javascript:alert(1)" }], stats: { mentorCount: 1, slotMinutes: 40, availableSlots: 0 } })).toThrow();
   });
 
   it("buildPath/fullPath", () => {

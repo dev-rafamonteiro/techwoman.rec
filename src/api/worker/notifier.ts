@@ -2,7 +2,6 @@ import type { OutboxChannel, OutboxType } from '@tw/shared';
 import { createTransport, type Transporter } from 'nodemailer';
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { maskEmail } from '../lib/log.js';
-import { wahaMessageHash } from '../domain/index.js';
 
 /** Anexo de e-mail (ex.: `.ics` do e-mail de confirmação). */
 export interface NotifierAttachment {
@@ -12,27 +11,16 @@ export interface NotifierAttachment {
   content: string;
 }
 
-/** List Message do WhatsApp (RN18: confirmação de presença). Só o WAHA envia; os outros canais usam o `text`. */
-export interface NotifierList {
-  title: string;
-  description: string;
-  footer: string;
-  button: string;
-  sections: { title: string; rows: { title: string; rowId: string; description: string | null }[] }[];
-}
-
 export interface NotifierMessage {
   channel: OutboxChannel;
   to: string;
   type: OutboxType;
-  /** Texto final: versão em texto do e-mail ou mensagem de WhatsApp (modelos de A7). */
+  /** Versão em texto do e-mail. */
   text: string;
   subject: string;
-  /** Só e-mail: corpo HTML (o `text` segue como alternativa). */
+  /** Corpo HTML (o `text` segue como alternativa). */
   html?: string;
   attachments?: NotifierAttachment[];
-  /** Só WhatsApp: envia como List Message (o `text` segue como versão em texto). */
-  list?: NotifierList;
   /** dedupeKey: o provedor deve tratá-la como chave de idempotência (mitiga duplicata em crash). */
   idempotencyKey: string;
   payload: Record<string, unknown>;
@@ -45,7 +33,37 @@ export class NotifierError extends Error {
   }
 }
 
-/** Resultado do envio. `providerMessageId`: id estável da mensagem no provedor (WAHA: o `<hash>` final do id). */
+/**
+ * Limite do provedor (HTTP 429, throttling do SES): não é falha da mensagem. O worker devolve o item à fila sem gastar
+ * tentativa e pausa o canal por `retryAfterMs`.
+ */
+/** Espera padrão quando o provedor não diz quanto esperar; cota diária/mensal estourada espera mais. */
+export const RATE_LIMIT_WAIT_MS = 1_000;
+export const QUOTA_WAIT_MS = 5 * 60_000;
+
+export class RateLimitError extends NotifierError {
+  /** Teto de 5 min: um cabeçalho estranho (data distante, epoch) não pode estacionar a mensagem fora do alerta da fila. */
+  readonly retryAfterMs: number;
+  constructor(message: string, retryAfterMs: number) {
+    super(message, false);
+    this.retryAfterMs = Math.min(Math.max(0, Number.isFinite(retryAfterMs) ? retryAfterMs : RATE_LIMIT_WAIT_MS), QUOTA_WAIT_MS);
+  }
+}
+
+/** `Retry-After` em segundos (ou data HTTP); senão `ratelimit-reset` (segundos, Resend). */
+export function retryAfterMs(headers: Headers, now = Date.now()): number | null {
+  const ra = headers.get('retry-after');
+  if (ra) {
+    const sec = Number(ra);
+    if (Number.isFinite(sec)) return Math.max(0, sec * 1000);
+    const at = Date.parse(ra);
+    if (!Number.isNaN(at)) return Math.max(0, at - now);
+  }
+  const reset = Number(headers.get('ratelimit-reset'));
+  return Number.isFinite(reset) && headers.get('ratelimit-reset') !== null ? Math.max(0, reset * 1000) : null;
+}
+
+/** Resultado do envio. `providerMessageId`: id da mensagem no provedor, quando ele devolve. */
 export interface NotifierResult {
   providerMessageId?: string;
 }
@@ -57,15 +75,20 @@ export interface Notifier {
 /** Notifier de teste: guarda o que foi enviado e permite simular falhas. */
 export class MemoryNotifier implements Notifier {
   readonly sent: NotifierMessage[] = [];
-  private failures: { left: number; permanent: boolean }[] = [];
+  private failures: { left: number; permanent: boolean; rateLimitMs?: number }[] = [];
   /** Falha nos próximos `times` envios. */
   failNext(times = 1, permanent = false): void {
     this.failures.push({ left: times, permanent });
+  }
+  /** Responde "limite do provedor" (429) nos próximos `times` envios. */
+  rateLimitNext(times = 1, retryAfterMs = 1_000): void {
+    this.failures.push({ left: times, permanent: false, rateLimitMs: retryAfterMs });
   }
   async send(msg: NotifierMessage): Promise<NotifierResult> {
     const f = this.failures[0];
     if (f) {
       if (--f.left <= 0) this.failures.shift();
+      if (f.rateLimitMs !== undefined) throw new RateLimitError('HTTP 429 limite simulado', f.rateLimitMs);
       throw new NotifierError('falha simulada', f.permanent);
     }
     this.sent.push(msg);
@@ -77,7 +100,7 @@ export class MemoryNotifier implements Notifier {
 export class ConsoleNotifier implements Notifier {
   constructor(private readonly log: (o: object, m: string) => void) {}
   async send(msg: NotifierMessage): Promise<void> {
-    this.log({ channel: msg.channel, type: msg.type, to: msg.channel === 'email' ? maskEmail(msg.to) : '***' }, 'notificação (console)');
+    this.log({ channel: msg.channel, type: msg.type, to: maskEmail(msg.to) }, 'notificação (console)');
   }
 }
 
@@ -94,6 +117,11 @@ async function postJson(url: string, headers: Record<string, string>, body: unkn
   }
   if (res.ok) return res.json().catch(() => undefined);
   const text = (await res.text().catch(() => '')).slice(0, 200);
+  if (res.status === 429) {
+    // Resend: `daily_quota_exceeded` / `monthly_quota_exceeded` não passam em 1 s; espera mais para não martelar
+    const quota = /quota/i.test(text);
+    throw new RateLimitError(`HTTP 429 ${text}`, retryAfterMs(res.headers) ?? (quota ? QUOTA_WAIT_MS : RATE_LIMIT_WAIT_MS));
+  }
   throw new NotifierError(`HTTP ${res.status} ${text}`, isPermanent(res.status));
 }
 
@@ -140,7 +168,11 @@ export class MailerEmailNotifier implements Notifier {
           : {}),
       });
     } catch (err) {
-      const e = err as { responseCode?: number; code?: string; message?: string };
+      const e = err as { responseCode?: number; code?: string; name?: string; message?: string };
+      // SES "Maximum sending rate exceeded" (Throttling) e SMTP 421/454: limite do servidor, não da mensagem
+      if (e.name === 'ThrottlingException' || e.code === 'Throttling' || e.responseCode === 421 || e.responseCode === 454 || /rate exceeded|throttl/i.test(e.message ?? '')) {
+        throw new RateLimitError(`e-mail: ${(e.message ?? String(err)).slice(0, 200)}`, RATE_LIMIT_WAIT_MS);
+      }
       // resposta 5xx do servidor SMTP: destinatário ou mensagem recusados, não adianta repetir
       const permanent = typeof e.responseCode === 'number' && e.responseCode >= 500 && e.responseCode < 600;
       throw new NotifierError(`e-mail: ${(e.message ?? String(err)).slice(0, 200)}`, permanent);
@@ -148,36 +180,7 @@ export class MailerEmailNotifier implements Notifier {
   }
 }
 
-/** WhatsApp Business Cloud API (texto; em produção exige modelos aprovados). */
-export class WhatsAppCloudNotifier implements Notifier {
-  constructor(private readonly token: string, private readonly phoneNumberId: string) {}
-  async send(msg: NotifierMessage): Promise<void> {
-    await postJson(`https://graph.facebook.com/v21.0/${this.phoneNumberId}/messages`, { Authorization: `Bearer ${this.token}` }, { messaging_product: 'whatsapp', to: msg.to.replace(/^\+/, ''), type: 'text', text: { body: msg.text } });
-  }
-}
-
-/** PLAN (Provedores): 400/401/404 e 501 (ex.: `sendButtons` no GOWS) são permanentes; rede, 5xx, 408 e 429 tentam de novo. */
-const wahaPermanent = (status: number) => status === 501 || defaultPermanent(status);
-
-/**
- * WhatsApp pelo WAHA (WHATSAPP_TRANSPORT=waha): texto por `/api/sendText`, List Message por `/api/sendList`.
- * `chatId` = telefone só com dígitos + `@c.us`. Devolve o `<hash>` final do id (`true_<chatId>_<hash>`).
- */
-export class WahaNotifier implements Notifier {
-  constructor(private readonly url: string, private readonly apiKey: string, private readonly session: string) {}
-  async send(msg: NotifierMessage): Promise<NotifierResult> {
-    const chatId = `${msg.to.replace(/\D/g, '')}@c.us`;
-    const res = msg.list
-      ? await postJson(`${this.url}/api/sendList`, { 'X-Api-Key': this.apiKey }, { session: this.session, chatId, message: msg.list }, wahaPermanent)
-      : await postJson(`${this.url}/api/sendText`, { 'X-Api-Key': this.apiKey }, { session: this.session, chatId, text: msg.text }, wahaPermanent);
-    // a mensagem já saiu: sem id na resposta não é falha (só não dá para correlacionar)
-    const id = (res as { id?: unknown } | undefined)?.id;
-    const raw = typeof id === 'string' ? id : typeof (id as { _serialized?: unknown } | undefined)?._serialized === 'string' ? (id as { _serialized: string })._serialized : null;
-    return raw ? { providerMessageId: wahaMessageHash(raw) } : {};
-  }
-}
-
-/** Roteia por canal. Canal sem provedor configurado falha de forma permanente (vira `skipped` no worker). */
+/** Roteia por canal (só e-mail). Canal sem provedor configurado falha de forma permanente (vira `skipped` no worker). */
 export class RoutingNotifier implements Notifier {
   constructor(private readonly byChannel: Partial<Record<OutboxChannel, Notifier>>) {}
   async send(msg: NotifierMessage): Promise<NotifierResult | void> {
@@ -229,25 +232,6 @@ function emailNotifier(env: NodeJS.ProcessEnv, readSecret: (n: string) => string
   }
 }
 
-/** WHATSAPP_TRANSPORT=waha | cloud (padrão cloud). Desligado (WHATSAPP_ENABLED) ou sem credenciais do cloud: sem canal. */
-function whatsappNotifier(env: NodeJS.ProcessEnv, readSecret: (n: string) => string | undefined): Notifier | undefined {
-  if (!['1', 'true'].includes((env['WHATSAPP_ENABLED'] || '').toLowerCase())) return undefined;
-  const transport = (env['WHATSAPP_TRANSPORT'] || 'cloud').toLowerCase();
-  if (transport === 'waha') {
-    const url = (env['WAHA_URL'] ?? '').replace(/\/$/, '');
-    const key = readSecret('WAHA_API_KEY');
-    if (!url) throw new Error('WAHA_URL é obrigatório com WHATSAPP_TRANSPORT=waha');
-    if (!key) throw new Error('WAHA_API_KEY (ou WAHA_API_KEY_FILE) é obrigatório com WHATSAPP_TRANSPORT=waha');
-    return new WahaNotifier(url, key, env['WAHA_SESSION'] || 'default');
-  }
-  if (transport !== 'cloud') throw new Error(`WHATSAPP_TRANSPORT inválido: "${transport}" (use waha ou cloud)`);
-  const waToken = readSecret('WHATSAPP_TOKEN');
-  const waId = env['WHATSAPP_PHONE_NUMBER_ID'];
-  return waToken && waId ? new WhatsAppCloudNotifier(waToken, waId) : undefined;
-}
-
 export function notifierFromEnv(env: NodeJS.ProcessEnv, readSecret: (n: string) => string | undefined, log: (o: object, m: string) => void): Notifier {
-  const email = emailNotifier(env, readSecret, log);
-  const whatsapp = whatsappNotifier(env, readSecret);
-  return new RoutingNotifier({ email, ...(whatsapp ? { whatsapp } : {}) });
+  return new RoutingNotifier({ email: emailNotifier(env, readSecret, log) });
 }

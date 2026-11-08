@@ -43,7 +43,6 @@ export default defineConfig({
             JWT_SECRET: "e2e-only-jwt-secret-0123456789abcdef0123456789",
             TURNSTILE_MODE: "test",
             EMAIL_PROVIDER: "console",
-            WHATSAPP_ENABLED: "false",
             NODE_ENV: "test",
           },
         },

@@ -27,7 +27,7 @@ Este SDD define as telas que faltam para a mentoria do Tech Woman (Recife, sába
 | Recusa por horário | A participante volta para a fila marcada como prioridade. |
 | Marca | Nenhuma referência ao Bradesco em nenhuma tela, exceto o logo de patrocínio no bloco "Quem faz o Tech Woman" da P1. |
 
-**Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M6, A1–A9; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
+**Como usar com o Claude Design:** gerar as telas na ordem P4–P6, M1–M7, A1–A10; cada tela abaixo traz rota, quem acessa, conteúdo, ações, estados e o endpoint que alimenta cada ação.
 
 ## Diretrizes visuais e de experiência
 
@@ -62,12 +62,14 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 | P4 | Inscrição na mentoria | `/mentoria/inscricao` | Público | Nova |
 | P5 | Inscrição recebida | `/mentoria/inscricao/ok` | Público | Nova |
 | P6 | Minha mentoria | `/mentoria/minha?t=<token>` (as mensagens e P5 levam para cá pelo link curto `/l/<código>`, E48) | Participante (link pessoal) | Nova |
+| P7 | As mentoras | `/mentoras` | Público | Nova |
 | M1 | Login | `/entrar` | Mentora, admin | Nova |
 | M2 | Primeiro acesso / troca de senha | `/entrar/nova-senha` | Mentora, admin | Nova |
 | M3 | Minha disponibilidade | `/mentora/disponibilidade` | Mentora | Nova |
 | M4 | Participantes aguardando | `/mentora/aguardando` | Mentora | Nova |
 | M5 | Agendar mentoria | painel sobre M4 | Mentora | Nova |
 | M6 | Minha agenda | `/mentora/agenda` | Mentora | Nova |
+| M7 | Atendimento fora da mesa | gaveta sobre M6 | Mentora | Nova |
 | A1 | Dashboard | `/admin` | Admin, super admin | Nova |
 | A2 | Mentoras | `/admin/mentoras` | Admin, super admin | Nova |
 | A3 | Cadastro de mentora e importação | `/admin/mentoras/nova`, `/admin/mentoras/:id`, `/admin/mentoras/importar` | Admin, super admin | Nova |
@@ -80,9 +82,9 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 
 **Menu da mentora (barra inferior no celular):** Aguardando · Minha agenda · Disponibilidade · Sair.
 
-**Menu do admin (lateral):** Dashboard · Participantes · Mapa de mesas · Mentoras · Mesas · Evento · Administradores · Logs. Itens sem permissão não aparecem.
+**Menu do admin (lateral):** Dashboard · Participantes · Avaliações · Mapa de mesas · Mentoras · Mesas · Evento · Administradores · Logs. Itens sem permissão não aparecem.
 
-## Telas da participante (P1–P6)
+## Telas da participante (P1–P7)
 
 A jornada é QR Code → gamificação → resultado → inscrição → link pessoal, onde ela confirma o horário proposto pela mentora.
 
@@ -116,7 +118,7 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 | --- | --- | --- | --- |
 | Nome completo | Texto | Sim |  |
 | E-mail | E-mail | Sim | Uma inscrição por e-mail |
-| WhatsApp | Telefone com DDD | Sim | Máscara (00) 00000-0000 |
+| Celular | Telefone com DDD | Sim | Máscara (00) 00000-0000 |
 | LinkedIn | URL | Não | Aceita só o usuário ou a URL completa |
 | Área de interesse | Seleção | Sim | Pré-preenchida com o resultado de P3; editável |
 | Período preferido | Opções | Sim | Manhã, Início da tarde, Fim da tarde, Qualquer horário |
@@ -124,13 +126,13 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 | Consentimento LGPD | Caixa de seleção | Sim | Link para o aviso de privacidade |
 
 - Abaixo do período: "É só uma preferência. O horário final é definido pela mentora e você confirma."
-- Verificação anti-robô invisível (Cloudflare Turnstile) antes de enviar.
+- Verificação anti-robô (Cloudflare Turnstile) no envio, escondida: o widget roda só ao enviar (`execution: execute`) e só aparece, abaixo do formulário, se a Cloudflare pedir interação (`appearance: interaction-only`). Sem token em 2 minutos (ou com erro do desafio), o envio para e mostra "Não foi possível verificar que você é uma pessoa. Tente de novo."
 - Botão "Quero ser mentorada" envia para **E02**.
 - Estados: validação por campo em tempo real; e-mail já inscrito mostra "Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail" (o reenvio também é **E02**); falha de rede mantém os dados preenchidos.
 
 ### P5 · Inscrição recebida (nova)
 
-- Mensagem: "Recebemos sua inscrição! Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail e WhatsApp."
+- Mensagem: "Recebemos sua inscrição! Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail."
 - Botão "Acompanhar minha mentoria" abre P6 (navegação interna pelo `personalPath` de **E02**).
 - Sugestão "Salve este link" com botão copiar: mostra e copia o link curto (origem do site + `shortPath` de **E02**, ex.: `https://techwoman.dev/l/IEO31Kd`). `personalPath` e `shortPath` ficam juntos no estado da navegação e no `sessionStorage`, para P5 continuar certa depois de recarregar.
 
@@ -143,13 +145,28 @@ Página única que muda conforme o status vindo de **E03**; atualiza sozinha a c
 | Aguardando mentora | Área, período preferido, posição neutra ("Sua inscrição está ativa") | Editar período preferido; Cancelar inscrição (**E04**) |
 | Horário proposto | Card com mentora (nome, foto opcional, LinkedIn), mesa, horário, duração 45 min e contador "Responda até 14h05" | Aceitar; Recusar com motivo: Horário não serve / Não tenho mais interesse (**E04**) |
 | Confirmada | Card destacado: "Mesa 7 · 14h20 · com Ana" e "Chegue 5 minutos antes" | Adicionar à agenda (.ics via E06); Cancelar (**E04**): abre a escolha "Trocar de horário" (`reschedule`, RN19: cancela esta mentoria, volta à fila com prioridade e mostra os horários livres) ou "Não tenho mais interesse" (`cancel`, encerra a inscrição) |
-| Recusada por horário (inclui quem trocou de horário ou disse "Não poderei ir" no WhatsApp) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
+| Recusada por horário (inclui quem trocou de horário) | "Tudo bem! Sua inscrição continua ativa e com prioridade." e o bloco "Escolha um novo horário": horários livres de **E07** (componente de horários, os do período preferido destacados); tocar num horário pede confirmação "Confirmar mentoria às 14h20?" e chama **E08**; sucesso vira o estado Confirmada. Sem horários: "Nenhum horário livre agora. Você continua na fila com prioridade e uma mentora pode te chamar." 409 `SLOT_UNAVAILABLE`: "Esse horário acabou de ser ocupado. Escolha outro." e recarrega a lista | Escolher horário (**E07**, **E08**); Editar período preferido |
 | Proposta expirada | "O prazo para responder terminou e o horário foi liberado. Você continua na fila." | — |
-| Concluída | Agradecimento e link de avaliação (se houver) | — |
+| Concluída | Agradecimento (concluída num atendimento fora da mesa, RN21, sem mentoria na mesa: "Você foi atendida por {mentora} ({organização}, se houver) fora das mesas." antes do agradecimento e o cartão da mentora com o nome, a organização e o link "LinkedIn" quando ela tem, vindo de `walkIn` de E03) e o cartão "Como foi sua experiência?": notas de 1 a 5 em estrelas para O evento, A palestra e A mentoria (obrigatórias; abaixo de cada uma, o nome da nota: Muito ruim, Ruim, Regular, Boa, Excelente) e o campo livre "Quer contar mais?" (opcional, até 1.000 caracteres, com contador). Enviar sem as três notas mostra "Dê uma nota para o evento, a palestra e a mentoria." Depois de enviada (ou ao reabrir a página), o cartão vira "Obrigada pela avaliação!" com as notas e o comentário, só para leitura | Enviar avaliação (**E09**) |
 | Não compareceu / Cancelada | Mensagem neutra | Fazer nova inscrição, se o evento ainda estiver aberto |
 | Link inválido | "Não encontramos sua inscrição" | Reenviar link por e-mail (**E05**) |
 
-## Telas da mentora (M1–M6)
+### P7 · As mentoras (nova)
+
+Página pública e responsiva que apresenta as mentoras do programa, com dados de **E54** (sem login). Visual acolhedor e contemporâneo, nas cores da marca: roxo escuro e lilás como base, detalhes em laranja e verde-menta; títulos em Unbounded e texto em Manrope (tokens de `components.css`, sem cor nova).
+
+- Cabeçalho (fundo roxo escuro, fixo no topo): marca à esquerda; links Início (`/`), As mentoras (esta página, `aria-current`) e Começar minha jornada (P2); botão "Voltar ao evento" para a home do evento (P1, `/`). No celular, como em P1, ficam a marca e o botão.
+- Hero com o gradiente roxo: sobretítulo "Mentoria Tech Woman", título "Experiências que abrem caminhos.", texto convidando a conhecer as profissionais e o link "Conheça as mentoras ↓" (âncora `#mentoras`); ao lado, destaque circular laranja com a quantidade de mentoras (`stats.mentorCount`).
+- Introdução (fundo lilás claro): "Uma conversa pode transformar uma possibilidade em caminho.", texto curto e três indicadores: duração da conversa (`stats.slotMinutes` min), número de profissionais (`stats.mentorCount`) e vagas disponíveis (`stats.availableSlots`: vagas que ainda restam nos horários futuros; o rótulo é "vagas", não "horários", porque cada horário soma uma vaga por mesa livre). Enquanto carrega, os números mostram "—".
+- Diretório (`id="mentoras"`): título "Nossas mentoras", campo de busca "Busque por nome, especialidade, empresa ou tema" (placeholder "Ex.: dados, Java, liderança"), botão "Limpar busca" quando há texto e a contagem "23 mentoras" / "2 de 23 mentoras" em `aria-live="polite"`. A busca roda no navegador, sem recarregar e sem nova chamada: procura cada palavra digitada no nome, na empresa, no rótulo das áreas, nos temas e na bio, sem diferenciar acento e maiúscula (`src/web/pages/public/lib/mentoras.ts`).
+- Cartão da mentora: foto circular (`photoUrl`, com `alt` "Foto de {nome}" e carregamento tardio; sem foto, ou se o arquivo falhar, as iniciais do primeiro e do último nome sobre um fundo roxo); empresa em etiqueta; nome; especialidade (rótulos das áreas, separados por " · "); bio curta; temas em etiquetas verde-menta; "Ver perfil no LinkedIn ↗" quando houver (nova aba, `rel="noopener noreferrer"`, "abre em nova aba" escrito). Grade de 3 colunas em telas grandes, 2 entre 768 e 980 px e 1 no celular. Nunca mostra e-mail, telefone nem horários da mentora.
+- Estados: carregando (6 cartões em esqueleto, anunciados como "Carregando mentoras"); erro (estado de erro padrão com "Tentar de novo"); nenhuma mentora cadastrada ("Nenhuma mentora cadastrada ainda"); busca sem resultado ("Nenhuma mentora encontrada", "Tente outro nome, empresa, área ou tema." e "Ver todas as mentoras").
+- Chamada final (fundo roxo escuro): "Venha trocar, aprender e construir novas possibilidades." e o botão "Começar minha jornada" (P2). Rodapé com a marca e "Voltar ao início".
+- Acessibilidade: tudo por teclado, foco visível (roxo nas áreas claras, verde-menta nas roxas), busca em `role="search"` com rótulo visível, alvos de 44 px, leitura confortável no celular (margem lateral `--page-gutter`, sem rolagem horizontal).
+- Entradas: link "Mentoras" no menu do cabeçalho de P1 (depois das quatro âncoras), link "As mentoras" no rodapé de P1 e o botão "Conheça as mentoras" no bloco Mentoria de P1.
+- Fotos: arquivos em `src/web/public/mentoras/`, referenciados no `photoUrl` do cadastro da mentora (A3). P7 só mostra foto com endereço https ou caminho do próprio site (`/mentoras/...`); uma foto `http://` aceita em A3 aparece em P7 como iniciais. Não há busca automática de foto no LinkedIn (o LinkedIn bloqueia).
+
+## Telas da mentora (M1–M7)
 
 A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguardando, define mesa e horário, e acompanha tudo em "Minha agenda".
 
@@ -163,13 +180,15 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 
 - Aparece obrigatoriamente no primeiro login com senha provisória.
 - Campos: nova senha, confirmar senha; regras visíveis (mínimo 10 caracteres). Envia para **E13**.
-- Na mesma tela, a mentora confere nome, LinkedIn, WhatsApp (opcional, telefone com DDD, máscara (00) 00000-0000, nota "Para avisar quando uma participante liberar seu horário. Sem WhatsApp, o aviso vai só por e-mail."), foto (opcional) e áreas de atuação (**E28**).
+- Na mesma tela, a mentora confere nome, LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000), foto (opcional) e áreas de atuação (**E28**).
 
 ### M3 · Minha disponibilidade
 
 - Grade vertical com todos os horários do dia (ex.: 8h00, 8h45, 9h30… definidos em A7). Cada horário é um botão liga/desliga "Disponível".
 - Atalhos: "Manhã inteira", "Tarde inteira", "Limpar".
 - Horário com mentoria já marcada aparece travado, com o nome da participante; não pode ser desligado sem antes cancelar a mentoria em M6.
+- **Limite por horário (RN22):** horário que ela não marcou e que já tem uma mentora para cada mesa ativa aparece cinza, "Lotado", e não pode ser ligado (os atalhos também o pulam); legenda ganha "Lotado" e a dica "Horário lotado já tem uma mentora para cada mesa. Se alguém desmarcar, ele volta a ficar livre.". Horário livre com 5 vagas ou menos mostra "N vagas" ("1 vaga") no lugar de "Indisponível". Os horários dela continuam liga/desliga, mesmo lotados (pode desmarcar e remarcar antes de salvar).
+- Se outro salvar antes e o horário lotar (409 `SLOT_FULL`), a tela mostra a mensagem da API ("O horário 10h30 já está lotado (23 de 23 mesas). Desmarcamos esse horário; salve de novo."), tira só os horários lotados da seleção, mantém as outras escolhas não salvas e relê **E20** só para atualizar a lotação (se essa leitura falhar, a tela fica como está). Depois de salvar, a lotação ("Lotado", "N vagas") passa a vir da resposta do E21.
 - Salvar envia para **E21** (carga inicial via **E20**). Aviso se a mentora tentar entrar em M4 sem nenhum horário disponível.
 
 ### M4 · Participantes aguardando
@@ -205,43 +224,56 @@ Gaveta de baixo para cima no celular, modal no desktop.
 - **Ações por card (E26):**
   - Convite enviado: "Cancelar convite"; "Confirmar presencialmente" (quando a participante está na mesa e não conseguiu confirmar pelo celular).
   - Confirmada: "Iniciar" / "Concluir", "Não compareceu" (liberado 10 min após o início), "Cancelar" com motivo.
+- **Horário livre:** "+ Escolher participante" abre a lista da fila (E22) com filtro "Período": Manhã, Tarde (início e fim da tarde juntos) ou Qualquer horário (a fila toda). Manhã e Tarde somam quem marcou "Qualquer horário"; ao abrir, vem selecionado o período do horário tocado. Escolher abre o M5 nesse horário.
 - Destaque visual da próxima mentoria e aviso "Começa em 5 min".
+- **Atendimentos fora da mesa (RN21):** bloco "Atendimentos fora da mesa de hoje" acima da linha do tempo, com o botão "Registrar atendimento fora da mesa" (abre o M7) e a lista dos atendimentos dela (hora, nome, área e anotação), do mais recente ao mais antigo (**E52**). Sem nenhum: "Conversou com alguém fora das mesas? Registre para a conversa contar." O bloco aparece também quando a mentora ainda não marcou horários.
 - Dados: **E25**, atualização em tempo real por **E27**.
 
-## Telas do super admin (A1–A9)
+### M7 · Atendimento fora da mesa (gaveta aberta no M6)
+
+Para a mentoria rápida feita fora das mesas (RN21): não usa mesa nem horário. Quem é registrada aqui fica como atendida (concluída) e nunca entra na fila. Gaveta de baixo para cima no celular, modal no desktop (mesmo `Overlay` do M5).
+
+- **Buscar:** campo "Buscar participante" (busca com 300 ms de espera, a partir de 2 letras, tolerante a erro de digitação, **E50**). Resultados com o card da participante (sem e-mail e telefone), o selo da situação ("Na fila", "Mentoria agendada às 14h20", "Já atendida", "Não compareceu", "Atendida por você fora da mesa"; com mentoria agendada, E50 traz horário, mesa e mentora) e o botão "Registrar" (desabilitado em "Atendida por você fora da mesa"). Canceladas não aparecem. Sem resultado: "Ninguém encontrado. Confira o nome ou faça o cadastro rápido."
+- **Registrar:** mostra o card, o texto "Registra a conversa que você teve com {nome} fora das mesas. Ela fica como atendida, não entra na fila e recebe por e-mail o agradecimento com o seu nome, o seu LinkedIn e o link para avaliar.", o campo "Anotação" (opcional, até 500 caracteres, "Só a organização vê") e "Registrar atendimento" (**E51** com `menteeId`). **Com mentoria marcada na mesa (convite ou confirmada):** antes do botão, o aviso laranja "{nome} tem mentoria marcada às {horario} na {mesa} com {mentora}. Ao registrar o atendimento fora da mesa, essa mentoria será cancelada." e o botão vira "Cancelar a mentoria e registrar" (vermelho); a mentoria da mesa é cancelada e a mentora dela (se for outra) recebe o aviso por e-mail.
+- **"Não achei, cadastrar":** texto "Cadastro rápido: ela fica como atendida e recebe por e-mail o agradecimento com o seu nome, o seu LinkedIn e o link da página dela, onde pode avaliar a mentoria."; nome, e-mail, celular (opcional, máscara (00) 00000-0000), área (as do evento), anotação (opcional) e a caixa obrigatória "Ela concordou com o aviso de privacidade" (link para a página de privacidade). "Continuar" leva à **conferência do e-mail**: "Confira o e-mail:" com o e-mail em letra grande e "É para ele que vai o link da participante. Leia junto com ela antes de registrar."; botões "E-mail certo, registrar" (**E51** com `newMentee`) e "Corrigir".
+- **Sucesso (toast):** "Atendimento com {nome} registrado." ou, no RN01, "Esse e-mail já estava inscrito: o atendimento foi registrado para {nome completo}."; se uma mentoria na mesa foi cancelada (mesmo que a tela não soubesse dela, numa corrida: vem de `cancelledAppointment` de E51), acrescenta "A mentoria das {horario} na {mesa} com {mentora} foi cancelada."; sempre termina com "Ela vai receber por e-mail o agradecimento e o link para avaliar a mentoria." A gaveta fecha e a lista do M6 recarrega.
+- **Erros:** 409 com a mensagem da API ("Você já registrou um atendimento fora da mesa com esta participante.", inscrição cancelada) volta à busca; 503 da busca mostra "Não foi possível buscar" com "Tentar de novo".
+
+## Telas do super admin (A1–A10)
 
 O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila, as mesas e intervém quando algo trava.
 
 ### A1 · Dashboard
 
-- **Indicadores (E30):** inscritas, aguardando, convites pendentes, confirmadas, concluídas, não compareceu, ocupação das mesas agora (ex.: 14/20), capacidade restante do dia (sessões livres), mentoras com login feito / total.
+- **Indicadores (E30):** inscritas, aguardando, convites pendentes, confirmadas, concluídas (RN21: participantes atendidas, cada uma uma vez, na mesa ou fora dela; nota "{n} na mesa · {m} fora da mesa", `counts.attended`), atendimentos fora da mesa (registros das mentoras, `counts.walkIns`), não compareceu, ocupação das mesas agora (ex.: 14/20), capacidade restante do dia (sessões livres; com horário acima do limite de mesas (RN22, só por ação do admin) a nota do card fica laranja: "Mais mentoras que mesas: 10h30, 11h15"), mentoras com login feito / total.
 - Gráfico de barras "Inscritas por área" e linha "Inscrições por hora".
 - Lista "Precisa de atenção": convites prestes a expirar, mesas com mentoria atrasada, participantes com prioridade há mais de 30 min na fila.
 - Atualização automática a cada 15 s.
 
 ### A2 · Mentoras (lista)
 
-- Tabela: nome, e-mail, organização (uso interno, nunca exibido à participante), áreas, horários disponíveis, mentorias (confirmadas/concluídas), último acesso, status (Ativa / Desativada / Nunca acessou).
+- Tabela: nome, e-mail, organização (uso interno, nunca exibido à participante), áreas, horários disponíveis, mentorias (confirmadas/concluídas; concluídas inclui os atendimentos fora da mesa, RN21), atendimentos fora da mesa (coluna "Fora da mesa": "{n} de {concluídas}"), último acesso, status (Ativa / Desativada / Nunca acessou).
 - Busca livre por nome, e-mail, área ou tema da bio; filtro por status e área. Ações em linha: Editar, Redefinir senha, Ativar/Desativar, Ver agenda.
 - Botões "Nova mentora" e "Importar lista (CSV)".
 - Dados: **E31**.
 
 ### A3 · Cadastro de mentora e importação
 
-**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, WhatsApp (opcional, telefone com DDD, máscara (00) 00000-0000, nota "Para avisar a mentora quando uma participante liberar o horário dela. Sem WhatsApp, o aviso vai só por e-mail."; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
+**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
 
+- **Limite por horário (RN22):** o admin pode marcar horário lotado (não há bloqueio). Ao salvar a edição (E32), se algum horário dela ficou com mais mentoras ativas do que mesas ativas, a tela não volta para a lista: mostra o aviso laranja "Salvo, mas acima do limite de mesas. O horário 10h30 (24 mentoras para 23 mesas) tem mais mentoras disponíveis do que mesas ativas. No dia, alguma pode ficar sem mesa." com o link "Voltar para a lista". Como o botão Salvar fica no pé do formulário, a tela rola até o aviso e põe o foco nele, e o toast diz "Mentora atualizada, mas com horário acima do limite de mesas."
 - Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail" (layout de e-mail "Acesso da mentora", senha válida por 72 h). A mentora troca no primeiro acesso (M2).
 - **Redefinir senha (E34):** confirma e mostra a nova senha provisória uma única vez.
 
-**Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade, whatsapp; a coluna whatsapp é opcional, telefone com DDD); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
+**Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade, celular; a coluna celular é opcional, telefone com DDD, e planilhas antigas com a coluna whatsapp continuam aceitas); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
 
 ### A4 · Participantes
 
-- Tabela: nome, e-mail, WhatsApp, área, período preferido, status, prioridade, mentora, mesa, horário, inscrita em.
+- Tabela: nome, e-mail, celular, área, período preferido, status, prioridade, mentora, mesa, horário, inscrita em.
 - Filtros por status, área, prioridade e período; busca livre por nome, e-mail, telefone ou assunto do comentário.
-- Detalhe em painel lateral: dados completos, linha do tempo de eventos (inscrição, convite, recusa, confirmação…) e notificações enviadas.
+- Detalhe em painel lateral: dados completos, linha do tempo de eventos (inscrição, convite, recusa, confirmação…, e "Atendimento fora da mesa com {mentora}" e a remoção dele, RN21), o bloco "Atendimentos fora da mesa" (hora, mentora, anotação e o botão "Remover", com confirmação "Remover o atendimento fora da mesa com {mentora}? A participante será descadastrada e receberá um e-mail pedindo nova inscrição." quando é o único atendimento dela e não há mentoria na mesa; **E53**: nesse caso ela é descadastrada (nunca volta para a fila) e o toast diz "Atendimento removido. A participante foi descadastrada e vai receber um e-mail pedindo nova inscrição."; senão, "Atendimento removido.") e notificações enviadas.
 - **Ações (E36):** marcar/desmarcar prioridade, cancelar inscrição, reenviar link pessoal, agendar manualmente (abre o mesmo componente de M5 escolhendo também a mentora).
-- Exportar CSV (**E37**) com os filtros aplicados.
+- Exportar CSV (**E37**) com os filtros aplicados; a coluna `fora_da_mesa` lista as mentoras do atendimento fora da mesa; quem foi atendida só fora da mesa sai com status "done (fora da mesa)" e a mentora do atendimento na coluna `mentora`.
 - Dados: **E35**.
 
 ### A5 · Mapa de mesas
@@ -260,12 +292,11 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Nome, data, local, fuso (America/Recife), grade de mentoria das 10h às 16h45, duração da sessão (45 min), intervalo entre sessões (0 min). O evento ocorre das 8h às 18h. Prévia ao vivo da grade de horários gerada.
 - Prazo para a participante responder ao convite (15 min) e antecedência mínima para convite (10 min antes do horário).
-- Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440) e canais (E-mail, WhatsApp); "+ Adicionar lembrete" e remover. Padrão: 15 min por e-mail e WhatsApp. Sem WhatsApp disponível, vai só por e-mail.
-- Menus do WhatsApp (List Message), dois blocos: "Convite (menu do WhatsApp)" e "Confirmação de presença (menu do WhatsApp)". Cada um tem dois campos editáveis, Título e Texto (`events.whatsappLists`), e ao lado uma prévia ao vivo no estilo do WhatsApp com o rodapé "Se preferir, responda SIM ou NÃO", o botão "Responder" e as duas opções, fixos e não editáveis (convite: "Aceito" / "Não posso"; presença: "Sim, confirmo" / "Não poderei ir"), com a nota "As opções e o rodapé são fixos: as respostas da participante dependem deles." Variáveis do convite: {nome} {mentora} {horario} {mesa} {prazo} {link}; da presença: {nome} {mentora} {horario} {mesa} {minutos} {link}. Na prévia, as variáveis aparecem com dados de exemplo.
-- Nos textos do WhatsApp, "Convite de horário" leva a nota "Usado quando o WhatsApp sai em texto simples (sem menu)" e "Lembrete" leva "Usado nos lembretes depois do primeiro; o primeiro pelo WhatsApp vai como menu de presença".
-- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável), textos do WhatsApp e assuntos dos e-mails, com variáveis {nome}, {mentora}, {mesa}, {horario} (no lembrete, também {minutos}); botão "Prévia dos e-mails" que abre cada um dos 9 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
+- Lembretes antes da mentoria: lista de até 10, cada um com minutos antes do início (1 a 1440); "+ Adicionar lembrete" e remover. Todos vão por e-mail, sem escolha de canal. Padrão: 15 min.
+- Menus do WhatsApp (List Message) e textos do WhatsApp: removidos em 2026-11-05 (só e-mail).
+- Inscrições abertas / fechadas (interruptor), áreas disponíveis (lista editável) e assuntos dos e-mails, com as variáveis `{{variavel}}` de cada layout; botão "Prévia dos e-mails" que abre cada um dos 9 layouts com dados de exemplo (E46). O HTML dos e-mails é fixo no código.
 - QR Code da página de inscrição: visualizar e baixar PNG/SVG para impressão.
-- Alterar a grade com mentorias já marcadas é bloqueado. Dados: **E41**, QR Code: **E42**.
+- Alterar a grade (data, fuso, hora de início e de fim, duração e intervalo) é bloqueado enquanto houver mentoria marcada ou realizada, ou seja, com `slotLock` (convidada, confirmada, em andamento, concluída ou sem comparecimento), o mesmo critério da RN16 em E41. Com o bloqueio, esses campos ficam desabilitados e aparece o aviso com a quantidade de mentorias; se o E41 ainda assim responder `GRID_LOCKED`, a tela mostra o erro acima do formulário. Dados: **E41** (bloqueio calculado com **E38**), QR Code: **E42**.
 
 ### A8 · Administradores (super admin)
 
@@ -274,8 +305,17 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A9 · Notificações e auditoria
 
-- Aba **Notificações (E44):** canal, destinatária, modelo, status (na fila, enviada, falhou), tentativas e botão "Reenviar".
+- Aba **Notificações (E44):** canal (sempre e-mail; registros antigos de WhatsApp aparecem como "WhatsApp" no histórico), destinatária, modelo, status (na fila, enviada, falhou), tentativas e botão "Reenviar" (só em linhas de e-mail).
 - Aba **Auditoria (E45):** quem fez o quê e quando (login, cadastro de mentora, convite, cancelamento, override do admin), com filtro por usuário e ação.
+
+### A10 · Avaliações
+
+Rota `/admin/avaliacoes`, admin e super admin. Resultado da avaliação que a participante faz em P6 (Concluída, **E09**), alimentado por **E49** e atualizado a cada minuto.
+
+- Cartões no estilo do A1: Respostas (com a nota "X% das N concluídas", a taxa de resposta sobre as mentorias concluídas), Média · Evento, Média · Palestra e Média · Mentoria (uma casa decimal, "/ 5", e quantas deram 5 estrelas) e Com comentário.
+- Três painéis de barras, um por item, com quantas respostas deram de 5 a 1 estrela; cada um tem o botão "Ver tabela" (Nota, Respostas), como o gráfico de áreas do A1.
+- Lista "Respostas", da mais recente para a mais antiga: participante, mentora (a do atendimento fora da mesa quando ela foi concluída assim, RN21), data e hora, as três notas em estrelas (nota até 2 em vermelho) e o comentário. Filtros: Todas · Com comentário · Alguma nota até 2.
+- Sem respostas: "Nenhuma avaliação ainda", explicando que a avaliação abre na página da participante depois que a mentora conclui a mentoria. Participante anonimizada some da lista (a avaliação é apagada).
 
 ## Componentes, estados e mensagens padrão
 
@@ -296,35 +336,31 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 
 **Estados obrigatórios em toda tela com dados:** carregando (esqueleto), vazio (texto + próxima ação), erro (mensagem + tentar de novo), sem permissão ("Você não tem acesso a esta área"), sessão expirada (volta para M1 mantendo a rota de retorno).
 
-**Mensagens enviadas: o e-mail usa os 9 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o WhatsApp usa os textos abaixo, editáveis em A7. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos). `{link_inscricao}` (e `link_inscricao` no e-mail) é `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token). Nos avisos à mentora, `{link_painel}` (e `link_painel` no e-mail) é `<PUBLIC_BASE_URL>/entrar` (M1, sem token) e `{mentora}` é o nome dela:**
+**Mensagens enviadas: todas vão só por e-mail (o WhatsApp foi removido em 2026-11-05) e usam os 11 layouts HTML (SDD 2, Notificações > Layouts de e-mail); o texto base abaixo resume o conteúdo de cada uma. Em todos, `{link}` (e `link_minha_mentoria` / `link_agenda` nos e-mails) é o link curto `<PUBLIC_BASE_URL>/l/<código>` (SDD 2, Notificações > Links curtos). `{link_inscricao}` (e `link_inscricao` no e-mail) é `<PUBLIC_BASE_URL>/mentoria/inscricao` (P4, sem token). Nos avisos à mentora, `{link_painel}` (e `link_painel` no e-mail) é `<PUBLIC_BASE_URL>/entrar` (M1, sem token) e `{mentora}` é o nome dela:**
 
 | Momento | Canal | Texto base |
 | --- | --- | --- |
-| Inscrição recebida | E-mail + WhatsApp | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
+| Inscrição recebida | E-mail | "Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}" |
 | Convite de horário | E-mail | "{mentora} quer te mentorar às {horario}, na {mesa}. Confirme até {prazo}: {link}" |
-| Convite de horário (RN20; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "{mentora} quer te mentorar às {horario}, na {mesa}. Você aceita? Responda até {prazo}.\nDetalhes: {link}"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Aceito" e "Não posso" (descrição "Você conta o motivo na sua página") |
-| Resposta ao convite: aceitou | WhatsApp | A mensagem de Confirmação normal |
-| Resposta ao convite: não pode (texto fixo) | WhatsApp | "Tudo bem, {nome}! Para recusar, conte o motivo na sua página: {link}. Se for o horário, você continua na fila com prioridade." |
-| Resposta ao convite: não está mais disponível (texto fixo) | WhatsApp | "Este convite não está mais disponível. Veja como está sua inscrição: {link}" |
-| Resposta ao convite: não entendida (texto fixo) | WhatsApp | "Não entendi. Toque em Aceito ou Não posso, ou responda SIM ou NÃO." |
-| Confirmação | E-mail + WhatsApp | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
-| Lembrete (antes da mentoria, tempos e canais configurados em A7; padrão 15 min) | WhatsApp e/ou e-mail | "Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!" |
-| Primeiro lembrete pelo WhatsApp: confirmação de presença (RN18; título e texto editáveis em A7, o resto fixo) | WhatsApp (List Message) | Título "Oi, {nome}!"; texto "Sua mentoria com {mentora} começa às {horario} na {mesa}: faltam {minutos} minutos. Você confirma sua presença?"; rodapé "Se preferir, responda SIM ou NÃO"; botão "Responder"; opções "Sim, confirmo" e "Não poderei ir" (descrição "Você poderá escolher outro horário") |
-| Resposta: confirmou (texto fixo) | WhatsApp | "Obrigada por confirmar, {nome}! Te esperamos às {horario} na {mesa}." |
-| Resposta: não poderá ir (texto fixo) | WhatsApp | "Tudo bem, {nome}. Sua mentoria das {horario} foi cancelada e você continua na fila com prioridade. Se quiser, escolha um novo horário aqui: {link}" |
-| Resposta: não entendida (texto fixo) | WhatsApp | "Não entendi. Responda SIM para confirmar ou NÃO para cancelar sua mentoria das {horario}." |
-| Convite expirado | E-mail e WhatsApp | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
-| Cancelamento pela mentora | E-mail + WhatsApp | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
-| Inscrição cancelada pela participante (texto fixo) | E-mail + WhatsApp | "Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}" |
-| Horário liberado pela participante (recusa "Horário não serve", "Trocar de horário" em P6 ou "Não vou" no WhatsApp; texto fixo) | E-mail e WhatsApp (pelo "Não vou" do WhatsApp, só e-mail) | "Tudo bem, {nome}. O horário das {horario} foi liberado e você continua na fila com prioridade. Se quiser, escolha outro horário na sua página: {link}" |
-| Aviso à mentora: participante cancelou a mentoria confirmada ("Cancelar" ou "Trocar de horário" em P6, "Não vou" no WhatsApp; texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda: {link_painel}" |
-| Aviso à mentora: participante recusou o convite (qualquer motivo; texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
-| Aviso à mentora: participante cancelou a inscrição com convite pendente (texto fixo) | E-mail (layout 9) e WhatsApp, se a mentora tiver WhatsApp | "Oi, {mentora}. {nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
-| E-mail do aviso à mentora (layout 9; selo "PARA MENTORAS"; título "Seu horário das {horario} ficou livre"; card com Mesa, Horário e Participante; botão "Abrir minha agenda"; nota "O horário já aparece livre no seu painel.") | E-mail | Parágrafo "Oi, {mentora}." seguido de `motivo`: confirmada cancelada "{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda."; convite recusado "{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; inscrição cancelada "{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila." |
+| Convite de horário pelo menu do WhatsApp (RN20) e respostas ao convite | — | Removido em 2026-11-05 (só e-mail). A participante aceita ou recusa na sua página (P6). |
+| Confirmação | E-mail | "Combinado! {horario} na {mesa} com {mentora}. Chegue 5 minutos antes." |
+| Lembrete (antes da mentoria, tempos configurados em A7; padrão 15 min) | E-mail | "Faltam {minutos} minutos: sua mentoria com {mentora} começa às {horario} na {mesa}. Te esperamos!" |
+| Confirmação de presença pelo menu do WhatsApp (RN18) e respostas | — | Removido em 2026-11-05 (só e-mail). |
+| Convite expirado | E-mail | "O prazo para confirmar terminou e o horário foi liberado. Sua inscrição continua ativa." |
+| Cancelamento pela mentora | E-mail | "Sua mentoria das {horario} foi cancelada. Você voltou para a fila com prioridade." |
+| Inscrição cancelada pela participante (texto fixo) | E-mail | "Tudo certo, {nome}. Sua inscrição na mentoria do Tech Woman foi cancelada, como você pediu. Se havia um horário marcado, ele foi liberado. Se mudar de ideia, é só se inscrever de novo: {link_inscricao}" |
+| Horário liberado pela participante (recusa "Horário não serve" ou "Trocar de horário" em P6; texto fixo) | E-mail | "Tudo bem, {nome}. O horário das {horario} foi liberado e você continua na fila com prioridade. Se quiser, escolha outro horário na sua página: {link}" |
+| Aviso à mentora: participante cancelou a mentoria confirmada ("Cancelar" ou "Trocar de horário" em P6; texto fixo) | E-mail (layout 9) | "Oi, {mentora}. {nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda: {link_painel}" |
+| Aviso à mentora: participante recusou o convite (qualquer motivo; texto fixo) | E-mail (layout 9) | "Oi, {mentora}. {nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
+| Aviso à mentora: participante cancelou a inscrição com convite pendente (texto fixo) | E-mail (layout 9) | "Oi, {mentora}. {nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila: {link_painel}" |
+| Aviso à mentora: outra mentora registrou atendimento fora da mesa com a participante e a mentoria da mesa foi cancelada (RN21; texto fixo) | E-mail (layout 9) | "Oi, {mentora}. {nome} foi atendida fora da mesa por outra mentora, e a mentoria das {horario} na {mesa} foi cancelada. O horário voltou a ficar livre na sua agenda: {link_painel}" |
+| Atendida fora da mesa (RN21; layout 10, selo "ATENDIMENTO CONCLUÍDO"; um por atendimento registrado; texto fixo) | E-mail | "Obrigada por participar, {nome}! Você foi atendida por {mentora} ({organização}, se houver) fora das mesas, aqui no evento. Sua mentoria no Tech Woman está registrada como concluída. Na sua página pessoal você vê com quem conversou e avalia a mentoria: {link}" + card Mentora e o botão "Ver o LinkedIn de {mentora}" (só quando ela tem LinkedIn) |
+| Atendimento fora da mesa removido pelo admin, participante descadastrada (RN21; layout 11, selo "INSCRIÇÃO REMOVIDA"; texto fixo) | E-mail | "Oi, {nome}. A organização removeu o registro do seu atendimento fora da mesa e, com ele, sua inscrição na mentoria do Tech Woman. Se você ainda quer participar da mentoria, faça uma nova inscrição: {link_inscricao}" |
+| E-mail do aviso à mentora (layout 9; selo "PARA MENTORAS"; título "Seu horário das {horario} ficou livre"; card com Mesa, Horário e Participante; botão "Abrir minha agenda"; nota "O horário já aparece livre no seu painel.") | E-mail | Parágrafo "Oi, {mentora}." seguido de `motivo`: confirmada cancelada "{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda."; convite recusado "{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; inscrição cancelada "{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; atendida fora da mesa por outra mentora (RN21) "{nome} foi atendida fora da mesa por outra mentora, e a mentoria das {horario} na {mesa} foi cancelada. O horário voltou a ficar livre na sua agenda." |
 
 ## Medição de uso (analytics)
 
-Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha` e `/privacidade`. As telas da mentora (M1–M6, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A9) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
+Medição anônima e sem cookies (Umami self-hosted; regras, filtro e implantação no SDD 2, Analytics (Umami)). Vale só nas telas públicas, com caminho exato: P1 `/`, P2 `/jornada`, P3 `/jornada/resultado`, P4 `/mentoria/inscricao`, P5 `/mentoria/inscricao/ok`, P6 `/mentoria/minha`, P7 `/mentoras` e `/privacidade`. As telas da mentora (M1–M7, inclusive `/entrar` e `/entrar/nova-senha`) e do admin (A1–A10) nunca são medidas nem carregam o script. A URL vai sem query string e sem hash (o `?t=<token>` de P6 nunca sai do navegador). Nenhuma mudança visual: não há banner de cookies, porque não há cookie.
 
 Cada tela pública conta um pageview ao abrir. Eventos por tela (propriedades só de categoria; nunca nome, e-mail, telefone, LinkedIn, comentário, token ou ids):
 
@@ -340,6 +376,7 @@ Cada tela pública conta um pageview ao abrir. Eventos por tela (propriedades s�
 | P6 (Recusada por horário) | Horário escolhido e confirmado (E08) | `horario_escolhido` | — |
 | P6 (Confirmada) | Toque em "Adicionar à agenda (.ics)" | `agenda_adicionada` | — |
 | P6 | Período preferido salvo | `preferencia_atualizada` | `periodo` |
+| P6 (Concluída) | Avaliação enviada com sucesso (E09) | `avaliacao_enviada` | — |
 
 ### Privacidade · parágrafo sobre medição de uso
 
@@ -353,6 +390,5 @@ Na página `/privacidade`, em um cartão próprio (o restante do aviso continua 
 - [ ] Lista oficial das \~50 mentoras com nome, e-mail, LinkedIn e horários, para o modelo de importação (A3).
 - [ ] Lista de áreas finais da gamificação, para os selos e filtros (P3, P4, M4).
 - [ ] Foto da mentora: obrigatória, opcional ou fora?
-- [ ] Haverá avaliação pós-mentoria? Se sim, link na tela de status Concluída (P6).
 - [ ] Texto do aviso de privacidade (LGPD) e quem é a controladora dos dados, sem citar o Bradesco.
 - [ ] Fase 2, se der tempo: tela de configuração das perguntas e pesos da gamificação no admin (hoje ficam fixas no código).

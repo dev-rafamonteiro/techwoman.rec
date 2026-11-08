@@ -4,7 +4,7 @@ import { AppError } from './errors.js';
 export { normalizePhoneBR };
 
 /**
- * WhatsApp opcional da mentora (E28, E31, E32): undefined = não mexe, null = sem telefone, texto = E.164.
+ * Celular opcional da mentora (E28, E31, E32): undefined = não mexe, null = sem telefone, texto = E.164.
  * Inválido vira VALIDATION_ERROR no campo `phone` (o schema já recusa string vazia).
  */
 export function parseOptionalPhone(input: string | null | undefined): string | null | undefined {

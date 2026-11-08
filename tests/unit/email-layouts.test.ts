@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { EMAIL_COMMON_VARS, EMAIL_SUBJECTS, EMAIL_TEMPLATE_IDS, EMAIL_TEMPLATE_VARS, MENTOR_SLOT_RELEASED_SUBJECTS, emailSubjectFor, type EmailTemplateId } from "../../src/api/notifications/templates/email/subjects.js";
 
 /**
- * PLAN, "Testes dos e-mails", caixas 1 e 2: os 9 layouts renderizam com dados de exemplo sem `{{` sobrando
+ * PLAN, "Testes dos e-mails", caixas 1 e 2: os 11 layouts renderizam com dados de exemplo sem `{{` sobrando
  * (snapshot do HTML e do texto) e todos os links são absolutos e nenhum executa ação.
  */
 const DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../src/api/notifications/templates/email");
@@ -14,9 +14,13 @@ const read = (id: string, ext: "html" | "txt") => readFileSync(resolve(DIR, `${i
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-/** Mesma regra do PLAN: `{{variavel}}`, escape de HTML no .html; variável faltando é erro. */
+/** Mesma regra do PLAN: `{{variavel}}`, escape de HTML no .html; variável faltando é erro; `{{#v}}...{{/v}}` some com `v` vazia. */
 function fill(tpl: string, vars: Record<string, string>, html: boolean): string {
-  return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => {
+  const withSections = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, k: string, inner: string) => {
+    if (!(k in vars)) throw new Error(`variável ausente: ${k}`);
+    return vars[k] ? inner : "";
+  });
+  return withSections.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => {
     if (!(k in vars)) throw new Error(`variável ausente: ${k}`);
     return html ? esc(vars[k]!) : vars[k]!;
   });
@@ -24,9 +28,9 @@ function fill(tpl: string, vars: Record<string, string>, html: boolean): string 
 const varsFor = (id: EmailTemplateId) => ({ ...sample.common, ...sample.templates[id]! });
 const placeholders = (s: string) => [...s.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]!);
 
-describe("layouts de e-mail (9): arquivos e variáveis", () => {
-  it("existem os 9 pares .html + .txt com os nomes do PLAN", () => {
-    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora", "07-inscricao-cancelada", "08-horario-liberado", "09-aviso-mentora"]);
+describe("layouts de e-mail (11): arquivos e variáveis", () => {
+  it("existem os 11 pares .html + .txt com os nomes do PLAN", () => {
+    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora", "07-inscricao-cancelada", "08-horario-liberado", "09-aviso-mentora", "10-atendimento-fora-da-mesa", "11-atendimento-removido"]);
     for (const id of EMAIL_TEMPLATE_IDS) {
       expect(read(id, "html").length, id).toBeGreaterThan(500);
       expect(read(id, "txt").length, id).toBeGreaterThan(50);
@@ -159,8 +163,49 @@ describe("layout 9 (aviso à mentora: a participante liberou o horário)", () =>
       confirmed_cancelled: "{{nome}} cancelou a mentoria das {{horario}}",
       invite_declined: "{{nome}} recusou o convite das {{horario}}",
       invite_cancelled: "Convite das {{horario}} encerrado",
+      walked_in_elsewhere: "{{nome}} foi atendida fora da mesa",
     });
     expect(emailSubjectFor("mentor_slot_released", "invite_declined")).toBe("{{nome}} recusou o convite das {{horario}}");
     expect(emailSubjectFor("mentor_slot_released")).toBe(EMAIL_SUBJECTS["09-aviso-mentora"]);
+  });
+});
+
+describe("layout 10 (RN21: atendida fora da mesa)", () => {
+  const vars = varsFor("10-atendimento-fora-da-mesa");
+  it("agradece, diz quem atendeu (com a organização), traz o LinkedIn da mentora e o link pessoal (curto /l/)", () => {
+    expect(vars.link_minha_mentoria).toMatch(/^https:\/\/[^/]+\/l\//);
+    const html = fill(read("10-atendimento-fora-da-mesa", "html"), vars, true);
+    expect(html).toContain("Obrigada por participar, Joana!");
+    expect(html).toContain("Você foi atendida por Ana (Empresa Exemplo) fora das mesas");
+    expect(html).toContain(`href="${vars.mentora_linkedin}"`);
+    expect(html).toContain("Ver o LinkedIn de Ana");
+    expect(html).toContain(`href="${vars.link_minha_mentoria}"`);
+    const txt = fill(read("10-atendimento-fora-da-mesa", "txt"), vars, false);
+    expect(txt).toContain(`Ver o LinkedIn de Ana: ${vars.mentora_linkedin}`);
+    expect(txt).toContain(`Ver minha página e avaliar: ${vars.link_minha_mentoria}`);
+  });
+  it("sem LinkedIn nem organização: o botão e os parênteses somem, sem linha vazia sobrando", () => {
+    const sem = { ...vars, mentora_linkedin: "", mentora_organizacao: "" };
+    const html = fill(read("10-atendimento-fora-da-mesa", "html"), sem, true);
+    const txt = fill(read("10-atendimento-fora-da-mesa", "txt"), sem, false);
+    for (const out of [html, txt]) {
+      expect(out).not.toMatch(/LinkedIn|\{\{|\}\}/);
+      expect(out).toContain("Você foi atendida por Ana fora das mesas");
+    }
+    expect(html).not.toMatch(/href=""/);
+    expect(txt).toContain(`Ver minha página e avaliar: ${vars.link_minha_mentoria}\n\nSua avaliação`);
+  });
+});
+
+describe("layout 11 (RN21: atendimento removido, inscrição desfeita)", () => {
+  it("pede nova inscrição com o link de P4, sem token", () => {
+    const vars = varsFor("11-atendimento-removido");
+    expect(vars.link_inscricao).toBe("https://techwoman.dev/mentoria/inscricao");
+    const html = fill(read("11-atendimento-removido", "html"), vars, true);
+    expect(html).toContain(`href="${vars.link_inscricao}"`);
+    expect(html).toContain("Fazer nova inscrição");
+    const txt = fill(read("11-atendimento-removido", "txt"), vars, false);
+    expect(txt).toContain("sua inscrição na mentoria do Tech Woman");
+    expect(txt).not.toMatch(/\?t=/);
   });
 });

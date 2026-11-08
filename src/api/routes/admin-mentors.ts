@@ -11,7 +11,8 @@ import { enqueueStaffPassword } from '../lib/outbox.js';
 import { mentorSearchPipeline, runSearch } from '../search/text.js';
 import { respond, route } from '../lib/route.js';
 import { iso, toUserView } from '../lib/views.js';
-import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers } from '../domain/index.js';
+import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers, overCapacitySlots, remainingSlotCapacity } from '../domain/index.js';
+import { ensureSlotCounters, slotCapacity, toSlotCapacityInfo, touchSlotCounters } from '../services/slot-capacity.js';
 
 const ACTIVE = ['invited', 'confirmed', 'in_progress'] as const;
 
@@ -27,7 +28,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     const event = await loadEvent(ctx);
     const eid = event._id;
     const { appointments: ap, mentees: me, users, tables } = ctx.c;
-    const [byStatus, menteeByStatus, byArea, byHour, activeTables, mentors, occupied, futureBooked] = await Promise.all([
+    const [byStatus, menteeByStatus, byArea, byHour, activeTables, mentors, occupied, futureBooked, walkIns] = await Promise.all([
       ap.aggregate<{ _id: string; n: number }>([{ $match: { eventId: eid } }, { $group: { _id: '$status', n: { $sum: 1 } } }]).toArray(),
       me.aggregate<{ _id: string; n: number }>([{ $match: { eventId: eid } }, { $group: { _id: '$status', n: { $sum: 1 } } }]).toArray(),
       me.aggregate<{ _id: string; n: number }>([{ $match: { eventId: eid } }, { $group: { _id: '$area', n: { $sum: 1 } } }]).toArray(),
@@ -36,18 +37,32 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       users.find({ roles: 'mentor', status: 'active' }, { projection: { availability: 1, lastLoginAt: 1 } }).toArray(),
       ap.countDocuments({ eventId: eid, status: { $in: [...ACTIVE] }, startAt: { $lte: now }, endAt: { $gt: now } }),
       ap.find({ eventId: eid, slotLock: true, startAt: { $gt: now } }, { projection: { slotId: 1 } }).toArray(),
+      ctx.c.walkIns.countDocuments({ eventId: eid, deletedAt: null }),
     ]);
     const cnt = (list: { _id: string; n: number }[], k: string) => list.find((x) => x._id === k)?.n ?? 0;
     const registered = menteeByStatus.reduce((s, x) => s + x.n, 0);
     const bookedBySlot = new Map<string, number>();
     for (const a of futureBooked) bookedBySlot.set(a.slotId, (bookedBySlot.get(a.slotId) ?? 0) + 1);
-    let remainingCapacity = 0;
+    const mentorsBySlot = new Map<string, number>();
     for (const s of event.slots) {
       if (s.startAt.getTime() <= now.getTime()) continue;
-      const mentorsHere = mentors.filter((m) => m.availability.includes(s.id)).length;
-      remainingCapacity += Math.max(0, Math.min(activeTables, mentorsHere) - (bookedBySlot.get(s.id) ?? 0));
+      mentorsBySlot.set(s.id, mentors.filter((m) => m.availability.includes(s.id)).length);
     }
+    const remainingCapacity = remainingSlotCapacity({ slots: event.slots, now, activeTables, mentorsBySlot, bookedBySlot });
+    // RN22: horários futuros com mais mentoras do que mesas (só por ação do admin ou dado anterior à regra)
+    const overCapacity = toSlotCapacityInfo(event, overCapacitySlots(mentorsBySlot, activeTables, [...mentorsBySlot.keys()]));
     const label = new Map(event.areas.map((a) => [a.key, a.label]));
+
+    // RN21: atendidas = participantes `done` (cada uma conta uma vez); fora da mesa = `done` sem mentoria concluída na
+    // mesa e com atendimento fora da mesa ativo; na mesa = o resto
+    const [doneAtTable, walkedIn] = await Promise.all([
+      ap.distinct('menteeId', { eventId: eid, status: 'done' }),
+      ctx.c.walkIns.distinct('menteeId', { eventId: eid, deletedAt: null }),
+    ]);
+    const atTableSet = new Set(doneAtTable.map(String));
+    const walkInOnlyIds = walkedIn.filter((x) => !atTableSet.has(String(x)));
+    const attendedWalkIn = walkInOnlyIds.length ? await me.countDocuments({ eventId: eid, status: 'done', _id: { $in: walkInOnlyIds } }) : 0;
+    const attendedTotal = cnt(menteeByStatus, 'done');
 
     const [expiring, late, priorityWaiting] = await Promise.all([
       ap.find({ eventId: eid, status: 'invited', expiresAt: { $gt: now, $lte: new Date(now.getTime() + 3 * 60_000) } }).limit(20).toArray(),
@@ -77,9 +92,12 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         confirmed: cnt(byStatus, 'confirmed') + cnt(byStatus, 'in_progress'),
         done: cnt(byStatus, 'done'),
         noShow: cnt(byStatus, 'no_show'),
+        walkIns,
+        attended: { total: attendedTotal, atTable: attendedTotal - attendedWalkIn, walkIn: attendedWalkIn },
       },
       tables: { occupiedNow: occupied, total: activeTables },
       remainingCapacity,
+      overCapacitySlots: overCapacity,
       mentors: { loggedIn: mentors.filter((m) => m.lastLoginAt).length, total: mentors.length },
       registeredByArea: byArea.map((a) => ({ area: a._id, label: label.get(a._id) ?? a._id, count: a.n })),
       registeredByHour: byHour.map((h) => ({ hour: iso(h._id), count: h.n })),
@@ -113,14 +131,28 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         { $group: { _id: { m: '$mentorId', s: '$status' }, n: { $sum: 1 } } },
       ])
       .toArray();
+    // RN21: atendimentos fora da mesa, à parte das mentorias na mesa
+    const walkIns = await ctx.c.walkIns
+      .aggregate<{ _id: ObjectId; n: number }>([
+        { $match: { eventId: ctx.config.eventId, mentorId: { $in: users.map((u) => u._id) }, deletedAt: null } },
+        { $group: { _id: '$mentorId', n: { $sum: 1 } } },
+      ])
+      .toArray();
     const n = (id: ObjectId, ...st: string[]) => counts.filter((c) => c._id.m.equals(id) && st.includes(c._id.s)).reduce((s, c) => s + c.n, 0);
-    const items: MentorListItem[] = users.map((u) => ({
-      ...toUserView(u),
-      availableSlots: u.availability.length,
-      confirmedCount: n(u._id, 'confirmed', 'in_progress'),
-      doneCount: n(u._id, 'done'),
-      neverLoggedIn: u.lastLoginAt === null,
-    }));
+    const items: MentorListItem[] = users.map((u) => {
+      const doneCount = n(u._id, 'done');
+      const walkInCount = walkIns.find((w) => w._id.equals(u._id))?.n ?? 0;
+      return {
+        ...toUserView(u),
+        availableSlots: u.availability.length,
+        confirmedCount: n(u._id, 'confirmed', 'in_progress'),
+        doneCount,
+        walkInCount,
+        // RN21: atendimentos concluídos = na mesa + fora da mesa
+        attendedCount: doneCount + walkInCount,
+        neverLoggedIn: u.lastLoginAt === null,
+      };
+    });
     return { items };
   });
 
@@ -149,6 +181,8 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       phone: phone ?? null,
       organization: body.organization ?? null,
       areas: [...new Set(body.areas)],
+      themes: body.themes,
+      themeDomains: body.themeDomains,
       bio: body.bio ?? null,
       photoUrl: body.photoUrl ?? null,
       availability: event.slots.map((s) => s.id).filter((id) => body.availability.includes(id)),
@@ -176,10 +210,12 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     return respond(201, { user: toUserView(doc), provisionalPassword: password });
   });
 
-  // E32 · PATCH /admin/mentors/:id · RN11, RN12
+  // E32 · PATCH /admin/mentors/:id · RN11, RN12, RN22 (o admin pode passar do limite; a resposta avisa)
   route(app, ctx, E32, async ({ req, user, params, body }) => {
     const event = await loadEvent(ctx);
     const id = oid(params.id);
+    const validIds = new Set(event.slots.map((s) => s.id));
+    if (body.availability) await ensureSlotCounters(ctx, event._id, [...new Set(body.availability)].filter((s) => validIds.has(s)));
     if (body.alsoAdmin !== undefined && !canGrantAdminRole(user.roles)) throw new AppError('FORBIDDEN', 'Só super admin pode alterar o papel de admin.');
     const updated = await runTxn(ctx, async (session) => {
       const target = await ctx.c.users.findOne({ _id: id, roles: 'mentor' }, { session });
@@ -194,6 +230,8 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       if (body.phone !== undefined) set['phone'] = parseOptionalPhone(body.phone);
       if (body.organization !== undefined) set['organization'] = body.organization;
       if (body.bio !== undefined) set['bio'] = body.bio;
+      if (body.themes !== undefined) set['themes'] = body.themes;
+      if (body.themeDomains !== undefined) set['themeDomains'] = body.themeDomains;
       if (body.photoUrl !== undefined) set['photoUrl'] = body.photoUrl;
       if (body.areas !== undefined) {
         const keys = new Set(event.areas.map((a) => a.key));
@@ -206,6 +244,8 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         const check = checkAvailabilityUpdate({ current: target.availability, next, appointments: active.map((a) => ({ slotId: a.slotId, status: a.status })), validSlotIds: event.slots.map((s) => s.id) });
         if (!check.ok) throw fromRuleError(check);
         set['availability'] = event.slots.map((s) => s.id).filter((s) => next.includes(s));
+        // RN22: mesma trava de E21, para a mentora que salva ao mesmo tempo recontar já com esta gravação
+        await touchSlotCounters(ctx, session, event._id, next.filter((s) => !target.availability.includes(s)));
       }
       if (body.alsoAdmin !== undefined) {
         const hasAdmin = target.roles.includes('admin');
@@ -249,7 +289,13 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       await writeAudit(ctx, session, { actor: actorForRoute(req, 'admin'), action: body.status === 'disabled' ? 'mentor.disable' : body.status === 'active' && target.status === 'disabled' ? 'mentor.enable' : 'mentor.update', entity: 'user', entityId: id, before: { status: target.status }, after: { fields: Object.keys(set).filter((k) => k !== 'updatedAt'), status: set['status'] ?? target.status }, ip: req.ip });
       return after!;
     });
-    return { user: toUserView(updated) };
+    // RN22: aviso (não bloqueia) dos horários dela com mais mentoras ativas do que mesas ativas
+    let overCapacity: ReturnType<typeof toSlotCapacityInfo> = [];
+    if (updated.status === 'active' && updated.availability.length) {
+      const { capacity, counts } = await slotCapacity(ctx, event._id, { slotIds: updated.availability });
+      overCapacity = toSlotCapacityInfo(event, overCapacitySlots(counts, capacity, updated.availability));
+    }
+    return { user: toUserView(updated), warnings: { overCapacity } };
   });
 
   // E33 · POST /admin/mentors/import (multipart CSV, ?dryRun=true)

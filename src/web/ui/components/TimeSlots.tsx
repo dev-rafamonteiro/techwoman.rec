@@ -9,6 +9,10 @@ export interface SlotOption {
   caption?: string;
   /** Travado (mentoria marcada): não pode ser alterado. */
   locked?: boolean;
+  /** Lotado (RN22): não pode ser ligado; mostra "Lotado". Só vale para horário desligado. */
+  full?: boolean;
+  /** Texto sob o horário desligado no lugar de "Indisponível" (ex.: "2 vagas", RN22). */
+  hint?: string;
   preferred?: boolean;
 }
 
@@ -27,17 +31,19 @@ export function SlotToggleGrid({ legend, slots, selected, onToggle, disabled, ca
       <legend className="tw-sr-only">{legend}</legend>
       {slots.map((s) => {
         const on = selected.has(s.id);
+        const full = !!s.full && !on;
         return (
           <button
             key={s.id}
             type="button"
             className="tw-slot"
             aria-pressed={on}
-            disabled={s.locked}
+            disabled={s.locked || full}
+            data-full={full || undefined}
             onClick={() => onToggle(s.id)}
           >
             {s.label}
-            <small>{s.locked ? `Marcada${s.caption ? ` · ${s.caption}` : ''}` : caption ?? (on ? 'Disponível' : 'Indisponível')}</small>
+            <small>{s.locked ? `Marcada${s.caption ? ` · ${s.caption}` : ''}` : full ? 'Lotado' : caption ?? (on ? 'Disponível' : s.hint ?? 'Indisponível')}</small>
           </button>
         );
       })}

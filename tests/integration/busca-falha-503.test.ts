@@ -27,6 +27,7 @@ describe.skipIf(!api)("falha do $search: 503 em E22, E31 e E35 (nunca 500)", () 
     ["E22 /mentor/queue?q=", () => b.mentor[0]!.get("/api/mentor/queue?q=dados")],
     ["E35 /admin/mentees?q=", () => b.admin.get("/api/admin/mentees?q=dados")],
     ["E31 /admin/mentors?q=", () => b.admin.get("/api/admin/mentors?q=dados")],
+    ["E50 /mentor/mentees/search?q=", () => b.mentor[0]!.get("/api/mentor/mentees/search?q=dados")],
   ];
 
   it.each(cases)("%s responde 503 com corpo de erro padrão e sem vazar a causa", async (_n, call) => {
