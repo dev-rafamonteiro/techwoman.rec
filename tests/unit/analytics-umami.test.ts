@@ -30,7 +30,7 @@ describe("tracker vendorizado", () => {
   });
 
   it("versão do script é a mesma da imagem em ops/analytics/compose.yaml", () => {
-    const compose = readFileSync(new URL("ops/analytics/compose.yaml", root), "utf8");
+    const compose = readFileSync(new URL("ops/analytics/compose.yaml", root), "utf8").replace(/\r\n/g, "\n");
     expect(compose).toContain(`image: ghcr.io/umami-software/umami:${UMAMI_VERSION}\n`);
   });
 });
