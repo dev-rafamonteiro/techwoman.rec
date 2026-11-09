@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ENDPOINTS, MentorHasAppointmentsDetailsSchema, type MentorHasAppointmentsDetails, type MentorListItem } from '@tw/shared';
+import { canonicalSpecialty, ENDPOINTS, MentorHasAppointmentsDetailsSchema, type MentorHasAppointmentsDetails, type MentorListItem } from '@tw/shared';
 import { ApiError, Button, CheckboxField, DataTable, ErrorState, LinkButton, Overlay, SelectField, SkeletonList, TextField, call, formatTime, useQuery, useToast, type Column } from '../../ui';
 import { PageHead, errMsg, useAreas, useDebounced, useTitle } from './lib/common';
 import './lib/a2-a3.css';
@@ -107,9 +107,9 @@ export default function A2Mentoras() {
     { key: 'org', header: 'Organização (interno)', render: (m) => (m.organization ? <span className="a2-clip a2-clip--org" title={m.organization}>{m.organization}</span> : '—'), text: (m) => m.organization ?? '' },
     { key: 'themes', header: 'Temas e domínios', render: (m) => (m.themes.length ? (
       <div className="a2-themes">{m.themes.map((t, i) => (
-        <div key={i}><strong>{t}</strong>{m.themeDomains[i]?.length ? <span>{m.themeDomains[i]!.join(' · ')}</span> : null}</div>
+        <div key={i}><strong>{canonicalSpecialty(t)}</strong>{m.themeDomains[i]?.length ? <span>{m.themeDomains[i]!.join(' · ')}</span> : null}</div>
       ))}</div>
-    ) : '—'), text: (m) => m.themes.map((t, i) => [t, ...(m.themeDomains[i] ?? [])].join(': ')).join(' | ') },
+    ) : '—'), text: (m) => m.themes.map((t, i) => [canonicalSpecialty(t), ...(m.themeDomains[i] ?? [])].join(': ')).join(' | ') },
     { key: 'slots', header: 'Horários disp.', render: (m) => m.availableSlots, text: (m) => m.availableSlots },
     // RN21: concluídas = na mesa + fora da mesa (a divisão fica na coluna "Fora da mesa")
     { key: 'appts', header: 'Confirm. / concl.', render: (m) => `${m.confirmedCount} / ${m.attendedCount}`, text: (m) => `${m.confirmedCount}/${m.attendedCount}` },

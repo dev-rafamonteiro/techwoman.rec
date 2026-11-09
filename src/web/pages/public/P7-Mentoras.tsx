@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ENDPOINTS, type PublicMentor } from '@tw/shared';
+import { canonicalSpecialty, ENDPOINTS, KNOWLEDGE_TRACKS, trackKeysForSpecialties, type KnowledgeTrackKey, type PublicMentor } from '@tw/shared';
 import { Brand, ErrorState, LinkButton, call, useQuery } from '../../ui';
 import { filterMentors, initials, resultCountLabel } from './lib/mentoras';
 import './public.css';
@@ -21,6 +21,9 @@ function Portrait({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
 
 function MentorCard({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
   const expertise = mentor.areas.map((a) => a.label).join(' · ');
+  const tracks = trackKeysForSpecialties(mentor.themes)
+    .map((key) => KNOWLEDGE_TRACKS.find((track) => track.key === key))
+    .filter((track) => track !== undefined);
   return (
     <article className="tw-p7__card" data-testid="p7-card">
       <Portrait mentor={mentor} tone={tone} />
@@ -31,9 +34,14 @@ function MentorCard({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
           {expertise && <p className="tw-p7__expertise">{expertise}</p>}
         </div>
         {mentor.bio && <p className="tw-p7__bio">{mentor.bio}</p>}
+        {tracks.length > 0 && (
+          <ul className="tw-p7__themes" aria-label="Trilhas de conhecimento">
+            {tracks.map((track) => <li key={track.key}>{track.label}</li>)}
+          </ul>
+        )}
         {mentor.themes.length > 0 && (
           <ul className="tw-p7__themes" aria-label="Temas">
-            {mentor.themes.map((t, i) => <li key={`${i}-${t}`}>{t}</li>)}
+            {mentor.themes.map((t, i) => <li key={`${i}-${t}`}>{canonicalSpecialty(t)}</li>)}
           </ul>
         )}
         {mentor.linkedin && (
@@ -51,8 +59,12 @@ function MentorCard({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
 export default function P7Mentoras() {
   const q = useQuery((signal) => call(ENDPOINTS.E54, { signal }), []);
   const [query, setQuery] = useState('');
+  const [trackKey, setTrackKey] = useState<KnowledgeTrackKey | ''>('');
   const mentors = useMemo(() => (q.status === 'success' ? q.data.items : []), [q.status, q.data]);
-  const filtered = useMemo(() => filterMentors(mentors, query), [mentors, query]);
+  const filtered = useMemo(
+    () => filterMentors(trackKey ? mentors.filter((mentor) => trackKeysForSpecialties(mentor.themes).includes(trackKey)) : mentors, query),
+    [mentors, query, trackKey],
+  );
   const stats = q.status === 'success' ? q.data.stats : null;
   const num = (n: number | undefined) => (n === undefined ? '—' : n);
 
@@ -126,8 +138,22 @@ export default function P7Mentoras() {
                   data-testid="p7-search"
                 />
               </label>
-              {query && (
-                <button className="tw-p7__clear" type="button" onClick={() => setQuery('')}>Limpar busca</button>
+              <label>
+                <span>Filtre por trilha</span>
+                <select
+                  value={trackKey}
+                  onChange={(event) => {
+                    const selected = KNOWLEDGE_TRACKS.find((track) => track.key === event.target.value);
+                    setTrackKey(selected?.key ?? '');
+                  }}
+                  data-testid="p7-track"
+                >
+                  <option value="">Todas as trilhas</option>
+                  {KNOWLEDGE_TRACKS.map((track) => <option key={track.key} value={track.key}>{track.label}</option>)}
+                </select>
+              </label>
+              {(query || trackKey) && (
+                <button className="tw-p7__clear" type="button" onClick={() => { setQuery(''); setTrackKey(''); }}>Limpar filtros</button>
               )}
             </div>
             <p className="tw-p7__result-count" aria-live="polite" data-testid="p7-count">

@@ -3,6 +3,7 @@
  * arquivo no Node.
  */
 import type { PublicMentor } from '@tw/shared';
+import { KNOWLEDGE_TRACKS, trackKeysForSpecialties } from '@tw/shared';
 
 /** Minúsculas, sem acento e com espaços simples: "  Liderança  TÉCNICA " -> "lideranca tecnica". */
 export function normalizeSearch(value: string): string {
@@ -27,9 +28,11 @@ export function initials(name: string): string {
   return (first.charAt(0) + last.charAt(0)).toLocaleUpperCase('pt-BR');
 }
 
-/** Texto em que a busca procura: nome, empresa, áreas (rótulo), temas e bio, já normalizado. */
+/** Texto em que a busca procura: nome, empresa, áreas, temas, trilhas e bio, já normalizado. */
 export function searchText(m: Pick<PublicMentor, 'name' | 'organization' | 'areas' | 'themes' | 'bio'>): string {
-  return normalizeSearch([m.name, m.organization ?? '', ...m.areas.map((a) => a.label), ...m.themes, m.bio ?? ''].join(' '));
+  const tracks = trackKeysForSpecialties(m.themes)
+    .map((key) => KNOWLEDGE_TRACKS.find((track) => track.key === key)?.label ?? '');
+  return normalizeSearch([m.name, m.organization ?? '', ...m.areas.map((a) => a.label), ...m.themes, ...tracks, m.bio ?? ''].join(' '));
 }
 
 /**

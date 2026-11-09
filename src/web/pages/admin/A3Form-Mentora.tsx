@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type InputHTMLAttributes } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ENDPOINTS, MENTOR_BIO_MAX, MENTOR_THEME_MAX, type SlotCapacityInfo, type UserView } from '@tw/shared';
+import { canonicalSpecialty, ENDPOINTS, MENTOR_BIO_MAX, SPECIALTIES_BY_TRACK, type SlotCapacityInfo, type UserView } from '@tw/shared';
 import {
-  ApiError, Button, CheckboxField, ErrorState, LinkButton, SkeletonList, SlotToggleGrid,
+  ApiError, Button, CheckboxField, ErrorState, LinkButton, SelectField, SkeletonList, SlotToggleGrid,
   call, formatTime, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useTitle } from './lib/common';
@@ -15,7 +15,7 @@ interface FormState {
 const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], theme1: '', theme2: '', domains1: '', domains2: '', bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
 
 const fromUser = (u: UserView): FormState => ({
-  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, theme1: u.themes[0] ?? '', theme2: u.themes[1] ?? '', domains1: (u.themeDomains[0] ?? []).join('; '), domains2: (u.themeDomains[1] ?? []).join('; '), bio: u.bio ?? '',
+  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, theme1: canonicalSpecialty(u.themes[0] ?? ''), theme2: canonicalSpecialty(u.themes[1] ?? ''), domains1: (u.themeDomains[0] ?? []).join('; '), domains2: (u.themeDomains[1] ?? []).join('; '), bio: u.bio ?? '',
   photoUrl: u.photoUrl ?? '', availability: new Set(u.availability), alsoAdmin: u.roles.includes('admin'), sendPasswordByEmail: false,
 });
 
@@ -23,7 +23,7 @@ const splitDomains = (s: string) => s.split(';').map((d) => d.trim()).filter(Boo
 /** Tema sem texto sai junto com os domínios dele, para os índices de `themes` e `themeDomains` seguirem alinhados. */
 function themesBody(f: FormState): { themes: string[]; themeDomains: string[][] } {
   const pairs = [[f.theme1, f.domains1], [f.theme2, f.domains2]].filter(([t]) => t!.trim());
-  return { themes: pairs.map(([t]) => t!.trim()), themeDomains: pairs.map(([, d]) => splitDomains(d!)) };
+  return { themes: pairs.map(([t]) => canonicalSpecialty(t!.trim())), themeDomains: pairs.map(([, d]) => splitDomains(d!)) };
 }
 
 /** Campo do design: rótulo 700 com nota em cinza ao lado, dica ou erro abaixo. */
@@ -175,9 +175,23 @@ export default function A3FormMentora() {
             <Field label="LinkedIn" note="(opcional)" value={f.linkedin} onChange={(e) => set('linkedin', e.target.value)} />
             <Field label="Celular" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone} data-testid="a3-phone" />
             <Field label="Organização" note="(uso interno, nunca aparece para a participante)" placeholder="Onde ela trabalha" value={f.organization} onChange={(e) => set('organization', e.target.value)} />
-            <Field label="Tema comercial 1" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1" />
+            <SelectField label="Tema comercial 1" optional value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1">
+              <option value="">Selecione um tema</option>
+              {SPECIALTIES_BY_TRACK.map((track) => (
+                <optgroup key={track.key} label={track.label}>
+                  {track.specialties.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
+                </optgroup>
+              ))}
+            </SelectField>
             <Field label="Domínios do tema 1" note="(separados por ;)" value={f.domains1} onChange={(e) => set('domains1', e.target.value)} data-testid="a3-domains1" />
-            <Field label="Tema comercial 2" note="(opcional)" maxLength={MENTOR_THEME_MAX} value={f.theme2} onChange={(e) => set('theme2', e.target.value)} data-testid="a3-theme2" />
+            <SelectField label="Tema comercial 2" optional value={f.theme2} onChange={(e) => set('theme2', e.target.value)} data-testid="a3-theme2">
+              <option value="">Selecione um tema</option>
+              {SPECIALTIES_BY_TRACK.map((track) => (
+                <optgroup key={track.key} label={track.label}>
+                  {track.specialties.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
+                </optgroup>
+              ))}
+            </SelectField>
             <Field label="Domínios do tema 2" note="(separados por ;)" value={f.domains2} onChange={(e) => set('domains2', e.target.value)} data-testid="a3-domains2" />
             <div className="tw-field a3f-bio">
               <label className="tw-field__label" htmlFor="a3-bio">Mini bio <span className="a3f-note">(opcional)</span></label>

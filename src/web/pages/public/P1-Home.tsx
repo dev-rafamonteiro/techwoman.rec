@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ENDPOINTS } from '@tw/shared';
+import { ENDPOINTS, KNOWLEDGE_TRACKS } from '@tw/shared';
 import { Brand, CalendarIcon, ClockIcon, ErrorState, HeroMosaic, LinkButton, PeopleIcon, PinFilledIcon, PinIcon, SkeletonList, call, useQuery } from '../../ui';
 import './public.css';
 import './p1.css';
@@ -24,14 +24,6 @@ const SOCIAL = [
   ['LinkedIn', 'https://www.linkedin.com/company/techwoman'],
   ['YouTube', 'https://www.youtube.com/@techwomanrec'],
 ] as const;
-const TRAILS = [
-  ['Carreiras', 'Para quem deseja ingressar no mercado de tecnologia, fazer uma transição profissional ou descobrir novas possibilidades de atuação.', '#f26430'],
-  ['Técnica', 'Para profissionais que já atuam no setor e buscam aprofundar conhecimentos e acompanhar as transformações tecnológicas.', '#8a1f96'],
-  ['Soft Skills', 'Comunicação, inteligência emocional e liderança, fundamentais para o desenvolvimento pessoal e profissional.', '#d98ce6'],
-  ['Empreendedorismo', 'Para mulheres que empreendem ou desejam transformar ideias em negócios, com inovação e conexões.', '#f4af3e'],
-  ['Tecnologia para quem não é da tecnologia', 'Inteligência artificial, inovação, comportamento e segurança digital: a transformação digital faz parte de todas as áreas.', '#c9f4ee'],
-] as const;
-
 /** P1 · Home do evento (E01) */
 export default function P1Home() {
   const ev = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
@@ -83,10 +75,10 @@ export default function P1Home() {
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#8a1f96' }} aria-hidden="true"><PinIcon size={20} color="#FFFFFF" /></span><h3>Onde</h3><p>{where ? `${where} · ` : ''}Recife</p></div>
             <div className="tw-card"><span className="tw-p1__ico" style={{ background: '#d98ce6' }} aria-hidden="true"><PeopleIcon size={20} color="#3D0A45" /></span><h3>Para quem</h3><p>Mulheres que querem entrar ou crescer na área de tecnologia</p></div>
           </div>
-          <h3 className="tw-p1__trailstitle">Cinco trilhas de conhecimento</h3>
+          <h3 className="tw-p1__trailstitle">Trilhas de conhecimento</h3>
           <div className="tw-p1__trails" data-testid="p1-trails">
-            {TRAILS.map(([t, d, c]) => (
-              <div key={t} className="tw-card tw-p1__trail" style={{ borderTopColor: c }}><h4>{t}</h4><p>{d}</p></div>
+            {KNOWLEDGE_TRACKS.map(({ key, label, description, color }) => (
+              <div key={key} className="tw-card tw-p1__trail" style={{ borderTopColor: color }}><h4>{label}</h4><p>{description}</p></div>
             ))}
           </div>
         </div>
