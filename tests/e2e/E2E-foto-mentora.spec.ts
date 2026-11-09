@@ -107,3 +107,14 @@ test("admin carrega a foto da mentora em A3 e o salvar mantém", async ({ browse
   expect(await c.mentorPhotos.countDocuments({ _id: world.w.mentors[1]!._id })).toBe(1);
   expect((await c.users.findOne({ _id: world.w.mentors[1]!._id }))?.photoUrl).toContain("/photo?v=");
 });
+
+test("P7: mentora sem foto aparece com a imagem padrão", async ({ browser }, info) => {
+  const page = await newPage(browser, info.project.use.viewport ?? undefined);
+  await withProductionImagePolicy(page);
+  await page.goto("/mentoras");
+  const img = page.getByTestId("p7-card").first().locator("img");
+  await img.scrollIntoViewIfNeeded();
+  await expect(img).toHaveAttribute("src", "/mentoras/sem-foto.png");
+  await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBe(188);
+  if (SHOT) await page.screenshot({ path: `${SHOT}/p7-${info.project.name}.png` });
+});
