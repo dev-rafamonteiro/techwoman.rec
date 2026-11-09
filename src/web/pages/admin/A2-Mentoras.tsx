@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ENDPOINTS, MentorHasAppointmentsDetailsSchema, type MentorHasAppointmentsDetails, type MentorListItem } from '@tw/shared';
 import { ApiError, Button, CheckboxField, DataTable, ErrorState, LinkButton, Overlay, SelectField, SkeletonList, TextField, call, formatTime, useQuery, useToast, type Column } from '../../ui';
@@ -25,25 +25,47 @@ function lastAccess(iso: string): string {
   return `${day.slice(0, 5)}, ${formatTime(iso)}`;
 }
 
-/** Faixa escura com a senha provisória, mostrada uma única vez (design A2). */
-function SecretBanner({ name, password, onClose }: { name: string; password: string; onClose: () => void }) {
+/** Copia o e-mail da mentora; o ícone vira um ✓ por um instante. */
+function CopyEmail({ email }: { email: string }) {
+  const toast = useToast();
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(t);
+  }, [copied]);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(email); setCopied(true); } catch { toast.error('Não foi possível copiar o e-mail.'); }
+  };
+  return (
+    <button type="button" className="a2-copy" aria-label={`Copiar e-mail ${email}`} title={copied ? 'Copiado' : 'Copiar e-mail'} data-copied={copied || undefined} data-testid="a2-copy-email" onClick={() => void copy()}>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        {copied ? <path d="M5 12.5l4.5 4.5L19 7.5" /> : <><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></>}
+      </svg>
+    </button>
+  );
+}
+
+/** Resultado de "Redefinir senha": a senha provisória fica oculta até tocar no olho e é mostrada uma única vez. */
+function ResetResult({ email, password, emailed, onClose }: { email: string; password: string; emailed: boolean; onClose: () => void }) {
   const [shown, setShown] = useState(false);
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try { await navigator.clipboard.writeText(password); setCopied(true); } catch { setShown(true); }
   };
   return (
-    <div className="a23-secret" role="alertdialog" aria-label="Nova senha provisória" data-testid="a2-secret">
-      <div className="a23-secret__text">
-        <strong>Nova senha provisória de {name}</strong>
-        <span>Não será mostrada de novo. Ela troca no primeiro acesso.</span>
+    <div className="tw-stack" data-testid="a2-secret">
+      <p>{emailed ? <>A nova senha foi enviada para <strong>{email}</strong>.</> : 'A senha foi redefinida.'} A mentora troca a senha no primeiro acesso.</p>
+      <div className="a2-pass">
+        <output className="a2-pass__value" aria-live="polite" data-testid="a2-secret-value">{shown ? password : '•'.repeat(Math.min(password.length, 14))}</output>
+        <button type="button" className="a2-pass__eye" aria-label="Mostrar senha" aria-pressed={shown} title={shown ? 'Ocultar senha' : 'Mostrar senha'} data-testid="a2-secret-eye" onClick={() => setShown((s) => !s)}>
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" />{shown && <path d="M4 4l16 16" />}
+          </svg>
+        </button>
       </div>
-      <output className="a23-secret__value" aria-live="polite">{shown ? password : '•'.repeat(Math.min(password.length, 14))}</output>
-      <div className="a23-secret__btns">
-        <button type="button" className="a23-secret__ghost" aria-pressed={shown} onClick={() => setShown((s) => !s)}>{shown ? 'Ocultar' : 'Mostrar'}</button>
-        <button type="button" className="a23-secret__cta" onClick={() => void copy()}>{copied ? 'Copiada ✓' : 'Copiar'}</button>
-        <button type="button" className="a23-secret__close" aria-label="Fechar" onClick={onClose}>×</button>
-      </div>
+      <p className="a23-small">Esta senha não será mostrada de novo depois que você fechar.</p>
+      <div className="tw-row"><Button onClick={() => void copy()}>{copied ? 'Copiada ✓' : 'Copiar senha'}</Button><Button variant="ghost" onClick={onClose}>Fechar</Button></div>
     </div>
   );
 }
@@ -68,7 +90,7 @@ export default function A2Mentoras() {
   const filtered = !!(q.trim() || status || area);
   const clear = () => { setQ(''); setStatus(''); setArea(''); };
 
-  const [secret, setSecret] = useState<{ name: string; id: string; password: string } | null>(null);
+  const [secret, setSecret] = useState<{ password: string; emailed: boolean } | null>(null);
   const [realocar, setRealocar] = useState<{ name: string; details: MentorHasAppointmentsDetails } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -89,21 +111,20 @@ export default function A2Mentoras() {
 
   const [resetFor, setResetFor] = useState<MentorListItem | null>(null);
   const [sendByEmail, setSendByEmail] = useState(true);
+  const closeReset = () => { setResetFor(null); setSecret(null); };
   const reset = async () => {
     const m = resetFor;
     if (!m) return;
     setBusy(m.id);
     try {
       const r = await call(ENDPOINTS.E34, { params: { id: m.id }, body: { sendByEmail } });
-      setResetFor(null);
-      if (sendByEmail) toast.success('Senha provisória enviada por e-mail.');
-      setSecret({ name: m.name, id: m.id, password: r.provisionalPassword });
+      setSecret({ password: r.provisionalPassword, emailed: sendByEmail });
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
   };
 
   const columns: Column<MentorListItem>[] = [
     { key: 'name', header: 'Nome', render: (m) => m.name, text: (m) => m.name },
-    { key: 'email', header: 'E-mail', render: (m) => <span className="a2-clip a2-clip--email" title={m.email}>{m.email}</span>, text: (m) => m.email },
+    { key: 'email', header: 'E-mail', render: (m) => <span className="a2-email"><span className="a2-clip a2-clip--email" title={m.email}>{m.email}</span><CopyEmail email={m.email} /></span>, text: (m) => m.email },
     { key: 'org', header: 'Organização (interno)', render: (m) => (m.organization ? <span className="a2-clip a2-clip--org" title={m.organization}>{m.organization}</span> : '—'), text: (m) => m.organization ?? '' },
     { key: 'themes', header: 'Temas e domínios', render: (m) => (m.themes.length ? (
       <div className="a2-themes">{m.themes.map((t, i) => (
@@ -159,7 +180,6 @@ export default function A2Mentoras() {
         <LinkButton to="/admin/mentoras/importar" variant="secondary" className="a23-btn">Importar lista (CSV)</LinkButton>
         <LinkButton to="/admin/mentoras/nova" className="a23-btn">+ Nova mentora</LinkButton>
       </PageHead>
-      {secret && <SecretBanner key={secret.id} name={secret.name} password={secret.password} onClose={() => setSecret(null)} />}
       {!items && list.status === 'loading' && <SkeletonList rows={5} height={56} />}
       {list.status === 'error' && <ErrorState error={list.error} onRetry={list.reload} />}
       {items && (
@@ -175,12 +195,15 @@ export default function A2Mentoras() {
           )}
         </div>
       )}
-      <Overlay title="Redefinir senha" open={!!resetFor} onClose={() => setResetFor(null)}>
-        <div className="tw-stack">
-          <p>Redefinir a senha de {resetFor?.name}? A senha atual deixa de valer e as sessões são encerradas.</p>
-          <CheckboxField label="Enviar a nova senha por e-mail" checked={sendByEmail} onChange={(e) => setSendByEmail(e.target.checked)} />
-          <div className="tw-row"><Button loading={busy === resetFor?.id} onClick={() => void reset()}>Redefinir</Button><Button variant="ghost" onClick={() => setResetFor(null)}>Cancelar</Button></div>
-        </div>
+      {/* key: ao trocar a confirmação pelo resultado, o foco volta para a janela */}
+      <Overlay key={secret ? 'result' : 'confirm'} title={secret ? 'Senha redefinida' : 'Redefinir senha'} open={!!resetFor} onClose={closeReset}>
+        {secret && resetFor ? <ResetResult email={resetFor.email} password={secret.password} emailed={secret.emailed} onClose={closeReset} /> : (
+          <div className="tw-stack">
+            <p>Redefinir a senha de {resetFor?.name}? A senha atual deixa de valer e as sessões são encerradas.</p>
+            <CheckboxField label="Enviar a nova senha por e-mail" checked={sendByEmail} onChange={(e) => setSendByEmail(e.target.checked)} />
+            <div className="tw-row"><Button loading={busy === resetFor?.id} onClick={() => void reset()}>Redefinir</Button><Button variant="ghost" onClick={closeReset}>Cancelar</Button></div>
+          </div>
+        )}
       </Overlay>
       <Overlay title="Realocar mentorias antes de desativar" open={!!realocar} onClose={() => setRealocar(null)}>
         {realocar && (
