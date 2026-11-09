@@ -165,6 +165,7 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
                 phone: null,
                 linkedin: null,
                 note: null,
+                theme: null,
                 quizScores: {},
                 consent: null,
                 status: 'cancelled',

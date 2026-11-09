@@ -121,6 +121,8 @@ export interface MenteeDoc {
   phone: string | null;
   linkedin: string | null;
   area: string;
+  /** Tema dentro da trilha (`area`); ausente em inscrições antigas e no atendimento fora da mesa. */
+  theme?: string | null;
   quizScores: Record<string, number>;
   preferredPeriod: PreferredPeriod;
   note: string | null;

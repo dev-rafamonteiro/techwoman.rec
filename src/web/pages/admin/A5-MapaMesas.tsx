@@ -153,6 +153,7 @@ function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onCon
           <dt>Celular</dt><dd>{m.phone ? phoneFromE164(m.phone) : '—'}</dd>
           <dt>LinkedIn</dt><dd>{m.linkedin ? <a href={linkedinUrl(m.linkedin)} target="_blank" rel="noopener noreferrer">{m.linkedin.replace(/^https?:\/\/(www\.)?/i, '')}</a> : '—'}</dd>
           <dt>Área</dt><dd>{areaLabel(m.area)}</dd>
+          {m.theme && <><dt>Tema</dt><dd>{m.theme}</dd></>}
           {m.note && <><dt>Observação</dt><dd>{m.note}</dd></>}
         </dl>
         {a.history.length > 0 && (

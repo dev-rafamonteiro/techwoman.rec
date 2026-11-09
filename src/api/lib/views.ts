@@ -40,6 +40,7 @@ export function toMenteeStaffView(m: MenteeDoc): MenteeStaffView {
     id: id(m._id),
     name: m.name,
     area: m.area,
+    theme: m.theme ?? null,
     preferredPeriod: m.preferredPeriod,
     linkedin: m.linkedin,
     note: m.note,

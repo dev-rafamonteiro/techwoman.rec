@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { canonicalSpecialty, ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
-import { ApiError, Button, SelectField, TextField, ThemeOptions, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
+import { ApiError, Button, SelectField, TextField, ThemeOptions, call, themeTrackHint, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
 import { safeNext } from '../../shell/auth';
 import '../public/public.css';
 import { MentorPhotoField } from './lib/MentorPhotoField';
@@ -93,11 +93,11 @@ export default function M2NovaSenha() {
         <TextField label="Celular" optional type="tel" inputMode="tel" autoComplete="tel" value={phone} error={shown('phone')} placeholder="(00) 00000-0000"
           onChange={(e) => { setPhone(maskPhone(e.target.value)); setProfileTouched(true); }} data-testid="m2-phone" />
         <MentorPhotoField />
-        <SelectField label="Tema comercial 1" optional value={theme1}
+        <SelectField label="Tema 1" optional hint={themeTrackHint(theme1)} value={theme1}
           onChange={(e) => { setTheme1(e.target.value); setProfileTouched(true); }} data-testid="m2-theme1">
           <ThemeOptions current={theme1} />
         </SelectField>
-        <SelectField label="Tema comercial 2" optional value={theme2}
+        <SelectField label="Tema 2" optional hint={themeTrackHint(theme2)} value={theme2}
           onChange={(e) => { setTheme2(e.target.value); setProfileTouched(true); }} data-testid="m2-theme2">
           <ThemeOptions current={theme2} />
         </SelectField>

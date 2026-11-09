@@ -185,6 +185,7 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
               <dt>LinkedIn</dt><dd>{m.linkedin ? <a href={linkedinUrl(m.linkedin)} target="_blank" rel="noopener noreferrer">{m.linkedin.replace(/^https?:\/\/(www\.)?/i, '')}</a> : '—'}</dd>
               <dt>Área</dt><dd>{areaLabel(m.area)}{score != null ? ` · jornada: ${score} pts` : ''}</dd>
               <dt>Período</dt><dd>{PERIOD_LABELS[m.preferredPeriod]}</dd>
+              <dt>Tema</dt><dd>{m.theme ?? '—'}</dd>
               <dt>Comentário</dt><dd>{m.note ?? '—'}</dd>
               <dt>Mentora</dt><dd>{m.mentorName ?? '—'}</dd>
               <dt>Mesa e horário</dt><dd>{m.table && m.slot ? `Mesa ${m.table.number} às ${formatTime(m.slot.startAt)}` : '—'}</dd>

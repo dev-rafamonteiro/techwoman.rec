@@ -53,6 +53,7 @@ export const MenteeStaffViewSchema = z.object({
   id: IdSchema,
   name: z.string(),
   area: AreaKeySchema,
+  theme: z.string().nullable(),
   preferredPeriod: PreferredPeriodSchema,
   linkedin: z.string().nullable(),
   note: z.string().nullable(),

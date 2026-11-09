@@ -30,6 +30,9 @@ test("resultado da jornada preenche uma área válida e a inscrição conclui", 
 
   const area = page.getByTestId("p4-area");
   await expect(area.locator("option:checked")).toHaveText(track);
+  const theme = page.getByTestId("p4-theme");
+  const firstTheme = await theme.locator("option").nth(1).innerText();
+  await theme.selectOption(firstTheme);
   await page.getByTestId("p4-name").fill("Julia Jornada");
   await page.getByTestId("p4-email").fill("julia.jornada@example.test");
   await page.getByTestId("p4-phone").fill("81912345678");
@@ -41,6 +44,19 @@ test("resultado da jornada preenche uma área válida e a inscrição conclui", 
   const mentee = await getCollections(world.db.db).mentees.findOne({ emailNorm: "julia.jornada@example.test" });
   expect(KNOWLEDGE_TRACKS.find(({ key }) => key === mentee?.area)?.label).toBe(track);
   expect(Object.keys(mentee?.quizScores ?? {})).toContain(mentee?.area);
+  expect(mentee?.theme).toBe(firstTheme);
+  await page.context().close();
+});
+
+test("trocar a trilha limpa o tema e mostra só os temas dela", async ({ browser }, info) => {
+  const page = await newPage(browser, info.project.use.viewport ?? undefined);
+  await page.goto("/mentoria/inscricao");
+  await expect(page.getByText("Trilha de interesse")).toBeVisible();
+  await page.getByTestId("p4-area").selectOption("dados");
+  await page.getByTestId("p4-theme").selectOption("Engenharia de Dados");
+  await page.getByTestId("p4-area").selectOption("qualidade");
+  await expect(page.getByTestId("p4-theme")).toHaveValue("");
+  await expect(page.getByTestId("p4-theme").locator("option")).toHaveText(["Selecione um tema", "Qualidade de Engenharia de Software", "Quality Assurance"]);
   await page.context().close();
 });
 

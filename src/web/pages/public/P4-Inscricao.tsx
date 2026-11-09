@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ENDPOINTS, MENTEE_NOTE_MAX, normalizePhoneBR, type PreferredPeriod } from '@tw/shared';
+import { ENDPOINTS, MENTEE_NOTE_MAX, normalizePhoneBR, SPECIALTIES_BY_TRACK, type PreferredPeriod } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, EmptyState, ErrorState, Hero, PERIOD_LABELS, RadioCards, SelectField, SkeletonList,
   TextArea, TextField, call, maskPhone, useQuery,
@@ -20,6 +20,7 @@ interface Values {
   phone: string;
   linkedin: string;
   area: string;
+  theme: string;
   preferredPeriod: PreferredPeriod | null;
   note: string;
   consent: boolean;
@@ -46,7 +47,7 @@ export default function P4Inscricao() {
   const journey = useMemo(() => loadJourney(), []);
 
   const [values, setValues] = useState<Values>({
-    name: '', email: '', phone: '', linkedin: '', area: journey?.area ?? '', preferredPeriod: null, note: '', consent: false,
+    name: '', email: '', phone: '', linkedin: '', area: journey?.area ?? '', theme: '', preferredPeriod: null, note: '', consent: false,
   });
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -69,6 +70,7 @@ export default function P4Inscricao() {
   const areas = ev.areas.length ? ev.areas : FALLBACK_AREAS;
   // área que não está na lista do evento (jornada antiga) não vale: o campo mostraria uma e o envio levaria outra
   const effArea = areas.some((a) => a.key === values.area) ? values.area : areas[0]!.key;
+  const themes = SPECIALTIES_BY_TRACK.find((t) => t.key === effArea)?.specialties ?? [];
   const periods = ev.periods.length
     ? ev.periods.map((p) => ({ value: p.key, label: p.label }))
     : (Object.entries(PERIOD_LABELS) as [PreferredPeriod, string][]).map(([value, label]) => ({ value, label }));
@@ -102,6 +104,7 @@ export default function P4Inscricao() {
           phone: values.phone,
           ...(values.linkedin.trim() ? { linkedin: values.linkedin.trim() } : {}),
           area: effArea,
+          ...(values.theme ? { theme: values.theme } : {}),
           preferredPeriod: values.preferredPeriod!,
           ...(values.note.trim() ? { note: values.note.trim() } : {}),
           ...(journey?.scores ? { quizScores: journey.scores } : {}),
@@ -134,7 +137,7 @@ export default function P4Inscricao() {
   return (
     <div className="tw-page">
       <Hero eyebrow="Inscrição" title="Quero uma mentoria">
-        <p>Leva 1 minuto. Uma mentora da sua área vai propor horário e mesa.</p>
+        <p>Leva 1 minuto. Uma mentora da sua trilha vai propor horário e mesa.</p>
       </Hero>
 
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="p4-form">
@@ -159,10 +162,17 @@ export default function P4Inscricao() {
           error={shown('phone')} ok={values.phone && !errors.phone ? 'Número válido' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
         <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
           error={shown('linkedin')} ok={values.linkedin && !errors.linkedin ? 'A mentora verá seu perfil' : undefined} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
-        <SelectField label="Área de interesse" hint="Preenchida com o resultado da sua jornada. Pode trocar." name="area" value={effArea} error={shown('area')}
-          onChange={(e) => set('area', e.target.value)} onBlur={() => touch('area')} data-testid="p4-area">
+        <SelectField label="Trilha de interesse" hint="Preenchida com o resultado da sua jornada. Pode trocar." name="area" value={effArea} error={shown('area')}
+          onChange={(e) => setValues((p) => ({ ...p, area: e.target.value, theme: '' }))} onBlur={() => touch('area')} data-testid="p4-area">
           {areas.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
         </SelectField>
+        {themes.length > 0 && (
+          <SelectField label="Tema de interesse" optional hint="Um assunto dentro da trilha escolhida." name="theme" value={values.theme}
+            onChange={(e) => set('theme', e.target.value)} data-testid="p4-theme">
+            <option value="">Selecione um tema</option>
+            {themes.map((t) => <option key={t} value={t}>{t}</option>)}
+          </SelectField>
+        )}
         <RadioCards legend="Período preferido" name="preferredPeriod" options={periods} value={values.preferredPeriod}
           error={shown('preferredPeriod')} hint="É só uma preferência. O horário final é definido pela mentora e você confirma."
           onChange={(v) => { set('preferredPeriod', v); touch('preferredPeriod'); }} />

@@ -120,7 +120,8 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 | E-mail | E-mail | Sim | Uma inscrição por e-mail |
 | Celular | Telefone com DDD | Sim | Máscara (00) 00000-0000 |
 | LinkedIn | URL | Não | Aceita só o usuário ou a URL completa |
-| Área de interesse | Seleção | Sim | Pré-preenchida com o resultado de P3; editável |
+| Trilha de interesse | Seleção | Sim | Pré-preenchida com o resultado de P3; editável |
+| Tema de interesse | Seleção | Não | Só os temas da trilha escolhida; trocar a trilha limpa o tema. A mentora vê o tema no cartão da participante |
 | Período preferido | Opções | Sim | Manhã, Início da tarde, Fim da tarde, Qualquer horário |
 | Comentário para a mentora | Texto curto, 280 caracteres | Não | "O que você quer conversar?" |
 | Consentimento LGPD | Caixa de seleção | Sim | Link para o aviso de privacidade |

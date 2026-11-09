@@ -5,6 +5,7 @@ import {
   EmailSchema,
   LinkedinInputSchema,
   MENTEE_NOTE_MAX,
+  MENTOR_THEME_MAX,
   PhoneInputSchema,
   PreferredPeriodSchema,
 } from './common.js';
@@ -17,6 +18,8 @@ export const E02BodySchema = z
     phone: PhoneInputSchema,
     linkedin: LinkedinInputSchema.optional(),
     area: AreaKeySchema,
+    /** Tema dentro da trilha (`area`), do catálogo em trilhas.ts. */
+    theme: z.string().trim().min(1).max(MENTOR_THEME_MAX).optional(),
     preferredPeriod: PreferredPeriodSchema,
     note: z.string().trim().max(MENTEE_NOTE_MAX).optional(),
     /** Resultado da gamificação (P2): pontuação por área. */

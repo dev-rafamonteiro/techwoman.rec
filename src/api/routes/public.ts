@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
-import { E01, E02, E03, E04, E05, E06, E07, E08, E09, E54, E57, type E01Response, type E54Response } from '@tw/shared';
+import { canonicalSpecialty, E01, E02, E03, E04, E05, E06, E07, E08, E09, E54, E57, trackKeysForSpecialties, type E01Response, type E54Response } from '@tw/shared';
 import { menteeToken, personalPath } from '../lib/tokens.js';
 import { getOrCreateShortLink, shortLinkExpireAt, shortPath } from '../lib/short-links.js';
 import type { MenteeDoc, UserDoc } from '@tw/db';
@@ -127,7 +127,10 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
         throw new AppError('VALIDATION_ERROR', 'LinkedIn inválido.', { details: { field: 'linkedin' } });
       }
       if (!event.areas.some((a) => a.key === body.area)) {
-        throw new AppError('VALIDATION_ERROR', 'Área desconhecida.', { details: { field: 'area' } });
+        throw new AppError('VALIDATION_ERROR', 'Trilha desconhecida.', { details: { field: 'area' } });
+      }
+      if (body.theme !== undefined && !trackKeysForSpecialties([body.theme]).some((k) => k === body.area)) {
+        throw new AppError('VALIDATION_ERROR', 'Este tema não faz parte da trilha escolhida.', { details: { field: 'theme' } });
       }
       const now = ctx.now();
       const emailNorm = normalizeEmail(body.email);
@@ -168,6 +171,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
         phone,
         linkedin: linkedin ?? null,
         area: body.area,
+        theme: body.theme ? canonicalSpecialty(body.theme) : null,
         preferredPeriod: body.preferredPeriod,
         note: body.note ? body.note : null,
         quizScores: body.quizScores ?? {},

@@ -7,7 +7,7 @@ import { AppError, fromRuleError, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { menteeSearchPipeline, runSearch } from '../search/text.js';
-import { normalizeLinkedin, parseOptionalPhone } from '../lib/normalize.js';
+import { normalizeLinkedin, parseOptionalPhone, trackAreasOf } from '../lib/normalize.js';
 import { openSse } from '../lib/sse.js';
 import { RAW, route } from '../lib/route.js';
 import { forgetReplacedPhoto, saveMentorPhoto } from '../lib/mentor-photos.js';
@@ -251,6 +251,10 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
       const keys = new Set(event.areas.map((a) => a.key));
       if (body.areas.some((a) => !keys.has(a))) throw new AppError('VALIDATION_ERROR', 'Área desconhecida.', { details: { field: 'areas' } });
       set['areas'] = [...new Set(body.areas)];
+    }
+    if (body.themes !== undefined) {
+      const trackAreas = trackAreasOf(body.themes, event.areas);
+      if (trackAreas.length) set['areas'] = trackAreas;
     }
     const after = await ctx.c.users.findOneAndUpdate({ _id: user._id }, { $set: set }, { returnDocument: 'after' });
     if (!after) throw notFound('Mentora');

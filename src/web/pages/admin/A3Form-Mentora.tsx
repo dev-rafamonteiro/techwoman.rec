@@ -2,20 +2,20 @@ import { useEffect, useId, useRef, useState, type FormEvent, type InputHTMLAttri
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { canonicalSpecialty, ENDPOINTS, MENTOR_BIO_MAX, type SlotCapacityInfo, type UserView } from '@tw/shared';
 import {
-  ApiError, Button, CheckboxField, ErrorState, LinkButton, PhotoUpload, SelectField, SkeletonList, SlotToggleGrid, ThemeOptions,
+  ApiError, Button, CheckboxField, ErrorState, LinkButton, PhotoUpload, SelectField, SkeletonList, SlotToggleGrid, ThemeOptions, themeTrackHint,
   call, callForm, formatTime, maskPhone, optionalPhoneError, phoneFromE164, photoForm, useAuth, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useTitle } from './lib/common';
 import './lib/a2-a3.css';
 
 interface FormState {
-  name: string; email: string; linkedin: string; phone: string; organization: string; areas: string[]; theme1: string; theme2: string; domains1: string; domains2: string; bio: string; photoUrl: string;
+  name: string; email: string; linkedin: string; phone: string; organization: string; theme1: string; theme2: string; domains1: string; domains2: string; bio: string; photoUrl: string;
   availability: Set<string>; alsoAdmin: boolean; sendPasswordByEmail: boolean;
 }
-const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', areas: [], theme1: '', theme2: '', domains1: '', domains2: '', bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
+const EMPTY: FormState = { name: '', email: '', linkedin: '', phone: '', organization: '', theme1: '', theme2: '', domains1: '', domains2: '', bio: '', photoUrl: '', availability: new Set(), alsoAdmin: false, sendPasswordByEmail: true };
 
 const fromUser = (u: UserView): FormState => ({
-  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', areas: u.areas, theme1: canonicalSpecialty(u.themes[0] ?? ''), theme2: canonicalSpecialty(u.themes[1] ?? ''), domains1: (u.themeDomains[0] ?? []).join('; '), domains2: (u.themeDomains[1] ?? []).join('; '), bio: u.bio ?? '',
+  name: u.name, email: u.email, linkedin: u.linkedin ?? '', phone: phoneFromE164(u.phone), organization: u.organization ?? '', theme1: canonicalSpecialty(u.themes[0] ?? ''), theme2: canonicalSpecialty(u.themes[1] ?? ''), domains1: (u.themeDomains[0] ?? []).join('; '), domains2: (u.themeDomains[1] ?? []).join('; '), bio: u.bio ?? '',
   photoUrl: u.photoUrl ?? '', availability: new Set(u.availability), alsoAdmin: u.roles.includes('admin'), sendPasswordByEmail: false,
 });
 
@@ -121,7 +121,7 @@ export default function A3FormMentora() {
     setSaving(true);
     const common = {
       name: f.name.trim(), linkedin: f.linkedin.trim() || null, phone: f.phone.trim() || null, organization: f.organization.trim() || null,
-      areas: f.areas, ...themesBody(f), bio: f.bio.trim() || null, photoUrl: f.photoUrl.trim() || null, availability: [...f.availability],
+      ...themesBody(f), bio: f.bio.trim() || null, photoUrl: f.photoUrl.trim() || null, availability: [...f.availability],
     };
     try {
       if (editing) {
@@ -175,11 +175,11 @@ export default function A3FormMentora() {
             <Field label="LinkedIn" note="(opcional)" value={f.linkedin} onChange={(e) => set('linkedin', e.target.value)} />
             <Field label="Celular" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone} data-testid="a3-phone" />
             <Field label="Organização" note="(uso interno, nunca aparece para a participante)" placeholder="Onde ela trabalha" value={f.organization} onChange={(e) => set('organization', e.target.value)} />
-            <SelectField label="Tema comercial 1" optional value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1">
+            <SelectField label="Tema 1" optional hint={themeTrackHint(f.theme1)} value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1">
               <ThemeOptions current={f.theme1} />
             </SelectField>
             <Field label="Domínios do tema 1" note="(separados por ;)" value={f.domains1} onChange={(e) => set('domains1', e.target.value)} data-testid="a3-domains1" />
-            <SelectField label="Tema comercial 2" optional value={f.theme2} onChange={(e) => set('theme2', e.target.value)} data-testid="a3-theme2">
+            <SelectField label="Tema 2" optional hint={themeTrackHint(f.theme2)} value={f.theme2} onChange={(e) => set('theme2', e.target.value)} data-testid="a3-theme2">
               <ThemeOptions current={f.theme2} />
             </SelectField>
             <Field label="Domínios do tema 2" note="(separados por ;)" value={f.domains2} onChange={(e) => set('domains2', e.target.value)} data-testid="a3-domains2" />

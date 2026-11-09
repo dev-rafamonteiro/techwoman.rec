@@ -57,7 +57,7 @@ export interface MenteeSearch {
   limit?: number;
 }
 
-const STAFF_FIELDS = { name: 1, area: 1, preferredPeriod: 1, linkedin: 1, note: 1, priority: 1, priorityReason: 1, status: 1, queuedAt: 1 };
+const STAFF_FIELDS = { name: 1, area: 1, theme: 1, preferredPeriod: 1, linkedin: 1, note: 1, priority: 1, priorityReason: 1, status: 1, queuedAt: 1 };
 const ADMIN_FIELDS = { ...STAFF_FIELDS, email: 1, phone: 1, consent: 1, quizScores: 1, createdAt: 1, currentAppointmentId: 1 };
 
 /**

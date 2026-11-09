@@ -1,4 +1,11 @@
-import { SPECIALTIES_BY_TRACK } from '@tw/shared';
+import { KNOWLEDGE_TRACKS, SPECIALTIES_BY_TRACK, trackKeysForSpecialties } from '@tw/shared';
+
+/** "Trilha: X" para o tema escolhido; sem hint se o tema não é do catálogo. */
+export function themeTrackHint(theme: string): string | undefined {
+  const key = theme ? trackKeysForSpecialties([theme])[0] : undefined;
+  const label = KNOWLEDGE_TRACKS.find((t) => t.key === key)?.label;
+  return label ? `Trilha: ${label}` : undefined;
+}
 
 /** Opções de tema comercial agrupadas por trilha (A3, M2). Tema fora do catálogo vira opção própria, senão o campo mostraria "Selecione" com o tema ainda guardado. */
 export function ThemeOptions({ current }: { current: string }) {

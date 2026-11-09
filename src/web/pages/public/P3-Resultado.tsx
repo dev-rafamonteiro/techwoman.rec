@@ -64,7 +64,7 @@ export default function P3Resultado() {
         <section className="tw-p3__cta">
           <div style={{ flex: 1, minWidth: 220 }}>
             <h2>Inscreva-se na nossa mentoria para te ajudarmos.</h2>
-            <p style={{ margin: 0 }}>A trilha indicada não limita sua inscrição. Na próxima etapa, você poderá escolher separadamente a área da mentoria.</p>
+            <p style={{ margin: 0 }}>A trilha indicada não limita sua inscrição. Na próxima etapa, você poderá trocar a trilha e escolher um tema dentro dela.</p>
           </div>
           <LinkButton to="/mentoria/inscricao" size="lg" className="tw-btn--dark" data-testid="p3-cta">Quero me inscrever na mentoria</LinkButton>
         </section>

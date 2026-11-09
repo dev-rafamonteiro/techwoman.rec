@@ -10,7 +10,7 @@ import { enqueueMenteeNotifications } from '../lib/outbox.js';
 import { hashMenteeToken, menteeToken } from '../lib/tokens.js';
 
 /** Campos que a inscrição recebe de quem a preenche (P4 pela participante, M7 pela mentora). */
-export type MenteeFields = Pick<MenteeDoc, 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'preferredPeriod' | 'note' | 'quizScores' | 'consent'>;
+export type MenteeFields = Pick<MenteeDoc, 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'theme' | 'preferredPeriod' | 'note' | 'quizScores' | 'consent'>;
 
 /**
  * Documento de uma inscrição nova (RN01): token derivado (versão 1), link enviado uma vez, sem prioridade.

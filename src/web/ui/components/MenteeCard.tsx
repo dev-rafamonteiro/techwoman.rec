@@ -36,6 +36,7 @@ export function MenteeCard({ mentee, areaLabel, variant = 'compact', actions, le
         </div>
       </div>
       <div className="tw-mentee__meta">
+        {mentee.theme && <><span>Tema: {mentee.theme}</span><span aria-hidden="true">·</span></>}
         <span>Prefere: {PERIOD_LABELS[mentee.preferredPeriod]}</span>
         <span aria-hidden="true">·</span>
         <span>{formatWaiting(mentee.queuedAt, nowMs)}</span>

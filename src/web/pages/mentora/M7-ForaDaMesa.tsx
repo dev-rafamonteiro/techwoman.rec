@@ -21,7 +21,7 @@ function validate(f: NewForm): Partial<Record<keyof NewForm, string>> {
   if (f.name.trim().length < 2) e.name = 'Informe o nome.';
   if (!EMAIL_RE.test(f.email.trim())) e.email = 'Informe um e-mail válido.';
   if (f.phone && f.phone.replace(/\D/g, '').length < 10) e.phone = 'Use DDD + número: (00) 00000-0000.';
-  if (!f.area) e.area = 'Escolha a área.';
+  if (!f.area) e.area = 'Escolha a trilha.';
   if (!f.consent) e.consent = 'Ela precisa concordar com o aviso de privacidade.';
   return e;
 }
@@ -184,7 +184,7 @@ export function M7ForaDaMesa({ open, onClose, onDone, areas, areaLabel }: {
             <TextField label="Nome" autoComplete="off" maxLength={120} value={form.name} error={shown('name')} onChange={(e) => set('name', e.target.value)} data-testid="m7-name" />
             <TextField label="E-mail" type="email" inputMode="email" autoComplete="off" autoCapitalize="none" maxLength={254} value={form.email} error={shown('email')} onChange={(e) => set('email', e.target.value)} data-testid="m7-email" />
             <TextField label="Celular" optional type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={form.phone} error={shown('phone')} onChange={(e) => set('phone', maskPhone(e.target.value))} data-testid="m7-phone" />
-            <SelectField label="Área" value={form.area} error={shown('area')} onChange={(e) => set('area', e.target.value)} data-testid="m7-area">
+            <SelectField label="Trilha" value={form.area} error={shown('area')} onChange={(e) => set('area', e.target.value)} data-testid="m7-area">
               <option value="">Escolha…</option>
               {areas.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
             </SelectField>

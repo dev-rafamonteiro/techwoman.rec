@@ -71,6 +71,7 @@ export const menteesSchema: Schema = strictObject(
     phone: strN,
     linkedin: strN,
     area: str,
+    theme: strN,
     quizScores: { bsonType: 'object' },
     preferredPeriod: enumOf(PREFERRED_PERIODS),
     note: strN,

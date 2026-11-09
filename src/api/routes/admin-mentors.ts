@@ -6,7 +6,7 @@ import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, isDuplicateKey, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
 
-import { normalizeLinkedin, parseOptionalPhone } from '../lib/normalize.js';
+import { normalizeLinkedin, parseOptionalPhone, trackAreasOf } from '../lib/normalize.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
 import { mentorSearchPipeline, runSearch } from '../search/text.js';
 import { forgetReplacedPhoto, saveMentorPhoto } from '../lib/mentor-photos.js';
@@ -163,6 +163,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     if (body.alsoAdmin && !canGrantAdminRole(user.roles)) throw new AppError('FORBIDDEN', 'Só super admin pode conceder o papel de admin.');
     const keys = new Set(event.areas.map((a) => a.key));
     if (body.areas.some((a) => !keys.has(a))) throw new AppError('VALIDATION_ERROR', 'Área desconhecida.', { details: { field: 'areas' } });
+    const trackAreas = trackAreasOf(body.themes, event.areas);
     const slotIds = new Set(event.slots.map((s) => s.id));
     if (body.availability.some((s) => !slotIds.has(s))) throw new AppError('VALIDATION_ERROR', 'Horário inexistente na grade.', { details: { field: 'availability' } });
     const linkedin = normalizeLinkedin(body.linkedin);
@@ -181,7 +182,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       linkedin: linkedin ?? null,
       phone: phone ?? null,
       organization: body.organization ?? null,
-      areas: [...new Set(body.areas)],
+      areas: trackAreas.length ? trackAreas : [...new Set(body.areas)],
       themes: body.themes,
       themeDomains: body.themeDomains,
       bio: body.bio ?? null,
@@ -238,6 +239,10 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
         const keys = new Set(event.areas.map((a) => a.key));
         if (body.areas.some((a) => !keys.has(a))) throw new AppError('VALIDATION_ERROR', 'Área desconhecida.', { details: { field: 'areas' } });
         set['areas'] = [...new Set(body.areas)];
+      }
+      if (body.themes !== undefined) {
+        const trackAreas = trackAreasOf(body.themes, event.areas);
+        if (trackAreas.length) set['areas'] = trackAreas;
       }
       const active = await ctx.c.appointments.find({ eventId: event._id, mentorId: id, status: { $in: [...ACTIVE] } }, { session }).toArray();
       if (body.availability !== undefined) {

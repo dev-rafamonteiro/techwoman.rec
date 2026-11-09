@@ -1,5 +1,5 @@
 // telefone: a regra mora em @tw/shared para a importação de mentoras (@tw/db) usar a mesma
-import { normalizePhoneBR } from '@tw/shared';
+import { normalizePhoneBR, trackKeysForSpecialties } from '@tw/shared';
 import { AppError } from './errors.js';
 export { normalizePhoneBR };
 
@@ -12,6 +12,12 @@ export function parseOptionalPhone(input: string | null | undefined): string | n
   const phone = normalizePhoneBR(input);
   if (!phone) throw new AppError('VALIDATION_ERROR', 'Telefone inválido. Informe DDD e número.', { details: { field: 'phone' } });
   return phone;
+}
+
+/** Trilhas da mentora (campo `areas`): saem dos temas dela, só as que existem no evento. Vazio se nenhum tema é do catálogo. */
+export function trackAreasOf(themes: readonly string[], eventAreas: readonly { key: string }[]): string[] {
+  const keys = new Set(eventAreas.map((a) => a.key));
+  return trackKeysForSpecialties(themes).filter((k) => keys.has(k));
 }
 
 /** LinkedIn: aceita só o usuário, "linkedin.com/in/x" ou a URL completa; guarda a URL completa. Null se vazio ou inválido. */
