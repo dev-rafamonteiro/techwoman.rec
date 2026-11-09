@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
-import { E30, E31Create, E31List, E32, E33, E34, type E30Response, type MentorListItem } from '@tw/shared';
+import { E30, E31Create, E31List, E32, E33, E34, E56, type E30Response, type MentorListItem } from '@tw/shared';
 import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, importMentors, ImportFormatError, type UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, isDuplicateKey, notFound } from '../lib/errors.js';
@@ -9,6 +9,7 @@ import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { normalizeLinkedin, parseOptionalPhone } from '../lib/normalize.js';
 import { enqueueStaffPassword } from '../lib/outbox.js';
 import { mentorSearchPipeline, runSearch } from '../search/text.js';
+import { forgetReplacedPhoto, saveMentorPhoto } from '../lib/mentor-photos.js';
 import { respond, route } from '../lib/route.js';
 import { iso, toUserView } from '../lib/views.js';
 import { canGrantAdminRole, checkAvailabilityUpdate, checkSuperAdminInvariant, mentorDisableBlockers, overCapacitySlots, remainingSlotCapacity } from '../domain/index.js';
@@ -295,8 +296,22 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       const { capacity, counts } = await slotCapacity(ctx, event._id, { slotIds: updated.availability });
       overCapacity = toSlotCapacityInfo(event, overCapacitySlots(counts, capacity, updated.availability));
     }
+    if (body.photoUrl !== undefined) await forgetReplacedPhoto(ctx, id, body.photoUrl);
     return { user: toUserView(updated), warnings: { overCapacity } };
   });
+
+  // E56 · POST /admin/mentors/:id/photo (multipart, campo `file`)
+  route(
+    app,
+    ctx,
+    E56,
+    async ({ req, params }) => {
+      const id = oid(params.id);
+      if (!(await ctx.c.users.findOne({ _id: id, roles: 'mentor' }, { projection: { _id: 1 } }))) throw notFound('Mentora');
+      return saveMentorPhoto(ctx, req, id, 'admin');
+    },
+    { rawBody: true, rateLimit: { max: 30, timeWindow: '1 minute' } },
+  );
 
   // E33 · POST /admin/mentors/import (multipart CSV, ?dryRun=true)
   route(

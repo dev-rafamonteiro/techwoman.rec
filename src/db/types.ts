@@ -1,4 +1,4 @@
-import type { ObjectId } from 'mongodb';
+import type { Binary, ObjectId } from 'mongodb';
 import type {
   AppointmentStatus,
   MenteeStatus,
@@ -198,6 +198,16 @@ export interface OutboxDoc {
   lastError: string | null;
   dedupeKey: string;
   createdAt: Date;
+}
+
+/** Foto carregada pela mentora (E55/E56): fora de `users`, que é lido em quase toda rota. `_id` = id da mentora. */
+export interface MentorPhotoDoc {
+  _id: ObjectId;
+  data: Binary;
+  contentType: 'image/jpeg';
+  /** Vai no `?v=` do photoUrl: endereço novo a cada foto, então E57 pode ter cache longo. */
+  hash: string;
+  updatedAt: Date;
 }
 
 export interface AuditLogDoc {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ENDPOINTS, type E20Response, type SlotFullDetails } from '@tw/shared';
 import { ApiError, Button, EmptyState, ErrorState, SkeletonList, SlotToggleGrid, call, formatDayShort, formatTime, slotShortcut, useQuery, useToast } from '../../ui';
 import { recifeHHmm } from './lib/format';
+import { MentorPhotoField } from './lib/MentorPhotoField';
 import '../public/public.css';
 import './mentora.css';
 import './m3.css';
@@ -105,6 +106,7 @@ export default function M3Disponibilidade() {
         </span>
       </header>
       <div className="mt-section">
+        <div className="tw-card" data-testid="m3-photo"><MentorPhotoField /></div>
         <p className="mt-hint">Toque nos horários em que você pode mentorar. As participantes só podem ser chamadas nesses horários.</p>
         <div className="mt-chips">
           <button type="button" className="tw-chip" onClick={() => shortcut('morning')} data-testid="m3-morning">Manhã inteira</button>

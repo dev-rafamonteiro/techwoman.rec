@@ -45,6 +45,7 @@ export * from './contracts/E48-short-link.js';
 export * from './contracts/E49-admin-feedback.js';
 export * from './contracts/E50-E53-walk-ins.js';
 export * from './contracts/E54-public-mentors.js';
+export * from './contracts/E55-E57-mentor-photos.js';
 
 import type { EndpointDef } from './contracts/common.js';
 import { E01 } from './contracts/E01-public-event.js';
@@ -90,6 +91,7 @@ import { E48 } from './contracts/E48-short-link.js';
 import { E49 } from './contracts/E49-admin-feedback.js';
 import { E50, E51, E52, E53Delete, E53List } from './contracts/E50-E53-walk-ins.js';
 import { E54 } from './contracts/E54-public-mentors.js';
+import { E55, E56, E57 } from './contracts/E55-E57-mentor-photos.js';
 
 /** Todos os endpoints, por nome. Usado pelo cliente HTTP tipado e pelo registro de rotas da API. */
 export const ENDPOINTS = {
@@ -102,6 +104,7 @@ export const ENDPOINTS = {
   E48, E49,
   E50, E51, E52, E53List, E53Delete,
   E54,
+  E55, E56, E57,
 } as const;
 
 export type EndpointName = keyof typeof ENDPOINTS;

@@ -4,6 +4,7 @@ import { ENDPOINTS, MENTOR_THEME_MAX, PASSWORD_MIN_LENGTH } from '@tw/shared';
 import { ApiError, Button, TextField, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
 import { safeNext } from '../../shell/auth';
 import '../public/public.css';
+import { MentorPhotoField } from './lib/MentorPhotoField';
 
 /** M2 · Primeiro acesso / troca de senha (E13) + conferência do perfil (E28) */
 export default function M2NovaSenha() {
@@ -20,7 +21,6 @@ export default function M2NovaSenha() {
   const [name, setName] = useState(user?.name ?? '');
   const [linkedin, setLinkedin] = useState(user?.linkedin ?? '');
   const [phone, setPhone] = useState(phoneFromE164(user?.phone));
-  const [photoUrl, setPhotoUrl] = useState(user?.photoUrl ?? '');
   const [theme1, setTheme1] = useState(user?.themes[0] ?? '');
   const [theme2, setTheme2] = useState(user?.themes[1] ?? '');
   const [profileTouched, setProfileTouched] = useState(false);
@@ -32,10 +32,9 @@ export default function M2NovaSenha() {
     pw: pw.length >= PASSWORD_MIN_LENGTH ? undefined : `Use pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`,
     confirm: confirm === pw ? undefined : 'As senhas não são iguais.',
     name: !isMentor || name.trim().length >= 2 ? undefined : 'Informe seu nome.',
-    photo: !photoUrl || /^https:\/\/\S+$/.test(photoUrl) ? undefined : 'Use um endereço https://',
     phone: optionalPhoneError(phone),
-  }), [current, pw, confirm, name, photoUrl, phone]);
-  const valid = !errors.current && !errors.pw && !errors.confirm && !errors.name && !errors.photo && !errors.phone;
+  }), [current, pw, confirm, name, phone]);
+  const valid = !errors.current && !errors.pw && !errors.confirm && !errors.name && !errors.phone;
   const shown = <K extends keyof typeof errors>(k: K) => (touched ? errors[k] : undefined);
 
   async function submit(e: FormEvent) {
@@ -53,7 +52,6 @@ export default function M2NovaSenha() {
               name: name.trim(),
               ...(linkedin.trim() ? { linkedin: linkedin.trim() } : {}),
               phone: phone.trim() || null,
-              ...(photoUrl.trim() ? { photoUrl: photoUrl.trim() } : {}),
               themes: [theme1, theme2].map((t) => t.trim()).filter(Boolean),
             },
           });
@@ -94,8 +92,7 @@ export default function M2NovaSenha() {
           onChange={(e) => { setLinkedin(e.target.value); setProfileTouched(true); }} data-testid="m2-linkedin" />
         <TextField label="Celular" optional type="tel" inputMode="tel" autoComplete="tel" value={phone} error={shown('phone')} placeholder="(00) 00000-0000"
           onChange={(e) => { setPhone(maskPhone(e.target.value)); setProfileTouched(true); }} data-testid="m2-phone" />
-        <TextField label="Foto" optional type="url" value={photoUrl} error={shown('photo')} placeholder="https://"
-          onChange={(e) => { setPhotoUrl(e.target.value); setProfileTouched(true); }} data-testid="m2-photo" />
+        <MentorPhotoField />
         <TextField label="Tema comercial 1" optional value={theme1} maxLength={MENTOR_THEME_MAX}
           onChange={(e) => { setTheme1(e.target.value); setProfileTouched(true); }} data-testid="m2-theme1" />
         <TextField label="Tema comercial 2" optional value={theme2} maxLength={MENTOR_THEME_MAX}

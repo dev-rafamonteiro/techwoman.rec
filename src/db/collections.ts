@@ -6,6 +6,7 @@ import type {
   FeedbackDoc,
   IdempotencyDoc,
   MenteeDoc,
+  MentorPhotoDoc,
   OutboxDoc,
   SessionDoc,
   ShortLinkDoc,
@@ -18,6 +19,7 @@ import type {
 export const COLLECTIONS = {
   events: 'events',
   users: 'users',
+  mentorPhotos: 'mentor_photos',
   sessions: 'sessions',
   tables: 'tables',
   mentees: 'mentees',
@@ -34,6 +36,7 @@ export const COLLECTIONS = {
 export interface Collections {
   events: Collection<EventDoc>;
   users: Collection<UserDoc>;
+  mentorPhotos: Collection<MentorPhotoDoc>;
   sessions: Collection<SessionDoc>;
   tables: Collection<TableDoc>;
   mentees: Collection<MenteeDoc>;
@@ -51,6 +54,7 @@ export function getCollections(db: Db): Collections {
   return {
     events: db.collection<EventDoc>(COLLECTIONS.events),
     users: db.collection<UserDoc>(COLLECTIONS.users),
+    mentorPhotos: db.collection<MentorPhotoDoc>(COLLECTIONS.mentorPhotos),
     sessions: db.collection<SessionDoc>(COLLECTIONS.sessions),
     tables: db.collection<TableDoc>(COLLECTIONS.tables),
     mentees: db.collection<MenteeDoc>(COLLECTIONS.mentees),

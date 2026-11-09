@@ -164,7 +164,7 @@ Página pública e responsiva que apresenta as mentoras do programa, com dados d
 - Chamada final (fundo roxo escuro): "Venha trocar, aprender e construir novas possibilidades." e o botão "Começar minha jornada" (P2). Rodapé com a marca e "Voltar ao início".
 - Acessibilidade: tudo por teclado, foco visível (roxo nas áreas claras, verde-menta nas roxas), busca em `role="search"` com rótulo visível, alvos de 44 px, leitura confortável no celular (margem lateral `--page-gutter`, sem rolagem horizontal).
 - Entradas: link "Mentoras" no menu do cabeçalho de P1 (depois das quatro âncoras), link "As mentoras" no rodapé de P1 e o botão "Conheça as mentoras" no bloco Mentoria de P1.
-- Fotos: arquivos em `src/web/public/mentoras/`, referenciados no `photoUrl` do cadastro da mentora (A3). P7 só mostra foto com endereço https ou caminho do próprio site (`/mentoras/...`); uma foto `http://` aceita em A3 aparece em P7 como iniciais. Não há busca automática de foto no LinkedIn (o LinkedIn bloqueia).
+- Fotos: carregadas pela própria mentora (M2, M3) ou pelo admin (A3), ou arquivos em `src/web/public/mentoras/`, referenciados no `photoUrl` do cadastro da mentora (A3). O site só exibe imagens do próprio domínio (CSP): endereço externo fica nas iniciais. P7 só mostra foto com endereço https ou caminho do próprio site (`/mentoras/...`); uma foto `http://` aceita em A3 aparece em P7 como iniciais. Não há busca automática de foto no LinkedIn (o LinkedIn bloqueia).
 
 ## Telas da mentora (M1–M7)
 
@@ -180,7 +180,7 @@ A mentora monta a disponibilidade, escolhe quem vai mentorar na lista de aguarda
 
 - Aparece obrigatoriamente no primeiro login com senha provisória.
 - Campos: nova senha, confirmar senha; regras visíveis (mínimo 10 caracteres). Envia para **E13**.
-- Na mesma tela, a mentora confere nome, LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000), foto (opcional) e áreas de atuação (**E28**).
+- Na mesma tela, a mentora confere nome, LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000), foto (opcional, botão "Carregar foto": JPG, PNG ou WebP reduzido no navegador e enviado na hora, **E55**) e áreas de atuação (**E28**). Depois do primeiro acesso, a foto fica em M3 (Disponibilidade); M4 avisa quem ainda está sem foto.
 
 ### M3 · Minha disponibilidade
 
@@ -259,7 +259,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 ### A3 · Cadastro de mentora e importação
 
-**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
+**Formulário (nova ou edição, E31/E32):** nome completo, e-mail (login), LinkedIn, Celular (opcional, telefone com DDD, máscara (00) 00000-0000; inválido: "Telefone inválido. Informe DDD e número."), organização, áreas de atuação (multi), mini bio (opcional, 200 caracteres), foto (opcional; na edição, botão "Carregar foto", **E56**, ou endereço da imagem; na criação, só o endereço), disponibilidade inicial (mesma grade de M3), papel extra "Também é admin" (só super admin vê).
 
 - **Limite por horário (RN22):** o admin pode marcar horário lotado (não há bloqueio). Ao salvar a edição (E32), se algum horário dela ficou com mais mentoras ativas do que mesas ativas, a tela não volta para a lista: mostra o aviso laranja "Salvo, mas acima do limite de mesas. O horário 10h30 (24 mentoras para 23 mesas) tem mais mentoras disponíveis do que mesas ativas. No dia, alguma pode ficar sem mesa." com o link "Voltar para a lista". Como o botão Salvar fica no pé do formulário, a tela rola até o aviso e põe o foco nele, e o toast diz "Mentora atualizada, mas com horário acima do limite de mesas."
 - Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail" (layout de e-mail "Acesso da mentora", senha válida por 72 h). A mentora troca no primeiro acesso (M2).
@@ -389,7 +389,7 @@ Na página `/privacidade`, em um cartão próprio (o restante do aviso continua 
 - [ ] Rafaela confirmar os campos da inscrição (P4): data de nascimento entra ou não?
 - [ ] Lista oficial das \~50 mentoras com nome, e-mail, LinkedIn e horários, para o modelo de importação (A3).
 - [ ] Lista de áreas finais da gamificação, para os selos e filtros (P3, P4, M4).
-- [ ] Foto da mentora: obrigatória, opcional ou fora?
+- [x] Foto da mentora: opcional.
 - [ ] Texto do aviso de privacidade (LGPD) e quem é a controladora dos dados, sem citar o Bradesco.
 - [ ] Fase 2, se der tempo: tela de configuração das perguntas e pesos da gamificação no admin (hoje ficam fixas no código).
 
