@@ -37,7 +37,7 @@ export default function P1Home() {
   const ev = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
   const eventDate = ev.status === 'success' ? longDate(ev.data.date) : 'Sábado, 14 de novembro de 2026';
   const mentoringStart = ev.status === 'success' ? formatHour(ev.data.startTime) : '10h';
-  const mentoringEnd = ev.status === 'success' ? formatHour(ev.data.endTime) : '16h';
+  const mentoringEnd = ev.status === 'success' ? formatHour(ev.data.endTime) : '16h45';
   const where = ev.status === 'success' ? ev.data.location : null;
   const cta = (cls = '') => <LinkButton to="/jornada" size="lg" className={cls} data-testid="p1-cta">Começar minha jornada</LinkButton>;
 

@@ -33,7 +33,7 @@ export function buildEvent(overrides: Partial<Omit<EventDoc, 'slots'>> = {}, now
     location: 'Recife',
     timezone: DEFAULT_TIMEZONE,
     startTime: '10:00',
-    endTime: '16:00',
+    endTime: '16:45',
     slotMinutes: 40,
     gapMinutes: 5,
     responseWindowMinutes: 15,
