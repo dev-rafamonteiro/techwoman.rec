@@ -51,6 +51,9 @@ export const E39PatchBodySchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('cancel'), reason: z.string().trim().max(200).optional() }).strict(),
   z.object({ action: z.literal('no_show') }).strict(),
   z.object({ action: z.literal('confirm_in_person') }).strict(),
+  /** RN23 · só super admin e só de mentoria `done`. */
+  z.object({ action: z.literal('reopen') }).strict(),
+  z.object({ action: z.literal('release') }).strict(),
 ]);
 export type E39PatchBody = z.input<typeof E39PatchBodySchema>;
 

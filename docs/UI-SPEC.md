@@ -280,7 +280,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Grade com mesas nas colunas e horários nas linhas (20 × 12 na configuração padrão). Cada célula mostra mentora + participante e o status em cor + texto; célula vazia = livre.
 - Linha do horário atual destacada; seletor "Agora / Dia inteiro".
-- Clique na célula abre o detalhe com ações (**E39**): mover para outra mesa ou horário, cancelar, marcar não compareceu, confirmar presencialmente.
+- Clique na célula abre o detalhe com ações (**E39**): mover para outra mesa ou horário, cancelar, marcar não compareceu, confirmar presencialmente. Em mentoria concluída, só super admin vê "Voltar para confirmada" e "Cancelar e liberar a mesa" (RN23).
 - Dados: **E38**, em tempo real.
 
 ### A6 · Mesas (super admin)

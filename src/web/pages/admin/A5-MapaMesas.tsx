@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ADMIN_STREAM_EVENT_TYPES, ENDPOINTS, type AdminAppointmentView, type AdminStreamEvent, type E39PatchBody } from '@tw/shared';
 import {
   ApiError, CheckboxField, ConnectionBar, ErrorState, PriorityBadge, SkeletonList, STATUS_LOOK, StatusBadge,
-  call, formatRange, formatTime, useEventStream, useQuery, useToast,
+  call, formatRange, formatTime, useAuth, useEventStream, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useTitle } from './lib/common';
 import './lib/a4-a6.css';
@@ -112,6 +112,7 @@ function CellDetail({ a, slots, tables, appts, onClose, onDone, onConflict }: {
   appts: AdminAppointmentView[]; onClose: () => void; onDone: () => Promise<void>; onConflict: (m: string) => void;
 }) {
   const toast = useToast();
+  const { hasRole } = useAuth();
   const ref = useRef<HTMLElement>(null);
   const [slotId, setSlotId] = useState(a.slotId);
   const [tableId, setTableId] = useState('');
@@ -138,6 +139,7 @@ function CellDetail({ a, slots, tables, appts, onClose, onDone, onConflict }: {
   };
   const taken = new Set(appts.filter((x) => x.slotId === slotId && x.id !== a.id).map((x) => x.table.id));
   const canAct = ['invited', 'confirmed', 'in_progress'].includes(a.status);
+  const canFixDone = a.status === 'done' && hasRole('super_admin');
   const noShowEarly = Date.now() < new Date(a.startAt).getTime() + 10 * 60000;
   const title = `Mesa ${a.table.number} · ${formatTime(a.startAt)}`;
 
@@ -158,6 +160,14 @@ function CellDetail({ a, slots, tables, appts, onClose, onDone, onConflict }: {
         {canAct && (
           <button type="button" className="a46-pill a46-pill--danger" disabled={busy}
             onClick={() => { if (window.confirm('Cancelar esta mentoria? A participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Mentoria cancelada.'); }}>Cancelar</button>
+        )}
+        {canFixDone && (
+          <>
+            <button type="button" className="a46-pill" disabled={busy} data-testid="a5-reopen"
+              onClick={() => { if (window.confirm('Voltar esta mentoria para confirmada?')) void run({ action: 'reopen' }, 'Mentoria voltou para confirmada.'); }}>Voltar para confirmada</button>
+            <button type="button" className="a46-pill a46-pill--danger" disabled={busy} data-testid="a5-release"
+              onClick={() => { if (window.confirm('Cancelar esta mentoria e liberar a mesa? A participante volta para a fila com prioridade.')) void run({ action: 'release' }, 'Mesa liberada.'); }}>Cancelar e liberar a mesa</button>
+          </>
         )}
         <button type="button" className="a46-x" aria-label="Fechar detalhe" onClick={onClose}>×</button>
       </div>

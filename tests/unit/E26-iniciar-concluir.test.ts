@@ -34,3 +34,23 @@ describe("iniciar e concluir (M6)", () => {
     expect(code(run("finish", "invited", start))).toBe("INVALID_STATE");
   });
 });
+
+describe("RN23 · correção de mentoria concluída", () => {
+  const sup = { userId: "u9", role: "super_admin" as const };
+  const fix = (action: TransitionAction, status: AppointmentStatus) => planTransition({ action, appointment: { status, startAt: start, expiresAt: null }, now: start, actor: sup });
+
+  it("reopen: done -> confirmed, com as duas travas e sem aviso", () => {
+    const p = ok(fix("reopen", "done"));
+    expect(p).toMatchObject({ appointmentTo: "confirmed", menteeTo: "confirmed", notify: null, scheduleReminder: false, locks: { slotLock: true, menteeLock: true } });
+  });
+  it("release: done -> cancelled, mesa livre, participante na fila com prioridade e sem aviso", () => {
+    const p = ok(fix("release", "done"));
+    expect(p).toMatchObject({ appointmentTo: "cancelled", menteeTo: "waiting", notify: null, priority: { value: true, reason: "cancelled_by_staff" }, locks: { slotLock: false, menteeLock: false } });
+  });
+  it("só de done", () => {
+    for (const s of ["invited", "confirmed", "in_progress", "no_show", "cancelled", "expired", "declined"] as AppointmentStatus[]) {
+      expect(code(fix("reopen", s)), s).toBe("INVALID_STATE");
+      expect(code(fix("release", s)), s).toBe("INVALID_STATE");
+    }
+  });
+});

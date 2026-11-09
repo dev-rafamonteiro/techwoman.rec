@@ -18,6 +18,8 @@ export type TransitionAction =
   | 'staff_cancel' // E26/E39: RN10
   | 'expire' // worker: RN07
   | 'move_cancel' // E39 move: o antigo vira cancelled (motivo "moved"), sem prioridade
+  | 'reopen' // E39 (RN23): super admin desfaz uma conclusão errada
+  | 'release' // E39 (RN23): super admin cancela uma mentoria concluída e libera a mesa
   | 'walk_in_cancel'; // E51 (RN21): atendida fora da mesa; a mentoria da mesa é cancelada e ela fica `done`
 
 export interface TransitionInput {
@@ -201,6 +203,19 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       return plan(from, 'cancelled', 'done', 'appointment.walk_in_cancel', {
         notifyMentor: 'walked_in_elsewhere',
         reason: 'walk_in',
+      });
+    }
+    case 'reopen': {
+      // RN23 · sem aviso: é correção interna; a participante volta a ter a mentoria confirmada
+      if (from !== 'done') return invalid(from, 'reabrir');
+      return plan(from, 'confirmed', 'confirmed', 'appointment.reopen', { reason: 'reopened_by_super_admin' });
+    }
+    case 'release': {
+      // RN23 · sem aviso, como em reopen; mesa e horário livres na hora e a participante volta à fila com prioridade
+      if (from !== 'done') return invalid(from, 'liberar a mesa de');
+      return plan(from, 'cancelled', 'waiting', 'appointment.release', {
+        priority: { value: true, reason: 'cancelled_by_staff' },
+        reason: 'released_by_super_admin',
       });
     }
     case 'move_cancel': {
