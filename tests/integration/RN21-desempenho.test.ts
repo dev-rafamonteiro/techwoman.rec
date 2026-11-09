@@ -15,7 +15,7 @@ const api = await loadApi();
 const N = 500;
 const FIRST = ["Ana", "Beatriz", "Camila", "Daniela", "Eduarda", "Fernanda", "Gabriela", "Helena", "Isabela", "Juliana", "Larissa", "Mariana", "Natália", "Patrícia", "Renata", "Sabrina", "Tatiana", "Vanessa", "Yasmin", "Joana"];
 const LAST = ["Albuquerque", "Barbosa", "Cavalcanti", "Duarte", "Esteves", "Ferraz", "Guimarães", "Holanda", "Lacerda", "Monteiro", "Nogueira", "Oliveira", "Pessoa", "Queiroz", "Rezende", "Siqueira", "Teixeira", "Uchoa", "Vasconcelos", "Lima"];
-const AREAS = ["dados", "backend", "frontend", "ux", "produto", "cloud"];
+const AREAS = ["dados", "desenvolvimento", "qualidade", "infraestrutura", "inteligencia-artificial", "carreira-em-ti"];
 
 const pct = (xs: number[], p: number) => {
   const s = [...xs].sort((a, b) => a - b);

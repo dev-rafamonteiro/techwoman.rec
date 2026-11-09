@@ -1,18 +1,11 @@
 import type { Db } from 'mongodb';
-import { DEFAULT_TIMEZONE, generateSlots } from '@tw/shared';
+import { DEFAULT_TIMEZONE, generateSlots, KNOWLEDGE_TRACKS } from '@tw/shared';
 import { getCollections } from './collections.js';
 import { DEFAULT_EVENT_ID } from './client.js';
 import type { EventDoc, TableDoc } from './types.js';
 
-/** Áreas da gamificação (js/jornada.js). A lista final depende da Rafaela; editável em A7. */
-export const DEFAULT_AREAS = [
-  { key: 'backend', label: 'Backend' },
-  { key: 'frontend', label: 'Frontend' },
-  { key: 'dados', label: 'Dados' },
-  { key: 'ux', label: 'UX & Design' },
-  { key: 'produto', label: 'Produto' },
-  { key: 'cloud', label: 'Cloud & Infraestrutura' },
-];
+/** As oito trilhas (áreas da inscrição e resultado da jornada); editável em A7. */
+export const DEFAULT_AREAS = KNOWLEDGE_TRACKS.map(({ key, label }) => ({ key, label }));
 
 export const DEFAULT_TEMPLATES: EventDoc['templates'] = {
   registered: 'Oi, {nome}! Recebemos sua inscrição na mentoria do Tech Woman. Acompanhe aqui: {link}',

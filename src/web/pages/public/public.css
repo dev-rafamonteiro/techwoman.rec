@@ -154,7 +154,6 @@
 .tw-mosaic > span { font-size: 56px; border-radius: 18px; }
 .tw-p1__cards { gap: 16px; }
 .tw-p2__opts { display: grid; gap: 12px; grid-template-columns: 1fr; }
-@media (min-width: 900px) { .tw-p2__opts { grid-template-columns: repeat(3, 1fr); } }
 .tw-p3 .tw-pub__progress { background: var(--tw-plum-950); }
 .tw-p3__body > .tw-row strong { color: #fff; }
 .tw-opt { font-weight: 700; } .tw-p3__white h2 { font-size: 22px; }

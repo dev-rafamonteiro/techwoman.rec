@@ -25,6 +25,7 @@ describe("P7 · busca de mentoras", () => {
     expect(names("bradesco")).toEqual(["Ana Vitória de Souza Cruz"]);
     expect(names("dados e ia")).toEqual(["Ana Vitória de Souza Cruz"]);
     expect(names("transicao")).toEqual(["Ana Vitória de Souza Cruz"]);
+    expect(names("carreira em ti")).toEqual(["Ana Vitória de Souza Cruz"]);
     expect(names("azure")).toEqual(["Ana Vitória de Souza Cruz"]);
     expect(names("lideranca")).toEqual(["Beatriz Benz"]);
     expect(names("qualidade benz")).toEqual(["Beatriz Benz"]); // cada palavra em qualquer campo

@@ -1,4 +1,5 @@
 export * from './time.js';
+export * from './trilhas.js';
 export * from './contracts/common.js';
 export * from './contracts/entities.js';
 export * from './contracts/sse.js';

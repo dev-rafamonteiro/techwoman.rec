@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ENDPOINTS, MENTOR_THEME_MAX, PASSWORD_MIN_LENGTH } from '@tw/shared';
-import { ApiError, Button, TextField, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
+import { canonicalSpecialty, ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
+import { ApiError, Button, SelectField, TextField, ThemeOptions, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
 import { safeNext } from '../../shell/auth';
 import '../public/public.css';
 import { MentorPhotoField } from './lib/MentorPhotoField';
@@ -21,8 +21,8 @@ export default function M2NovaSenha() {
   const [name, setName] = useState(user?.name ?? '');
   const [linkedin, setLinkedin] = useState(user?.linkedin ?? '');
   const [phone, setPhone] = useState(phoneFromE164(user?.phone));
-  const [theme1, setTheme1] = useState(user?.themes[0] ?? '');
-  const [theme2, setTheme2] = useState(user?.themes[1] ?? '');
+  const [theme1, setTheme1] = useState(canonicalSpecialty(user?.themes[0] ?? ''));
+  const [theme2, setTheme2] = useState(canonicalSpecialty(user?.themes[1] ?? ''));
   const [profileTouched, setProfileTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export default function M2NovaSenha() {
               name: name.trim(),
               ...(linkedin.trim() ? { linkedin: linkedin.trim() } : {}),
               phone: phone.trim() || null,
-              themes: [theme1, theme2].map((t) => t.trim()).filter(Boolean),
+              themes: [theme1, theme2].map((t) => canonicalSpecialty(t.trim())).filter(Boolean),
             },
           });
         } catch (pe) {
@@ -93,10 +93,14 @@ export default function M2NovaSenha() {
         <TextField label="Celular" optional type="tel" inputMode="tel" autoComplete="tel" value={phone} error={shown('phone')} placeholder="(00) 00000-0000"
           onChange={(e) => { setPhone(maskPhone(e.target.value)); setProfileTouched(true); }} data-testid="m2-phone" />
         <MentorPhotoField />
-        <TextField label="Tema comercial 1" optional value={theme1} maxLength={MENTOR_THEME_MAX}
-          onChange={(e) => { setTheme1(e.target.value); setProfileTouched(true); }} data-testid="m2-theme1" />
-        <TextField label="Tema comercial 2" optional value={theme2} maxLength={MENTOR_THEME_MAX}
-          onChange={(e) => { setTheme2(e.target.value); setProfileTouched(true); }} data-testid="m2-theme2" />
+        <SelectField label="Tema comercial 1" optional value={theme1}
+          onChange={(e) => { setTheme1(e.target.value); setProfileTouched(true); }} data-testid="m2-theme1">
+          <ThemeOptions current={theme1} />
+        </SelectField>
+        <SelectField label="Tema comercial 2" optional value={theme2}
+          onChange={(e) => { setTheme2(e.target.value); setProfileTouched(true); }} data-testid="m2-theme2">
+          <ThemeOptions current={theme2} />
+        </SelectField>
         </>)}
         <Button type="submit" size="lg" block loading={submitting} data-testid="m2-submit">Salvar e continuar</Button>
       </form>

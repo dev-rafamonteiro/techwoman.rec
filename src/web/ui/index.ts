@@ -13,6 +13,7 @@ export * from './components/States';
 export * from './components/Overlay';
 export * from './components/Layout';
 export * from './components/PhotoUpload';
+export * from './components/ThemeOptions';
 export * from './format';
 export * from '../net/client';
 export * from '../net/useQuery';

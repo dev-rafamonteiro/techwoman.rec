@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ENDPOINTS, MENTEE_NOTE_MAX, type PreferredPeriod } from '@tw/shared';
+import { ENDPOINTS, MENTEE_NOTE_MAX, normalizePhoneBR, type PreferredPeriod } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, EmptyState, ErrorState, Hero, PERIOD_LABELS, RadioCards, SelectField, SkeletonList,
   TextArea, TextField, call, maskPhone, useQuery,
@@ -29,7 +29,7 @@ function validate(v: Values): Partial<Record<Field, string>> {
   const e: Partial<Record<Field, string>> = {};
   if (v.name.trim().split(/\s+/).length < 2) e.name = 'Informe nome e sobrenome.';
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) e.email = 'Digite um e-mail válido.';
-  if (v.phone.replace(/\D/g, '').length !== 11) e.phone = 'Use DDD + número: (00) 00000-0000.';
+  if (v.phone.replace(/\D/g, '').length !== 11 || !normalizePhoneBR(v.phone)) e.phone = 'Use DDD + celular com 9 na frente: (00) 90000-0000.';
   if (v.linkedin && !/^([a-z0-9-]{3,100}|(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-z0-9-]{3,100}\/?)$/i.test(v.linkedin.trim())) {
     e.linkedin = 'Use seu usuário ou o link completo do perfil.';
   }
@@ -67,7 +67,8 @@ export default function P4Inscricao() {
   if (event.status === 'error') return <div className="tw-page"><ErrorState error={event.error} onRetry={event.reload} /></div>;
   const ev = event.data;
   const areas = ev.areas.length ? ev.areas : FALLBACK_AREAS;
-  const effArea = values.area || areas[0]!.key;
+  // área que não está na lista do evento (jornada antiga) não vale: o campo mostraria uma e o envio levaria outra
+  const effArea = areas.some((a) => a.key === values.area) ? values.area : areas[0]!.key;
   const periods = ev.periods.length
     ? ev.periods.map((p) => ({ value: p.key, label: p.label }))
     : (Object.entries(PERIOD_LABELS) as [PreferredPeriod, string][]).map(([value, label]) => ({ value, label }));
@@ -122,7 +123,7 @@ export default function P4Inscricao() {
       track('inscricao_erro', { codigo: ae?.code ?? 'UNKNOWN' });
       if (ae?.code === 'NETWORK') setFormError({ network: true, text: '' });
       else if (ae?.code === 'REGISTRATION_CLOSED') setFormError({ network: false, text: 'As inscrições estão fechadas no momento.' });
-      else if (ae?.code === 'VALIDATION_ERROR') setFormError({ network: false, text: 'Confira os campos e tente de novo.' });
+      else if (ae?.code === 'VALIDATION_ERROR') setFormError({ network: false, text: (ae.details as { field?: string } | undefined)?.field ? ae.message : 'Confira os campos e tente de novo.' });
       else if (ae?.code === 'RATE_LIMITED') setFormError({ network: false, text: 'Muitas tentativas. Aguarde um instante e tente de novo.' });
       else setFormError({ network: false, text: ae?.message ?? 'Não foi possível enviar agora. Tente de novo.' });
     } finally {
