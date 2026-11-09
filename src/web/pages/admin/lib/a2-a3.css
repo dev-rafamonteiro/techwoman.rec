@@ -23,15 +23,11 @@
 
 /* senha provisória (faixa escura do design) */
 .a23-secret { background: var(--tw-plum-950); color: var(--tw-white); border-radius: 18px; padding: 18px 20px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
-.a23-secret__text { flex: 1 1 280px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.a23-secret__text strong { font-weight: 800; }
-.a23-secret__text span { font-size: 13px; color: var(--tw-lilac-150); }
 .a23-secret__value { font-family: var(--font-display); font-weight: 700; background: var(--tw-plum-800); padding: 10px 14px; border-radius: 12px; letter-spacing: 0.06em; max-width: 100%; overflow-wrap: anywhere; }
 .a23-secret__btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .a23-secret button { cursor: pointer; min-height: 44px; border-radius: 999px; font: inherit; font-weight: 800; padding: 0 16px; }
 .a23-secret__ghost { border: 2px solid var(--tw-lilac-400); background: transparent; color: var(--tw-white); font-weight: 700 !important; padding: 0 14px !important; }
 .a23-secret__cta { border: 0; background: var(--tw-orange-500); color: var(--tw-plum-950); }
-.a23-secret__close { width: 44px; height: 44px; padding: 0 !important; border: 0; border-radius: 50% !important; background: var(--tw-plum-800); color: var(--tw-white); font-size: 18px !important; }
 .a23-secret button:focus-visible { outline: 3px solid var(--tw-lilac-400); outline-offset: 2px; }
 
 /* ---------- A2 · Mentoras ---------- */
@@ -47,6 +43,14 @@
 .a2 .tw-data { min-width: 900px; font-size: 14px; }
 .a2-clip { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .a2-clip--email { max-width: 100px; }
+.a2-email { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; }
+.a2-copy { cursor: pointer; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--tw-purple-600); }
+.a2-copy:hover { background: var(--tw-lilac-100); }
+.a2-copy[data-copied] { color: #1f6b5c; }
+.a2-pass { display: flex; align-items: center; gap: 8px; background: var(--tw-lilac-100); border-radius: 12px; padding: 6px 6px 6px 14px; }
+.a2-pass__value { flex: 1 1 auto; min-width: 0; font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: 0.06em; overflow-wrap: anywhere; }
+.a2-pass__eye { cursor: pointer; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--tw-purple-600); }
+.a2-pass__eye:hover { background: var(--tw-lilac-200); }
 .tw-page.a2 .tw-data th { white-space: normal; line-height: 1.25; }
 .a2 .tw-data th .tw-sortbtn { text-align: inherit; }
 .a2-clip--org { max-width: 90px; }

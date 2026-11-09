@@ -263,7 +263,8 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - **Limite por horário (RN22):** o admin pode marcar horário lotado (não há bloqueio). Ao salvar a edição (E32), se algum horário dela ficou com mais mentoras ativas do que mesas ativas, a tela não volta para a lista: mostra o aviso laranja "Salvo, mas acima do limite de mesas. O horário 10h30 (24 mentoras para 23 mesas) tem mais mentoras disponíveis do que mesas ativas. No dia, alguma pode ficar sem mesa." com o link "Voltar para a lista". Como o botão Salvar fica no pé do formulário, a tela rola até o aviso e põe o foco nele, e o toast diz "Mentora atualizada, mas com horário acima do limite de mesas."
 - Ao salvar uma nova mentora, o sistema gera a senha provisória e mostra uma única vez, com opções "Copiar" e "Enviar por e-mail" (layout de e-mail "Acesso da mentora", senha válida por 72 h). A mentora troca no primeiro acesso (M2).
-- **Redefinir senha (E34):** confirma e mostra a nova senha provisória uma única vez.
+- **Redefinir senha (E34):** confirma e, na mesma janela, mostra a nova senha provisória oculta, com o olho para revelar e "Copiar senha". Ao fechar, ela não aparece de novo.
+- Ao lado do e-mail de cada mentora, botão pequeno copia o endereço.
 
 **Importação (E33):** passo 1, baixar modelo CSV (nome, email, linkedin, organizacao, areas, disponibilidade, celular; a coluna celular é opcional, telefone com DDD, e planilhas antigas com a coluna whatsapp continuam aceitas); passo 2, enviar arquivo; passo 3, prévia com linha a linha válida, com erro (e-mail duplicado, formato) ou já existente (atualizar/ignorar); passo 4, confirmar e baixar o CSV com as senhas provisórias geradas.
 
