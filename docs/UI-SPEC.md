@@ -107,7 +107,7 @@ Sem mudança de layout. Ao terminar, guarda o resultado (área principal e pontu
 
 ### P3 · Resultado (ajuste)
 
-- Mantém o resultado atual e acrescenta o CTA "Quero me inscrever na mentoria" para P4, com a trilha do resultado já preenchida como área (a chave da trilha é a chave da área do evento). Se a área guardada não estiver na lista do evento, P4 usa a primeira da lista.
+- Mantém o resultado atual e acrescenta o CTA "Quero me inscrever na mentoria" para P4, com a trilha do resultado já preenchida como área (a chave da trilha é a chave da área do evento). Se a área guardada não estiver na lista do evento, P4 usa a primeira da lista. Empate entre trilhas é resolvido pelas respostas da pessoa (não pela ordem da lista), para distribuir o resultado entre as oito.
 - Link secundário "Refazer a jornada".
 
 ### P4 · Inscrição na mentoria (nova)

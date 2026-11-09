@@ -111,6 +111,13 @@ export interface JourneyResult {
   trackPct: (k: KnowledgeTrackKey) => number;
 }
 
+/** Desempate pelas respostas da pessoa (FNV-1a): a ordem da lista favoreceria as primeiras trilhas, e o resultado não muda ao recarregar. */
+function tieBreak(text: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193);
+  return h >>> 0;
+}
+
 export function computeResult(answers: Answers): JourneyResult {
   const keys = Object.keys(AREAS);
   const score: Record<string, number> = {};
@@ -138,8 +145,10 @@ export function computeResult(answers: Answers): JourneyResult {
   const ranking = [...keys].sort((x, y) => ratio(y) - ratio(x) || score[y]! - score[x]!);
   const totalTrackScore = Object.values(trackScores).reduce((total, value) => total + value, 0);
   const trackRatio = (k: KnowledgeTrackKey) => totalTrackScore ? trackScores[k] / totalTrackScore : 0;
+  const affinity = QUESTIONS.map((q, idx) => (q.correta == null ? answers[idx] : '')).join();
+  const tie = (k: KnowledgeTrackKey) => tieBreak(`${k}:${affinity}`);
   const trackRanking = KNOWLEDGE_TRACKS.map(({ key }) => key)
-    .sort((x, y) => trackScores[y] - trackScores[x]);
+    .sort((x, y) => trackScores[y] - trackScores[x] || tie(x) - tie(y));
   const tracos = [...ordem].sort((x, y) => count[y]! - count[x]!).slice(0, 3);
   ['analitica', 'criativa', 'construtora'].forEach((t) => { if (tracos.length < 3 && !tracos.includes(t)) tracos.push(t); });
   const perfil = Object.keys(grupos).sort((x, y) => grupos[y]! - grupos[x]!)[0] ?? 'construtora';

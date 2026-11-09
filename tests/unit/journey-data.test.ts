@@ -38,6 +38,40 @@ describe('resultado da jornada por trilha', () => {
     expect(result.trackRanking[0]).toBe('dados');
   });
 
+  it('distribui o resultado entre as oito trilhas, sem favorecer a ordem da lista', () => {
+    const affinity = QUESTIONS.flatMap((question, idx) => (question.correta == null ? [{ idx, total: question.opcoes.length }] : []));
+    const wins = new Map<string, number>(KNOWLEDGE_TRACKS.map(({ key }) => [key, 0]));
+    let combinations = 0;
+    const answers: Record<number, number> = {};
+    const walk = (depth: number) => {
+      if (depth === affinity.length) {
+        const top = computeResult(answers).trackRanking[0]!;
+        wins.set(top, wins.get(top)! + 1);
+        combinations += 1;
+        return;
+      }
+      for (let option = 0; option < affinity[depth]!.total; option++) {
+        answers[affinity[depth]!.idx] = option;
+        walk(depth + 1);
+      }
+    };
+    walk(0);
+
+    for (const [, n] of wins) {
+      expect(n / combinations).toBeGreaterThan(0.10);
+      expect(n / combinations).toBeLessThan(0.15);
+    }
+  });
+
+  it('dá o mesmo resultado para as mesmas respostas e o desafio de lógica não muda o desempate', () => {
+    const challenge = QUESTIONS.findIndex((question) => question.correta != null);
+    const tied = { 0: 0, 2: 0 };
+    const ranking = computeResult(tied).trackRanking;
+
+    expect(computeResult(tied).trackRanking).toEqual(ranking);
+    expect(computeResult({ ...tied, [challenge]: 1 }).trackRanking).toEqual(ranking);
+  });
+
   it('não usa o desafio de lógica para pontuar afinidade com uma trilha', () => {
     const challengeIndex = QUESTIONS.findIndex((question) => question.correta != null);
     const result = computeResult({ [challengeIndex]: QUESTIONS[challengeIndex]!.correta! });
