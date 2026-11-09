@@ -12,13 +12,12 @@ export default function P3Resultado() {
   const answers = useMemo(() => loadAnswers(), []);
   const r = useMemo(() => (answers ? computeResult(answers) : null), [answers]);
   const topTrack = r?.trackRanking[0];
-  const topArea = r?.ranking[0];
 
   useEffect(() => {
-    if (r && topArea) saveJourney({ area: topArea, scores: r.score });
-  }, [r, topArea]);
+    if (r && topTrack) saveJourney({ area: topTrack, scores: r.trackScores });
+  }, [r, topTrack]);
 
-  if (!answers || !r || !topTrack || !topArea) {
+  if (!answers || !r || !topTrack) {
     return (
       <div className="tw-pub">
         <header className="tw-pub__head"><Brand height={44} /><span /><Link className="tw-pub__back" to="/">Voltar ao início</Link></header>

@@ -42,8 +42,8 @@ export const QUESTIONS: Question[] = [
   { tipo: 'pergunta', texto: 'Num projeto em grupo, qual papel você assume naturalmente?', opcoes: [
     { label: 'Analiso as informações e encontro padrões', s: { dados: 3 }, t: ['analitica'], trilhas: { dados: 3 } },
     { label: 'Construo a lógica que faz tudo funcionar por trás', s: { backend: 3 }, t: ['construtora'], trilhas: { desenvolvimento: 3 } },
-    { label: 'Transformo necessidades em ideias de produtos digitais', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'produtos-negocios': 3 } },
-    { label: 'Organizo o time e defino as prioridades', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'gestao-agilidade': 3 } },
+    { label: 'Transformo necessidades em ideias de produtos digitais', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'produtos-e-negocios': 3 } },
+    { label: 'Organizo o time e defino as prioridades', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'gestao-e-agilidade': 3 } },
   ] },
   { tipo: 'desafio', texto: 'Desafio relâmpago: qual é o próximo número da sequência 2, 6, 12, 20, ?', correta: 1,
     explica: 'As diferenças crescem de 2 em 2 (4, 6, 8…), então o próximo salto é 10: 20 + 10 = 30. Este desafio vale XP, mas não altera sua afinidade com as trilhas.', opcoes: [
@@ -56,30 +56,30 @@ export const QUESTIONS: Question[] = [
     { label: 'Criar sistemas que aprendem e ajudam a automatizar tarefas', s: {}, t: ['analitica'], trilhas: { 'inteligencia-artificial': 3 } },
     { label: 'Testar aplicativos para encontrar problemas antes de publicar', s: {}, t: ['guardia'], trilhas: { qualidade: 3 } },
     { label: 'Manter servidores, redes e serviços funcionando', s: { cloud: 3 }, t: ['guardia'], trilhas: { infraestrutura: 3 } },
-    { label: 'Começar ou fazer uma transição de carreira para tecnologia', s: {}, t: ['estrategista'], trilhas: { 'carreira-ti': 3 } },
+    { label: 'Começar ou fazer uma transição de carreira para tecnologia', s: {}, t: ['estrategista'], trilhas: { 'carreira-em-ti': 3 } },
   ] },
   { tipo: 'pergunta', texto: 'Que impacto você gostaria de gerar com tecnologia?', opcoes: [
     { label: 'Levanto os dados de uso para ver onde as pessoas desistem', s: { dados: 2, produto: 1 }, t: ['analitica'], trilhas: { dados: 3 } },
     { label: 'Criar soluções inteligentes que facilitem tarefas do dia a dia', s: {}, t: ['analitica'], trilhas: { 'inteligencia-artificial': 3 } },
-    { label: 'Transformar uma ideia em um produto útil para as pessoas', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'produtos-negocios': 3 } },
-    { label: 'Ajudar pessoas a começar ou crescer na carreira em tecnologia', s: {}, t: ['estrategista'], trilhas: { 'carreira-ti': 3 } },
+    { label: 'Transformar uma ideia em um produto útil para as pessoas', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'produtos-e-negocios': 3 } },
+    { label: 'Ajudar pessoas a começar ou crescer na carreira em tecnologia', s: {}, t: ['estrategista'], trilhas: { 'carreira-em-ti': 3 } },
   ] },
   { tipo: 'desafio', texto: 'Desafio: as clientes de um app dizem que é difícil achar o botão de pagar. O que você faz primeiro?', opcoes: [
     { label: 'Implemento uma solução para deixar o fluxo mais simples', s: { frontend: 3 }, t: ['construtora'], trilhas: { desenvolvimento: 3 } },
     { label: 'Reproduzo o problema e testo soluções antes de publicar', s: {}, t: ['guardia'], trilhas: { qualidade: 3 } },
-    { label: 'Entendo o valor da melhoria e priorizo o que ajuda as clientes', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'produtos-negocios': 3 } },
-    { label: 'Organizo as prioridades e alinho os próximos passos com o time', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'gestao-agilidade': 3 } },
+    { label: 'Entendo o valor da melhoria e priorizo o que ajuda as clientes', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'produtos-e-negocios': 3 } },
+    { label: 'Organizo as prioridades e alinho os próximos passos com o time', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'gestao-e-agilidade': 3 } },
   ] },
   { tipo: 'pergunta', texto: 'Em qual atividade você gostaria de passar mais tempo?', opcoes: [
     { label: 'Construindo funcionalidades para sites e aplicativos', s: { frontend: 2, backend: 1 }, t: ['construtora'], trilhas: { desenvolvimento: 3 } },
     { label: 'Configurando nuvem e infraestrutura para manter serviços disponíveis', s: { cloud: 3 }, t: ['guardia'], trilhas: { infraestrutura: 3 } },
-    { label: 'Apoiando pessoas a planejar seus próximos passos profissionais', s: {}, t: ['empatia', 'estrategista'], trilhas: { 'carreira-ti': 3 } },
+    { label: 'Apoiando pessoas a planejar seus próximos passos profissionais', s: {}, t: ['empatia', 'estrategista'], trilhas: { 'carreira-em-ti': 3 } },
     { label: 'Analisando informações para descobrir padrões e orientar decisões', s: { dados: 3 }, t: ['analitica'], trilhas: { dados: 3 } },
   ] },
   { tipo: 'desafio', texto: 'Desafio: um serviço precisa atender mais pessoas sem perder qualidade. O que você prioriza?', opcoes: [
     { label: 'Testo os fluxos para garantir que continuem funcionando', s: {}, t: ['guardia'], trilhas: { qualidade: 3 } },
     { label: 'Preparo a infraestrutura para suportar mais acessos', s: { cloud: 3 }, t: ['guardia'], trilhas: { infraestrutura: 3 } },
-    { label: 'Coordeno as prioridades e a colaboração entre as equipes', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'gestao-agilidade': 3 } },
+    { label: 'Coordeno as prioridades e a colaboração entre as equipes', s: { produto: 3 }, t: ['estrategista'], trilhas: { 'gestao-e-agilidade': 3 } },
     { label: 'Uso automação e IA para antecipar necessidades do serviço', s: {}, t: ['analitica'], trilhas: { 'inteligencia-artificial': 3 } },
   ] },
 ];

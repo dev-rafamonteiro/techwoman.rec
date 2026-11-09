@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_AREAS } from '../../src/db/event.js';
 import { canonicalSpecialty, KNOWLEDGE_TRACKS, SPECIALTIES_BY_TRACK, trackKeysForSpecialties } from '../../src/shared/trilhas.js';
 
 describe('trilhas de conhecimento', () => {
@@ -25,7 +26,7 @@ describe('trilhas de conhecimento', () => {
     for (const track of SPECIALTIES_BY_TRACK) {
       expect(track.specialties).toEqual([...track.specialties].sort((a, b) => a.localeCompare(b, 'pt-BR')));
     }
-    expect(SPECIALTIES_BY_TRACK.find((track) => track.key === 'gestao-agilidade')?.specialties).not.toContain('Agilidade');
+    expect(SPECIALTIES_BY_TRACK.find((track) => track.key === 'gestao-e-agilidade')?.specialties).not.toContain('Agilidade');
   });
 
   it('padroniza as opções de Desenvolvimento', () => {
@@ -64,11 +65,27 @@ describe('trilhas de conhecimento', () => {
   it('classifica uma mentora em mais de uma trilha e ignora temas não mapeados', () => {
     expect(trackKeysForSpecialties(['Quality Assurance', 'Produtos digitais', 'Tema não cadastrado'])).toEqual([
       'qualidade',
-      'produtos-negocios',
+      'produtos-e-negocios',
     ]);
   });
 
   it('retorna lista vazia quando não há tema correspondente', () => {
     expect(trackKeysForSpecialties(['Tema sem trilha'])).toEqual([]);
+  });
+});
+
+describe('trilhas e áreas do evento', () => {
+  it('cada trilha é uma área padrão do evento, com a mesma chave', () => {
+    expect(DEFAULT_AREAS.map(({ key }) => key)).toEqual(KNOWLEDGE_TRACKS.map(({ key }) => key));
+  });
+
+  it.each([
+    ['Agilidade', 'Metodologia ágil', 'gestao-e-agilidade'],
+    ['Engenharia Backend', 'Desenvolvimento Back-end', 'desenvolvimento'],
+    ['Início de carreira', 'Início de Profissão', 'carreira-em-ti'],
+    ['Transição de carreira técnica para gestão e liderança em TI', 'Transição de carreira técnica para gestão liderança TI', 'gestao-e-agilidade'],
+  ])('tema já cadastrado "%s" entra no catálogo', (theme, canonical, track) => {
+    expect(canonicalSpecialty(theme)).toBe(canonical);
+    expect(trackKeysForSpecialties([theme])).toEqual([track]);
   });
 });

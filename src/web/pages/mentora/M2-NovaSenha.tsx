@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { canonicalSpecialty, ENDPOINTS, PASSWORD_MIN_LENGTH, SPECIALTIES_BY_TRACK } from '@tw/shared';
-import { ApiError, Button, SelectField, TextField, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
+import { canonicalSpecialty, ENDPOINTS, PASSWORD_MIN_LENGTH } from '@tw/shared';
+import { ApiError, Button, SelectField, TextField, ThemeOptions, call, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useToast } from '../../ui';
 import { safeNext } from '../../shell/auth';
 import '../public/public.css';
 import { MentorPhotoField } from './lib/MentorPhotoField';
@@ -95,21 +95,11 @@ export default function M2NovaSenha() {
         <MentorPhotoField />
         <SelectField label="Tema comercial 1" optional value={theme1}
           onChange={(e) => { setTheme1(e.target.value); setProfileTouched(true); }} data-testid="m2-theme1">
-          <option value="">Selecione um tema</option>
-          {SPECIALTIES_BY_TRACK.map((track) => (
-            <optgroup key={track.key} label={track.label}>
-              {track.specialties.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
-            </optgroup>
-          ))}
+          <ThemeOptions current={theme1} />
         </SelectField>
         <SelectField label="Tema comercial 2" optional value={theme2}
           onChange={(e) => { setTheme2(e.target.value); setProfileTouched(true); }} data-testid="m2-theme2">
-          <option value="">Selecione um tema</option>
-          {SPECIALTIES_BY_TRACK.map((track) => (
-            <optgroup key={track.key} label={track.label}>
-              {track.specialties.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
-            </optgroup>
-          ))}
+          <ThemeOptions current={theme2} />
         </SelectField>
         </>)}
         <Button type="submit" size="lg" block loading={submitting} data-testid="m2-submit">Salvar e continuar</Button>

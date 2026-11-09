@@ -31,10 +31,9 @@ describe('resultado da jornada por trilha', () => {
     expect(computeResult({ [questionIndex]: optionIndex }).trackRanking[0]).toBe(track.key);
   });
 
-  it('mantém as pontuações de área usadas pela inscrição', () => {
+  it('pontua a trilha que vai preenchida na inscrição', () => {
     const result = computeResult({ 0: 0 });
 
-    expect(result.score.dados).toBe(3);
     expect(result.trackScores.dados).toBe(3);
     expect(result.trackRanking[0]).toBe('dados');
   });

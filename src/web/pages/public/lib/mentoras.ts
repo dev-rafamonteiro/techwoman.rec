@@ -15,19 +15,6 @@ export function normalizeSearch(value: string): string {
     .trim();
 }
 
-/** Iniciais do primeiro e do último nome ("Ana Vitória de Souza Cruz" -> "AC"); nome único -> uma letra. */
-export function initials(name: string): string {
-  const parts = name
-    .replace(/[,(].*$/, '') // "Adriana Ribeiro, M.Sc" -> "Adriana Ribeiro"
-    .split(/\s+/)
-    .map((p) => p.replace(/[^\p{L}\p{N}]/gu, ''))
-    .filter(Boolean);
-  if (parts.length === 0) return '?';
-  const first = parts[0]!;
-  const last = parts.length > 1 ? parts[parts.length - 1]! : '';
-  return (first.charAt(0) + last.charAt(0)).toLocaleUpperCase('pt-BR');
-}
-
 /** Texto em que a busca procura: nome, empresa, áreas (rótulo), temas e bio, já normalizado. */
 export function searchText(m: Pick<PublicMentor, 'name' | 'organization' | 'areas' | 'themes' | 'bio'>): string {
   const tracks = trackKeysForSpecialties(m.themes)

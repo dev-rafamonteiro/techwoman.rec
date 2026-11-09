@@ -1,3 +1,4 @@
+/** As `key` são as áreas do evento (A7, E01): a inscrição (E02) recusa área que não esteja lá. */
 export const KNOWLEDGE_TRACKS = [
   {
     key: 'desenvolvimento',
@@ -52,7 +53,7 @@ export const KNOWLEDGE_TRACKS = [
     ],
   },
   {
-    key: 'gestao-agilidade',
+    key: 'gestao-e-agilidade',
     label: 'Gestão e Liderança',
     description: 'Organize projetos, facilite o trabalho das equipes e desenvolva habilidades de liderança em tecnologia.',
     color: '#f26430',
@@ -66,14 +67,14 @@ export const KNOWLEDGE_TRACKS = [
     ],
   },
   {
-    key: 'produtos-negocios',
+    key: 'produtos-e-negocios',
     label: 'Produtos e Negócios',
     description: 'Transforme necessidades e ideias em produtos digitais e negócios que criam valor para as pessoas.',
     color: '#8a1f96',
     specialties: ['Produtos (PO/PM)', 'Produtos digitais', 'Negócios', 'Empreendedora', 'Sustentabilidade'],
   },
   {
-    key: 'carreira-ti',
+    key: 'carreira-em-ti',
     label: 'Carreira em TI',
     description: 'Descubra como começar, mudar de área ou crescer em tecnologia, incluindo comunicação e outras habilidades profissionais.',
     color: '#d98ce6',
@@ -129,6 +130,10 @@ for (const [alias, corrected] of [
   ['UX', 'Desenvolvimento Front-end / UX'],
   ['Desendolvimento Front-end', 'Desenvolvimento Front-end / UX'],
   ['Desendolvimento Back-end', 'Desenvolvimento Back-end'],
+  ['Engenharia Backend', 'Desenvolvimento Back-end'],
+  ['Agilidade', 'Metodologia ágil'],
+  ['Início de carreira', 'Início de Profissão'],
+  ['Transição de carreira técnica para gestão e liderança em TI', 'Transição de carreira técnica para gestão liderança TI'],
 ] as const) {
   const normalizedAlias = normalizeSpecialty(alias);
   specialtyLabels.set(normalizedAlias, corrected);

@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type InputHTMLAttributes } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { canonicalSpecialty, ENDPOINTS, MENTOR_BIO_MAX, SPECIALTIES_BY_TRACK, type SlotCapacityInfo, type UserView } from '@tw/shared';
+import { canonicalSpecialty, ENDPOINTS, MENTOR_BIO_MAX, type SlotCapacityInfo, type UserView } from '@tw/shared';
 import {
-  ApiError, Button, CheckboxField, ErrorState, LinkButton, PhotoUpload, SelectField, SkeletonList, SlotToggleGrid,
+  ApiError, Button, CheckboxField, ErrorState, LinkButton, PhotoUpload, SelectField, SkeletonList, SlotToggleGrid, ThemeOptions,
   call, callForm, formatTime, maskPhone, optionalPhoneError, phoneFromE164, photoForm, useAuth, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useTitle } from './lib/common';
@@ -176,21 +176,11 @@ export default function A3FormMentora() {
             <Field label="Celular" note="(opcional)" type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={f.phone} onChange={(e) => set('phone', maskPhone(e.target.value))} error={errors.phone} data-testid="a3-phone" />
             <Field label="Organização" note="(uso interno, nunca aparece para a participante)" placeholder="Onde ela trabalha" value={f.organization} onChange={(e) => set('organization', e.target.value)} />
             <SelectField label="Tema comercial 1" optional value={f.theme1} onChange={(e) => set('theme1', e.target.value)} data-testid="a3-theme1">
-              <option value="">Selecione um tema</option>
-              {SPECIALTIES_BY_TRACK.map((track) => (
-                <optgroup key={track.key} label={track.label}>
-                  {track.specialties.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
-                </optgroup>
-              ))}
+              <ThemeOptions current={f.theme1} />
             </SelectField>
             <Field label="Domínios do tema 1" note="(separados por ;)" value={f.domains1} onChange={(e) => set('domains1', e.target.value)} data-testid="a3-domains1" />
             <SelectField label="Tema comercial 2" optional value={f.theme2} onChange={(e) => set('theme2', e.target.value)} data-testid="a3-theme2">
-              <option value="">Selecione um tema</option>
-              {SPECIALTIES_BY_TRACK.map((track) => (
-                <optgroup key={track.key} label={track.label}>
-                  {track.specialties.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
-                </optgroup>
-              ))}
+              <ThemeOptions current={f.theme2} />
             </SelectField>
             <Field label="Domínios do tema 2" note="(separados por ;)" value={f.domains2} onChange={(e) => set('domains2', e.target.value)} data-testid="a3-domains2" />
             <div className="tw-field a3f-bio">
