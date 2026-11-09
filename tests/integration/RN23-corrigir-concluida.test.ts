@@ -66,6 +66,18 @@ describe.skipIf(!api)("RN23 · corrigir mentoria concluída", () => {
     expect((await b.invite(0, 2, 3, 0)).status).toBe(201);
   });
 
+  it("não compareceu e em andamento também podem ser corrigidos", async () => {
+    const m = b.w.mentees[0]!.doc._id;
+    const a = (await c.appointments.findOne({ menteeId: m, status: "done" }))!;
+    await c.appointments.updateOne({ _id: a._id }, { $set: { status: "no_show" } });
+    await c.mentees.updateOne({ _id: m }, { $set: { status: "no_show" } });
+    expect((await b.superAdmin.patch(url(a._id), { action: "reopen" })).status).toBe(200);
+    expect((await mentee(0))?.status).toBe("confirmed");
+    await c.appointments.updateOne({ _id: a._id }, { $set: { status: "in_progress" } });
+    expect((await b.superAdmin.patch(url(a._id), { action: "release" })).status).toBe(200);
+    expect(await mentee(0)).toMatchObject({ status: "waiting", priority: true });
+  });
+
   it("só de mentoria concluída", async () => {
     const a = (await c.appointments.findOne({ menteeId: b.w.mentees[2]!.doc._id, status: "invited" }))!;
     const r = await b.superAdmin.patch(url(a._id), { action: "release" });

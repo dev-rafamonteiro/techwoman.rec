@@ -15,7 +15,7 @@ export function registerAdminAppointmentRoutes(app: FastifyInstance, ctx: AppCon
   // (POST /admin/appointments, a criação, fica em routes/invite.ts junto com E24)
   route(app, ctx, E39Patch, async ({ req, user, params, body, idem }) => {
     if ((body.action === 'reopen' || body.action === 'release') && !user.roles.includes('super_admin')) {
-      throw new AppError('FORBIDDEN', 'Só super admin corrige uma mentoria concluída.');
+      throw new AppError('FORBIDDEN', 'Só super admin pode fazer esta correção.');
     }
     if (!ObjectId.isValid(params.id)) throw new AppError('VALIDATION_ERROR', 'Identificador inválido.');
     const id = new ObjectId(params.id);

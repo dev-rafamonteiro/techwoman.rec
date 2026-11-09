@@ -48,8 +48,8 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     throw fromRuleError(planned);
   }
   const plan = planned;
-  // RN23: só corrige quem continua concluída (inscrição cancelada ou anonimizada depois não volta a ter mentoria)
-  if ((input.action === 'reopen' || input.action === 'release') && !(await c.mentees.findOne({ _id: appt.menteeId, status: 'done' }, { session, projection: { _id: 1 } }))) {
+  // RN23: a participante precisa seguir na situação da mentoria (inscrição cancelada ou anonimizada depois não volta a ter mentoria)
+  if ((input.action === 'reopen' || input.action === 'release') && !(await c.mentees.findOne({ _id: appt.menteeId, status: plan.from === 'done' ? 'done' : plan.from === 'no_show' ? 'no_show' : 'confirmed' }, { session, projection: { _id: 1 } }))) {
     throw new AppError('INVALID_STATE', 'A participante mudou de situação. Atualize a tela.');
   }
 

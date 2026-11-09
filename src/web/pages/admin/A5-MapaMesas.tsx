@@ -1,19 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ADMIN_STREAM_EVENT_TYPES, ENDPOINTS, type AdminAppointmentView, type AdminStreamEvent, type E39PatchBody } from '@tw/shared';
 import {
-  ApiError, CheckboxField, ConnectionBar, ErrorState, PriorityBadge, SkeletonList, STATUS_LOOK, StatusBadge,
-  call, formatRange, formatTime, useAuth, useEventStream, useQuery, useToast,
+  ApiError, CheckboxField, ConnectionBar, ErrorState, Overlay, PriorityBadge, SkeletonList, STATUS_LOOK, StatusBadge,
+  call, formatDateTime, formatRange, formatTime, phoneFromE164, useAuth, useEventStream, useQuery, useToast,
 } from '../../ui';
-import { PageHead, errMsg, useTitle } from './lib/common';
+import { PageHead, errMsg, useAreas, useTitle } from './lib/common';
 import './lib/a4-a6.css';
 
 /** Legenda do design (cor + texto); "Em andamento" usa o tom de Confirmada. */
+const linkedinUrl = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linkedin.com') ? `https://${v}` : `https://www.linkedin.com/in/${v}`);
+
 const LEGEND = [['invited', 'Horário proposto'], ['confirmed', 'Confirmada'], ['done', 'Concluída'], ['negative', 'Não compareceu'], ['free', 'Livre']] as const;
 
 /** A5 · Mapa de mesas: grade mesa × horário em tempo real (E38 + SSE), ações de E39. Visual: design/admin/A5-mapa-de-mesas.html. */
 export default function A5MapaMesas() {
   useTitle('Mapa de mesas');
   const toast = useToast();
+  const { label: areaLabel } = useAreas();
   const q = useQuery((signal) => call(ENDPOINTS.E38, { signal }), []);
   const [live, setLive] = useState<Map<string, AdminAppointmentView>>(new Map());
   const [view, setView] = useState<'now' | 'all'>('now');
@@ -67,14 +70,14 @@ export default function A5MapaMesas() {
         {LEGEND.map(([tone, label]) => <li key={tone} className={`a5-t--${tone}`}>{label}</li>)}
       </ul>
       {sel && (
-        <CellDetail key={sel.id} a={sel} slots={slots} tables={activeTables} appts={appts} onClose={() => setSelected(null)}
+        <CellDetail key={sel.id} a={sel} slots={slots} tables={activeTables} appts={appts} areaLabel={areaLabel} onClose={() => setSelected(null)}
           onDone={async () => { setSelected(null); await q.refetch(); }} onConflict={(m) => toast.conflict(m, q.refetch)} />
       )}
       {activeTables.length === 0 || slots.length === 0 ? (
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />
       ) : (
         <div className="a5-wrap" tabIndex={0} role="region" aria-label="Grade de mesas por horário" data-testid="a5-grid">
-          <table className="a5-grid" style={{ minWidth: 80 + activeTables.length * 116 }}>
+          <table className="a5-grid" style={{ minWidth: 80 + activeTables.length * 158 }}>
             <thead><tr><th scope="col">Horário</th>{activeTables.map((t) => <th key={t.id} scope="col">Mesa {t.number}{t.location ? <small>{t.location}</small> : null}</th>)}</tr></thead>
             <tbody>
               {visibleSlots.map((s) => {
@@ -90,7 +93,7 @@ export default function A5MapaMesas() {
                             <button type="button" className={`a5-cell a5-t--${STATUS_LOOK[a.status].tone}`} aria-pressed={a.id === selected}
                               onClick={() => setSelected(a.id === selected ? null : a.id)}
                               aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, ${a.mentor.name} com ${a.mentee.name}, ${STATUS_LOOK[a.status].label}`}>
-                              <b>{a.mentor.name}</b><span>→ {a.mentee.name}</span><small>{STATUS_LOOK[a.status].label}</small>
+                              <i>Mentora</i><b>{a.mentor.name}</b><i>Participante</i><b>{a.mentee.name}</b><small>{STATUS_LOOK[a.status].label}</small>
                             </button>
                           ) : <span className="a5-cell a5-t--free" aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, livre`}>Livre</span>}
                         </td>
@@ -107,25 +110,16 @@ export default function A5MapaMesas() {
   );
 }
 
-function CellDetail({ a, slots, tables, appts, onClose, onDone, onConflict }: {
+function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onConflict }: {
   a: AdminAppointmentView; slots: { id: string; startAt: string; endAt: string }[]; tables: { id: string; number: number; name: string | null; location: string | null }[];
-  appts: AdminAppointmentView[]; onClose: () => void; onDone: () => Promise<void>; onConflict: (m: string) => void;
+  appts: AdminAppointmentView[]; areaLabel: (k: string) => string; onClose: () => void; onDone: () => Promise<void>; onConflict: (m: string) => void;
 }) {
   const toast = useToast();
   const { hasRole } = useAuth();
-  const ref = useRef<HTMLElement>(null);
   const [slotId, setSlotId] = useState(a.slotId);
   const [tableId, setTableId] = useState('');
   const [ignore, setIgnore] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    ref.current?.focus();
-    ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', key);
-    return () => document.removeEventListener('keydown', key);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const run = async (body: E39PatchBody, ok: string) => {
     setBusy(true);
@@ -138,63 +132,81 @@ function CellDetail({ a, slots, tables, appts, onClose, onDone, onConflict }: {
     } finally { setBusy(false); }
   };
   const taken = new Set(appts.filter((x) => x.slotId === slotId && x.id !== a.id).map((x) => x.table.id));
-  const canAct = ['invited', 'confirmed', 'in_progress'].includes(a.status);
-  const canFixDone = a.status === 'done' && hasRole('super_admin');
+  const canCancel = a.status === 'invited' || a.status === 'confirmed';
+  const isSuper = hasRole('super_admin');
+  const canReopen = isSuper && (a.status === 'done' || a.status === 'no_show');
+  const canRelease = isSuper && (a.status === 'done' || a.status === 'no_show' || a.status === 'in_progress');
   const noShowEarly = Date.now() < new Date(a.startAt).getTime() + 10 * 60000;
   const title = `Mesa ${a.table.number} · ${formatTime(a.startAt)}`;
+  const m = a.mentee;
 
   return (
-    <section ref={ref} tabIndex={-1} className="a5-detail" aria-label={`Detalhe da mesa: ${title}`} data-testid="cell-detail">
-      <div className="a5-detail__info">
-        <h2 className="a5-detail__title">{title}</h2>
-        <p>{a.mentor.name} com {a.mentee.name}</p>
-        <div className="tw-row" style={{ gap: 6 }}><StatusBadge status={a.status} />{a.mentee.priority && <PriorityBadge />}</div>
-        <small>{formatRange(a.startAt, a.endAt)}{a.table.location ? ` · ${a.table.location}` : ''}</small>
-      </div>
-      <div className="a5-detail__acts">
-        {a.status === 'invited' && <button type="button" className="a46-pill a46-pill--cta" disabled={busy} onClick={() => void run({ action: 'confirm_in_person' }, 'Presença confirmada.')}>Confirmar presencialmente</button>}
-        {a.status === 'confirmed' && (
-          <button type="button" className="a46-pill" disabled={busy || noShowEarly} title={noShowEarly ? 'Disponível 10 min depois do início.' : undefined}
-            onClick={() => { if (window.confirm('Marcar como não compareceu?')) void run({ action: 'no_show' }, 'Marcada como não compareceu.'); }}>Não compareceu</button>
+    <Overlay open title={title} onClose={onClose}>
+      <div className="a5-detail" data-testid="cell-detail">
+        <div className="tw-row" style={{ gap: 6 }}><StatusBadge status={a.status} />{m.priority && <PriorityBadge />}</div>
+        <dl className="a5-info">
+          <dt>Horário</dt><dd>{formatRange(a.startAt, a.endAt)}</dd>
+          <dt>Mesa</dt><dd>{a.table.number}{a.table.location ? ` · ${a.table.location}` : ''}</dd>
+          <dt>Mentora</dt><dd><b>{a.mentor.name}</b></dd>
+          <dt>Participante</dt><dd><b>{m.name}</b></dd>
+          <dt>E-mail</dt><dd><a href={`mailto:${m.email}`}>{m.email}</a></dd>
+          <dt>Celular</dt><dd>{m.phone ? phoneFromE164(m.phone) : '—'}</dd>
+          <dt>LinkedIn</dt><dd>{m.linkedin ? <a href={linkedinUrl(m.linkedin)} target="_blank" rel="noopener noreferrer">{m.linkedin.replace(/^https?:\/\/(www\.)?/i, '')}</a> : '—'}</dd>
+          <dt>Área</dt><dd>{areaLabel(m.area)}</dd>
+          {m.note && <><dt>Observação</dt><dd>{m.note}</dd></>}
+        </dl>
+        {a.history.length > 0 && (
+          <div>
+            <h3 className="a5-detail__sub">Histórico</h3>
+            <ol className="a5-history">
+              {a.history.map((h, i) => <li key={i}>{formatDateTime(h.at)} · {STATUS_LOOK[h.to].label}</li>)}
+            </ol>
+          </div>
         )}
-        {canAct && (
-          <button type="button" className="a46-pill a46-pill--danger" disabled={busy}
-            onClick={() => { if (window.confirm('Cancelar esta mentoria? A participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Mentoria cancelada.'); }}>Cancelar</button>
-        )}
-        {canFixDone && (
-          <>
+        <div className="a5-detail__acts">
+          {a.status === 'invited' && <button type="button" className="a46-pill a46-pill--cta" disabled={busy} onClick={() => void run({ action: 'confirm_in_person' }, 'Presença confirmada.')}>Confirmar presencialmente</button>}
+          {a.status === 'confirmed' && (
+            <button type="button" className="a46-pill" disabled={busy || noShowEarly} title={noShowEarly ? 'Disponível 10 min depois do início.' : undefined}
+              onClick={() => { if (window.confirm('Marcar como não compareceu?')) void run({ action: 'no_show' }, 'Marcada como não compareceu.'); }}>Não compareceu</button>
+          )}
+          {canCancel && (
+            <button type="button" className="a46-pill a46-pill--danger" disabled={busy} data-testid="a5-cancel"
+              onClick={() => { if (window.confirm('Cancelar esta mentoria? A participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Mentoria cancelada.'); }}>Cancelar</button>
+          )}
+          {canReopen && (
             <button type="button" className="a46-pill" disabled={busy} data-testid="a5-reopen"
               onClick={() => { if (window.confirm('Voltar esta mentoria para confirmada?')) void run({ action: 'reopen' }, 'Mentoria voltou para confirmada.'); }}>Voltar para confirmada</button>
+          )}
+          {canRelease && (
             <button type="button" className="a46-pill a46-pill--danger" disabled={busy} data-testid="a5-release"
               onClick={() => { if (window.confirm('Cancelar esta mentoria e liberar a mesa? A participante volta para a fila com prioridade.')) void run({ action: 'release' }, 'Mesa liberada.'); }}>Cancelar e liberar a mesa</button>
-          </>
-        )}
-        <button type="button" className="a46-x" aria-label="Fechar detalhe" onClick={onClose}>×</button>
-      </div>
-      {a.status === 'confirmed' && (
-        <div className="a5-move">
-          <label htmlFor="a5-mv-mesa">Mover para</label>
-          <select id="a5-mv-mesa" className="a46-sel" value={tableId} onChange={(e) => setTableId(e.target.value)}>
-            <option value="">Escolha a mesa</option>
-            {tables.map((t) => {
-              const same = slotId === a.slotId && t.id === a.table.id;
-              const busyT = taken.has(t.id);
-              return <option key={t.id} value={t.id} disabled={same || busyT}>Mesa {t.number}{same ? ' (atual)' : busyT ? ' (ocupada)' : ' (livre)'}</option>;
-            })}
-          </select>
-          <select aria-label="Horário" className="a46-sel" value={slotId} onChange={(e) => {
-            // sugere a mesma mesa no novo horário, se estiver livre (como a sugestão do TablePicker)
-            const v = e.target.value;
-            const free = !appts.some((x) => x.slotId === v && x.id !== a.id && x.table.id === a.table.id);
-            setSlotId(v); setTableId(v !== a.slotId && free ? a.table.id : '');
-          }}>
-            {slots.map((s) => <option key={s.id} value={s.id}>{formatTime(s.startAt)}</option>)}
-          </select>
-          <button type="button" className="a46-pill a46-pill--dark" disabled={!tableId || busy}
-            onClick={() => void run({ action: 'move', slotId, tableId, ignoreAvailability: ignore, ignoreLeadTime: ignore }, 'Mentoria movida.')}>Mover</button>
-          <CheckboxField label="Ignorar disponibilidade e antecedência mínima" checked={ignore} onChange={(e) => setIgnore(e.target.checked)} />
+          )}
         </div>
-      )}
-    </section>
+        {a.status === 'confirmed' && (
+          <div className="a5-move">
+            <label htmlFor="a5-mv-mesa">Mover para</label>
+            <select id="a5-mv-mesa" className="a46-sel" value={tableId} onChange={(e) => setTableId(e.target.value)}>
+              <option value="">Escolha a mesa</option>
+              {tables.map((t) => {
+                const same = slotId === a.slotId && t.id === a.table.id;
+                const busyT = taken.has(t.id);
+                return <option key={t.id} value={t.id} disabled={same || busyT}>Mesa {t.number}{same ? ' (atual)' : busyT ? ' (ocupada)' : ' (livre)'}</option>;
+              })}
+            </select>
+            <select aria-label="Horário" className="a46-sel" value={slotId} onChange={(e) => {
+              // sugere a mesma mesa no novo horário, se estiver livre (como a sugestão do TablePicker)
+              const v = e.target.value;
+              const free = !appts.some((x) => x.slotId === v && x.id !== a.id && x.table.id === a.table.id);
+              setSlotId(v); setTableId(v !== a.slotId && free ? a.table.id : '');
+            }}>
+              {slots.map((s) => <option key={s.id} value={s.id}>{formatTime(s.startAt)}</option>)}
+            </select>
+            <button type="button" className="a46-pill a46-pill--dark" disabled={!tableId || busy}
+              onClick={() => void run({ action: 'move', slotId, tableId, ignoreAvailability: ignore, ignoreLeadTime: ignore }, 'Mentoria movida.')}>Mover</button>
+            <CheckboxField label="Ignorar disponibilidade e antecedência mínima" checked={ignore} onChange={(e) => setIgnore(e.target.checked)} />
+          </div>
+        )}
+      </div>
+    </Overlay>
   );
 }

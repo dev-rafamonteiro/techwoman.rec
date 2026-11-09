@@ -47,8 +47,13 @@ describe("RN23 · correção de mentoria concluída", () => {
     const p = ok(fix("release", "done"));
     expect(p).toMatchObject({ appointmentTo: "cancelled", menteeTo: "waiting", notify: null, priority: { value: true, reason: "cancelled_by_staff" }, locks: { slotLock: false, menteeLock: false } });
   });
-  it("só de done", () => {
-    for (const s of ["invited", "confirmed", "in_progress", "no_show", "cancelled", "expired", "declined"] as AppointmentStatus[]) {
+  it("também de no_show, e release de in_progress", () => {
+    expect(ok(fix("reopen", "no_show"))).toMatchObject({ appointmentTo: "confirmed", menteeTo: "confirmed" });
+    for (const s of ["no_show", "in_progress"] as AppointmentStatus[]) expect(ok(fix("release", s)), s).toMatchObject({ appointmentTo: "cancelled", menteeTo: "waiting" });
+  });
+  it("nos demais status, recusa", () => {
+    expect(code(fix("reopen", "in_progress"))).toBe("INVALID_STATE");
+    for (const s of ["invited", "confirmed", "cancelled", "expired", "declined"] as AppointmentStatus[]) {
       expect(code(fix("reopen", s)), s).toBe("INVALID_STATE");
       expect(code(fix("release", s)), s).toBe("INVALID_STATE");
     }
