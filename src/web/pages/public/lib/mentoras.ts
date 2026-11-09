@@ -28,7 +28,7 @@ export function initials(name: string): string {
   return (first.charAt(0) + last.charAt(0)).toLocaleUpperCase('pt-BR');
 }
 
-/** Texto em que a busca procura: nome, empresa, áreas, temas, trilhas e bio, já normalizado. */
+/** Texto em que a busca procura: nome, empresa, áreas (rótulo), temas e bio, já normalizado. */
 export function searchText(m: Pick<PublicMentor, 'name' | 'organization' | 'areas' | 'themes' | 'bio'>): string {
   const tracks = trackKeysForSpecialties(m.themes)
     .map((key) => KNOWLEDGE_TRACKS.find((track) => track.key === key)?.label ?? '');

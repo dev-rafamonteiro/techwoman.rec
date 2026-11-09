@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { remainingSlotCapacity } from "@tw/api/domain";
-import { filterMentors, initials, normalizeSearch, resultCountLabel, searchText } from "../../src/web/pages/public/lib/mentoras.js";
+import { filterMentors, normalizeSearch, resultCountLabel, searchText } from "../../src/web/pages/public/lib/mentoras.js";
 
 const mentor = (over: Partial<Parameters<typeof searchText>[0]> = {}) => ({
   name: "Ana Vitória de Souza Cruz",
@@ -16,14 +16,6 @@ describe("P7 · busca de mentoras", () => {
     expect(normalizeSearch("  Liderança   TÉCNICA ")).toBe("lideranca tecnica");
     expect(normalizeSearch("Júlia Sobral M.")).toBe("julia sobral m.");
     expect(normalizeSearch("")).toBe("");
-  });
-
-  it("initials: primeiro e último nome; nome único = uma letra; ignora títulos depois da vírgula", () => {
-    expect(initials("Ana Vitória de Souza Cruz")).toBe("AC");
-    expect(initials("Adriana Ribeiro, M.Sc")).toBe("AR");
-    expect(initials("  ísis  ")).toBe("Í");
-    expect(initials("Júlia Sobral M.")).toBe("JM");
-    expect(initials("")).toBe("?");
   });
 
   it("procura em nome, empresa, rótulo da área, temas e bio, sem diferenciar acento e maiúscula", () => {

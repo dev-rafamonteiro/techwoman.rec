@@ -40,6 +40,7 @@ export default defineConfig({
             MONGODB_URI: process.env.MONGODB_URI_TEST ?? "mongodb://localhost:27017/?directConnection=true",
             MONGODB_DB: "tw_e2e",
             EVENT_ID: "techwoman-2026",
+            PUBLIC_BASE_URL: baseURL,
             JWT_SECRET: "e2e-only-jwt-secret-0123456789abcdef0123456789",
             TURNSTILE_MODE: "test",
             EMAIL_PROVIDER: "console",

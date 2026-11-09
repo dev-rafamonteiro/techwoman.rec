@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
 import type { MenteeDoc } from '@tw/db';
-import { E20, E21, E22, E23, E25, E26, E27, E28, QUEUE_PAGE_SIZE, formatTimeBR, type E20Response, type E25Response } from '@tw/shared';
+import { E20, E21, E22, E23, E25, E26, E27, E28, E55, QUEUE_PAGE_SIZE, formatTimeBR, type E20Response, type E25Response } from '@tw/shared';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
@@ -10,6 +10,7 @@ import { menteeSearchPipeline, runSearch } from '../search/text.js';
 import { normalizeLinkedin, parseOptionalPhone } from '../lib/normalize.js';
 import { openSse } from '../lib/sse.js';
 import { RAW, route } from '../lib/route.js';
+import { forgetReplacedPhoto, saveMentorPhoto } from '../lib/mentor-photos.js';
 import { toMenteeStaffView, toMentorAppointmentView, toSlot, toTableView, toUserView } from '../lib/views.js';
 import { applyTransition } from '../services/transitions.js';
 import { checkAvailabilityUpdate, fullSlotsForAdditions, matchesPeriod, slotFullMessage, suggestTable } from '../domain/index.js';
@@ -254,6 +255,14 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
     const after = await ctx.c.users.findOneAndUpdate({ _id: user._id }, { $set: set }, { returnDocument: 'after' });
     if (!after) throw notFound('Mentora');
     await writeAudit(ctx, undefined, { actor: actorForRoute(req, 'mentor'), action: 'user.profile_update', entity: 'user', entityId: user._id, after: { fields: Object.keys(set).filter((k) => k !== 'updatedAt') }, ip: req.ip });
+    if (body.photoUrl !== undefined) await forgetReplacedPhoto(ctx, user._id, body.photoUrl);
     return { user: toUserView(after) };
+  });
+
+  // E55 · POST /mentor/photo (multipart, campo `file`) · também no primeiro acesso (M2), antes de trocar a senha
+  route(app, ctx, E55, async ({ req, user }) => saveMentorPhoto(ctx, req, user._id, 'mentor'), {
+    rawBody: true,
+    allowWhilePasswordChange: true,
+    rateLimit: { max: 30, timeWindow: '1 minute' },
   });
 }

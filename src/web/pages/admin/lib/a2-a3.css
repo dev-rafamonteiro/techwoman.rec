@@ -87,8 +87,8 @@ button.a2-act { text-decoration: none; }
 .a3f-form .tw-textarea { border-radius: 12px; padding: 10px 12px; font-size: 15px; resize: vertical; }
 .a3f-form .tw-field__hint { font-size: 13px; color: var(--tw-muted); }
 .a3f-bio .tw-field__hint { text-align: right; }
-.a3f-photo { display: flex; align-items: flex-end; gap: 14px; }
-.a3f-photo > .tw-field { flex: 1 1 auto; min-width: 0; }
+.a3f-photo { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; }
+.a3f-photo > .tw-field { flex: 1 1 240px; min-width: 0; }
 .a3f-avatar { flex: 0 0 auto; width: 56px; height: 56px; border-radius: 50%; background: var(--tw-lilac-100); border: 2px dashed var(--tw-lilac-400); object-fit: cover; box-sizing: border-box; }
 img.a3f-avatar { border-style: solid; }
 .a3f-check .tw-check { display: flex; gap: 10px; align-items: center; min-height: 44px; background: var(--tw-lilac-100); border-radius: 12px; padding: 8px 12px; box-sizing: border-box; cursor: pointer; font-weight: 700; }

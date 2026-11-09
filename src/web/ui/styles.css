@@ -1,3 +1,10 @@
 @import './tokens.css';
 @import './components/components.css';
 @import '../shell/shell.css';
+
+/* Carregar foto (PhotoUpload: M2, M3, A3) */
+.tw-photoup { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.tw-photoup__img { flex: 0 0 auto; width: 72px; height: 72px; border-radius: 50%; background: var(--tw-lilac-100); border: 2px dashed var(--tw-lilac-400); object-fit: cover; object-position: center 35%; box-sizing: border-box; }
+img.tw-photoup__img { border-style: solid; }
+.tw-photoup__body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tw-photoup__actions { display: flex; flex-wrap: wrap; gap: 8px; }

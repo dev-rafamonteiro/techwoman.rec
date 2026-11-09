@@ -2,19 +2,19 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { canonicalSpecialty, ENDPOINTS, KNOWLEDGE_TRACKS, trackKeysForSpecialties, type KnowledgeTrackKey, type PublicMentor } from '@tw/shared';
 import { Brand, ErrorState, LinkButton, call, useQuery } from '../../ui';
-import { filterMentors, initials, resultCountLabel } from './lib/mentoras';
+import { filterMentors, resultCountLabel } from './lib/mentoras';
 import './public.css';
 import './p7.css';
 
-/** Foto circular; sem foto (ou se o arquivo falhar) mostra as iniciais do primeiro e do último nome. */
+const NO_PHOTO = '/mentoras/sem-foto.png';
+
+/** Foto circular; sem foto (ou se o arquivo falhar) mostra a imagem padrão, sem gravar nada no cadastro. */
 function Portrait({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
   const [failed, setFailed] = useState(false);
   const photo = mentor.photoUrl && !failed ? mentor.photoUrl : null;
   return (
     <div className={`tw-p7__portrait tw-p7__portrait--${tone}`}>
-      {photo
-        ? <img src={photo} alt={`Foto de ${mentor.name}`} loading="lazy" decoding="async" width={148} height={148} onError={() => setFailed(true)} />
-        : <><span aria-hidden="true">{initials(mentor.name)}</span><i aria-hidden="true" /></>}
+      <img src={photo ?? NO_PHOTO} alt={photo ? `Foto de ${mentor.name}` : ''} loading="lazy" decoding="async" width={148} height={148} onError={() => setFailed(true)} />
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
-import { E01, E02, E03, E04, E05, E06, E07, E08, E09, E54, type E01Response, type E54Response } from '@tw/shared';
+import { ObjectId } from 'mongodb';
+import { E01, E02, E03, E04, E05, E06, E07, E08, E09, E54, E57, type E01Response, type E54Response } from '@tw/shared';
 import { menteeToken, personalPath } from '../lib/tokens.js';
 import { getOrCreateShortLink, shortLinkExpireAt, shortPath } from '../lib/short-links.js';
 import type { MenteeDoc, UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
-import { AppError, isDuplicateKey } from '../lib/errors.js';
+import { AppError, isDuplicateKey, notFound } from '../lib/errors.js';
 import { RAW, respond, route } from '../lib/route.js';
 import { findMenteeByToken } from '../lib/mentee-auth.js';
 import { buildIcs, ICS_FILENAME, icsIdentity } from '../notifications/ics.js';
@@ -50,6 +51,22 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       consentVersion: ev.consentVersion,
     };
     return body;
+  });
+
+  // E57 · GET /public/mentors/:id/photo · foto carregada (E55/E56), só de mentora ativa, como em E54
+  route(app, ctx, E57, async ({ reply, params, query }) => {
+    if (!ObjectId.isValid(params.id)) throw notFound('Foto');
+    const id = new ObjectId(params.id);
+    const [mentor, photo] = await Promise.all([
+      ctx.c.users.findOne({ _id: id, roles: 'mentor', status: 'active' }, { projection: { _id: 1 } }),
+      ctx.c.mentorPhotos.findOne({ _id: id }),
+    ]);
+    if (!mentor || !photo) throw notFound('Foto');
+    void reply.header('Content-Type', photo.contentType).header('X-Content-Type-Options', 'nosniff');
+    // o photoUrl muda a cada foto; sem o `v` certo fica o no-store padrão de /api
+    if (query.v === photo.hash) void reply.header('Cache-Control', 'public, max-age=31536000, immutable');
+    void reply.send(Buffer.from(photo.data.buffer));
+    return RAW;
   });
 
   // E54 · GET /public/mentors · P7 · perfis públicos das mentoras ativas e números do programa (cache curto, sem login)

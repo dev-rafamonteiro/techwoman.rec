@@ -48,6 +48,10 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     throw fromRuleError(planned);
   }
   const plan = planned;
+  // RN23: a participante precisa seguir na situação da mentoria (inscrição cancelada ou anonimizada depois não volta a ter mentoria)
+  if ((input.action === 'reopen' || input.action === 'release') && !(await c.mentees.findOne({ _id: appt.menteeId, status: plan.from === 'done' ? 'done' : plan.from === 'no_show' ? 'no_show' : 'confirmed' }, { session, projection: { _id: 1 } }))) {
+    throw new AppError('INVALID_STATE', 'A participante mudou de situação. Atualize a tela.');
+  }
 
   const filter: Record<string, unknown> = { _id: appt._id, status: plan.from };
   // `walk_in_cancel` (RN21) cancela o convite mesmo com o prazo vencido: o worker ainda não o expirou
@@ -60,8 +64,9 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
   if (input.action === 'confirm_in_person') set['confirmedBy'] = actorRef(input.actor);
   if (input.action === 'accept') set['confirmedBy'] = { userId: null, role: 'mentee' };
   const unset: Record<string, ''> = {};
-  if (!plan.locks.slotLock) unset['slotLock'] = '';
-  if (!plan.locks.menteeLock) unset['menteeLock'] = '';
+  // `reopen` (RN23) é a única transição que volta a precisar de uma trava já solta
+  if (plan.locks.slotLock) set['slotLock'] = true; else unset['slotLock'] = '';
+  if (plan.locks.menteeLock) set['menteeLock'] = true; else unset['menteeLock'] = '';
 
   const updated = await c.appointments.findOneAndUpdate(
     filter,

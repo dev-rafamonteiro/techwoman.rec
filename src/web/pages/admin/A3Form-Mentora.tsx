@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState, type FormEvent, type InputHTMLAttri
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { canonicalSpecialty, ENDPOINTS, MENTOR_BIO_MAX, SPECIALTIES_BY_TRACK, type SlotCapacityInfo, type UserView } from '@tw/shared';
 import {
-  ApiError, Button, CheckboxField, ErrorState, LinkButton, SelectField, SkeletonList, SlotToggleGrid,
-  call, formatTime, maskPhone, optionalPhoneError, phoneFromE164, useAuth, useQuery, useToast,
+  ApiError, Button, CheckboxField, ErrorState, LinkButton, PhotoUpload, SelectField, SkeletonList, SlotToggleGrid,
+  call, callForm, formatTime, maskPhone, optionalPhoneError, phoneFromE164, photoForm, useAuth, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useTitle } from './lib/common';
 import './lib/a2-a3.css';
@@ -201,8 +201,14 @@ export default function A3FormMentora() {
                 : <span id="a3-bio-msg" className="tw-field__hint">{f.bio.length}/{MENTOR_BIO_MAX}</span>}
             </div>
             <div className="a3f-photo">
-              {f.photoUrl.trim() ? <img className="a3f-avatar" src={f.photoUrl.trim()} alt="" /> : <span className="a3f-avatar" aria-hidden="true" />}
-              <Field label="Foto" note="(opcional, endereço da imagem)" type="url" value={f.photoUrl} onChange={(e) => set('photoUrl', e.target.value)} />
+              {editing
+                ? <PhotoUpload url={f.photoUrl.trim() || null} testId="a3-photo" onFile={async (blob) => {
+                    const r = await callForm(ENDPOINTS.E56, { params: { id: id! }, form: photoForm(blob) });
+                    set('photoUrl', r.photoUrl);
+                    toast.success('Foto salva.');
+                  }} />
+                : f.photoUrl.trim() ? <img className="a3f-avatar" src={f.photoUrl.trim()} alt="" /> : <span className="a3f-avatar" aria-hidden="true" />}
+              <Field label={editing ? 'Ou endereço da imagem' : 'Foto'} note={editing ? '(opcional)' : '(opcional, endereço da imagem; para carregar um arquivo, salve primeiro)'} type="url" value={f.photoUrl} onChange={(e) => set('photoUrl', e.target.value)} />
             </div>
             {isSuper && (
               <div className="a3f-check">

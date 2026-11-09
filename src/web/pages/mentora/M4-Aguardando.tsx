@@ -179,6 +179,11 @@ export default function M4Aguardando() {
           Você ainda não marcou nenhum horário. Marque ao menos um para poder mentorar. <Link className="tw-link" to="/mentora/disponibilidade">Ir para Disponibilidade</Link>
         </div>
       )}
+      {user && !user.photoUrl && (
+        <div className="tw-card" role="status" data-testid="m4-no-photo">
+          Seu perfil público ainda está sem foto. <Link className="tw-link" to="/mentora/disponibilidade">Carregar foto</Link>
+        </div>
+      )}
       <div aria-live="polite" className="tw-stack">
         {notices.map((n) => <div key={n.id} className="tw-card" role="status" data-testid="m4-notice">{n.text}</div>)}
       </div>

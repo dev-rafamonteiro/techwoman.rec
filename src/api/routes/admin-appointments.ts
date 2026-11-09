@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
 import { E39Patch } from '@tw/shared';
+import { mapDuplicateKeyError } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, notFound } from '../lib/errors.js';
 import { actorForRoute } from '../lib/audit.js';
@@ -12,7 +13,10 @@ import { moveAppointment } from '../services/move.js';
 export function registerAdminAppointmentRoutes(app: FastifyInstance, ctx: AppContext): void {
   // E39 · PATCH /admin/appointments/:id · mover, cancelar, no-show, confirmar presencialmente
   // (POST /admin/appointments, a criação, fica em routes/invite.ts junto com E24)
-  route(app, ctx, E39Patch, async ({ req, params, body, idem }) => {
+  route(app, ctx, E39Patch, async ({ req, user, params, body, idem }) => {
+    if ((body.action === 'reopen' || body.action === 'release') && !user.roles.includes('super_admin')) {
+      throw new AppError('FORBIDDEN', 'Só super admin pode fazer esta correção.');
+    }
     if (!ObjectId.isValid(params.id)) throw new AppError('VALIDATION_ERROR', 'Identificador inválido.');
     const id = new ObjectId(params.id);
     const event = await loadEvent(ctx);
@@ -26,7 +30,11 @@ export function registerAdminAppointmentRoutes(app: FastifyInstance, ctx: AppCon
         warnings = moved.warnings;
       } else {
         const action = body.action === 'cancel' ? 'staff_cancel' : body.action;
-        const res = await applyTransition(ctx, session, { appointmentId: id, action, actor, reason: body.action === 'cancel' ? (body.reason ?? null) : null, ip: req.ip });
+        const res = await applyTransition(ctx, session, { appointmentId: id, action, actor, reason: body.action === 'cancel' ? (body.reason ?? null) : null, ip: req.ip }).catch((err: unknown) => {
+          // reopen devolve a trava da participante: outra mentoria ativa dela bate no índice único
+          if (mapDuplicateKeyError(err) === 'MENTEE_TAKEN') throw new AppError('MENTEE_TAKEN', 'Esta participante já tem outra mentoria ativa.');
+          throw err;
+        });
         if (!res) throw notFound('Mentoria');
       }
       return { apptId, warnings };
