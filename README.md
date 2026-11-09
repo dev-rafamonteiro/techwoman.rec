@@ -114,6 +114,10 @@ docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVE
   ignorado nessa variante porque o cliente o forjaria; no Cloudflare Tunnel (`compose.yaml`) vale `CLIENT_IP_HEADER=cf`.
 - O `container_name` fixo impede `--scale api=N`; para escalar, tire o `container_name` da `api` no override.
 
+### Deploy automático
+
+No servidor de produção, o cron roda `ops/deploy-check.sh` a cada ~30s: commit novo na `main` com o CI aprovado vai para o ar sem ação manual. Pausa, falhas e o que continua manual estão em `docs/PLAN.md` > Deploy automático.
+
 ## Analytics (Umami)
 
 Medição anônima e sem cookies, só nas páginas públicas e sem query string, numa stack separada (`ops/analytics/`, projeto

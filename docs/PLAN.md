@@ -665,6 +665,26 @@ A carga esperada é pequena para o tamanho da máquina; o risco real é conflito
 5. 15/11: fechar inscrições, exportar tudo, voltar Atlas e VM ao tamanho normal.
 6. 14/12: job de anonimização, que também apaga `outbox` e `short_links` (prazo a confirmar).
 
+## Deploy automático
+
+O servidor publica sozinho o que entra na `main`, com build na própria máquina. O `ops/deploy-check.sh` roda pelo cron a cada ~30s:
+
+1. compara a ponta da `main` no GitHub com o commit no ar (`~/.techwoman-deploy/deployed-sha`);
+2. com commit novo, espera o job `build-test` do CI passar nele (a API do GitHub é consultada sem token, no máximo a cada 90s);
+3. faz o `git merge --ff-only` e o `up -d --build --wait` do deploy manual.
+
+```sh
+# cron do usuário ubuntu
+* * * * * /home/ubuntu/techwoman.rec/ops/deploy-check.sh
+* * * * * sleep 30; /home/ubuntu/techwoman.rec/ops/deploy-check.sh
+```
+
+- Build falho: os containers atuais seguem no ar, o commit fica em `failed-sha` e só outro commit dispara nova tentativa. Para repetir o mesmo, apague `failed-sha`.
+- CI falho: não publica; se o CI for rodado de novo e passar, o deploy sai.
+- Pausar (dia do evento, por exemplo): `touch ~/.techwoman-deploy/PAUSED`. Para voltar, apague o arquivo.
+- Histórico em `~/.techwoman-deploy/deploy.log`.
+- Fora do automático: índices e validadores (`npm run db:indexes`, com o usuário master, antes do merge que depende deles) e mudanças no `.env` ou em `ops/secrets` (recriar à mão).
+
 ## Analytics (Umami)
 
 Medição de uso anônima e sem cookies, com Umami self-hosted em `analytics.techwoman.dev`. Só as páginas públicas são medidas, a query string nunca sai do navegador e nenhum dado pessoal entra nos eventos.
