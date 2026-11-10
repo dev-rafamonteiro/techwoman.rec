@@ -77,7 +77,7 @@ export default function A5MapaMesas() {
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />
       ) : (
         <div className="a5-wrap" tabIndex={0} role="region" aria-label="Grade de horários por mesa" data-testid="a5-grid">
-          <table className="a5-grid" style={{ minWidth: 96 + visibleSlots.length * 158 }}>
+          <table className="a5-grid" style={{ minWidth: 80 + visibleSlots.length * 72 }}>
             <thead>
               <tr>
                 <th scope="col">Mesa</th>
@@ -98,6 +98,7 @@ export default function A5MapaMesas() {
                         {a ? (
                           <button type="button" className={`a5-cell a5-t--${STATUS_LOOK[a.status].tone}`} aria-pressed={a.id === selected}
                             onClick={() => setSelected(a.id === selected ? null : a.id)}
+                            title={`${a.mentor.name} com ${a.mentee.name}`}
                             aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, ${a.mentor.name} com ${a.mentee.name}, ${STATUS_LOOK[a.status].label}`}>
                             <i>Mentora</i><b>{a.mentor.name}</b><i>Participante</i><b>{a.mentee.name}</b><small>{STATUS_LOOK[a.status].label}</small>
                           </button>
