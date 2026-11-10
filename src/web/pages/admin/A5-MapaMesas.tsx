@@ -12,7 +12,7 @@ const linkedinUrl = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linked
 
 const LEGEND = [['invited', 'Horário proposto'], ['confirmed', 'Confirmada'], ['done', 'Concluída'], ['negative', 'Não compareceu'], ['free', 'Livre']] as const;
 
-/** A5 · Mapa de mesas: grade mesa × horário em tempo real (E38 + SSE), ações de E39. Visual: design/admin/A5-mapa-de-mesas.html. */
+/** A5 · Mapa de mesas: grade em tempo real, uma linha por mesa e uma coluna por horário (E38 + SSE), ações de E39. Visual: design/admin/A5-mapa-de-mesas.html. */
 export default function A5MapaMesas() {
   useTitle('Mapa de mesas');
   const toast = useToast();
@@ -76,32 +76,37 @@ export default function A5MapaMesas() {
       {activeTables.length === 0 || slots.length === 0 ? (
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />
       ) : (
-        <div className="a5-wrap" tabIndex={0} role="region" aria-label="Grade de mesas por horário" data-testid="a5-grid">
-          <table className="a5-grid" style={{ minWidth: 80 + activeTables.length * 158 }}>
-            <thead><tr><th scope="col">Horário</th>{activeTables.map((t) => <th key={t.id} scope="col">Mesa {t.number}{t.location ? <small>{t.location}</small> : null}</th>)}</tr></thead>
+        <div className="a5-wrap" tabIndex={0} role="region" aria-label="Grade de horários por mesa" data-testid="a5-grid">
+          <table className="a5-grid" style={{ minWidth: 96 + visibleSlots.length * 158 }}>
+            <thead>
+              <tr>
+                <th scope="col">Mesa</th>
+                {visibleSlots.map((s) => {
+                  const isNow = slots.indexOf(s) === currentIdx;
+                  return <th key={s.id} scope="col" aria-current={isNow ? 'time' : undefined} data-testid={`col-${s.id}`}>{formatTime(s.startAt)}{isNow && <small>AGORA</small>}</th>;
+                })}
+              </tr>
+            </thead>
             <tbody>
-              {visibleSlots.map((s) => {
-                const isNow = slots.indexOf(s) === currentIdx;
-                return (
-                  <tr key={s.id} aria-current={isNow ? 'time' : undefined} data-testid={`row-${s.id}`}>
-                    <th scope="row">{formatTime(s.startAt)}{isNow && <span>AGORA</span>}</th>
-                    {activeTables.map((t) => {
-                      const a = cell(s.id, t.id);
-                      return (
-                        <td key={t.id} data-testid={`cell-${s.id}-${t.id}`}>
-                          {a ? (
-                            <button type="button" className={`a5-cell a5-t--${STATUS_LOOK[a.status].tone}`} aria-pressed={a.id === selected}
-                              onClick={() => setSelected(a.id === selected ? null : a.id)}
-                              aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, ${a.mentor.name} com ${a.mentee.name}, ${STATUS_LOOK[a.status].label}`}>
-                              <i>Mentora</i><b>{a.mentor.name}</b><i>Participante</i><b>{a.mentee.name}</b><small>{STATUS_LOOK[a.status].label}</small>
-                            </button>
-                          ) : <span className="a5-cell a5-t--free" aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, livre`}>Livre</span>}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
+              {activeTables.map((t) => (
+                <tr key={t.id}>
+                  <th scope="row">Mesa {t.number}{t.location ? <span>{t.location}</span> : null}</th>
+                  {visibleSlots.map((s) => {
+                    const a = cell(s.id, t.id);
+                    return (
+                      <td key={s.id} data-testid={`cell-${s.id}-${t.id}`}>
+                        {a ? (
+                          <button type="button" className={`a5-cell a5-t--${STATUS_LOOK[a.status].tone}`} aria-pressed={a.id === selected}
+                            onClick={() => setSelected(a.id === selected ? null : a.id)}
+                            aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, ${a.mentor.name} com ${a.mentee.name}, ${STATUS_LOOK[a.status].label}`}>
+                            <i>Mentora</i><b>{a.mentor.name}</b><i>Participante</i><b>{a.mentee.name}</b><small>{STATUS_LOOK[a.status].label}</small>
+                          </button>
+                        ) : <span className="a5-cell a5-t--free" aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, livre`}>Livre</span>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
