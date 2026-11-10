@@ -1,5 +1,3 @@
-import { EVENT_TIMEZONE } from '../../../ui/format';
-
 /**
  * Vista "Agora" do A5: o horário em andamento (ou o próximo) e os 3 seguintes; nunca horários que já passaram.
  * A hora de agora vale no dia do evento: antes dele (ensaio, testes), às 16h aparecem os horários de 16h em diante,
@@ -7,6 +5,8 @@ import { EVENT_TIMEZONE } from '../../../ui/format';
  */
 export const NOW_WINDOW_NEXT = 3;
 const DAY = 86_400_000;
+/** O mesmo de ui/format (EVENT_TIMEZONE); sem import, porque os testes de unidade compilam este arquivo sozinho. */
+const EVENT_TIMEZONE = 'America/Recife';
 
 /** Dia do calendário em `timeZone`, contado em dias desde 1970 (Recife não tem horário de verão). */
 function dayOf(ms: number, timeZone: string): number {
