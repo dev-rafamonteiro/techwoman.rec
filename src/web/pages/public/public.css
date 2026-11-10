@@ -241,3 +241,6 @@ span.tw-star svg { width: 24px; height: 24px; }
 .tw-mentor-pick__tracks span.is-mine { background: var(--tw-purple-600); color: #fff; }
 .tw-mentor-pick:has(input:checked) .tw-mentor-pick__tracks span:not(.is-mine) { background: #fff; }
 .tw-mentor-pick__text small { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
+
+/* P4: caixa do Turnstile. Quando a Cloudflare pede um toque, ganha moldura e aviso. */
+.tw-ts--ask { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 2px solid var(--tw-orange-500); border-radius: 14px; background: var(--tw-orange-100); color: var(--tw-orange-900); }

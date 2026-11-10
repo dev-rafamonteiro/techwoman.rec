@@ -140,3 +140,4 @@
 .a7-rem__del { margin-left: auto; cursor: pointer; width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: var(--tw-purple-600); font-size: 18px; font-weight: 800; font-family: inherit; }
 .a7-rem__del:hover { background: var(--tw-lilac-200); }
 .a7-rem__err { margin: 0; color: var(--tw-red-700); font-weight: 700; font-size: 14px; }
+.a7-insc + .a7-insc { margin-top: 10px; }

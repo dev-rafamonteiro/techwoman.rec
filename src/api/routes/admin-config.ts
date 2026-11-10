@@ -36,6 +36,7 @@ export function toEventConfig(ev: EventDoc): EventConfig {
     responseWindowMinutes: ev.responseWindowMinutes,
     minLeadMinutes: ev.minLeadMinutes,
     registrationOpen: ev.registrationOpen,
+    turnstileEnabled: ev.turnstileEnabled !== false,
     areas: ev.areas,
     emailSubjects: ev.emailSubjects ?? {},
     // eventos antigos podem ter `whatsapp` nos canais: o lembrete vai sempre por e-mail
@@ -122,6 +123,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
             name: body.name, date: body.date, location: body.location, timezone: body.timezone, startTime: body.startTime, endTime: body.endTime,
             slotMinutes: body.slotMinutes, gapMinutes: body.gapMinutes, slots: slots.map((s) => ({ id: s.id, startAt: s.startAt, endAt: s.endAt })),
             responseWindowMinutes: body.responseWindowMinutes, minLeadMinutes: body.minLeadMinutes, registrationOpen: body.registrationOpen,
+            ...(body.turnstileEnabled !== undefined ? { turnstileEnabled: body.turnstileEnabled } : {}),
             areas: body.areas, ...(body.templates ? { templates: body.templates } : {}), ...(body.emailSubjects ? { emailSubjects: body.emailSubjects } : {}),
             // lembretes sempre por e-mail (canal `whatsapp` de uma aba antiga do A7 é ignorado)
             ...(body.reminders ? { reminders: normalizeReminders(body.reminders).sort((x, y) => y.minutesBefore - x.minutesBefore) } : {}),
@@ -141,7 +143,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
       if (cur.date !== res.date || cur.endTime !== res.endTime || cur.timezone !== res.timezone) {
         await ctx.c.shortLinks.updateMany({}, { $set: { expireAt: shortLinkExpireAt(res) } }, { session });
       }
-      await writeAudit(ctx, session, { actor: actorForRoute(req, 'admin'), action: 'event.update', entity: 'event', entityId: cur._id, before: { version: cur.version, registrationOpen: cur.registrationOpen }, after: { version: res.version, registrationOpen: res.registrationOpen }, ip: req.ip });
+      await writeAudit(ctx, session, { actor: actorForRoute(req, 'admin'), action: 'event.update', entity: 'event', entityId: cur._id, before: { version: cur.version, registrationOpen: cur.registrationOpen, turnstileEnabled: cur.turnstileEnabled !== false }, after: { version: res.version, registrationOpen: res.registrationOpen, turnstileEnabled: res.turnstileEnabled !== false }, ip: req.ip });
       return res;
     });
     return { event: toEventConfig(next) };

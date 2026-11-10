@@ -8,7 +8,7 @@ import {
 import { track } from '../../analytics';
 import { FALLBACK_AREAS } from './lib/areas';
 import { loadJourney, savePersonalPath } from './lib/journey';
-import { useTurnstile } from './lib/turnstile';
+import { TurnstileError, useTurnstile } from './lib/turnstile';
 import { SlotMentorPicker, type SlotChoice } from './SlotMentorPicker';
 import Privacidade from './Privacidade';
 import { useFlowPaths, useToten } from '../../shell/toten/context';
@@ -69,8 +69,16 @@ export default function P4Inscricao() {
 
   const tsBox = useRef<HTMLDivElement>(null);
   // O contêiner só existe depois que E01 carrega e as inscrições estão abertas.
-  const formReady = event.status === 'success' && event.data.registrationOpen;
-  const getToken = useTurnstile(tsBox, formReady);
+  // O admin pode desligar o Turnstile no A7 (pessoas em VPN barradas): aí o widget nem é montado.
+  const formReady = event.status === 'success' && event.data.registrationOpen && event.data.turnstileEnabled;
+  /** A Cloudflare pediu um toque na caixa: a caixa vem para o meio da tela, com aviso. */
+  const [challenge, setChallenge] = useState(false);
+  const getToken = useTurnstile(tsBox, formReady, {
+    onInteractive: () => {
+      setChallenge(true);
+      tsBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+  });
 
   const errors = validate(values);
   const shown = (f: Field) => (touched[f] ? errors[f] : undefined);
@@ -106,9 +114,11 @@ export default function P4Inscricao() {
     }
     setSubmitting(true);
     try {
-      const turnstileToken = await getToken().catch(() => {
-        throw new ApiError(0, 'TURNSTILE_FAILED', 'Não foi possível verificar que você é uma pessoa. Tente de novo.');
-      });
+      const turnstileToken = ev.turnstileEnabled ? await getToken().catch((err: unknown) => {
+        // código da Cloudflare vai para a medição: diz por que a verificação falhou (VPN, rede, navegador)
+        const code = err instanceof TurnstileError ? err.code : 'erro';
+        throw new ApiError(0, 'TURNSTILE_FAILED', 'Não conseguimos confirmar que você é uma pessoa. Se aparecer uma caixa de verificação acima do botão, toque nela. Depois, toque em "Quero ser mentorada" de novo.', { turnstile: code });
+      }) : undefined;
       const res = await call(ENDPOINTS.E02, {
         body: {
           name: values.name.trim(),
@@ -122,7 +132,7 @@ export default function P4Inscricao() {
           ...(values.note.trim() ? { note: values.note.trim() } : {}),
           ...(journey?.scores ? { quizScores: journey.scores } : {}),
           consent: { accepted: true, version: ev.consentVersion },
-          turnstileToken,
+          ...(turnstileToken ? { turnstileToken } : {}),
         },
       });
       if (res.status === 'already_registered') {
@@ -136,7 +146,8 @@ export default function P4Inscricao() {
       navigate(paths.ok, { state: { ...links, appointment: res.appointment } });
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
-      track('inscricao_erro', { codigo: ae?.code ?? 'UNKNOWN' });
+      const tsCode = (ae?.details as { turnstile?: string } | undefined)?.turnstile;
+      track('inscricao_erro', { codigo: tsCode ? `TURNSTILE_${tsCode.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`.slice(0, 40) : ae?.code ?? 'UNKNOWN' });
       if (ae?.code === 'NETWORK') setFormError({ network: true, text: '' });
       else if (ae?.code === 'REGISTRATION_CLOSED') setFormError({ network: false, text: 'As inscrições estão fechadas no momento.' });
       else if (ae?.code === 'VALIDATION_ERROR') setFormError({ network: false, text: (ae.details as { field?: string } | undefined)?.field ? ae.message : 'Confira os campos e tente de novo.' });
@@ -202,8 +213,11 @@ export default function P4Inscricao() {
             // no toten uma aba nova não teria como ser fechada: o aviso abre por cima
             ? <button type="button" className="tw-link" style={{ padding: 0, border: 0, background: 'none', font: 'inherit' }} onClick={(e) => { e.preventDefault(); setPrivacy(true); }}>aviso de privacidade</button>
             : <a className="tw-link" href="/privacidade" target="_blank" rel="noopener noreferrer">aviso de privacidade</a>}.</>} />
-        <div ref={tsBox} />
-        <p className="tw-field__hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Verificação de segurança automática ativa</p>
+        <div className={challenge ? 'tw-ts tw-ts--ask' : 'tw-ts'} data-testid="p4-turnstile">
+          {challenge && <strong role="status">Toque na caixa abaixo para confirmar que você é uma pessoa.</strong>}
+          <div ref={tsBox} />
+        </div>
+        {ev.turnstileEnabled && <p className="tw-field__hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Verificação de segurança automática ativa</p>}
         <Button type="submit" size="lg" block loading={submitting} disabled={slotsEmpty} data-testid="p4-submit">Quero ser mentorada</Button>
       </form>
       {toten && <Overlay title="Aviso de privacidade" open={privacy} onClose={() => setPrivacy(false)}><Privacidade /></Overlay>}

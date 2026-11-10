@@ -33,6 +33,8 @@ export interface EventDoc {
   responseWindowMinutes: number;
   minLeadMinutes: number;
   registrationOpen: boolean;
+  /** Turnstile na inscrição (E02). Ausente = ligado; o super admin desliga no A7 se estiver barrando gente de verdade. */
+  turnstileEnabled?: boolean;
   areas: { key: string; label: string }[];
   /** Textos das mensagens de WhatsApp, legado (canal removido em 2026-11-05): continua gravado, ninguém lê. */
   templates: {

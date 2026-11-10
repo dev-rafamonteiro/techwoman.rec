@@ -13,7 +13,8 @@ export type E41GetResponse = z.infer<typeof E41GetResponseSchema>;
  * mas é ignorado.
  */
 export const E41PutBodySchema = EventConfigSchema.omit({ id: true, slots: true })
-  .extend({ areas: z.array(AreaSchema).min(1).max(30), whatsappLists: z.unknown().optional() })
+  // turnstileEnabled opcional: uma aba do A7 aberta antes do campo existir salva sem 422 (e não mexe nele)
+  .extend({ areas: z.array(AreaSchema).min(1).max(30), turnstileEnabled: z.boolean().optional(), whatsappLists: z.unknown().optional() })
   .strict();
 export type E41PutBody = z.input<typeof E41PutBodySchema>;
 export const E41PutResponseSchema = E41GetResponseSchema;

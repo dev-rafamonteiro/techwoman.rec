@@ -12,6 +12,8 @@ export const E01ResponseSchema = z.object({
   slotMinutes: z.number().int(),
   responseWindowMinutes: z.number().int(),
   registrationOpen: z.boolean(),
+  /** P4 só monta o Turnstile e manda o token se estiver ligado (A7). */
+  turnstileEnabled: z.boolean(),
   areas: z.array(AreaSchema),
   /** Períodos preferidos com o rótulo e o intervalo (RN14), em horário de Recife. */
   periods: z.array(

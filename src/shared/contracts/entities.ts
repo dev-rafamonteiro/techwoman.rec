@@ -230,6 +230,8 @@ export const EventConfigSchema = z.object({
   responseWindowMinutes: z.number().int().min(1).max(120),
   minLeadMinutes: z.number().int().min(0).max(120),
   registrationOpen: z.boolean(),
+  /** Turnstile na inscrição (E02). Desligado, a inscrição não pede a verificação anti-robô. */
+  turnstileEnabled: z.boolean(),
   areas: z.array(AreaSchema),
   /**
    * Textos das mensagens de WhatsApp, legado: o canal foi removido em 2026-11-05 e o e-mail usa os layouts fixos

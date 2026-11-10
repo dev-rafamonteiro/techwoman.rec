@@ -19,8 +19,6 @@ export interface Config {
   turnstileMode: 'live' | 'test';
   rateLimitEnabled: boolean;
   turnstileSecret: string | null;
-  /** Em dev/test sem segredo, o Turnstile aceita qualquer token. */
-  turnstileEnabled: boolean;
   /** Cookie Secure (produção). */
   cookieSecure: boolean;
   /** Valida cada resposta contra o schema do contrato (ligado fora de produção). */
@@ -66,7 +64,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, role: 'api' | '
     allowedOrigins: [publicBaseUrl, ...(env['ALLOWED_ORIGINS'] ?? '').split(',').map((s) => s.trim()).filter(Boolean)],
     jwtSecret,
     turnstileSecret,
-    turnstileEnabled: true,
     turnstileMode,
     menteeTokenSecret,
     rateLimitEnabled: bool(env['RATE_LIMIT'], true),

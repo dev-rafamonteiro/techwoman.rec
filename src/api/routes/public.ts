@@ -41,6 +41,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       slotMinutes: ev.slotMinutes,
       responseWindowMinutes: ev.responseWindowMinutes,
       registrationOpen: ev.registrationOpen && !!last && ctx.now().getTime() < last.startAt.getTime(),
+      turnstileEnabled: ev.turnstileEnabled !== false,
       areas: ev.areas,
       periods: [
         { key: 'morning', label: 'Manhã', from: ev.startTime, to: '12:00' },
@@ -118,8 +119,15 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
     ctx,
     E02,
     async ({ req, body }) => {
-      await verifyTurnstile(ctx.config, body.turnstileToken, req.ip);
       const event = await loadEvent(ctx);
+      // desligado pelo super admin no A7 (gente de verdade barrada, ex.: VPN); ligado, o token é obrigatório
+      if (event.turnstileEnabled !== false) {
+        if (!body.turnstileToken) throw new AppError('TURNSTILE_FAILED', 'Verificação anti-robô ausente. Recarregue a página.');
+        await verifyTurnstile(ctx.config, body.turnstileToken, req.ip).catch((err: unknown) => {
+          ctx.log.warn({ err, ip: req.ip }, 'E02: Turnstile recusou');
+          throw err;
+        });
+      }
       const phone = normalizePhoneBR(body.phone);
       if (!phone) throw new AppError('VALIDATION_ERROR', 'Telefone inválido. Informe DDD e número.', { details: { field: 'phone' } });
       const linkedin = normalizeLinkedin(body.linkedin);

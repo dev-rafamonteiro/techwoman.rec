@@ -29,7 +29,8 @@ export const E02BodySchema = z
     /** Resultado da gamificação (P2): pontuação por área. */
     quizScores: z.record(z.string().max(40), z.number().min(0).max(1000)).optional(),
     consent: z.object({ accepted: z.literal(true), version: z.string().min(1).max(40) }).strict(),
-    turnstileToken: z.string().min(1).max(4096),
+    /** Obrigatório enquanto o Turnstile estiver ligado no evento (A7); a API confere. */
+    turnstileToken: z.string().min(1).max(4096).optional(),
   })
   .strict();
 export type E02Body = z.infer<typeof E02BodySchema>;

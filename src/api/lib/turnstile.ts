@@ -10,16 +10,20 @@ export async function verifyTurnstile(config: Config, token: string, ip: string 
   if (!config.turnstileSecret) throw new AppError('TURNSTILE_FAILED', 'Verificação anti-robô indisponível.');
   const body = new URLSearchParams({ secret: config.turnstileSecret, response: token });
   if (ip) body.set('remoteip', ip);
+  let errorCodes: string[] = [];
   try {
     const res = await fetchImpl('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       body,
       signal: AbortSignal.timeout(4000),
     });
-    const json = (await res.json()) as { success?: boolean };
+    const json = (await res.json()) as { success?: boolean; 'error-codes'?: string[] };
     if (json.success) return;
+    // os códigos da Cloudflare (ex.: timeout-or-duplicate, invalid-input-response) vão para o log de quem chama
+    errorCodes = json['error-codes'] ?? [];
   } catch {
     // falha de rede conta como falha de verificação
+    errorCodes = ['network'];
   }
-  throw new AppError('TURNSTILE_FAILED', 'Não foi possível validar a verificação anti-robô. Tente de novo.');
+  throw new AppError('TURNSTILE_FAILED', 'Não foi possível validar a verificação anti-robô. Tente de novo.', { details: { errorCodes } });
 }

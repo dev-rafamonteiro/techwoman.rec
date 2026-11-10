@@ -54,14 +54,32 @@ export interface TurnstileHandle {
   destroy: () => void;
 }
 
-/** Cria o widget invisível dentro de `container`. Rejeita com Error('turnstile') se não carregar. */
-export async function mountTurnstile(container: HTMLElement): Promise<TurnstileHandle> {
+/** Erro do desafio: `code` é o código da Cloudflare (ex.: 600010), ou 'timeout'/'load' quando nem chegou a ter um. */
+export class TurnstileError extends Error {
+  constructor(readonly code: string) {
+    super('turnstile');
+  }
+}
+
+export interface TurnstileEvents {
+  /** A Cloudflare pediu um toque na caixa de verificação (pessoa suspeita, comum em VPN). */
+  onInteractive?: () => void;
+}
+
+/** Cria o widget invisível dentro de `container`. Rejeita com TurnstileError('load') se não carregar. */
+export async function mountTurnstile(container: HTMLElement, events: TurnstileEvents = {}): Promise<TurnstileHandle> {
   const siteKey = turnstileSiteKey();
-  if (!siteKey) throw new Error('turnstile');
-  const api = await loadScript();
+  if (!siteKey) throw new TurnstileError('load');
+  const api = await loadScript().catch(() => {
+    throw new TurnstileError('load');
+  });
   let pending: { resolve: (t: string) => void; reject: (e: Error) => void } | null = null;
   let used = false;
-  const fail = () => pending?.reject(new Error('turnstile'));
+  const fail = (code: unknown = 'erro') => {
+    pending?.reject(new TurnstileError(String(code)));
+    // `true`: erro tratado aqui (a Cloudflare não joga exceção no console); o próximo getToken reinicia o widget
+    return true;
+  };
   // um elemento por widget: montar de novo no mesmo contêiner (StrictMode, remontagem) não colide com o anterior
   const el = container.appendChild(document.createElement('div'));
   const id = api.render(el, {
@@ -71,14 +89,15 @@ export async function mountTurnstile(container: HTMLElement): Promise<TurnstileH
     appearance: 'interaction-only',
     callback: (token: string) => pending?.resolve(token),
     'error-callback': fail,
-    'timeout-callback': fail,
-    'unsupported-callback': fail,
+    'timeout-callback': () => fail('timeout'),
+    'unsupported-callback': () => fail('unsupported'),
+    'before-interactive-callback': () => events.onInteractive?.(),
     'expired-callback': () => undefined,
   });
   return {
     getToken: () =>
       new Promise<string>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('turnstile')), TOKEN_TIMEOUT_MS);
+        const timer = setTimeout(() => reject(new TurnstileError('timeout')), TOKEN_TIMEOUT_MS);
         const done = <A>(f: (a: A) => void) => (a: A) => {
           clearTimeout(timer);
           pending = null;
@@ -99,13 +118,15 @@ export async function mountTurnstile(container: HTMLElement): Promise<TurnstileH
 
 /**
  * Monta o widget em `box` enquanto `enabled` e devolve `getToken`, que espera a montagem terminar (clique antes do
- * script carregar não falha) e rejeita com Error('turnstile') se a montagem ou o desafio falharem.
+ * script carregar não falha) e rejeita com TurnstileError se a montagem ou o desafio falharem.
  */
-export function useTurnstile(box: RefObject<HTMLElement>, enabled = true): () => Promise<string> {
+export function useTurnstile(box: RefObject<HTMLElement>, enabled = true, events: TurnstileEvents = {}): () => Promise<string> {
   const handle = useRef<Promise<TurnstileHandle> | null>(null);
+  const eventsRef = useRef(events);
+  eventsRef.current = events;
   useEffect(() => {
     if (!enabled || !box.current) return;
-    const p = mountTurnstile(box.current);
+    const p = mountTurnstile(box.current, { onInteractive: () => eventsRef.current.onInteractive?.() });
     handle.current = p;
     p.catch(() => undefined);
     return () => {
@@ -114,7 +135,7 @@ export function useTurnstile(box: RefObject<HTMLElement>, enabled = true): () =>
     };
   }, [enabled, box]);
   return useCallback(async () => {
-    if (!handle.current) throw new Error('turnstile');
+    if (!handle.current) throw new TurnstileError('load');
     return (await handle.current).getToken();
   }, []);
 }

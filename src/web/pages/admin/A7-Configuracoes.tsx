@@ -131,6 +131,13 @@ export default function A7Configuracoes() {
               </span>
               <Switch label="Inscrições abertas" checked={d.registrationOpen} onChange={(v) => set('registrationOpen', v)} />
             </div>
+            <div className="a7-insc" data-on={d.turnstileEnabled} data-testid="a7-turnstile">
+              <span className="a7-insc__txt">
+                <strong>Verificação anti-robô {d.turnstileEnabled ? 'ligada' : 'desligada'}</strong>
+                <span>Cloudflare Turnstile na inscrição. Desligue só se estiver barrando pessoas de verdade (ex.: em VPN): desligada, qualquer um envia o formulário sem a verificação.</span>
+              </span>
+              <Switch label="Verificação anti-robô ligada" checked={d.turnstileEnabled} onChange={(v) => set('turnstileEnabled', v)} />
+            </div>
           </section>
 
           <section className="a7-sec" aria-labelledby="a7-grade">
