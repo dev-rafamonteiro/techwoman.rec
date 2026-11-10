@@ -106,15 +106,15 @@
 .a5-wrap { background: var(--tw-white); border: 1px solid var(--tw-lilac-200); border-radius: 18px; overflow: auto; max-height: 75dvh; }
 .a5-wrap:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .a5-grid { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 3px; font-size: 11px; }
-.a5-grid thead th { position: sticky; top: 0; z-index: 2; background: var(--tw-white); padding: 6px 2px; color: var(--tw-plum-950); font-weight: 800; text-align: center; font-size: 12px; }
+.a5-grid thead th { position: sticky; top: 0; z-index: 2; background: var(--tw-white); padding: 6px 2px; color: var(--tw-plum-950); font-weight: 800; text-align: center; font-size: 12px; max-width: 80px; }
 .a5-grid thead th small { display: block; font-weight: 600; color: var(--tw-muted); font-size: 10px; }
-.a5-grid thead th:first-child { left: 0; z-index: 3; width: 80px; text-align: left; color: var(--tw-muted); padding: 6px 8px; }
+.a5-grid thead th:first-child { left: 0; z-index: 3; width: 64px; text-align: left; color: var(--tw-muted); padding: 6px 4px; }
 .a5-grid thead th[aria-current='time'] { background: var(--tw-orange-500); border-radius: 8px; }
 .a5-grid thead th[aria-current='time'] small { color: var(--tw-plum-950); font-weight: 700; }
-.a5-grid tbody th { position: sticky; left: 0; z-index: 1; background: var(--tw-white); color: var(--tw-plum-950); padding: 6px 8px; text-align: left; font-weight: 800; border-radius: 8px; white-space: nowrap; vertical-align: top; }
-.a5-grid tbody th span { display: block; font-size: 10px; font-weight: 600; color: var(--tw-muted); white-space: normal; max-width: 120px; }
-.a5-grid td { padding: 0; vertical-align: top; height: 1px; }
-.a5-cell { box-sizing: border-box; width: 100%; height: 100%; min-height: 34px; border-radius: 8px; border: 1px solid transparent; padding: 4px 6px; text-align: left; display: flex; flex-direction: column; gap: 0; font: inherit; font-size: 11px; line-height: 1.2; outline-offset: 2px; overflow: hidden; }
+.a5-grid tbody th { position: sticky; left: 0; z-index: 1; background: var(--tw-white); color: var(--tw-plum-950); padding: 6px 4px; text-align: left; font-weight: 800; border-radius: 8px; white-space: nowrap; vertical-align: top; }
+.a5-grid tbody th span { display: block; font-size: 10px; font-weight: 600; color: var(--tw-muted); white-space: normal; max-width: 64px; }
+.a5-grid td { padding: 0; vertical-align: top; height: 1px; max-width: 80px; }
+.a5-cell { box-sizing: border-box; width: 100%; height: 100%; min-height: 34px; border-radius: 8px; border: 1px solid transparent; padding: 4px 5px; text-align: left; display: flex; flex-direction: column; gap: 0; font: inherit; font-size: 11px; line-height: 1.2; outline-offset: 2px; overflow: hidden; max-width: 80px; }
 .a5-cell b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 button.a5-cell { cursor: pointer; }
 button.a5-cell:focus-visible { outline: 3px solid var(--color-focus); }
