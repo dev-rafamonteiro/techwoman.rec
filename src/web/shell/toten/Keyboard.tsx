@@ -52,7 +52,7 @@ const LETTERS = ['qwertyuiop', 'asdfghjklç', 'zxcvbnm'].map((r) => r.split(''))
 
 type Kind = 'char' | 'mod' | 'ok';
 
-/** Teclado na tela do totem: letras, números, acentos e os símbolos de e-mail/LinkedIn (@ . _ -). Celular abre o numérico. */
+/** Teclado na tela do toten: letras, números, acentos e os símbolos de e-mail/LinkedIn (@ . _ -). Celular abre o numérico. */
 export function Keyboard({ target, onDone }: { target: TextTarget; onDone: () => void }) {
   const [shift, setShift] = useState(false);
   const [accents, setAccents] = useState(false);

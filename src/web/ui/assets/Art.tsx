@@ -17,7 +17,7 @@ function Tile({ style, children }: { style?: CSSProperties; children?: ReactNode
   return <div style={{ ...tile, ...style }}>{children}</div>;
 }
 
-/** Mosaico 3×3 do hero de P1 (flex 1 1 380px, máx. 460px). `strip`: as 9 peças numa linha (fundo do teclado do totem). */
+/** Mosaico 3×3 do hero de P1 (flex 1 1 380px, máx. 460px). `strip`: as 9 peças numa linha (fundo do teclado do toten). */
 export function HeroMosaic({ strip }: { strip?: boolean } = {}) {
   const dots = [0, 1, 2, 3, 4, 5, 6, 7, 8];
   const box: CSSProperties = strip

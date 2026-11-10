@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Brand, Button } from '../../ui';
 import { QUESTIONS, calcXp, saveAnswers, type Answers } from './lib/journeyData';
-import { useFlowPaths } from '../../shell/totem/context';
+import { useFlowPaths } from '../../shell/toten/context';
 import './public.css';
 
 /** P2 · Gamificação: intro, 7 etapas de perguntas e desafios com XP. Resultado em P3. */

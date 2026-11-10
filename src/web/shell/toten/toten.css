@@ -1,10 +1,10 @@
-/* Totem (/jornada_totem): palco de tamanho fixo escalado para a tela + teclado próprio. */
-.tw-totem { position: fixed; inset: 0; overflow: hidden; background: var(--tw-plum-950); user-select: none; -webkit-user-select: none; }
-.tw-totem input, .tw-totem textarea { user-select: text; -webkit-user-select: text; }
-.tw-totem__stage { position: absolute; left: 50%; top: 50%; transform-origin: center; display: flex; flex-direction: column; background: var(--color-bg); overflow: hidden; }
-.tw-totem__screen { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* Toten (/jornada_toten): palco de tamanho fixo escalado para a tela + teclado próprio. */
+.tw-toten { position: fixed; inset: 0; overflow: hidden; background: var(--tw-plum-950); user-select: none; -webkit-user-select: none; }
+.tw-toten input, .tw-toten textarea { user-select: text; -webkit-user-select: text; }
+.tw-toten__stage { position: absolute; left: 50%; top: 50%; transform-origin: center; display: flex; flex-direction: column; background: var(--color-bg); overflow: hidden; }
+.tw-toten__screen { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 /* as páginas medem a altura pela janela (100vh/100dvh); no palco vale a altura do palco */
-.tw-totem__screen .tw-app, .tw-totem__screen .tw-pub { min-height: 100% !important; }
+.tw-toten__screen .tw-app, .tw-toten__screen .tw-pub { min-height: 100% !important; }
 
 /* Teclado: gradiente e mosaico da arte do evento (P1), teclas na paleta da página. */
 .tw-kb { position: relative; flex: none; overflow: hidden; background: var(--gradient-hero); padding: 20px 24px 24px; border-top: 4px solid var(--tw-orange-500); touch-action: manipulation; }

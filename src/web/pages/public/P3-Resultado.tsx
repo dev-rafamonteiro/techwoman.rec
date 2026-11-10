@@ -4,7 +4,7 @@ import { Brand, EmptyState, LinkButton } from '../../ui';
 import { KNOWLEDGE_TRACKS } from '@tw/shared';
 import { saveJourney } from './lib/journey';
 import { PERFIS, TRACOS, calcXp, computeResult, loadAnswers, saveAnswers } from './lib/journeyData';
-import { useFlowPaths } from '../../shell/totem/context';
+import { useFlowPaths } from '../../shell/toten/context';
 import './public.css';
 
 /** P3 · Resultado da gamificação. Grava {area, scores} para P4 pré-preencher a inscrição. */

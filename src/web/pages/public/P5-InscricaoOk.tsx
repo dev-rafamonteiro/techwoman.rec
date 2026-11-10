@@ -3,11 +3,11 @@ import { useLocation } from 'react-router-dom';
 import type { E02Created } from '@tw/shared';
 import { Button, LinkButton, formatRange } from '../../ui';
 import { loadPersonalPath, type PersonalLinks } from './lib/journey';
-import { useTotem } from '../../shell/totem/context';
+import { useToten } from '../../shell/toten/context';
 import './public.css';
 
-/** Totem: a confirmação fica na tela por esse tempo e a jornada volta ao início para a próxima pessoa. */
-const TOTEM_RESTART_S = 30;
+/** Toten: a confirmação fica na tela por esse tempo e a jornada volta ao início para a próxima pessoa. */
+const TOTEN_RESTART_S = 30;
 
 /** P5 · Mentoria confirmada (links de E02, guardados por P4; RN24) */
 export default function P5InscricaoOk() {
@@ -20,16 +20,16 @@ export default function P5InscricaoOk() {
   const shown = links?.shortPath ?? path;
   const link = shown ? `${window.location.origin}${shown}` : null;
   const [copied, setCopied] = useState(false);
-  const totem = useTotem();
-  const [left, setLeft] = useState(TOTEM_RESTART_S);
+  const toten = useToten();
+  const [left, setLeft] = useState(TOTEN_RESTART_S);
   useEffect(() => {
-    if (!totem) return;
+    if (!toten) return;
     const t = setInterval(() => setLeft((n) => n - 1), 1000);
     return () => clearInterval(t);
-  }, [totem]);
+  }, [toten]);
   useEffect(() => {
-    if (totem && left <= 0) totem.restart();
-  }, [totem, left]);
+    if (toten && left <= 0) toten.restart();
+  }, [toten, left]);
 
   async function copy() {
     if (!link) return;
@@ -60,11 +60,11 @@ export default function P5InscricaoOk() {
       {appointment
         ? <p data-testid="p5-appointment"><strong>{appointment.tableLabel}</strong> · {formatRange(appointment.startAt, appointment.endAt)} · com {appointment.mentorName}</p>
         : <p>Os detalhes da sua mentoria estão na sua página pessoal e no e-mail de confirmação.</p>}
-      {totem ? (
+      {toten ? (
         // tela compartilhada: o link pessoal é credencial, vai só por e-mail
         <>
-          <p data-testid="p5-totem-email">Enviamos para o seu e-mail o link da sua página pessoal, para acompanhar, trocar ou cancelar a mentoria.</p>
-          <Button size="lg" block onClick={totem.restart} data-testid="p5-totem-restart">Nova inscrição</Button>
+          <p data-testid="p5-toten-email">Enviamos para o seu e-mail o link da sua página pessoal, para acompanhar, trocar ou cancelar a mentoria.</p>
+          <Button size="lg" block onClick={toten.restart} data-testid="p5-toten-restart">Nova inscrição</Button>
           <small aria-live="polite">A tela volta ao início em {Math.max(left, 0)} s.</small>
         </>
       ) : <>

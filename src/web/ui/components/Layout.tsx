@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { useTotem } from '../../shell/totem/context';
+import { useToten } from '../../shell/toten/context';
 
-/** Logotipo Tech Woman (imagem 2,83:1). `height` é a altura padrão do contexto; o CSS ajusta por tela. No totem, abre o painel escondido. */
+/** Logotipo Tech Woman (imagem 2,83:1). `height` é a altura padrão do contexto; o CSS ajusta por tela. No toten, abre o painel escondido. */
 export function Brand({ to = '/', height = 32 }: { to?: string; height?: 32 | 36 | 44 }) {
-  const totem = useTotem();
+  const toten = useToten();
   const img = (
     <img
       src="/brand/techwoman-logo.png"
@@ -15,7 +15,7 @@ export function Brand({ to = '/', height = 32 }: { to?: string; height?: 32 | 36
       alt="Tech Woman"
     />
   );
-  if (totem) return <button type="button" className="tw-brand" onClick={totem.openPanel} data-testid="totem-logo">{img}</button>;
+  if (toten) return <button type="button" className="tw-brand" onClick={toten.openPanel} data-testid="toten-logo">{img}</button>;
   return <Link to={to} className="tw-brand">{img}</Link>;
 }
 

@@ -11,7 +11,7 @@ import { loadJourney, savePersonalPath } from './lib/journey';
 import { useTurnstile } from './lib/turnstile';
 import { SlotMentorPicker, type SlotChoice } from './SlotMentorPicker';
 import Privacidade from './Privacidade';
-import { useFlowPaths, useTotem } from '../../shell/totem/context';
+import { useFlowPaths, useToten } from '../../shell/toten/context';
 import './public.css';
 
 type Field = 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'mentor' | 'note' | 'consent';
@@ -47,7 +47,7 @@ function validate(v: Values): Partial<Record<Field, string>> {
 export default function P4Inscricao() {
   const navigate = useNavigate();
   const paths = useFlowPaths();
-  const totem = useTotem();
+  const toten = useToten();
   const [privacy, setPrivacy] = useState(false);
   const event = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
   const journey = useMemo(() => loadJourney(), []);
@@ -198,15 +198,15 @@ export default function P4Inscricao() {
           onChange={(e) => set('note', e.target.value)} onBlur={() => touch('note')} data-testid="p4-note" />
         <CheckboxField name="consent" checked={values.consent} error={shown('consent')}
           onChange={(e) => { set('consent', e.target.checked); touch('consent'); }} data-testid="p4-consent"
-          label={<>Concordo com o uso dos meus dados para organizar a mentoria, conforme o {totem
-            // no totem uma aba nova não teria como ser fechada: o aviso abre por cima
+          label={<>Concordo com o uso dos meus dados para organizar a mentoria, conforme o {toten
+            // no toten uma aba nova não teria como ser fechada: o aviso abre por cima
             ? <button type="button" className="tw-link" style={{ padding: 0, border: 0, background: 'none', font: 'inherit' }} onClick={(e) => { e.preventDefault(); setPrivacy(true); }}>aviso de privacidade</button>
             : <a className="tw-link" href="/privacidade" target="_blank" rel="noopener noreferrer">aviso de privacidade</a>}.</>} />
         <div ref={tsBox} />
         <p className="tw-field__hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Verificação de segurança automática ativa</p>
         <Button type="submit" size="lg" block loading={submitting} disabled={slotsEmpty} data-testid="p4-submit">Quero ser mentorada</Button>
       </form>
-      {totem && <Overlay title="Aviso de privacidade" open={privacy} onClose={() => setPrivacy(false)}><Privacidade /></Overlay>}
+      {toten && <Overlay title="Aviso de privacidade" open={privacy} onClose={() => setPrivacy(false)}><Privacidade /></Overlay>}
     </div>
   );
 }

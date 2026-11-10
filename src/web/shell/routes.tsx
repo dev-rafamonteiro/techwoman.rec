@@ -4,8 +4,8 @@ import { NotFoundState } from '../ui/components/States';
 import { SkeletonList } from '../ui/components/States';
 import { RequireRole } from './auth';
 const Gallery = lazy(() => import('../ui/Gallery'));
-const TotemLayout = lazy(() => import('./totem/TotemLayout'));
-import { TOTEM_BASE } from './totem/context';
+const TotenLayout = lazy(() => import('./toten/TotenLayout'));
+import { TOTEN_BASE } from './toten/context';
 import { AdminLayout, BareLayout, MentorLayout, ParticipantLayout } from './layouts';
 
 /**
@@ -58,8 +58,8 @@ export const routes: RouteObject[] = [
     // QR Code do cartaz aponta para techwoman.dev/cadastro: leva à jornada (QR → gamificação → resultado → inscrição).
     { path: '/cadastro', element: <Navigate to="/jornada" replace /> },
   ] },
-  // Totem do evento: a mesma jornada até a confirmação, com teclado na tela e painel escondido no logotipo.
-  { path: TOTEM_BASE, element: <Suspense fallback={null}><TotemLayout /></Suspense>, children: [
+  // Toten do evento: a mesma jornada até a confirmação, com teclado na tela e painel escondido no logotipo.
+  { path: TOTEN_BASE, element: <Suspense fallback={null}><TotenLayout /></Suspense>, children: [
     { element: <BareLayout />, children: [
       { index: true, element: el('public', 'P2') },
       { path: 'resultado', element: el('public', 'P3') },
@@ -69,7 +69,6 @@ export const routes: RouteObject[] = [
       { path: 'ok', element: el('public', 'P5') },
     ] },
   ] },
-  { path: '/jornada_toten', element: <Navigate to={TOTEM_BASE} replace /> },
   { element: <ParticipantLayout title="Mentoria · 14/11" />, children: [
     { path: '/mentoria/inscricao', element: el('public', 'P4') },
     { path: '/mentoria/inscricao/ok', element: el('public', 'P5') },

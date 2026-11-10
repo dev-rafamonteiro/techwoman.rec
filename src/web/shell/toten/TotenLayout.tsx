@@ -3,16 +3,16 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Button, CheckboxField, Overlay, RadioCards } from '../../ui';
 import { clearJourney } from '../../pages/public/lib/journey';
 import { saveAnswers } from '../../pages/public/lib/journeyData';
-import { TOTEM_BASE, TotemContext, type Totem } from './context';
+import { TOTEN_BASE, TotenContext, type Toten } from './context';
 import { Keyboard, isTextField, type TextTarget } from './Keyboard';
-import './totem.css';
+import './toten.css';
 
 type Res = 'landscape' | 'portrait' | 'fill';
 interface Settings { keyboard: boolean; res: Res; zoom: string }
 
 const DEFAULTS: Settings = { keyboard: true, res: 'landscape', zoom: '1' };
 const SIZES: Record<Exclude<Res, 'fill'>, [number, number]> = { landscape: [1920, 1080], portrait: [1080, 1920] };
-const SETTINGS_KEY = 'tw:totem';
+const SETTINGS_KEY = 'tw:toten';
 /** Sem toque nesse prazo, os dados da pessoa saem da tela e a jornada volta ao início. */
 const IDLE_MS = 120_000;
 
@@ -36,10 +36,10 @@ function useViewport(): [number, number] {
 }
 
 /**
- * Totem (/jornada_totem): a mesma jornada P2 → P3 → P4 → P5 num palco de 1920×1080 ou 1080×1920 escalado para caber
+ * Toten (/jornada_toten): a mesma jornada P2 → P3 → P4 → P5 num palco de 1920×1080 ou 1080×1920 escalado para caber
  * na tela, com teclado próprio (o monitor não tem teclado físico). Toque no logotipo abre o painel de configuração.
  */
-export default function TotemLayout() {
+export default function TotenLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [settings, setSettings] = useState(loadSettings);
@@ -65,9 +65,9 @@ export default function TotemLayout() {
     setPanel(false);
     setTarget(null);
     (document.activeElement as HTMLElement | null)?.blur?.();
-    navigate(TOTEM_BASE, { replace: true });
+    navigate(TOTEN_BASE, { replace: true });
   }, [navigate]);
-  const ctx = useMemo<Totem>(() => ({ openPanel: () => setPanel(true), restart }), [restart]);
+  const ctx = useMemo<Toten>(() => ({ openPanel: () => setPanel(true), restart }), [restart]);
 
   useEffect(() => {
     let last = Date.now();
@@ -130,35 +130,35 @@ export default function TotemLayout() {
   const scale = Math.min(vw / w, vh / h);
 
   return (
-    <TotemContext.Provider value={ctx}>
-      <div className="tw-totem" data-testid="totem">
-        <div className="tw-totem__stage" style={{ width: w, height: h, transform: `translate(-50%, -50%) scale(${scale})` }}>
-          <div className="tw-totem__screen" style={{ zoom: settings.zoom }}>
+    <TotenContext.Provider value={ctx}>
+      <div className="tw-toten" data-testid="toten">
+        <div className="tw-toten__stage" style={{ width: w, height: h, transform: `translate(-50%, -50%) scale(${scale})` }}>
+          <div className="tw-toten__screen" style={{ zoom: settings.zoom }}>
             {/* location.key: cada navegação (inclusive para a mesma rota, ao reiniciar) monta a página do zero */}
             <Outlet key={location.key} />
           </div>
           {target && <Keyboard key={target.name} target={target} onDone={() => target.blur()} />}
         </div>
       </div>
-      <Overlay title="Configurações do totem" open={panel} onClose={() => setPanel(false)}>
-        <div className="tw-stack" data-testid="totem-panel">
+      <Overlay title="Configurações do toten" open={panel} onClose={() => setPanel(false)}>
+        <div className="tw-stack" data-testid="toten-panel">
           <CheckboxField label="Abrir o teclado da tela ao tocar num campo" checked={settings.keyboard}
-            onChange={(e) => update({ keyboard: e.target.checked })} data-testid="totem-keyboard" />
-          <RadioCards legend="Resolução" name="totem-res" stacked value={settings.res} onChange={(res) => update({ res })}
+            onChange={(e) => update({ keyboard: e.target.checked })} data-testid="toten-keyboard" />
+          <RadioCards legend="Resolução" name="toten-res" stacked value={settings.res} onChange={(res) => update({ res })}
             options={[
               { value: 'landscape', label: 'Horizontal · 1920 × 1080' },
               { value: 'portrait', label: 'Vertical · 1080 × 1920' },
               { value: 'fill', label: 'Tela inteira, sem escala' },
             ]} />
-          <RadioCards legend="Tamanho do conteúdo" name="totem-zoom" value={settings.zoom} onChange={(zoom) => update({ zoom })}
+          <RadioCards legend="Tamanho do conteúdo" name="toten-zoom" value={settings.zoom} onChange={(zoom) => update({ zoom })}
             options={[{ value: '1', label: '100%' }, { value: '1.25', label: '125%' }, { value: '1.5', label: '150%' }, { value: '1.75', label: '175%' }]} />
           <div className="tw-row">
             <Button variant="secondary" onClick={() => void document.documentElement.requestFullscreen?.().catch(() => undefined)}>Tela cheia</Button>
-            <Button variant="secondary" onClick={restart} data-testid="totem-restart">Reiniciar jornada</Button>
+            <Button variant="secondary" onClick={restart} data-testid="toten-restart">Reiniciar jornada</Button>
             <Button onClick={() => setPanel(false)}>Fechar</Button>
           </div>
         </div>
       </Overlay>
-    </TotemContext.Provider>
+    </TotenContext.Provider>
   );
 }
