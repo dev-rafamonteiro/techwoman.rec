@@ -80,7 +80,7 @@ function Picker({ area, value, onChange, onEmptyChange }: {
         onChange={(p) => { setPeriod(p); setSlotId(null); onChange(null); }} />
       {period && slots.length === 0 && <p className="tw-field__hint" data-testid="p4-period-empty">Sem vagas nesse período. Escolha outro.</p>}
       {slots.length > 0 && (
-        <RadioCards legend="Horário" name="slot" value={slotId}
+        <RadioCards legend="Horário" name="slot" value={slotId} stacked
           options={slots.map((s) => ({ value: s.slotId, label: `${formatTime(s.startAt)} · ${vagas(s.available)}` }))}
           onChange={(id) => { setSlotId(id); onChange(null); }} />
       )}
