@@ -56,6 +56,8 @@ const INDEXES: Record<string, IndexDescription[]> = {
   ],
   [COLLECTIONS.mentees]: [
     { key: { eventId: 1, emailNorm: 1 }, name: 'mentee_event_email', unique: true },
+    // RN01: P4 também bloqueia celular de inscrição ativa; não é único porque o cadastro rápido da equipe (E51) pode repetir
+    { key: { eventId: 1, phone: 1 }, name: 'mentee_event_phone' },
     { key: { tokenHash: 1 }, name: 'mentee_token', unique: true },
     { key: { eventId: 1, status: 1, priority: -1, queuedAt: 1 }, name: 'mentee_queue' },
     { key: { eventId: 1, area: 1, status: 1 }, name: 'mentee_area_status' },

@@ -1,16 +1,22 @@
 import type { MenteeStatus } from '@tw/shared';
 import { isLiveMentee } from './status.js';
 
-export type RegistrationOutcome = 'create' | 'resend_link' | 'reactivate';
+export type RegistrationOutcome = 'create' | 'blocked' | 'reactivate';
+
+/** Mensagem de RN01 para quem já tem inscrição ativa (P4 mostra como está). */
+export const ALREADY_REGISTERED_MESSAGE = 'Você já está inscrita na mentoria. Procure alguém da organização do evento para ajudar com a sua inscrição.';
 
 /**
- * RN01 · Inscrição única por e-mail normalizado por evento.
- * Sem inscrição: cria. Ativa: não cria outra e reenvia o link. `cancelled` ou `no_show`: reativa como `waiting`
- * sem prioridade e com novo `queuedAt`.
+ * RN01 · Uma inscrição ativa por pessoa no evento: e-mail normalizado ou celular de uma inscrição ativa bloqueiam a
+ * nova pelo P4 (a pessoa procura a organização). `cancelled` ou `no_show` com o mesmo e-mail reativa já confirmada,
+ * sem prioridade e com novo `queuedAt`. `existing` é a do mesmo e-mail; `matches`, as do mesmo e-mail ou celular.
  */
-export function registrationOutcome(existing: { status: MenteeStatus } | null): RegistrationOutcome {
-  if (!existing) return 'create';
-  return isLiveMentee(existing.status) ? 'resend_link' : 'reactivate';
+export function registrationOutcome(
+  existing: { status: MenteeStatus } | null,
+  matches: readonly { status: MenteeStatus }[] = existing ? [existing] : [],
+): RegistrationOutcome {
+  if (matches.some((m) => isLiveMentee(m.status))) return 'blocked';
+  return existing ? 'reactivate' : 'create';
 }
 
 /** RN01 · e-mail normalizado: minúsculo, sem espaços. */

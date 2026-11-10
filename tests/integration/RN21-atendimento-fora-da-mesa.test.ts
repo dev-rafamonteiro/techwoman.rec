@@ -322,7 +322,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN21 · atendiment
       expect(await queueNames(1)).not.toContain("Renata Prado");
     });
 
-    it("inscrever de novo pelo P4 (E02) com o mesmo e-mail só reenvia o link; reenviar o link pelo admin (E36) também não mexe no status", async () => {
+    it("inscrever de novo pelo P4 (E02) com o mesmo e-mail é bloqueado (RN01); reenviar o link pelo admin (E36) também não mexe no status", async () => {
       const joana = doc("Joana Lima");
       const reg = await b.anon.post("/api/public/mentees", {
         name: joana.name, email: joana.email, phone: "(81) 99910-0001", area: "dados", slotId: "s12", mentorId: String(b.w.mentors[0]!._id),

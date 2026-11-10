@@ -13,7 +13,7 @@ describe.skipIf(!api)("RN24 inscrição com agendamento", () => {
   let seq = 0;
   const m = (i: number) => b.w.mentors[i]!;
   const body = (slotId: string, mentorId: unknown, over: Record<string, unknown> = {}) => ({
-    name: "Maria Silva", email: `p${seq++}@y.test`, phone: "81912345678", area: "dados", slotId, mentorId: String(mentorId),
+    name: "Maria Silva", email: `p${seq}@y.test`, phone: `819${String(12345000 + seq++)}`, area: "dados", slotId, mentorId: String(mentorId),
     consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok", ...over,
   });
   const register = (slotId: string, mentorId: unknown, over?: Record<string, unknown>) => b.anon.post("/api/public/mentees", body(slotId, mentorId, over));

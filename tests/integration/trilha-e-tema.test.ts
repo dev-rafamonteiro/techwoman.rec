@@ -8,8 +8,9 @@ import { getCollections } from "../../src/db/collections.js";
 const api = await loadApi();
 
 let mentorId: unknown;
+let seq = 0;
 const body = (over: Record<string, unknown>) => ({
-  name: "Maria Silva", phone: "81912345678", area: "desenvolvimento", ...booking(mentorId),
+  name: "Maria Silva", phone: `819${String(12345000 + seq++)}`, area: "desenvolvimento", ...booking(mentorId),
   consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok", ...over,
 });
 

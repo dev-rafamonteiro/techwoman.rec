@@ -43,8 +43,8 @@ export const E02CreatedSchema = z.object({
   shortPath: z.string().describe('/l/<código>'),
   appointment: z.object({ mentorName: z.string(), tableLabel: z.string(), startAt: IsoDateTimeSchema, endAt: IsoDateTimeSchema }),
 });
-/** 200: e-mail já inscrito e ativo; o link foi reenviado por e-mail (sem token na resposta). */
 export type E02Created = z.infer<typeof E02CreatedSchema>;
+/** 200: e-mail ou celular de uma inscrição ativa do evento (RN01); nada é gravado nem enviado. */
 export const E02AlreadyRegisteredSchema = z.object({
   status: z.literal('already_registered'),
   code: z.literal('ALREADY_REGISTERED'),

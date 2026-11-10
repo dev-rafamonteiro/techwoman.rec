@@ -54,6 +54,9 @@ export default function P4Inscricao() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<{ network: boolean; text: string } | null>(null);
   const [already, setAlready] = useState(false);
+  const alreadyRef = useRef<HTMLDivElement>(null);
+  // o aviso fica no topo do formulário e o envio é no fim: leva a pessoa até ele
+  useEffect(() => { if (already) alreadyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, [already]);
   const [slotsEmpty, setSlotsEmpty] = useState(false);
   const [taken, setTaken] = useState(false);
   /** Sobe depois de um SLOT_UNAVAILABLE: refaz E58 e E59. */
@@ -152,9 +155,8 @@ export default function P4Inscricao() {
 
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="p4-form">
         {already && (
-          <div className="tw-banner tw-banner--ok" role="status" data-testid="p4-already">
-            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none', marginTop: 2 }}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
-            <span>Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail.</span>
+          <div className="tw-banner tw-banner--err" role="alert" data-testid="p4-already" ref={alreadyRef}>
+            <span><strong>Você já está inscrita na mentoria.</strong> Não é possível fazer outra inscrição com o mesmo e-mail ou celular. Procure alguém da organização do evento para ajudar com a sua inscrição.</span>
           </div>
         )}
         {formError && (
@@ -169,7 +171,7 @@ export default function P4Inscricao() {
         <TextField label="E-mail" placeholder="voce@email.com" name="email" type="email" inputMode="email" autoComplete="email" value={values.email} error={shown('email')} ok={values.email && !errors.email ? 'Uma inscrição por e-mail' : undefined}
           onChange={(e) => { set('email', e.target.value); setAlready(false); }} onBlur={() => touch('email')} data-testid="p4-email" />
         <TextField label="Celular" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" value={values.phone}
-          error={shown('phone')} ok={values.phone && !errors.phone ? 'Número válido' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
+          error={shown('phone')} ok={values.phone && !errors.phone ? 'Número válido' : undefined} onChange={(e) => { set('phone', maskPhone(e.target.value)); setAlready(false); }} onBlur={() => touch('phone')} data-testid="p4-phone" />
         <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
           error={shown('linkedin')} ok={values.linkedin && !errors.linkedin ? 'A mentora verá seu perfil' : undefined} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
         <SelectField label="Trilha de interesse" hint={journey?.area === effArea ? 'Preenchida com o resultado da sua jornada. Pode trocar.' : undefined} name="area" value={effArea} error={shown('area')}

@@ -61,7 +61,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E48 link curto /l/
   });
 
   it("e-mail do worker leva o link curto; reenviar reaproveita o mesmo código (1 doc por participante + tipo + versão)", async () => {
-    expect((await b.anon.post("/api/public/mentees", body())).status).toBe(200); // ALREADY_REGISTERED: reenvia
+    expect((await b.anon.post("/api/public/resend-link", { email: "maria.curto@exemplo.test", turnstileToken: "test-ok" })).status).toBe(202); // E05 reenvia
     const n = new api!.MemoryNotifier!();
     await api!.processOutbox!(b.t.db, { notifier: n, now: b.clock.now, config: { publicBaseUrl: BASE } });
     const regs = n.sent.filter((m: any) => m.type === "registered" && m.channel === "email");
@@ -101,7 +101,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E48 link curto /l/
   });
 
   it("tokenVersion mudou: link antigo revogado, resposta idêntica à de código inexistente", async () => {
-    const r = await b.anon.post("/api/public/mentees", body({ email: "outra.curto@exemplo.test" }));
+    const r = await b.anon.post("/api/public/mentees", body({ email: "outra.curto@exemplo.test", phone: "(81) 99999-2001" }));
     const other = r.body.shortPath as string;
     expect((await go(b.anon, other)).headers.location).toBe(r.body.personalPath);
     await c().mentees.updateOne({ emailNorm: "outra.curto@exemplo.test" }, { $inc: { tokenVersion: 1 } });
@@ -118,7 +118,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E48 link curto /l/
   });
 
   it("validade: expireAt = fim do evento + 7 dias; vencido dá a resposta de inválido; E41 mudando a data recalcula", async () => {
-    const r = await b.anon.post("/api/public/mentees", body({ email: "validade.curto@exemplo.test" }));
+    const r = await b.anon.post("/api/public/mentees", body({ email: "validade.curto@exemplo.test", phone: "(81) 99999-2002" }));
     const path = r.body.shortPath as string;
     const event = (await c().events.findOne({}))!;
     const doc = (await c().shortLinks.findOne({ _id: path.slice(3) }))!;

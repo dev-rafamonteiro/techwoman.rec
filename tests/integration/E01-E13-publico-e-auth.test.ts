@@ -50,11 +50,20 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
     expect(await b.t.db.collection("outbox").countDocuments({ type: "confirmed" })).toBeGreaterThan(0);
   });
 
-  it("E02: mesmo e-mail (outra caixa/espaços) -> 200 ALREADY_REGISTERED, sem segunda inscrição, link reenviado (RN01)", async () => {
-    const r = await b.anon.post("/api/public/mentees", body({ email: "  MARIA@exemplo.test " }));
+  it("E02: mesmo e-mail (outra caixa/espaços) -> 200 ALREADY_REGISTERED, sem segunda inscrição e sem e-mail (RN01)", async () => {
+    const outbox = await b.t.db.collection("outbox").countDocuments({});
+    const r = await b.anon.post("/api/public/mentees", body({ email: "  MARIA@exemplo.test ", phone: "(81) 98888-0001" }));
     expect(r.status).toBe(200);
     expect(r.body.code).toBe("ALREADY_REGISTERED");
+    expect(r.body.message).toMatch(/organização do evento/);
     expect(r.body.token).toBeUndefined();
+    expect(await getCollections(b.t.db).mentees.countDocuments({})).toBe(1);
+    expect(await b.t.db.collection("outbox").countDocuments({})).toBe(outbox);
+  });
+
+  it("E02: mesmo celular de inscrição ativa, com outro e-mail -> 200 ALREADY_REGISTERED, sem segunda inscrição (RN01)", async () => {
+    const r = await b.anon.post("/api/public/mentees", body({ email: "outra@exemplo.test", phone: "81999991234" }));
+    expect([r.status, r.body.code]).toEqual([200, "ALREADY_REGISTERED"]);
     expect(await getCollections(b.t.db).mentees.countDocuments({})).toBe(1);
   });
 
@@ -80,11 +89,11 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
 
   it("RN02: inscrições fechadas ou após o início do último horário -> 403 REGISTRATION_CLOSED", async () => {
     b.clock.now = new Date("2026-11-14T20:30:00Z"); // 17:30 Recife, último slot começa 17:15
-    let r = await b.anon.post("/api/public/mentees", body({ email: "tarde@y.test" }));
+    let r = await b.anon.post("/api/public/mentees", body({ email: "tarde@y.test", phone: "(81) 97777-0001" }));
     expect([r.status, r.body.code]).toEqual([403, "REGISTRATION_CLOSED"]);
     b.clock.now = new Date("2026-11-14T11:00:00Z");
     await getCollections(b.t.db).events.updateOne({}, { $set: { registrationOpen: false } });
-    r = await b.anon.post("/api/public/mentees", body({ email: "fechada@y.test" }));
+    r = await b.anon.post("/api/public/mentees", body({ email: "fechada@y.test", phone: "(81) 97777-0002" }));
     expect([r.status, r.body.code]).toEqual([403, "REGISTRATION_CLOSED"]);
     await getCollections(b.t.db).events.updateOne({}, { $set: { registrationOpen: true } });
   });

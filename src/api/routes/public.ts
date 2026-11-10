@@ -18,7 +18,7 @@ import { insertNewMentee, newMenteeDoc } from '../services/mentee-registration.j
 import { bookOnRegistration, listPublicSlots, listSelfBookSlots, runBookingTxn, sampleSlotMentors, selfBook } from '../services/self-book.js';
 import { applyTransition } from '../services/transitions.js';
 import { slotCapacity } from '../services/slot-capacity.js';
-import { canUpdatePreferredPeriod, isRegistrationOpen, normalizeEmail, periodOfStart, registrationOutcome, remainingSlotCapacity } from '../domain/index.js';
+import { ALREADY_REGISTERED_MESSAGE, canUpdatePreferredPeriod, isRegistrationOpen, normalizeEmail, periodOfStart, registrationOutcome, remainingSlotCapacity } from '../domain/index.js';
 
 /** Foto pública: só caminho do próprio site (`/mentoras/...`) ou https; o resto (http, `//host`, `/\\host`, `javascript:`) vira null. */
 const safePhotoUrl = (v: string | null): string | null => (v && (/^\/(?![/\\])/.test(v) || /^https:\/\//i.test(v)) ? v : null);
@@ -137,26 +137,13 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       const last = event.slots[event.slots.length - 1] ?? null;
       const open = isRegistrationOpen({ registrationOpen: event.registrationOpen, lastSlotStartAt: last?.startAt ?? null }, now);
 
-      const existing = await ctx.c.mentees.findOne({ eventId: ctx.config.eventId, emailNorm });
-      const outcome = registrationOutcome(existing);
-      if (outcome !== 'resend_link' && !open) {
-        throw new AppError('REGISTRATION_CLOSED', 'As inscrições estão encerradas.');
-      }
-
-      const resend = async (m: MenteeDoc) => {
-        await runTxn(ctx, async (session) => {
-          const upd = await ctx.c.mentees.findOneAndUpdate({ _id: m._id }, { $inc: { linkSendCount: 1 } }, { session, returnDocument: 'after' });
-          if (!upd) return;
-          await enqueueMenteeNotifications(ctx, session, { type: 'registered', mentee: upd, dedupeSuffix: upd.linkSendCount });
-        });
-        return respond(200, {
-          status: 'already_registered' as const,
-          code: 'ALREADY_REGISTERED' as const,
-          message: 'Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail.',
-        });
-      };
-
-      if (outcome === 'resend_link' && existing) return resend(existing);
+      // RN01: e-mail ou celular de uma inscrição ativa bloqueia; nada é gravado nem enviado (a organização do evento atende)
+      const blocked = () => respond(200, { status: 'already_registered' as const, code: 'ALREADY_REGISTERED' as const, message: ALREADY_REGISTERED_MESSAGE });
+      const matches = await ctx.c.mentees.find({ eventId: ctx.config.eventId, $or: [{ emailNorm }, { phone }] }).toArray();
+      const existing = matches.find((m) => m.emailNorm === emailNorm) ?? null;
+      const outcome = registrationOutcome(existing, matches);
+      if (outcome === 'blocked') return blocked();
+      if (!open) throw new AppError('REGISTRATION_CLOSED', 'As inscrições estão encerradas.');
 
       const slot = event.slots.find((s) => s.id === body.slotId);
       if (!slot) throw new AppError('SLOT_UNAVAILABLE', 'Horário inexistente.', { details: { reason: 'not_in_event' } });
@@ -206,11 +193,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
           await writeAudit(ctx, session, { actor: { userId: null, role: 'mentee' }, action: 'mentee.register', entity: 'mentee', entityId: m._id, before: { status: existing.status }, after: { status: 'confirmed' }, ip: req.ip });
           return { mentee: m, appointment };
         });
-        if (!updated) {
-          const again = await ctx.c.mentees.findOne({ _id: existing._id });
-          if (again) return resend(again);
-          throw new AppError('CONFLICT', 'Tente novamente.');
-        }
+        if (!updated) return blocked(); // corrida: ela voltou a ficar ativa entre a leitura e a gravação
         return created(updated.mentee, updated.appointment);
       }
 
@@ -225,8 +208,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       } catch (err) {
         if (isDuplicateKey(err)) {
           // corrida: outra requisição com o mesmo e-mail venceu
-          const winner = await ctx.c.mentees.findOne({ eventId: ctx.config.eventId, emailNorm });
-          if (winner) return resend(winner);
+          return blocked();
         }
         throw err;
       }
