@@ -77,7 +77,7 @@ export default function A5MapaMesas() {
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />
       ) : (
         <div className="a5-wrap" tabIndex={0} role="region" aria-label="Grade de horários por mesa" data-testid="a5-grid">
-          <table className="a5-grid" style={{ maxWidth: 70 + visibleSlots.length * 83, minWidth: 70 + visibleSlots.length * 64 }}>
+          <table className="a5-grid" style={{ minWidth: 80 + visibleSlots.length * 72 }}>
             <thead>
               <tr>
                 <th scope="col">Mesa</th>
