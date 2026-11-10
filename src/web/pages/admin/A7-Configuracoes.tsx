@@ -215,8 +215,8 @@ export default function A7Configuracoes() {
 
         <section className="a7-qr" data-testid="qr" aria-labelledby="a7-qr">
           <h2 id="a7-qr">QR Code da inscrição</h2>
-          <div className="a7-qr__img"><img src={endpointUrl(ENDPOINTS.E42Svg)} alt="QR Code da página de inscrição" /></div>
-          <span className="a7-qr__hint">Leva para a página de inscrição na mentoria.</span>
+          <div className="a7-qr__img"><img src={endpointUrl(ENDPOINTS.E42Svg)} alt="QR Code da jornada de perguntas" /></div>
+          <span className="a7-qr__hint">Leva para a jornada: as perguntas que indicam a trilha, antes da inscrição.</span>
           <div className="tw-row">
             <button type="button" className="a79-btn a79-btn--o" onClick={() => void qr('png')}>Baixar PNG</button>
             <button type="button" className="a79-btn a79-btn--line" onClick={() => void qr('svg')}>Baixar SVG</button>

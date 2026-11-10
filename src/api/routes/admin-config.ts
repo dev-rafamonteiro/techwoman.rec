@@ -148,7 +148,8 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
   });
 
   // E42 · GET /admin/event/qrcode.(png|svg)
-  const signupUrl = () => `${ctx.config.publicBaseUrl}/mentoria/inscricao`;
+  // Abre a jornada (perguntas): quem lê o QR descobre a trilha antes de se inscrever.
+  const signupUrl = () => `${ctx.config.publicBaseUrl}/jornada`;
   route(app, ctx, E42Png, async ({ reply }) => {
     const buf = await QRCode.toBuffer(signupUrl(), { type: 'png', width: 1024, margin: 2, errorCorrectionLevel: 'M' });
     void reply.header('Content-Type', 'image/png').header('Content-Disposition', 'inline; filename="qrcode-inscricao.png"').header('Cache-Control', 'no-store').send(buf);
