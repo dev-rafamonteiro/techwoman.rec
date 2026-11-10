@@ -45,6 +45,7 @@
 .tw-check { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--touch-target); }
 .tw-check input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--color-link); flex: none; }
 .tw-radio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.tw-radio-grid--stacked { grid-template-columns: minmax(0, 1fr); }
 .tw-radio-card { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: 10px 12px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--tw-white); font-weight: 600; font-size: var(--text-md); cursor: pointer; }
 .tw-radio-card input { accent-color: var(--color-link); width: 18px; height: 18px; margin: 0; flex: none; }
 .tw-radio-card:has(input:checked) { border-color: var(--color-link); background: var(--tw-lilac-100); }

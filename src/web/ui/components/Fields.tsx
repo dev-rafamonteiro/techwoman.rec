@@ -96,8 +96,8 @@ export interface RadioOption<V extends string> {
   label: string;
 }
 
-/** Opções em cartões 2x2 (período preferido em P4/P6). */
-export function RadioCards<V extends string>({ legend, name, options, value, onChange, error, hint }: {
+/** Opções em cartões 2x2 (período preferido em P4/P6); `stacked` põe um por linha, todos com a mesma largura. */
+export function RadioCards<V extends string>({ legend, name, options, value, onChange, error, hint, stacked }: {
   legend: string;
   name: string;
   options: readonly RadioOption<V>[];
@@ -105,12 +105,13 @@ export function RadioCards<V extends string>({ legend, name, options, value, onC
   onChange: (v: V) => void;
   error?: string;
   hint?: ReactNode;
+  stacked?: boolean;
 }) {
   const id = useId();
   return (
     <fieldset className="tw-field" style={{ border: 0, padding: 0, margin: 0 }} aria-describedby={error || hint ? `${id}-msg` : undefined}>
       <legend className="tw-field__label" style={{ padding: 0, marginBottom: 8 }}>{legend}</legend>
-      <div className="tw-radio-grid" role="radiogroup" aria-label={legend}>
+      <div className={stacked ? 'tw-radio-grid tw-radio-grid--stacked' : 'tw-radio-grid'} role="radiogroup" aria-label={legend}>
         {options.map((o) => (
           <label key={o.value} className="tw-radio-card">
             <input type="radio" name={name} value={o.value} checked={value === o.value} onChange={() => onChange(o.value)} />

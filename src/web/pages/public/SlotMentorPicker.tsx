@@ -74,7 +74,7 @@ function Picker({ area, value, onChange, onEmptyChange }: {
   const slot = slots.find((s) => s.slotId === slotId) ?? null;
   return (
     <>
-      <RadioCards legend="Período" name="period" value={period}
+      <RadioCards legend="Período" name="period" value={period} stacked
         options={PERIODS.map((p) => ({ value: p, label: `${PERIOD_LABELS[p]} · ${vagas(total(p))}` }))}
         hint="As vagas são uma visão geral da sua trilha, pelas mentoras e mesas livres. A mentora é escolhida na etapa seguinte."
         onChange={(p) => { setPeriod(p); setSlotId(null); onChange(null); }} />
