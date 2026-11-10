@@ -14,13 +14,15 @@ describe("A5 · vista Agora", () => {
     expect(ids(at(14, 0))).toEqual(["s1", "s2", "s3", "s4"]);
     expect(nowWindow(slots, at(14, 0)).currentIdx).toBe(1);
   });
-  it("antes do evento: o primeiro horário + 3 seguintes", () => {
-    expect(ids(Date.UTC(2026, 10, 10, 18, 0))).toEqual(["s0", "s1", "s2", "s3"]);
+  it("antes do evento: vale a hora de agora no dia do evento", () => {
+    // 10/11 às 15h em Recife: os de 15h em diante no dia 14, não os da manhã
+    expect(ids(Date.UTC(2026, 10, 10, 18, 0))).toEqual(["s6", "s7", "s8"]);
+    expect(ids(Date.UTC(2026, 10, 10, 11, 0))).toEqual(["s0", "s1", "s2", "s3"]);
   });
   it("perto do fim: só os que restam", () => {
     expect(ids(at(18, 30))).toEqual(["s7", "s8"]);
   });
-  it("depois do último horário: o dia inteiro", () => {
-    expect(ids(at(21, 0))).toHaveLength(9);
+  it("depois do último horário: nenhum (nunca mostra horário passado)", () => {
+    expect(ids(at(21, 0))).toEqual([]);
   });
 });

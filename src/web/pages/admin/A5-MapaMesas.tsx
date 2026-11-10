@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ADMIN_STREAM_EVENT_TYPES, ENDPOINTS, type AdminAppointmentView, type AdminStreamEvent, type E39PatchBody } from '@tw/shared';
 import {
-  ApiError, CheckboxField, ConnectionBar, ErrorState, Overlay, PriorityBadge, SkeletonList, STATUS_LOOK, StatusBadge,
+  ApiError, Button, CheckboxField, ConnectionBar, EmptyState, ErrorState, Overlay, PriorityBadge, SkeletonList, STATUS_LOOK, StatusBadge,
   call, formatDateTime, formatRange, formatTime, phoneFromE164, useAuth, useEventStream, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useAreas, useTitle } from './lib/common';
@@ -75,6 +75,8 @@ export default function A5MapaMesas() {
       )}
       {activeTables.length === 0 || slots.length === 0 ? (
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />
+      ) : visibleSlots.length === 0 ? (
+        <EmptyState title="Nenhum horário daqui em diante" text="Os horários de hoje já passaram." action={<Button variant="secondary" onClick={() => setView('all')}>Ver o dia inteiro</Button>} />
       ) : (
         <div className="a5-wrap" tabIndex={0} role="region" aria-label="Grade de horários por mesa" data-testid="a5-grid">
           <table className="a5-grid" style={{ minWidth: 80 + visibleSlots.length * 72 }}>
