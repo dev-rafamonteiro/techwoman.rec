@@ -5,6 +5,7 @@ import {
   call, formatDateTime, formatRange, formatTime, phoneFromE164, useAuth, useEventStream, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useAreas, useTitle } from './lib/common';
+import { nowWindow } from './lib/now-window';
 import './lib/a4-a6.css';
 
 /** Legenda do design (cor + texto); "Em andamento" usa o tom de Confirmada. */
@@ -48,10 +49,9 @@ export default function A5MapaMesas() {
   const { slots, tables } = q.data;
   const activeTables = tables.filter((t) => t.active);
   const now = nowMs + skew;
-  const currentIdx = slots.findIndex((s) => new Date(s.startAt).getTime() <= now && now < new Date(s.endAt).getTime());
-  const nextIdx = slots.findIndex((s) => new Date(s.startAt).getTime() > now);
-  const focusIdx = currentIdx >= 0 ? currentIdx : nextIdx;
-  const visibleSlots = view === 'all' || focusIdx < 0 ? slots : slots.slice(Math.max(0, focusIdx - 1), focusIdx + 3);
+  const win = nowWindow(slots, now);
+  const currentIdx = win.currentIdx;
+  const visibleSlots = view === 'all' ? slots : win.visible;
   const cell = (slotId: string, tableId: string) => appts.find((a) => a.slotId === slotId && a.table.id === tableId);
   const sel = appts.find((a) => a.id === selected) ?? null;
   const occupiedNow = currentIdx >= 0 ? activeTables.filter((t) => cell(slots[currentIdx]!.id, t.id)).length : null;
