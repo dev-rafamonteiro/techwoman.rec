@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ENDPOINTS, type E58Item, type SlotMentor } from '@tw/shared';
+import { useTotem } from '../../shell/totem/context';
 import { ErrorState, ExternalButton, PERIOD_LABELS, RadioCards, SkeletonList, call, formatTime, useQuery } from '../../ui';
 
 type Period = E58Item['period'];
@@ -15,6 +16,7 @@ export interface SlotChoice {
 
 function MentorCard({ mentor, area, checked, onSelect }: { mentor: SlotMentor; area: string; checked: boolean; onSelect: () => void }) {
   const [failed, setFailed] = useState(false);
+  const totem = useTotem();
   const photo = mentor.photoUrl && !failed ? mentor.photoUrl : NO_PHOTO;
   return (
     <div className="tw-mentor-pick">
@@ -31,7 +33,8 @@ function MentorCard({ mentor, area, checked, onSelect }: { mentor: SlotMentor; a
           {mentor.bio && <small>{mentor.bio}</small>}
         </span>
       </label>
-      {mentor.linkedin && <ExternalButton size="sm" href={mentor.linkedin} target="_blank" rel="noopener noreferrer">Ver LinkedIn</ExternalButton>}
+      {/* no totem o link abriria uma aba sem volta */}
+      {mentor.linkedin && !totem && <ExternalButton size="sm" href={mentor.linkedin} target="_blank" rel="noopener noreferrer">Ver LinkedIn</ExternalButton>}
     </div>
   );
 }

@@ -4,11 +4,13 @@ import { Brand, EmptyState, LinkButton } from '../../ui';
 import { KNOWLEDGE_TRACKS } from '@tw/shared';
 import { saveJourney } from './lib/journey';
 import { PERFIS, TRACOS, calcXp, computeResult, loadAnswers, saveAnswers } from './lib/journeyData';
+import { useFlowPaths } from '../../shell/totem/context';
 import './public.css';
 
 /** P3 · Resultado da gamificação. Grava {area, scores} para P4 pré-preencher a inscrição. */
 export default function P3Resultado() {
   const navigate = useNavigate();
+  const paths = useFlowPaths();
   const answers = useMemo(() => loadAnswers(), []);
   const r = useMemo(() => (answers ? computeResult(answers) : null), [answers]);
   const topTrack = r?.trackRanking[0];
@@ -20,8 +22,8 @@ export default function P3Resultado() {
   if (!answers || !r || !topTrack) {
     return (
       <div className="tw-pub">
-        <header className="tw-pub__head"><Brand height={44} /><span /><Link className="tw-pub__back" to="/">Voltar ao início</Link></header>
-        <div className="tw-page"><EmptyState title="Você ainda não fez a jornada" text="Responda as perguntas para ver seu resultado." action={<LinkButton to="/jornada">Começar jornada</LinkButton>} /></div>
+        <header className="tw-pub__head"><Brand height={44} /><span /><Link className="tw-pub__back" to={paths.home}>Voltar ao início</Link></header>
+        <div className="tw-page"><EmptyState title="Você ainda não fez a jornada" text="Responda as perguntas para ver seu resultado." action={<LinkButton to={paths.jornada}>Começar jornada</LinkButton>} /></div>
       </div>
     );
   }
@@ -37,7 +39,7 @@ export default function P3Resultado() {
       <header className="tw-pub__head">
         <Brand height={44} />
         <span className="tw-p3__xp">{xp} XP</span>
-        <Link className="tw-pub__back" to="/">Voltar ao início</Link>
+        <Link className="tw-pub__back" to={paths.home}>Voltar ao início</Link>
       </header>
       <div className="tw-p3__body">
         <section className="tw-p3__dark" aria-label="Seu resultado">
@@ -66,7 +68,7 @@ export default function P3Resultado() {
             <h2>Inscreva-se na nossa mentoria para te ajudarmos.</h2>
             <p style={{ margin: 0 }}>A trilha indicada não limita sua inscrição. Na próxima etapa, você poderá trocar a trilha e escolher um tema dentro dela.</p>
           </div>
-          <LinkButton to="/mentoria/inscricao" size="lg" className="tw-btn--dark" data-testid="p3-cta">Quero me inscrever na mentoria</LinkButton>
+          <LinkButton to={paths.inscricao} size="lg" className="tw-btn--dark" data-testid="p3-cta">Quero me inscrever na mentoria</LinkButton>
         </section>
 
         <section className="tw-p3__white">
@@ -80,7 +82,7 @@ export default function P3Resultado() {
         </section>
 
         <div className="tw-row">
-          <button type="button" className="tw-p3__redo" onClick={() => { saveAnswers(null); navigate('/jornada'); }} data-testid="p3-redo">Refazer a jornada</button>
+          <button type="button" className="tw-p3__redo" onClick={() => { saveAnswers(null); navigate(paths.jornada); }} data-testid="p3-redo">Refazer a jornada</button>
           <span>A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</span>
         </div>
       </div>

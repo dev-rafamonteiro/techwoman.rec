@@ -52,3 +52,13 @@ export function loadPersonalPath(): PersonalLinks | null {
     return null;
   }
 }
+
+/** Totem: a próxima pessoa não herda a jornada nem o link pessoal da anterior. */
+export function clearJourney(): void {
+  try {
+    sessionStorage.removeItem(KEY);
+    sessionStorage.removeItem(PERSONAL_KEY);
+  } catch {
+    /* ignora */
+  }
+}

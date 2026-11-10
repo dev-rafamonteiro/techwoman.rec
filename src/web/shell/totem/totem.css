@@ -1,0 +1,31 @@
+/* Totem (/jornada_totem): palco de tamanho fixo escalado para a tela + teclado próprio. */
+.tw-totem { position: fixed; inset: 0; overflow: hidden; background: var(--tw-plum-950); user-select: none; -webkit-user-select: none; }
+.tw-totem input, .tw-totem textarea { user-select: text; -webkit-user-select: text; }
+.tw-totem__stage { position: absolute; left: 50%; top: 50%; transform-origin: center; display: flex; flex-direction: column; background: var(--color-bg); overflow: hidden; }
+.tw-totem__screen { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* as páginas medem a altura pela janela (100vh/100dvh); no palco vale a altura do palco */
+.tw-totem__screen .tw-app, .tw-totem__screen .tw-pub { min-height: 100% !important; }
+
+/* Teclado: gradiente e mosaico da arte do evento (P1), teclas na paleta da página. */
+.tw-kb { position: relative; flex: none; overflow: hidden; background: var(--gradient-hero); padding: 20px 24px 24px; border-top: 4px solid var(--tw-orange-500); touch-action: manipulation; }
+.tw-kb__art { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 24px; opacity: 0.18; pointer-events: none; }
+.tw-kb__keys, .tw-kb__pad { position: relative; display: flex; flex-direction: column; gap: 12px; margin: 0 auto; }
+.tw-kb__keys { max-width: 1480px; }
+.tw-kb__pad { max-width: 560px; }
+.tw-kb__row { display: flex; gap: 12px; }
+.tw-kb__key {
+  flex: 1 1 0; min-width: 0; height: 72px; border: 0; border-radius: 16px; cursor: pointer;
+  font-family: var(--font-body); font-size: 28px; font-weight: 700; line-height: 1;
+  color: var(--tw-plum-950); background: var(--tw-lilac-50); box-shadow: 0 4px 0 var(--tw-lilac-300);
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+.tw-kb__key:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--tw-lilac-300); background: var(--tw-lilac-150); }
+.tw-kb__key--mod { color: var(--tw-lilac-300); background: var(--tw-plum-950); box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35); font-size: 24px; }
+.tw-kb__key--mod:active { background: var(--tw-plum-800); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+.tw-kb__key--mod.is-on { color: var(--tw-plum-950); background: var(--tw-lilac-400); }
+.tw-kb__key--ok { color: var(--color-cta-ink); background: var(--tw-orange-500); box-shadow: 0 4px 0 var(--tw-orange-900); font-family: var(--font-display); font-size: 22px; }
+.tw-kb__key--ok:active { background: var(--tw-orange-600); box-shadow: 0 1px 0 var(--tw-orange-900); }
+.tw-kb__pad .tw-kb__key { height: 88px; font-size: 34px; }
+
+/* logotipo vira o botão escondido do painel */
+button.tw-brand { padding: 0; border: 0; background: none; cursor: pointer; }

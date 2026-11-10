@@ -17,11 +17,14 @@ function Tile({ style, children }: { style?: CSSProperties; children?: ReactNode
   return <div style={{ ...tile, ...style }}>{children}</div>;
 }
 
-/** Mosaico 3×3 do hero de P1 (flex 1 1 380px, máx. 460px). */
-export function HeroMosaic() {
+/** Mosaico 3×3 do hero de P1 (flex 1 1 380px, máx. 460px). `strip`: as 9 peças numa linha (fundo do teclado do totem). */
+export function HeroMosaic({ strip }: { strip?: boolean } = {}) {
   const dots = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const box: CSSProperties = strip
+    ? { width: '100%', display: 'grid', gridTemplateColumns: 'repeat(9, minmax(0, 1fr))', gap: 14 }
+    : { flex: '1 1 380px', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, maxWidth: 460 };
   return (
-    <div aria-hidden="true" style={{ flex: '1 1 380px', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, maxWidth: 460 }}>
+    <div aria-hidden="true" style={box}>
       <Tile style={{ background: c.plum600, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, padding: 22 }}>
         {dots.map((i) => <span key={i} style={{ borderRadius: '50%', background: i === 4 ? c.orange : c.lilac }} />)}
       </Tile>

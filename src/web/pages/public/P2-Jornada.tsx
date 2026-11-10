@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Brand, Button } from '../../ui';
 import { QUESTIONS, calcXp, saveAnswers, type Answers } from './lib/journeyData';
+import { useFlowPaths } from '../../shell/totem/context';
 import './public.css';
 
 /** P2 · Gamificação: intro, 7 etapas de perguntas e desafios com XP. Resultado em P3. */
 export default function P2Jornada() {
   const navigate = useNavigate();
+  const paths = useFlowPaths();
   const [step, setStep] = useState<'intro' | 'quiz'>('intro');
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
@@ -21,7 +23,7 @@ export default function P2Jornada() {
     if (!hasSel) return;
     if (i >= total - 1) {
       saveAnswers(answers);
-      navigate('/jornada/resultado');
+      navigate(paths.resultado);
     } else setI(i + 1);
   };
 
@@ -30,7 +32,7 @@ export default function P2Jornada() {
       <header className="tw-pub__head">
         <Brand height={44} />
         <span className="tw-p3__xp" aria-live="polite" data-testid="p2-xp">{calcXp(answers)} XP</span>
-        <Link className="tw-pub__back" to="/">Voltar ao início</Link>
+        <Link className="tw-pub__back" to={paths.home}>Voltar ao início</Link>
       </header>
 
       {step === 'intro' ? (
