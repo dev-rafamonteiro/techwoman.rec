@@ -73,13 +73,28 @@ export interface NewMentee {
 }
 
 /** P4 -> P5; devolve o caminho pessoal (/mentoria/minha?t=...). */
-export async function registerMentee(page: Page, m: NewMentee, periodLabel = /manhã/i): Promise<string> {
+/** P4 · RN24: período, primeiro horário e primeira mentora da amostra. */
+export async function chooseSlotAndMentor(page: Page, periodLabel: RegExp = /manhã/i) {
+  await page.getByRole("radio", { name: periodLabel }).check();
+  await page.locator('input[name="slot"]').first().check();
+  await page.getByTestId("p4-mentors").locator('input[name="mentor"]').first().check();
+}
+
+/** Devolve a inscrita à fila, sem a mentoria de P4 (RN24), para os fluxos que começam no convite da mentora. */
+export async function returnToQueue(world: E2EWorld, email: string) {
+  const { mentees, appointments } = getCollections(world.db.db);
+  const mentee = (await mentees.findOne({ emailNorm: email }))!;
+  await appointments.deleteMany({ menteeId: mentee._id });
+  await mentees.updateOne({ _id: mentee._id }, { $set: { status: "waiting", currentAppointmentId: null } });
+}
+
+export async function registerMentee(page: Page, m: NewMentee, periodLabel: RegExp = /manhã/i): Promise<string> {
   await page.goto("/mentoria/inscricao");
   await page.getByTestId("p4-name").fill(m.name);
   await page.getByTestId("p4-email").fill(m.email);
   await page.getByTestId("p4-phone").fill(m.phone);
   await page.getByTestId("p4-area").selectOption(m.area);
-  await page.getByText(periodLabel).first().click();
+  await chooseSlotAndMentor(page, periodLabel);
   await page.getByTestId("p4-consent").check();
   await page.getByTestId("p4-submit").click();
   await page.waitForURL(/\/mentoria\/inscricao\/ok/);

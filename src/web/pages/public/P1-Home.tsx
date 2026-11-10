@@ -90,17 +90,15 @@ export default function P1Home() {
           <h2>Descubra sua área e ganhe uma mentoria no evento.</h2>
           {[
             ['Descubra sua área', 'Perguntas e desafios rápidos revelam sua aptidão, seu nível e seu perfil.', '#f26430'],
-            ['Inscreva-se na mentoria', 'Um formulário curto, com a sua área já preenchida e o período que você prefere.', '#d98ce6'],
-            ['Aguarde o convite de uma mentora', 'Ela propõe um horário e uma mesa; você confirma pelo celular.', '#c9f4ee'],
+            ['Inscreva-se na mentoria', 'Um formulário curto, com a sua área já preenchida.', '#d98ce6'],
+            ['Escolha horário e mentora', 'Veja as vagas da sua trilha e escolha; a mesa é definida automaticamente.', '#c9f4ee'],
           ].map(([t, d, c], i) => (
             <div key={t} className="tw-p1__step"><b style={{ background: c }}>{i + 1}</b><div><strong>{t}</strong><p style={{ margin: '2px 0 0' }}>{d}</p></div></div>
           ))}
-          <div className="tw-p1__invite" aria-label="Exemplo de convite">
-            <span className="tw-p1__eyebrow">Convite recebido</span>
+          <div className="tw-p1__invite" aria-label="Exemplo de mentoria confirmada">
+            <span className="tw-p1__eyebrow">Mentoria confirmada</span>
             <h3 style={{ margin: 0 }}>Mesa 7 · 14h15</h3>
-            <p style={{ margin: 0 }}>Ana quer te mentorar em Backend. Sessão de 40 minutos, aqui no evento.</p>
-            <div className="tw-row"><span className="tw-badge tw-badge--invited">Horário proposto</span><span className="tw-badge tw-badge--priority">Responda até 14h05</span></div>
-            <div className="tw-btnrow" aria-hidden="true"><span className="tw-btn tw-btn--primary">Aceitar</span><span className="tw-btn tw-btn--secondary">Recusar</span></div>
+            <p style={{ margin: 0 }}>Com Ana, em Backend. Sessão de 40 minutos, aqui no evento.</p>
           </div>
         </div>
       </section>
@@ -109,11 +107,11 @@ export default function P1Home() {
         <div className="tw-pub__wrap tw-stack">
           <span className="tw-p1__eyebrow">Mentoria</span>
           <h2>Mulheres que já trilharam o caminho, prontas para te ajudar.</h2>
-          <p>Depois da jornada, inscreva-se na área que mais combina com você. Uma mentora da área é atribuída a você, propõe um horário e uma mesa, e você confirma pelo celular.</p>
+          <p>Depois da jornada, inscreva-se na área que mais combina com você. Escolha o horário e a mentora entre as vagas disponíveis; a mesa é definida automaticamente.</p>
           <div className="tw-p1__cards">
             <div className="tw-card tw-p1__stat"><strong>40 min</strong><b>Por sessão</b><p>Uma conversa individual, em horários fixos ao longo do dia.</p></div>
             <div className="tw-card tw-p1__stat"><strong>Mesas</strong><b>No local do evento</b><p>Você recebe o número da mesa junto com o horário.</p></div>
-            <div className="tw-card tw-p1__stat"><strong>Celular</strong><b>Você confirma por lá</b><p>Avisamos por e-mail quando chegar o convite.</p></div>
+            <div className="tw-card tw-p1__stat"><strong>Celular</strong><b>Tudo pelo link pessoal</b><p>A confirmação chega por e-mail e você troca o horário por lá, se precisar.</p></div>
           </div>
           <div className="tw-row">{cta('tw-btn--dark')}<LinkButton to="/mentoras" size="lg" variant="secondary" data-testid="p1-mentoras">Conheça as mentoras</LinkButton><span className="tw-pub__muted" style={{ maxWidth: 420 }}>A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</span></div>
         </div>

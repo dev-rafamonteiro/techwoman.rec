@@ -14,6 +14,7 @@ export const EMAIL_PREVIEW_TYPES = [
   '09-aviso-mentora',
   '10-atendimento-fora-da-mesa',
   '11-atendimento-removido',
+  '12-mentoria-agendada',
 ] as const;
 export const EmailPreviewTypeSchema = z.enum(EMAIL_PREVIEW_TYPES);
 export type EmailPreviewType = z.infer<typeof EmailPreviewTypeSchema>;

@@ -1,5 +1,5 @@
 import type { MenteeStatus, PreferredPeriod } from '@tw/shared';
-import { matchesPeriod } from './period.js';
+import { matchesPeriod, periodOfStart, type ConcretePeriod } from './period.js';
 
 /** RN19 · Pode escolher sozinha um horário pelo link pessoal: `waiting` com `lastOutcome = "declined_schedule"`. */
 export function canSelfBook(mentee: { status: MenteeStatus; lastOutcome: string | null }): boolean {
@@ -35,19 +35,29 @@ export interface SelfBookSlotsInput {
 }
 
 /**
- * RN19 · E07: horários futuros (respeitando `minLeadMinutes`) com ao menos uma mentora livre (horário na
- * disponibilidade e sem mentoria ativa nele) e uma mesa ativa livre. `matchesPeriod` marca o período preferido (RN14).
+ * RN19, RN24 · E07 e E58: horários futuros (respeitando `minLeadMinutes`) com ao menos uma mentora livre (horário na
+ * disponibilidade e sem mentoria ativa nele) e uma mesa ativa livre. `matchesPeriod` marca o período preferido (RN14);
+ * `available` = min(mentoras livres, mesas livres) no horário.
  */
-export function selfBookSlots(i: SelfBookSlotsInput): { slotId: string; startAt: Date; endAt: Date; matchesPeriod: boolean }[] {
+export function selfBookSlots(i: SelfBookSlotsInput): { slotId: string; startAt: Date; endAt: Date; matchesPeriod: boolean; period: ConcretePeriod; available: number }[] {
   const earliest = i.now.getTime() + i.minLeadMinutes * 60_000;
   return [...i.slots]
     .filter((s) => s.startAt.getTime() >= earliest)
-    .filter((s) => {
+    .map((s) => {
       const here = i.activeAppointments.filter((a) => a.slotId === s.id);
       const busyMentors = new Set(here.map((a) => a.mentorId));
       const busyTables = new Set(here.map((a) => a.tableId));
-      return i.mentors.some((m) => m.availability.includes(s.id) && !busyMentors.has(m.id)) && i.activeTableIds.some((t) => !busyTables.has(t));
+      const freeMentors = i.mentors.filter((m) => m.availability.includes(s.id) && !busyMentors.has(m.id)).length;
+      return { slot: s, available: Math.min(freeMentors, i.activeTableIds.filter((t) => !busyTables.has(t)).length) };
     })
-    .sort((a, b) => a.startAt.getTime() - b.startAt.getTime())
-    .map((s) => ({ slotId: s.id, startAt: s.startAt, endAt: s.endAt, matchesPeriod: matchesPeriod(i.preferredPeriod, s.startAt, i.timezone) }));
+    .filter((x) => x.available > 0)
+    .sort((a, b) => a.slot.startAt.getTime() - b.slot.startAt.getTime())
+    .map(({ slot: s, available }) => ({
+      slotId: s.id,
+      startAt: s.startAt,
+      endAt: s.endAt,
+      matchesPeriod: matchesPeriod(i.preferredPeriod, s.startAt, i.timezone),
+      period: periodOfStart(s.startAt, i.timezone),
+      available,
+    }));
 }

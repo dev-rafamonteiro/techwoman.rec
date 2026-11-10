@@ -90,6 +90,15 @@ export async function enqueueMentorNotifications(
   );
 }
 
+/** RN24, RN19 · Aviso à mentora de que uma participante agendou com ela (`mentor_booked`). `menteeId` null, como no aviso acima. */
+export async function enqueueMentorBooked(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { mentor: Pick<UserDoc, '_id' | 'email'>; appointmentId: ObjectId },
+): Promise<void> {
+  await insertNotifications(ctx, session, { type: 'mentor_booked', appointmentId: i.appointmentId }, { menteeId: null, userId: i.mentor._id, email: i.mentor.email });
+}
+
 /**
  * RN21 · e-mails do atendimento fora da mesa à participante, na transação do registro (E51) ou da remoção (E53):
  * `walk_in_done` (layout 10, mentora e link pessoal) ou `walk_in_removed` (layout 11, nova inscrição). `payload.walkInId`

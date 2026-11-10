@@ -13,7 +13,7 @@ export interface EmailMessageInput {
   /** Participante; no aviso à mentora, a da mentoria (só para `nome`, sem links). */
   mentee: MenteeDoc | null;
   appointment: AppointmentDoc | null;
-  /** Mentora da mentoria (layouts 2, 3 e 9) ou do atendimento fora da mesa (layout 10). */
+  /** Mentora da mentoria (layouts 2, 3, 9 e 12) ou do atendimento fora da mesa (layout 10). */
   mentor: UserDoc | null;
   table: TableDoc | null;
   /** Destinatária do layout 6. */
@@ -98,6 +98,8 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
   }
   // layout 11 (RN21): inscrição desfeita; nova inscrição em P4, sem token
   if (layout === '11-atendimento-removido') vars['link_inscricao'] = `${i.baseUrl}/mentoria/inscricao`;
+  // layout 12: painel da mentora (M1, sem token)
+  if (layout === '12-mentoria-agendada') vars['link_painel'] = `${i.baseUrl}/entrar`;
   // layout 9: painel da mentora (M1, sem token) e a frase do motivo; motivo desconhecido é erro de renderização
   let reason: MentorSlotReleasedReason | undefined;
   if (layout === '09-aviso-mentora') {

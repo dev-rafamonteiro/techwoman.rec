@@ -35,7 +35,7 @@ export interface OutboxResult {
  */
 export const PRIORITY_TIERS: readonly (readonly OutboxType[])[] = [
   ['invite'],
-  ['confirmed', 'moved', 'cancelled', 'expired', 'reminder', 'slot_released', 'mentor_slot_released', 'registration_cancelled'],
+  ['confirmed', 'moved', 'cancelled', 'expired', 'reminder', 'slot_released', 'mentor_slot_released', 'mentor_booked', 'registration_cancelled'],
   ['registered', 'staff_password', 'walk_in_done', 'walk_in_removed'],
 ];
 
@@ -134,6 +134,9 @@ function skipReason(
     case 'mentor_slot_released':
       // aviso à mentora: o horário já foi liberado na transação; só precisa da mentoria para montar o texto
       return appt ? null : 'mentoria não encontrada';
+    case 'mentor_booked':
+      // se a participante já desfez o agendamento, a mentora recebe só o aviso de horário liberado
+      return appt?.status === 'confirmed' ? null : 'mentoria não está mais confirmada';
     default:
       return null;
   }
@@ -178,7 +181,7 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     // destinatária do layout 6; no aviso à mentora `userId` é a própria mentora, já lida acima
     item.type === 'staff_password' && item.userId ? c.users.findOne({ _id: item.userId }) : null,
     // aviso à mentora: o item não tem `menteeId` (sem links com o token dela); o nome vem da mentoria
-    item.type === 'mentor_slot_released' && appt ? c.mentees.findOne({ _id: appt.menteeId }, { projection: { name: 1 } }) : null,
+    (item.type === 'mentor_slot_released' || item.type === 'mentor_booked') && appt ? c.mentees.findOne({ _id: appt.menteeId }, { projection: { name: 1 } }) : null,
   ]);
   // links curtos (E48), uma vez por item e fora do try do render: erro de banco aqui sobe e o laço devolve o item
   // à fila (retry normal, não `failed`)

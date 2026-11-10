@@ -93,11 +93,11 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E04 · inscrição
     expect(await items(3)).toHaveLength(1);
     // nova inscrição (E02 reativa a cancelada)
     const reg = await b.anon.post("/api/public/mentees", {
-      name: mentee(3).doc.name, email: mentee(3).doc.email, phone: "(81) 99910-0004", area: "dados", preferredPeriod: "any",
+      name: mentee(3).doc.name, email: mentee(3).doc.email, phone: "(81) 99910-0004", area: "dados", slotId: "s12", mentorId: String(b.w.mentors[0]!._id),
       consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok",
     });
     expect(reg.status, JSON.stringify(reg.body)).toBe(201);
-    expect((await fresh(3)).status).toBe("waiting");
+    expect((await fresh(3)).status).toBe("confirmed");
     const { n } = await run();
     expect(n.sent.filter((s: any) => s.type === "registration_cancelled")).toHaveLength(0);
     for (const o of await items(3)) expect(o).toMatchObject({ status: "skipped", lastError: "inscrição não está mais cancelada" });

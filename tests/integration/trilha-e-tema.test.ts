@@ -1,13 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadApi } from "../helpers/app.js";
 import { bootApi, type Booted } from "../helpers/boot.js";
+import { booking } from "../helpers/booking.js";
 import { getCollections } from "../../src/db/collections.js";
 
 /** A trilha é o grupo; o tema é um item dela. A participante escolhe a trilha e o tema; a trilha da mentora sai dos temas. */
 const api = await loadApi();
 
+let mentorId: unknown;
 const body = (over: Record<string, unknown>) => ({
-  name: "Maria Silva", phone: "81912345678", area: "desenvolvimento", preferredPeriod: "morning",
+  name: "Maria Silva", phone: "81912345678", area: "desenvolvimento", ...booking(mentorId),
   consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok", ...over,
 });
 
@@ -22,6 +24,8 @@ describe.skipIf(!api)("trilha e tema", () => {
     await b.t.db.collection("events").updateOne({}, { $set: { areas: [
       { key: "desenvolvimento", label: "Desenvolvimento" }, { key: "dados", label: "Dados" }, { key: "gestao-e-agilidade", label: "Gestão" },
     ] } });
+    await c.users.updateOne({ _id: m(2)._id }, { $set: { areas: ["desenvolvimento"] } });
+    mentorId = m(2)._id;
   }, 120_000);
   afterAll(async () => {
     if (b) await b.close();
@@ -31,6 +35,8 @@ describe.skipIf(!api)("trilha e tema", () => {
     const r = await b.anon.post("/api/public/mentees", body({ email: "tema@y.test", theme: "Desenvolvimento Back-end" }));
     expect(r.status, JSON.stringify(r.body)).toBe(201);
     expect((await c.mentees.findOne({ emailNorm: "tema@y.test" }))?.theme).toBe("Desenvolvimento Back-end");
+    // inscrita já sai confirmada (RN24); volta à fila para a mentora ver o tema
+    await c.mentees.updateOne({ emailNorm: "tema@y.test" }, { $set: { status: "waiting" } });
     const q = await b.mentor[0]!.get("/api/mentor/queue");
     expect(q.body.items.find((i: { name: string; theme: string | null }) => i.theme === "Desenvolvimento Back-end")).toBeTruthy();
   });

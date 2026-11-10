@@ -76,3 +76,36 @@ export function suggestTable(input: {
   const lowest = [...input.freeTables].sort((a, b) => a.number - b.number)[0];
   return { suggestedTableId: lowest?.id ?? null, previousTableId };
 }
+
+/**
+ * RN24 · Mesa da inscrição, sem escolha humana. Fica na mesa da mentoria mais próxima da mentora (antes ou depois;
+ * empate: a anterior), se estiver livre. Sem isso, evita a mesa que outra mentora usa num horário vizinho, para não
+ * tirá-la de onde já está atuando; entre as restantes, sorteia, para inscrições simultâneas não disputarem a mesma mesa.
+ */
+export function chooseTableForBooking<T extends TableCandidate>(input: {
+  chosenStartAt: Date;
+  mentorId: string;
+  /** Distância entre inícios que conta como horário vizinho (duração + intervalo). */
+  neighbourMs: number;
+  appointments: readonly { mentorId: string; tableId: string; startAt: Date }[];
+  freeTables: readonly T[];
+  random?: () => number;
+}): T | null {
+  const chosen = input.chosenStartAt.getTime();
+  const free = [...input.freeTables].sort((a, b) => a.number - b.number);
+  const own = input.appointments
+    .filter((a) => a.mentorId === input.mentorId)
+    .sort((a, b) => Math.abs(a.startAt.getTime() - chosen) - Math.abs(b.startAt.getTime() - chosen) || a.startAt.getTime() - b.startAt.getTime());
+  for (const a of own) {
+    const same = free.find((t) => t.id === a.tableId);
+    if (same) return same;
+  }
+  const taken = new Set(
+    input.appointments
+      .filter((a) => a.mentorId !== input.mentorId && Math.abs(a.startAt.getTime() - chosen) <= input.neighbourMs)
+      .map((a) => a.tableId),
+  );
+  const clear = free.filter((t) => !taken.has(t.id));
+  const pool = clear.length ? clear : free;
+  return pool[Math.floor((input.random ?? Math.random)() * pool.length)] ?? null;
+}

@@ -102,6 +102,8 @@ export const OUTBOX_TYPES = [
   'slot_released',
   // aviso à mentora: a participante liberou o horário dela (cancelou a confirmada, recusou ou cancelou com convite pendente)
   'mentor_slot_released',
+  // RN24, RN19 · aviso à mentora: uma participante agendou com ela
+  'mentor_booked',
   'staff_password',
   // RN21 · participante atendida fora da mesa: agradecimento com a mentora (e o LinkedIn dela) e o link pessoal (P6)
   'walk_in_done',

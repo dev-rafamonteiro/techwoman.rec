@@ -121,16 +121,18 @@ describe("contratos: corpos .strict() (rejeitam campos extras)", () => {
 describe("contratos: aceita/rejeita (E02, E04, E10, E21, E24, E26, E39)", () => {
   const e02 = {
     name: "Maria Silva", email: "  Maria@Exemplo.COM ", phone: "(81) 99999-1234", area: "dados",
-    preferredPeriod: "any", consent: { accepted: true, version: "1" }, turnstileToken: "t",
+    slotId: "s01", mentorId: "507f1f77bcf86cd799439011", consent: { accepted: true, version: "1" }, turnstileToken: "t",
   };
   it("E02 normaliza e-mail e aceita o mínimo", () => {
     const r = E02BodySchema.parse(e02);
     expect(r.email).toBe("maria@exemplo.com");
   });
-  it("E02 rejeita extra, consent false, período inválido, nome curto", () => {
+  it("E02 rejeita extra, consent false, período no lugar do horário, nome curto", () => {
     expect(E02BodySchema.safeParse({ ...e02, admin: true }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, consent: { accepted: false, version: "1" } }).success).toBe(false);
-    expect(E02BodySchema.safeParse({ ...e02, preferredPeriod: "night" }).success).toBe(false);
+    expect(E02BodySchema.safeParse({ ...e02, preferredPeriod: "morning" }).success).toBe(false);
+    expect(E02BodySchema.safeParse({ ...e02, slotId: undefined }).success).toBe(false);
+    expect(E02BodySchema.safeParse({ ...e02, mentorId: undefined }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, name: "A" }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, note: "x".repeat(295) }).success).toBe(true);
     expect(E02BodySchema.safeParse({ ...e02, note: "x".repeat(296) }).success).toBe(false);

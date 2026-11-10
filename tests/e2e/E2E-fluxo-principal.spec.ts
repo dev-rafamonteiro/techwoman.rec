@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { expect, inviteFromQueue, loginMentor, newPage, registerMentee, resetWorld, type E2EWorld } from "./support.js";
+import { expect, inviteFromQueue, loginMentor, newPage, registerMentee, resetWorld, returnToQueue, type E2EWorld } from "./support.js";
 
 /**
  * PLAN, testes obrigatórios: P4 -> M4/M5 -> P6 aceitar -> M6 concluir.
@@ -21,6 +21,7 @@ test("P4 -> M4/M5 -> P6 aceitar -> M6 concluir", async ({ browser }) => {
 
   // P4/P5: inscrição
   const personal = await registerMentee(mentee, { name: "Joana Teste", email: "joana@exemplo.test", phone: "(81) 99999-1234", area: "dados" });
+  await returnToQueue(world, "joana@exemplo.test");
 
   // M1/M4/M5: a mentora faz login, vê a participante na fila (sem contato) e convida
   await loginMentor(mentor, world.mentorEmail(0));

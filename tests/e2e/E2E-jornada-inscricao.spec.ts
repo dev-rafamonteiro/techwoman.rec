@@ -1,4 +1,4 @@
-import { expect, newPage, resetWorld, test, type E2EWorld } from "./support.js";
+import { chooseSlotAndMentor, expect, newPage, resetWorld, test, type E2EWorld } from "./support.js";
 import { getCollections } from "../../src/db/collections.js";
 import { KNOWLEDGE_TRACKS } from "../../src/shared/trilhas.js";
 
@@ -6,6 +6,7 @@ import { KNOWLEDGE_TRACKS } from "../../src/shared/trilhas.js";
 let world: E2EWorld;
 test.beforeEach(async () => {
   world = await resetWorld(1);
+  await getCollections(world.db.db).users.updateMany({}, { $set: { areas: KNOWLEDGE_TRACKS.map(({ key }) => key) } });
 });
 test.afterEach(async () => {
   await world.db.drop();
@@ -36,7 +37,7 @@ test("resultado da jornada preenche uma área válida e a inscrição conclui", 
   await page.getByTestId("p4-name").fill("Julia Jornada");
   await page.getByTestId("p4-email").fill("julia.jornada@example.test");
   await page.getByTestId("p4-phone").fill("81912345678");
-  await page.getByText(/manhã/i).first().click();
+  await chooseSlotAndMentor(page);
   await page.getByTestId("p4-consent").check();
   await page.getByTestId("p4-submit").click();
   await page.waitForURL(/\/mentoria\/inscricao\/ok/);
@@ -67,10 +68,22 @@ test("área antiga guardada no navegador não trava a inscrição", async ({ bro
   await page.getByTestId("p4-name").fill("Clara Antiga");
   await page.getByTestId("p4-email").fill("clara.antiga@example.test");
   await page.getByTestId("p4-phone").fill("81912345678");
-  await page.getByText(/manhã/i).first().click();
+  await page.getByTestId("p4-area").selectOption("dados");
+  await chooseSlotAndMentor(page);
   await page.getByTestId("p4-consent").check();
   await page.getByTestId("p4-submit").click();
   await page.waitForURL(/\/mentoria\/inscricao\/ok/);
+  await page.context().close();
+});
+
+test("sem resultado da jornada a trilha começa vazia, sem dizer que veio dela", async ({ browser }, info) => {
+  const page = await newPage(browser, info.project.use.viewport ?? undefined);
+  await page.goto("/mentoria/inscricao");
+  await expect(page.getByTestId("p4-area").locator("option:checked")).toHaveText("Selecione uma trilha");
+  await expect(page.getByText("Preenchida com o resultado da sua jornada")).toHaveCount(0);
+  await expect(page.locator('input[name="period"]')).toHaveCount(0);
+  await page.getByTestId("p4-area").selectOption("dados");
+  await expect(page.locator('input[name="period"]')).toHaveCount(3);
   await page.context().close();
 });
 

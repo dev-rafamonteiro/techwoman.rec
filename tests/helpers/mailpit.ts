@@ -49,7 +49,8 @@ export async function getAttachment(id: string, partId: string): Promise<string>
 /** Apaga só as mensagens do endereço (não esvazia a caixa inteira de quem usa o Mailpit). */
 export async function deleteMessagesTo(address: string): Promise<void> {
   const ids = (await messagesTo(address)).map((m) => m.ID);
-  if (ids.length) await json(`/api/v1/messages`, { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ IDs: ids }) });
+  // o DELETE responde "ok" em texto, não JSON
+  if (ids.length) await fetch(`${MAILPIT_URL}/api/v1/messages`, { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ IDs: ids }) });
 }
 
 /** Espera chegarem `n` mensagens para o endereço. */

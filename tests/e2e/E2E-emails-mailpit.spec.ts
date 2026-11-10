@@ -1,6 +1,6 @@
 import { test } from "@playwright/test";
 import { getAttachment, getMessage, deleteMessagesTo, mailpitUp, waitForMessages } from "../helpers/mailpit.js";
-import { expect, inviteFromQueue, loginMentor, newPage, registerMentee, resetWorld, type E2EWorld } from "./support.js";
+import { expect, inviteFromQueue, loginMentor, newPage, registerMentee, resetWorld, returnToQueue, type E2EWorld } from "./support.js";
 
 /**
  * PLAN, "Testes dos e-mails", caixa 5: no E2E, os e-mails 1, 2 e 3 chegam ao Mailpit no fluxo
@@ -41,11 +41,11 @@ test("inscrição -> convite -> aceite: e-mails 1, 2 e 3 chegam ao Mailpit", asy
   const mentee = await newPage(browser);
   const mentor = await newPage(browser, { width: 1280, height: 800 });
 
-  // e-mail 1: inscrição recebida
+  // e-mail 1: a inscrição já sai confirmada (RN24)
   const personal = await registerMentee(mentee, { name: "Joana Emails", email: MENTEE_EMAIL, phone: "(81) 99999-4321", area: "dados" });
   await drainOutbox();
   const [m1] = await waitForMessages(MENTEE_EMAIL, 1);
-  expect(m1!.Subject).toBe("Recebemos sua inscrição na mentoria do Tech Woman");
+  expect(m1!.Subject).toMatch(/^Combinado:/);
   const full1 = await getMessage(m1!.ID);
   // links saem curtos (PLAN, Links curtos)
   expect(full1.HTML).toMatch(/\/l\/[0-9A-Za-z]{7}/);
@@ -53,11 +53,15 @@ test("inscrição -> convite -> aceite: e-mails 1, 2 e 3 chegam ao Mailpit", asy
   expect(full1.HTML + full1.Text).not.toMatch(/\{\{|\}\}/);
   expect(full1.From.Address).toBe("mentoria@techwoman.dev");
 
+  // daqui em diante, o fluxo de quem volta à fila
+  await returnToQueue(world, MENTEE_EMAIL);
+  await deleteMessagesTo(MENTEE_EMAIL);
+
   // e-mail 2: convite de horário
   await loginMentor(mentor, world.mentorEmail(0));
   await inviteFromQueue(mentor, "Joana");
   await drainOutbox();
-  const two = await waitForMessages(MENTEE_EMAIL, 2);
+  const two = await waitForMessages(MENTEE_EMAIL, 1);
   const m2 = two.find((m) => /quer te mentorar às/.test(m.Subject));
   expect(m2, `assuntos: ${two.map((m) => m.Subject).join(" | ")}`).toBeTruthy();
   expect(m2!.Subject).toContain("Mentora 1");
@@ -71,7 +75,7 @@ test("inscrição -> convite -> aceite: e-mails 1, 2 e 3 chegam ao Mailpit", asy
   await mentee.getByTestId("p6-accept").click();
   await expect(mentee.getByTestId("p6-confirmada")).toBeVisible();
   await drainOutbox();
-  const three = await waitForMessages(MENTEE_EMAIL, 3);
+  const three = await waitForMessages(MENTEE_EMAIL, 2);
   const m3 = three.find((m) => /^Combinado:/.test(m.Subject));
   expect(m3, `assuntos: ${three.map((m) => m.Subject).join(" | ")}`).toBeTruthy();
   const full3 = await getMessage(m3!.ID);

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Client, loadApi } from "../helpers/app.js";
 import { bootApi, type Booted } from "../helpers/boot.js";
+import { booking } from "../helpers/booking.js";
 import { getCollections } from "../../src/db/collections.js";
 import { getOrCreateShortLink, shortLinkExpireAt } from "../../src/api/lib/short-links.js";
 
@@ -11,8 +12,10 @@ import { getOrCreateShortLink, shortLinkExpireAt } from "../../src/api/lib/short
  */
 const api = await loadApi();
 const BASE = "http://localhost:5173";
+let mentorId: unknown;
+let firstRun: any[] = [];
 const body = (over: Record<string, unknown> = {}) => ({
-  name: "Maria Silva", email: "maria.curto@exemplo.test", phone: "(81) 99999-1234", area: "dados", preferredPeriod: "morning",
+  name: "Maria Silva", email: "maria.curto@exemplo.test", phone: "(81) 99999-1234", area: "dados", ...booking(mentorId),
   consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok", ...over,
 });
 const CODE = /\/l\/([0-9A-Za-z]{7})/g;
@@ -25,6 +28,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E48 link curto /l/
   let code: string;
   beforeAll(async () => {
     b = await bootApi(api!, "shortlink", { mentors: 1, mentees: 0, env: { RATE_LIMIT: "true", PUBLIC_BASE_URL: BASE } });
+    mentorId = b.w.mentors[0]!._id;
     const r = await b.anon.post("/api/public/mentees", body());
     expect(r.status).toBe(201);
     ({ token, personalPath } = r.body);
@@ -61,7 +65,8 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E48 link curto /l/
     const n = new api!.MemoryNotifier!();
     await api!.processOutbox!(b.t.db, { notifier: n, now: b.clock.now, config: { publicBaseUrl: BASE } });
     const regs = n.sent.filter((m: any) => m.type === "registered" && m.channel === "email");
-    expect(regs.length).toBe(2);
+    expect(regs.length).toBe(1); // a 1ª inscrição já sai confirmada (RN24); `registered` só no reenvio
+    firstRun = n.sent;
     for (const m of regs) {
       expect(m.text).toContain(`${BASE}/l/${code}`);
       expect(m.html).toContain(`${BASE}/l/${code}`);
@@ -74,12 +79,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E48 link curto /l/
 
   it("calendar: e-mail de confirmação traz link_agenda curto, 302 para E06 e o .ics abre", async () => {
     const mentee = (await c().mentees.findOne({ emailNorm: "maria.curto@exemplo.test" }))!;
-    const inv = await b.mentor[0]!.post("/api/mentor/appointments", { menteeId: String(mentee._id), slotId: b.w.slotIds[3]!, tableId: String(b.w.tables[0]!._id) });
-    expect(inv.status).toBe(201);
-    expect((await Client.asMentee(b.app, token).post("/api/public/me/actions", { action: "accept" })).status).toBe(200);
-    const n = new api!.MemoryNotifier!();
-    await api!.processOutbox!(b.t.db, { notifier: n, now: b.clock.now, config: { publicBaseUrl: BASE } });
-    const conf = n.sent.find((m: any) => m.type === "confirmed" && m.channel === "email");
+    const conf = firstRun.find((m: any) => m.type === "confirmed" && m.channel === "email");
     expect(conf.html).not.toContain("?t=");
     const cal = (await c().shortLinks.findOne({ menteeId: mentee._id, kind: "calendar" }))!;
     expect(codesIn(conf.html).sort()).toEqual([code, cal._id].sort());
@@ -123,7 +123,8 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("E48 link curto /l/
     const event = (await c().events.findOne({}))!;
     const doc = (await c().shortLinks.findOne({ _id: path.slice(3) }))!;
     expect(doc.expireAt.toISOString()).toBe(shortLinkExpireAt(event).toISOString());
-    // E41 muda a data do evento: a validade acompanha
+    // E41 muda a data do evento: a validade acompanha (RN16: só sem mentorias marcadas)
+    await c().appointments.deleteMany({});
     const { event: cfg } = (await b.superAdmin.get("/api/admin/event")).body;
     const { id: _id, slots: _slots, ...put } = cfg;
     const next = new Date(new Date(`${cfg.date}T12:00:00Z`).getTime() + 86_400_000).toISOString().slice(0, 10);

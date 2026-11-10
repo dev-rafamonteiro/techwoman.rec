@@ -325,7 +325,7 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN21 · atendiment
     it("inscrever de novo pelo P4 (E02) com o mesmo e-mail só reenvia o link; reenviar o link pelo admin (E36) também não mexe no status", async () => {
       const joana = doc("Joana Lima");
       const reg = await b.anon.post("/api/public/mentees", {
-        name: joana.name, email: joana.email, phone: "(81) 99910-0001", area: "dados", preferredPeriod: "any",
+        name: joana.name, email: joana.email, phone: "(81) 99910-0001", area: "dados", slotId: "s12", mentorId: String(b.w.mentors[0]!._id),
         consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok",
       });
       expect(reg.status, JSON.stringify(reg.body)).toBe(200);
@@ -412,16 +412,16 @@ describe.skipIf(!api?.processOutbox || !api?.MemoryNotifier)("RN21 · atendiment
       expect((await mailOf(bea._id, "walk_in_done"))[0]).toMatchObject({ status: "skipped", lastError: "atendimento fora da mesa removido" });
     });
 
-    it("descadastrada pode se inscrever de novo pelo P4 (E02) com o mesmo e-mail e volta à fila", async () => {
+    it("descadastrada pode se inscrever de novo pelo P4 (E02) com o mesmo e-mail e já sai confirmada (RN24)", async () => {
       const bea = doc("Beatriz Campos");
       const reg = await b.anon.post("/api/public/mentees", {
-        name: bea.name, email: bea.email, phone: "(81) 99910-0005", area: "dados", preferredPeriod: "any",
+        name: bea.name, email: bea.email, phone: "(81) 99910-0005", area: "dados", slotId: "s12", mentorId: String(b.w.mentors[0]!._id),
         consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok",
       });
       expect(reg.status, JSON.stringify(reg.body)).toBe(201);
-      expect((await c.mentees.findOne({ _id: bea._id }))!.status).toBe("waiting");
+      expect((await c.mentees.findOne({ _id: bea._id }))!.status).toBe("confirmed");
       expect(await c.mentees.countDocuments({ emailNorm: bea.emailNorm })).toBe(1);
-      expect(await queueNames(1)).toContain("Beatriz Campos");
+      expect(await queueNames(1)).not.toContain("Beatriz Campos");
     });
 
     it("com outro atendimento ativo, remover não descadastra nem manda e-mail", async () => {

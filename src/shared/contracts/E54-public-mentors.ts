@@ -3,7 +3,7 @@ import { defineEndpoint, IdSchema } from './common.js';
 
 /**
  * Perfil público da mentora (P7): só o que ela mostra para quem visita o site.
- * Nunca e-mail, telefone, disponibilidade, horários marcados nem dados de login.
+ * Nunca e-mail, telefone, a agenda completa nem dados de login. (E59 mostra só quem está livre no horário pedido, RN24.)
  */
 export const PublicMentorSchema = z.object({
   id: IdSchema,

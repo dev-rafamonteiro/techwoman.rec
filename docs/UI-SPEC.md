@@ -86,11 +86,11 @@ Ao fazer login, o sistema redireciona pelo perfil: mentora para `/mentora/aguard
 
 ## Telas da participante (P1–P7)
 
-A jornada é QR Code → gamificação → resultado → inscrição → link pessoal, onde ela confirma o horário proposto pela mentora.
+A jornada é QR Code → gamificação → resultado → inscrição com escolha de horário e mentora (RN24) → link pessoal.
 
 ### P1 · Home do evento (ajuste)
 
-- Incluir o bloco "Mentoria": como funciona em 3 passos (descubra sua área, inscreva-se, aguarde o convite de uma mentora), sessões de 40 min, mesas no local.
+- Incluir o bloco "Mentoria": como funciona em 3 passos (descubra sua área, inscreva-se escolhendo horário e mentora), sessões de 40 min, mesas no local.
 - CTA principal "Começar minha jornada" leva a P2. Texto de apoio: "A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras."
 - Dados de data, local e horário vêm de **E01**.
 - Conteúdo do evento, tirado da página oficial (Jalan, `https://app.jalanlive.com/techwoman26/home`):
@@ -120,20 +120,24 @@ Formulário de uma coluna, curto, pensado para preencher em pé no evento.
 | E-mail | E-mail | Sim | Uma inscrição por e-mail |
 | Celular | Telefone com DDD | Sim | Máscara (00) 00000-0000 |
 | LinkedIn | URL | Não | Aceita só o usuário ou a URL completa |
-| Trilha de interesse | Seleção | Sim | Pré-preenchida com o resultado de P3; editável |
+| Trilha de interesse | Seleção | Sim | Pré-preenchida com o resultado de P3, editável, e só então com o texto "Preenchida com o resultado da sua jornada. Pode trocar."; sem resultado, começa em "Selecione uma trilha" e período, horário e mentora aparecem depois da escolha |
 | Tema de interesse | Seleção | Não | Só os temas da trilha escolhida; trocar a trilha limpa o tema. A mentora vê o tema no cartão da participante |
-| Período preferido | Opções | Sim | Manhã, Início da tarde, Fim da tarde, Qualquer horário |
+| Período, horário e mentora | Opções em etapas | Sim | **E58** e **E59**, RN24; detalhes abaixo |
 | Comentário para a mentora | Texto curto, 280 caracteres | Não | "O que você quer conversar?" |
 | Consentimento LGPD | Caixa de seleção | Sim | Link para o aviso de privacidade |
 
-- Abaixo do período: "É só uma preferência. O horário final é definido pela mentora e você confirma."
+- **Período:** Manhã, Início da tarde e Fim da tarde, cada um com o total de vagas da trilha ("Manhã · 12 vagas"), somando min(mentoras livres, mesas livres) de cada horário. Texto abaixo: "As vagas são uma visão geral da sua trilha, pelas mentoras e mesas livres. A mentora é escolhida na etapa seguinte."
+- **Horário:** só os horários do período com vaga ("10h00 · 3 vagas").
+- **Mentora:** até 5 mentoras livres no horário, sorteadas: foto, nome, descrição curta e botão "Ver LinkedIn". A mesa é automática e não aparece aqui.
+- **Sem horário na trilha:** aviso "Não há horários disponíveis nesta trilha. Procure uma organizadora do evento." e botão de envio desativado; trocar de trilha refaz a lista.
+- **Vaga ocupada no envio (409 `SLOT_UNAVAILABLE`):** "Essa vaga acabou de ser ocupada. Escolha outro horário ou mentora.", a escolha recomeça e os demais campos ficam preenchidos.
 - Verificação anti-robô (Cloudflare Turnstile) no envio, escondida: o widget roda só ao enviar (`execution: execute`) e só aparece, abaixo do formulário, se a Cloudflare pedir interação (`appearance: interaction-only`). Sem token em 2 minutos (ou com erro do desafio), o envio para e mostra "Não foi possível verificar que você é uma pessoa. Tente de novo."
 - Botão "Quero ser mentorada" envia para **E02**.
 - Estados: validação por campo em tempo real; e-mail já inscrito mostra "Você já tem uma inscrição. Enviamos de novo o link da sua página para seu e-mail" (o reenvio também é **E02**); falha de rede mantém os dados preenchidos.
 
-### P5 · Inscrição recebida (nova)
+### P5 · Mentoria confirmada (nova)
 
-- Mensagem: "Recebemos sua inscrição! Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail."
+- Mensagem: "Mentoria confirmada!" com mesa, horário e mentora (`appointment` de **E02**). Recarregada sem esses dados: "Inscrição confirmada!" e aponta para a página pessoal e o e-mail.
 - Botão "Acompanhar minha mentoria" abre P6 (navegação interna pelo `personalPath` de **E02**).
 - Sugestão "Salve este link" com botão copiar: mostra e copia o link curto (origem do site + `shortPath` de **E02**, ex.: `https://techwoman.dev/l/IEO31Kd`). `personalPath` e `shortPath` ficam juntos no estado da navegação e no `sessionStorage`, para P5 continuar certa depois de recarregar.
 
@@ -359,6 +363,7 @@ Os componentes abaixo se repetem entre as três áreas e devem ser desenhados um
 | Atendida fora da mesa (RN21; layout 10, selo "ATENDIMENTO CONCLUÍDO"; um por atendimento registrado; texto fixo) | E-mail | "Obrigada por participar, {nome}! Você foi atendida por {mentora} ({organização}, se houver) fora das mesas, aqui no evento. Sua mentoria no Tech Woman está registrada como concluída. Na sua página pessoal você vê com quem conversou e avalia a mentoria: {link}" + card Mentora e o botão "Ver o LinkedIn de {mentora}" (só quando ela tem LinkedIn) |
 | Atendimento fora da mesa removido pelo admin, participante descadastrada (RN21; layout 11, selo "INSCRIÇÃO REMOVIDA"; texto fixo) | E-mail | "Oi, {nome}. A organização removeu o registro do seu atendimento fora da mesa e, com ele, sua inscrição na mentoria do Tech Woman. Se você ainda quer participar da mentoria, faça uma nova inscrição: {link_inscricao}" |
 | E-mail do aviso à mentora (layout 9; selo "PARA MENTORAS"; título "Seu horário das {horario} ficou livre"; card com Mesa, Horário e Participante; botão "Abrir minha agenda"; nota "O horário já aparece livre no seu painel.") | E-mail | Parágrafo "Oi, {mentora}." seguido de `motivo`: confirmada cancelada "{nome} cancelou a mentoria das {horario} na {mesa}. O horário voltou a ficar livre na sua agenda."; convite recusado "{nome} recusou o convite para as {horario}. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; inscrição cancelada "{nome} cancelou a inscrição e o convite para as {horario} foi encerrado. O horário voltou a ficar livre e você pode convidar outra pessoa da fila."; atendida fora da mesa por outra mentora (RN21) "{nome} foi atendida fora da mesa por outra mentora, e a mentoria das {horario} na {mesa} foi cancelada. O horário voltou a ficar livre na sua agenda." |
+| Nova mentoria, aviso à mentora (RN24, RN19; layout 12, selo "PARA MENTORAS"; card com Mesa, Horário e Participante; botão "Abrir minha agenda") | E-mail | "Oi, {mentora}. {nome} escolheu conversar com você às {horario}, na {mesa}." |
 
 ## Medição de uso (analytics)
 

@@ -1,3 +1,5 @@
+import { getCollections } from "../../src/db/collections.js";
+import { menteeDoc } from "../helpers/seed.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Client, loadApi } from "../helpers/app.js";
 import { bootApi, type Booted } from "../helpers/boot.js";
@@ -55,14 +57,10 @@ describe.skipIf(!api)("tempo real: SSE alimentado por Change Streams (E27 mentor
     mB.close();
   });
 
-  it("E27: nova inscrição (E02) aparece como queue.added", async () => {
+  it("E27: participante que entra na fila aparece como queue.added", async () => {
     const mB = await openSse(b.app, "/api/mentor/stream", b.mentor[1]!.cookie!);
     await mB.waitFor((f) => f.event === "ready");
-    const r = await b.anon.post("/api/public/mentees", {
-      name: "Nova Inscrita", email: "nova@exemplo.test", phone: "(81) 98888-7777", area: "dados", preferredPeriod: "any",
-      consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok",
-    });
-    expect(r.status, JSON.stringify(r.body)).toBe(201);
+    await getCollections(b.t.db).mentees.insertOne(menteeDoc(900, { name: "Nova Inscrita", email: "nova@exemplo.test", emailNorm: "nova@exemplo.test" }).doc);
     const added = await mB.waitFor((f) => f.event === "queue.added");
     expect(added.data.mentee.name).toBe("Nova Inscrita");
     expect(added.raw).not.toContain("nova@exemplo.test");

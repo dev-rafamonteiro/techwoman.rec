@@ -169,4 +169,18 @@ export const EMAILS = [
     nota: 'Acha que foi um engano? Procure a organização no balcão de apoio.',
     linkFallback: 'link_inscricao',
   },
+  {
+    // RN24, RN19 · aviso à mentora (mentor_booked): uma participante agendou com ela; sem token da participante
+    id: '12-mentoria-agendada',
+    paraMentora: true,
+    vars: ['mentora_nome', 'nome', 'horario', 'mesa', 'link_painel'],
+    preheader: 'A mentoria já aparece na sua agenda.',
+    selo: ['PARA MENTORAS', ...SELO.lilas],
+    titulo: 'Nova mentoria às {{horario}}',
+    paragrafos: ['Oi, {{mentora_nome}}. {{nome}} escolheu conversar com você às {{horario}}, na {{mesa}}.'],
+    card: [['MESA', '{{mesa}}'], ['HORÁRIO', '{{horario}}'], ['PARTICIPANTE', '{{nome}}']],
+    botao: ['Abrir minha agenda', 'link_painel'],
+    nota: 'A mentoria já está confirmada e aparece na sua agenda.',
+    linkFallback: 'link_painel',
+  },
 ];

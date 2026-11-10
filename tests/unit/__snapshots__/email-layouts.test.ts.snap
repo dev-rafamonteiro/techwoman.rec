@@ -21,3 +21,5 @@ exports[`layout 09-aviso-mentora com dados de exemplo > snapshot do HTML, do tex
 exports[`layout 10-atendimento-fora-da-mesa com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Obrigada pela conversa com Ana"`;
 
 exports[`layout 11-atendimento-removido com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Sua inscrição na mentoria do Tech Woman foi removida"`;
+
+exports[`layout 12-mentoria-agendada com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Nova mentoria: Joana às 14h15"`;

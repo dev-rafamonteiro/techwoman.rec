@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ENDPOINTS, MENTEE_NOTE_MAX, normalizePhoneBR, SPECIALTIES_BY_TRACK, type PreferredPeriod } from '@tw/shared';
+import { ENDPOINTS, MENTEE_NOTE_MAX, normalizePhoneBR, SPECIALTIES_BY_TRACK } from '@tw/shared';
 import {
-  ApiError, Button, CheckboxField, EmptyState, ErrorState, Hero, PERIOD_LABELS, RadioCards, SelectField, SkeletonList,
+  ApiError, Button, CheckboxField, EmptyState, ErrorState, Hero, SelectField, SkeletonList,
   TextArea, TextField, call, maskPhone, useQuery,
 } from '../../ui';
 import { track } from '../../analytics';
 import { FALLBACK_AREAS } from './lib/areas';
 import { loadJourney, savePersonalPath } from './lib/journey';
 import { useTurnstile } from './lib/turnstile';
+import { SlotMentorPicker, type SlotChoice } from './SlotMentorPicker';
 import './public.css';
 
-type Field = 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'preferredPeriod' | 'note' | 'consent';
+type Field = 'name' | 'email' | 'phone' | 'linkedin' | 'area' | 'mentor' | 'note' | 'consent';
 const NOTE_MAX = MENTEE_NOTE_MAX;
 
 interface Values {
@@ -21,7 +22,7 @@ interface Values {
   linkedin: string;
   area: string;
   theme: string;
-  preferredPeriod: PreferredPeriod | null;
+  choice: SlotChoice | null;
   note: string;
   consent: boolean;
 }
@@ -34,7 +35,7 @@ function validate(v: Values): Partial<Record<Field, string>> {
   if (v.linkedin && !/^([a-z0-9-]{3,100}|(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-z0-9-]{3,100}\/?)$/i.test(v.linkedin.trim())) {
     e.linkedin = 'Use seu usuário ou o link completo do perfil.';
   }
-  if (!v.preferredPeriod) e.preferredPeriod = 'Escolha um período.';
+  if (!v.choice) e.mentor = 'Escolha o horário e a mentora.';
   if (v.note.length > NOTE_MAX) e.note = `Use no máximo ${NOTE_MAX} caracteres.`;
   if (!v.consent) e.consent = 'Precisamos do seu consentimento para continuar.';
   return e;
@@ -47,12 +48,16 @@ export default function P4Inscricao() {
   const journey = useMemo(() => loadJourney(), []);
 
   const [values, setValues] = useState<Values>({
-    name: '', email: '', phone: '', linkedin: '', area: journey?.area ?? '', theme: '', preferredPeriod: null, note: '', consent: false,
+    name: '', email: '', phone: '', linkedin: '', area: journey?.area ?? '', theme: '', choice: null, note: '', consent: false,
   });
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<{ network: boolean; text: string } | null>(null);
   const [already, setAlready] = useState(false);
+  const [slotsEmpty, setSlotsEmpty] = useState(false);
+  const [taken, setTaken] = useState(false);
+  /** Sobe depois de um SLOT_UNAVAILABLE: refaz E58 e E59. */
+  const [refresh, setRefresh] = useState(0);
 
   const tsBox = useRef<HTMLDivElement>(null);
   // O contêiner só existe depois que E01 carrega e as inscrições estão abertas.
@@ -69,11 +74,9 @@ export default function P4Inscricao() {
   const ev = event.data;
   const areas = ev.areas.length ? ev.areas : FALLBACK_AREAS;
   // área que não está na lista do evento (jornada antiga) não vale: o campo mostraria uma e o envio levaria outra
-  const effArea = areas.some((a) => a.key === values.area) ? values.area : areas[0]!.key;
+  const effArea = areas.some((a) => a.key === values.area) ? values.area : '';
+  if (!effArea) errors.area = 'Escolha uma trilha.';
   const themes = SPECIALTIES_BY_TRACK.find((t) => t.key === effArea)?.specialties ?? [];
-  const periods = ev.periods.length
-    ? ev.periods.map((p) => ({ value: p.key, label: p.label }))
-    : (Object.entries(PERIOD_LABELS) as [PreferredPeriod, string][]).map(([value, label]) => ({ value, label }));
 
   if (!ev.registrationOpen) {
     return (
@@ -87,7 +90,8 @@ export default function P4Inscricao() {
     e.preventDefault();
     setFormError(null);
     setAlready(false);
-    setTouched({ name: true, email: true, phone: true, linkedin: true, area: true, preferredPeriod: true, note: true, consent: true });
+    setTaken(false);
+    setTouched({ name: true, email: true, phone: true, linkedin: true, area: true, mentor: true, note: true, consent: true });
     if (Object.keys(errors).length > 0) {
       document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
       return;
@@ -105,7 +109,8 @@ export default function P4Inscricao() {
           ...(values.linkedin.trim() ? { linkedin: values.linkedin.trim() } : {}),
           area: effArea,
           ...(values.theme ? { theme: values.theme } : {}),
-          preferredPeriod: values.preferredPeriod!,
+          slotId: values.choice!.slotId,
+          mentorId: values.choice!.mentorId,
           ...(values.note.trim() ? { note: values.note.trim() } : {}),
           ...(journey?.scores ? { quizScores: journey.scores } : {}),
           consent: { accepted: true, version: ev.consentVersion },
@@ -117,17 +122,22 @@ export default function P4Inscricao() {
         setAlready(true);
         return;
       }
-      track('inscricao_concluida', { area: effArea, periodo: values.preferredPeriod! });
+      track('inscricao_concluida', { area: effArea, periodo: values.choice!.period });
       const links = { personalPath: res.personalPath, shortPath: res.shortPath };
       savePersonalPath(links);
-      navigate('/mentoria/inscricao/ok', { state: links });
+      navigate('/mentoria/inscricao/ok', { state: { ...links, appointment: res.appointment } });
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
       track('inscricao_erro', { codigo: ae?.code ?? 'UNKNOWN' });
       if (ae?.code === 'NETWORK') setFormError({ network: true, text: '' });
       else if (ae?.code === 'REGISTRATION_CLOSED') setFormError({ network: false, text: 'As inscrições estão fechadas no momento.' });
       else if (ae?.code === 'VALIDATION_ERROR') setFormError({ network: false, text: (ae.details as { field?: string } | undefined)?.field ? ae.message : 'Confira os campos e tente de novo.' });
-      else if (ae?.code === 'RATE_LIMITED') setFormError({ network: false, text: 'Muitas tentativas. Aguarde um instante e tente de novo.' });
+      else if (ae?.code === 'SLOT_UNAVAILABLE') {
+        // outra pessoa pegou a vaga entre a lista e o envio: nada foi gravado, escolhe de novo
+        set('choice', null);
+        setTaken(true);
+        setRefresh((n) => n + 1);
+      } else if (ae?.code === 'RATE_LIMITED') setFormError({ network: false, text: 'Muitas tentativas. Aguarde um instante e tente de novo.' });
       else setFormError({ network: false, text: ae?.message ?? 'Não foi possível enviar agora. Tente de novo.' });
     } finally {
       setSubmitting(false);
@@ -137,7 +147,7 @@ export default function P4Inscricao() {
   return (
     <div className="tw-page">
       <Hero eyebrow="Inscrição" title="Quero uma mentoria">
-        <p>Leva 1 minuto. Uma mentora da sua trilha vai propor horário e mesa.</p>
+        <p>Leva 1 minuto. Escolha o horário e a mentora da sua trilha; a mesa é definida automaticamente.</p>
       </Hero>
 
       <form className="tw-stack" onSubmit={submit} noValidate data-testid="p4-form">
@@ -162,8 +172,9 @@ export default function P4Inscricao() {
           error={shown('phone')} ok={values.phone && !errors.phone ? 'Número válido' : undefined} onChange={(e) => set('phone', maskPhone(e.target.value))} onBlur={() => touch('phone')} data-testid="p4-phone" />
         <TextField label="LinkedIn" optional name="linkedin" autoComplete="off" placeholder="seu-usuario ou link do perfil" value={values.linkedin}
           error={shown('linkedin')} ok={values.linkedin && !errors.linkedin ? 'A mentora verá seu perfil' : undefined} onChange={(e) => set('linkedin', e.target.value)} onBlur={() => touch('linkedin')} data-testid="p4-linkedin" />
-        <SelectField label="Trilha de interesse" hint="Preenchida com o resultado da sua jornada. Pode trocar." name="area" value={effArea} error={shown('area')}
-          onChange={(e) => setValues((p) => ({ ...p, area: e.target.value, theme: '' }))} onBlur={() => touch('area')} data-testid="p4-area">
+        <SelectField label="Trilha de interesse" hint={journey?.area === effArea ? 'Preenchida com o resultado da sua jornada. Pode trocar.' : undefined} name="area" value={effArea} error={shown('area')}
+          onChange={(e) => setValues((p) => ({ ...p, area: e.target.value, theme: '', choice: null }))} onBlur={() => touch('area')} data-testid="p4-area">
+          {!effArea && <option value="" disabled>Selecione uma trilha</option>}
           {areas.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
         </SelectField>
         {themes.length > 0 && (
@@ -173,9 +184,8 @@ export default function P4Inscricao() {
             {themes.map((t) => <option key={t} value={t}>{t}</option>)}
           </SelectField>
         )}
-        <RadioCards legend="Período preferido" name="preferredPeriod" options={periods} value={values.preferredPeriod}
-          error={shown('preferredPeriod')} hint="É só uma preferência. O horário final é definido pela mentora e você confirma."
-          onChange={(v) => { set('preferredPeriod', v); touch('preferredPeriod'); }} />
+        {effArea && <SlotMentorPicker area={effArea} refresh={refresh} taken={taken} value={values.choice} error={shown('mentor')}
+          onChange={(c) => { set('choice', c); touch('mentor'); setTaken(false); }} onEmptyChange={setSlotsEmpty} />}
         <TextArea label="O que você quer conversar?" optional name="note" rows={3} maxLength={NOTE_MAX + 40} placeholder="Ex.: como migrar de suporte para backend"
           hint={<span className="tw-counter">{values.note.length}/{NOTE_MAX}</span>} value={values.note} error={shown('note')}
           onChange={(e) => set('note', e.target.value)} onBlur={() => touch('note')} data-testid="p4-note" />
@@ -184,8 +194,7 @@ export default function P4Inscricao() {
           label={<>Concordo com o uso dos meus dados para organizar a mentoria, conforme o <a className="tw-link" href="/privacidade" target="_blank" rel="noopener noreferrer">aviso de privacidade</a>.</>} />
         <div ref={tsBox} />
         <p className="tw-field__hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Verificação de segurança automática ativa</p>
-        <Button type="submit" size="lg" block loading={submitting} data-testid="p4-submit">Quero ser mentorada</Button>
-        <p className="tw-field__hint tw-center">A inscrição não garante a mentoria; as vagas são limitadas pela agenda das mentoras.</p>
+        <Button type="submit" size="lg" block loading={submitting} disabled={slotsEmpty} data-testid="p4-submit">Quero ser mentorada</Button>
       </form>
     </div>
   );

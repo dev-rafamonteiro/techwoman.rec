@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { expect, inviteFromQueue, loginMentor, newPage, registerMentee, resetWorld, type E2EWorld } from "./support.js";
+import { expect, inviteFromQueue, loginMentor, newPage, registerMentee, resetWorld, returnToQueue, type E2EWorld } from "./support.js";
 
 /**
  * RN06: "Horário não serve" devolve a participante à fila com prioridade (declined_schedule).
@@ -24,6 +24,8 @@ test("recusa por horário volta para a fila com prioridade (RN06, RN03)", async 
   // segunda participante, inscrita depois: sem prioridade, deve ficar atrás da Ana depois da recusa
   const other = await newPage(browser);
   await registerMentee(other, { name: "Bia Segunda", email: "bia@exemplo.test", phone: "(81) 98888-0002", area: "dados" });
+  await returnToQueue(world, "ana@exemplo.test");
+  await returnToQueue(world, "bia@exemplo.test");
 
   await loginMentor(mentorA, world.mentorEmail(0));
   await inviteFromQueue(mentorA, "Ana");

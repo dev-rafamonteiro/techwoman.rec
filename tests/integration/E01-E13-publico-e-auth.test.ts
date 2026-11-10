@@ -1,11 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Client, loadApi, TEST_PASSWORD } from "../helpers/app.js";
 import { bootApi, type Booted } from "../helpers/boot.js";
+import { booking } from "../helpers/booking.js";
 import { getCollections } from "../../src/db/collections.js";
 
 const api = await loadApi();
+let mentorId: unknown;
 const body = (over: Record<string, unknown> = {}) => ({
-  name: "Maria Silva", email: "Maria@Exemplo.test", phone: "(81) 99999-1234", area: "dados", preferredPeriod: "morning",
+  name: "Maria Silva", email: "Maria@Exemplo.test", phone: "(81) 99999-1234", area: "dados", ...booking(mentorId),
   consent: { accepted: true, version: "2026-10-v1" }, turnstileToken: "test-ok", ...over,
 });
 
@@ -13,6 +15,7 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
   let b: Booted;
   beforeAll(async () => {
     b = await bootApi(api!, "pub", { mentors: 1, mentees: 0 });
+    mentorId = b.w.mentors[0]!._id;
   });
   afterAll(async () => b?.close());
 
@@ -41,10 +44,10 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
     const doc = (await getCollections(b.t.db).mentees.findOne({}))!;
     expect(doc.emailNorm).toBe("maria@exemplo.test");
     expect(doc.phone).toMatch(/^\+55/);
-    expect(doc.status).toBe("waiting");
+    expect(doc.status).toBe("confirmed");
     expect(doc.consent?.version).toBe("2026-10-v1");
     expect(JSON.stringify(doc)).not.toContain(r.body.token);
-    expect(await b.t.db.collection("outbox").countDocuments({ type: "registered" })).toBeGreaterThan(0);
+    expect(await b.t.db.collection("outbox").countDocuments({ type: "confirmed" })).toBeGreaterThan(0);
   });
 
   it("E02: mesmo e-mail (outra caixa/espaços) -> 200 ALREADY_REGISTERED, sem segunda inscrição, link reenviado (RN01)", async () => {
@@ -60,15 +63,16 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
     expect((await b.anon.post("/api/public/mentees", body({ email: "z@y.test", consent: { accepted: false, version: "1" } }))).status).toBe(422);
   });
 
-  it("RN01: inscrição cancelled reativa como waiting sem prioridade e com novo queuedAt", async () => {
+  it("RN01: inscrição cancelled reativa já confirmada (RN24), sem prioridade e com novo queuedAt", async () => {
     const { mentees } = getCollections(b.t.db);
     const before = (await mentees.findOne({}))!;
     await mentees.updateOne({ _id: before._id }, { $set: { status: "cancelled", priority: true } });
+    await getCollections(b.t.db).appointments.deleteMany({});
     b.clock.now = new Date(b.clock.now.getTime() + 60_000);
     const r = await b.anon.post("/api/public/mentees", body());
     expect(r.status).toBe(201);
     const after = (await mentees.findOne({ _id: before._id }))!;
-    expect(after.status).toBe("waiting");
+    expect(after.status).toBe("confirmed");
     expect(after.priority).toBe(false);
     expect(after.queuedAt.getTime()).toBeGreaterThan(before.queuedAt.getTime());
     expect(await mentees.countDocuments({})).toBe(1);
@@ -146,6 +150,7 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
     it("RN12: desativar mentora revoga as sessões dela", async () => {
       const c = new Client(b.app);
       await c.login("mentora1@techwoman.test");
+      await getCollections(b.t.db).appointments.deleteMany({}); // RN12: mentorias futuras bloqueiam a desativação
       const id = String((await getCollections(b.t.db).users.findOne({ email: "mentora1@techwoman.test" }))!._id);
       const r = await b.admin.patch(`/api/admin/mentors/${id}`, { status: "disabled" });
       expect(r.status, JSON.stringify(r.body)).toBe(200);

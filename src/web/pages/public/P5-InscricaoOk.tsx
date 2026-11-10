@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Button, LinkButton } from '../../ui';
+import type { E02Created } from '@tw/shared';
+import { Button, LinkButton, formatRange } from '../../ui';
 import { loadPersonalPath, type PersonalLinks } from './lib/journey';
 import './public.css';
 
-/** P5 · Inscrição recebida (links de E02, guardados por P4) */
+/** P5 · Mentoria confirmada (links de E02, guardados por P4; RN24) */
 export default function P5InscricaoOk() {
   const location = useLocation();
-  const state = location.state as PersonalLinks | null;
+  const state = location.state as (PersonalLinks & { appointment?: E02Created['appointment'] }) | null;
+  const appointment = state?.appointment ?? null;
   const links = state?.personalPath ? state : loadPersonalPath();
   const path = links?.personalPath ?? null;
   // mostra e copia o link curto (E48); o botão navega pelo caminho longo, porque /l/ não é rota do React
@@ -40,13 +42,15 @@ export default function P5InscricaoOk() {
         <span className="tw-shape tw-shape--square" />
         <span className="tw-shape tw-shape--half" />
       </div>
-      <h1 className="tw-title">Recebemos sua inscrição!</h1>
-      <p>Em breve uma mentora vai propor um horário e uma mesa. Você vai receber o aviso por e-mail.</p>
+      <h1 className="tw-title">{appointment ? 'Mentoria confirmada!' : 'Inscrição confirmada!'}</h1>
+      {appointment
+        ? <p data-testid="p5-appointment"><strong>{appointment.tableLabel}</strong> · {formatRange(appointment.startAt, appointment.endAt)} · com {appointment.mentorName}</p>
+        : <p>Os detalhes da sua mentoria estão na sua página pessoal e no e-mail de confirmação.</p>}
       {path && <LinkButton to={path} size="lg" block data-testid="p5-track">Acompanhar minha mentoria</LinkButton>}
       {link && (
         <div className="tw-linkbox">
           <strong>Salve este link</strong>
-          <small>É a sua página pessoal. Por ela você confirma o horário que a mentora propuser.</small>
+          <small>É a sua página pessoal. Por ela você acompanha, troca ou cancela sua mentoria.</small>
           <div className="tw-linkrow">
             <code data-testid="p5-link">{link.replace(/^https?:\/\//, '')}</code>
             <Button size="sm" onClick={() => void copy()} data-testid="p5-copy" aria-live="polite">{copied ? 'Copiado ✓' : 'Copiar'}</Button>
@@ -55,8 +59,8 @@ export default function P5InscricaoOk() {
       )}
       <strong>O que acontece agora</strong>
       <ol className="tw-steps">
-        <li>Uma mentora da sua área é atribuída a você.</li>
-        <li>Você recebe horário e mesa e tem 15 minutos para confirmar.</li>
+        <li>Você recebe a confirmação por e-mail.</li>
+        <li>Se precisar, troque o horário pela sua página pessoal.</li>
         <li>Chegue 5 minutos antes na mesa indicada.</li>
       </ol>
     </div>

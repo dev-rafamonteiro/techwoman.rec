@@ -71,6 +71,13 @@
     "11-atendimento-removido": {
       "nome": "Joana",
       "link_inscricao": "https://techwoman.dev/mentoria/inscricao"
+    },
+    "12-mentoria-agendada": {
+      "mentora_nome": "Ana",
+      "nome": "Joana",
+      "horario": "14h15",
+      "mesa": "Mesa 7",
+      "link_painel": "https://techwoman.dev/entrar"
     }
   }
 }
