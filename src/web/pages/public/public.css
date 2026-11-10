@@ -236,4 +236,8 @@ span.tw-star svg { width: 24px; height: 24px; }
 .tw-mentor-pick__main input { flex: none; width: 18px; height: 18px; margin: 4px 0 0; accent-color: var(--color-link); }
 .tw-mentor-pick__main img { flex: none; width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
 .tw-mentor-pick__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tw-mentor-pick__tracks { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 4px; }
+.tw-mentor-pick__tracks span { padding: 2px 8px; border-radius: 999px; background: var(--tw-lilac-100); color: var(--tw-plum-950); font-size: 12px; font-weight: 700; line-height: 1.4; }
+.tw-mentor-pick__tracks span.is-mine { background: var(--tw-purple-600); color: #fff; }
+.tw-mentor-pick:has(input:checked) .tw-mentor-pick__tracks span:not(.is-mine) { background: #fff; }
 .tw-mentor-pick__text small { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }

@@ -121,16 +121,20 @@ describe.skipIf(!api)("RN24 inscrição com agendamento", () => {
     expect([r.status, r.body.code]).toEqual([409, "SLOT_UNAVAILABLE"]);
   });
 
-  it("E58: vagas = min(mentoras livres da trilha, mesas livres) e some o horário sem mentora", async () => {
+  it("E58: vagas = min(mentoras livres da trilha, mesas livres); trilha sem mentora livre usa as de outras trilhas", async () => {
     await reset();
     const before = await b.anon.get("/api/public/slots?area=dados");
     const s = (id: string, items = before.body.items) => items.find((i: { slotId: string }) => i.slotId === id);
     const tables = await c.tables.countDocuments({ active: true });
     expect(s("s08").available).toBe(Math.min(18, tables));
     expect(s("s08").period).toMatch(/morning|early_afternoon|late_afternoon/);
+    expect(s("s08").otherTracks).toBe(false);
     await register("s08", m(0)._id);
     expect(s("s08", (await b.anon.get("/api/public/slots?area=dados")).body.items).available).toBe(Math.min(17, tables - 1));
-    expect((await b.anon.get("/api/public/slots?area=qualidade")).body.items).toEqual([]);
+    const q = (await b.anon.get("/api/public/slots?area=qualidade")).body.items;
+    expect(q.length).toBe(before.body.items.length);
+    expect(q.every((i: { otherTracks: boolean }) => i.otherTracks)).toBe(true);
+    expect(s("s08", q).available).toBe(Math.min(17, tables - 1));
   });
 
   it("E59: no máximo 5, só livres no horário e da trilha, sem dados de contato", async () => {
@@ -142,13 +146,35 @@ describe.skipIf(!api)("RN24 inscrição com agendamento", () => {
       const r = await b.anon.get("/api/public/slots/s09/mentors?area=dados");
       expect(r.status).toBe(200);
       expect(r.body.items.length).toBe(5);
+      expect(r.body.otherTracks).toBe(false);
       for (const item of r.body.items) {
         seen.add(item.id);
-        expect(Object.keys(item).sort()).toEqual(["bio", "id", "linkedin", "name", "photoUrl"]);
+        expect(Object.keys(item).sort()).toEqual(["areas", "bio", "id", "linkedin", "name", "photoUrl"]);
+        expect(item.areas[0]).toMatchObject({ key: "dados" });
       }
     }
     expect(seen.has(String(m(0)._id))).toBe(false);
     expect(seen.has(String(m(1)._id))).toBe(false);
     expect(seen.size).toBeGreaterThan(5);
+  });
+
+  it("trilha sem mentora livre no horário: E59 traz as de outras trilhas e E02 agenda com uma delas, com a mesa automática", async () => {
+    await reset();
+    await c.users.updateMany({ _id: { $ne: m(0)._id } }, { $set: { areas: ["qualidade"] } });
+    await c.users.updateOne({ _id: m(0)._id }, { $set: { areas: ["dados", "qualidade"] } });
+    expect((await register("s10", m(0)._id)).status).toBe(201); // a única de dados fica ocupada às s10
+    const slot = (await b.anon.get("/api/public/slots?area=dados")).body.items.find((i: { slotId: string }) => i.slotId === "s10");
+    expect(slot).toMatchObject({ otherTracks: true });
+    const r = await b.anon.get("/api/public/slots/s10/mentors?area=dados");
+    expect(r.body.otherTracks).toBe(true);
+    expect(r.body.items.length).toBe(5);
+    expect(r.body.items.map((i: { id: string }) => i.id)).not.toContain(String(m(0)._id));
+    expect(r.body.items[0].areas).toEqual([{ key: "qualidade", label: expect.any(String) }]);
+    const other = await register("s10", r.body.items[0].id);
+    expect(other.status, JSON.stringify(other.body)).toBe(201);
+    expect(new Set((await c.appointments.find({ slotId: "s10", slotLock: true }).toArray()).map((a) => String(a.tableId))).size).toBe(2);
+    // em outro horário a de dados está livre: a de outra trilha não pode ser escolhida
+    const blocked = await register("s11", r.body.items[1].id);
+    expect([blocked.status, blocked.body.code]).toEqual([409, "SLOT_UNAVAILABLE"]);
   });
 });

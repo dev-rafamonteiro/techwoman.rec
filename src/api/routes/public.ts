@@ -325,12 +325,16 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
 
   // E59 · GET /public/slots/:slotId/mentors · P4 · amostra aleatória de mentoras livres no horário (RN24)
   route(app, ctx, E59, async ({ params, query }) => {
-    const mentors = await sampleSlotMentors(ctx, query.area, params.slotId);
+    const [{ mentors, otherTracks }, event] = await Promise.all([sampleSlotMentors(ctx, query.area, params.slotId), loadEvent(ctx)]);
+    const label = new Map(event.areas.map((a) => [a.key, a.label]));
     return {
+      otherTracks,
       items: mentors.map((m) => ({
         id: String(m._id),
         name: m.name,
         photoUrl: safePhotoUrl(m.photoUrl),
+        // a trilha de quem se inscreve vem primeiro
+        areas: [...m.areas].sort((x, y) => Number(y === query.area) - Number(x === query.area)).map((key) => ({ key, label: label.get(key) ?? key })),
         bio: m.bio?.trim() || null,
         linkedin: normalizeLinkedin(m.linkedin) ?? null,
       })),

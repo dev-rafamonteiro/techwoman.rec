@@ -13,7 +13,7 @@ export interface SlotChoice {
   period: Period;
 }
 
-function MentorCard({ mentor, checked, onSelect }: { mentor: SlotMentor; checked: boolean; onSelect: () => void }) {
+function MentorCard({ mentor, area, checked, onSelect }: { mentor: SlotMentor; area: string; checked: boolean; onSelect: () => void }) {
   const [failed, setFailed] = useState(false);
   const photo = mentor.photoUrl && !failed ? mentor.photoUrl : NO_PHOTO;
   return (
@@ -23,6 +23,11 @@ function MentorCard({ mentor, checked, onSelect }: { mentor: SlotMentor; checked
         <img src={photo} alt="" loading="lazy" decoding="async" width={56} height={56} onError={() => setFailed(true)} />
         <span className="tw-mentor-pick__text">
           <strong>{mentor.name}</strong>
+          {mentor.areas.length > 0 && (
+            <span className="tw-mentor-pick__tracks" aria-label={`Trilhas: ${mentor.areas.map((a) => a.label).join(', ')}`}>
+              {mentor.areas.map((a) => <span key={a.key} className={a.key === area ? 'is-mine' : undefined}>{a.label}</span>)}
+            </span>
+          )}
           {mentor.bio && <small>{mentor.bio}</small>}
         </span>
       </label>
@@ -40,8 +45,13 @@ function MentorList({ area, slot, value, onSelect }: { area: string; slot: E58It
   return (
     <fieldset className="tw-field" style={{ border: 0, padding: 0, margin: 0 }} data-testid="p4-mentors">
       <legend className="tw-field__label" style={{ padding: 0, marginBottom: 8 }}>Escolha sua mentora às {formatTime(slot.startAt)}</legend>
+      {q.data.otherTracks && (
+        <p className="tw-field__hint" style={{ marginTop: 0 }} data-testid="p4-other-tracks">
+          Nenhuma mentora da sua trilha está livre nesse horário. Estas são de outras trilhas e também podem conversar com você.
+        </p>
+      )}
       <div className="tw-stack">
-        {q.data.items.map((m) => <MentorCard key={m.id} mentor={m} checked={value === m.id} onSelect={() => onSelect(m.id)} />)}
+        {q.data.items.map((m) => <MentorCard key={m.id} mentor={m} area={area} checked={value === m.id} onSelect={() => onSelect(m.id)} />)}
       </div>
     </fieldset>
   );
@@ -81,7 +91,7 @@ function Picker({ area, value, onChange, onEmptyChange }: {
       {period && slots.length === 0 && <p className="tw-field__hint" data-testid="p4-period-empty">Sem vagas nesse período. Escolha outro.</p>}
       {slots.length > 0 && (
         <RadioCards legend="Horário" name="slot" value={slotId} stacked
-          options={slots.map((s) => ({ value: s.slotId, label: `${formatTime(s.startAt)} · ${vagas(s.available)}` }))}
+          options={slots.map((s) => ({ value: s.slotId, label: `${formatTime(s.startAt)} · ${vagas(s.available)}${s.otherTracks ? ' · outras trilhas' : ''}` }))}
           onChange={(id) => { setSlotId(id); onChange(null); }} />
       )}
       {slot && <MentorList area={area} slot={slot} value={value?.mentorId ?? null} onSelect={(mentorId) => onChange({ slotId: slot.slotId, mentorId, period: slot.period })} />}

@@ -14,13 +14,13 @@ const notAllowed = () => new AppError('INVALID_STATE', 'Escolher o horário sozi
 const slotTaken = () => new AppError('SLOT_UNAVAILABLE', 'Esse horário acabou de ser ocupado. Escolha outro.');
 
 /**
- * Agenda do evento vista pela participante (RN19): mentoras ativas da área dela, mentorias ativas (`slotLock`) e
- * mesas ativas. Uma consulta de cada; E07 e E08 decidem em cima disso.
+ * Agenda do evento vista pela participante (RN19): mentoras ativas da área dela (`area` null = de todas as trilhas),
+ * mentorias ativas (`slotLock`) e mesas ativas. Uma consulta de cada; E07 e E08 decidem em cima disso.
  */
-async function loadSelfBookContext(ctx: AppContext, event: EventDoc, mentee: Pick<MenteeDoc, 'area'>, session?: ClientSession) {
+async function loadSelfBookContext(ctx: AppContext, event: EventDoc, area: string | null, session?: ClientSession) {
   const opt = session ? { session } : {};
   const [mentors, active, tables] = await Promise.all([
-    ctx.c.users.find({ roles: 'mentor', status: 'active', areas: mentee.area }, { ...opt, projection: { name: 1, availability: 1, email: 1 } }).toArray(),
+    ctx.c.users.find({ roles: 'mentor', status: 'active', ...(area ? { areas: area } : {}) }, { ...opt, projection: { name: 1, availability: 1, email: 1, areas: 1 } }).toArray(),
     ctx.c.appointments.find({ eventId: event._id, slotLock: true }, { ...opt, projection: { slotId: 1, mentorId: 1, tableId: 1, startAt: 1, status: 1 } }).toArray(),
     ctx.c.tables.find({ eventId: event._id, active: true }, opt).sort({ number: 1 }).toArray(),
   ]);
@@ -31,7 +31,7 @@ async function loadSelfBookContext(ctx: AppContext, event: EventDoc, mentee: Pic
 export async function listSelfBookSlots(ctx: AppContext, mentee: MenteeDoc): Promise<E07Response> {
   if (!canSelfBook(mentee)) throw notAllowed();
   const event = await loadEvent(ctx);
-  const { mentors, active, tables } = await loadSelfBookContext(ctx, event, mentee);
+  const { mentors, active, tables } = await loadSelfBookContext(ctx, event, mentee.area);
   const items = selfBookSlots({
     now: ctx.now(),
     minLeadMinutes: event.minLeadMinutes,
@@ -45,67 +45,87 @@ export async function listSelfBookSlots(ctx: AppContext, mentee: MenteeDoc): Pro
   return { items: items.map((s) => ({ slotId: s.slotId, startAt: iso(s.startAt), endAt: iso(s.endAt), matchesPeriod: s.matchesPeriod })) };
 }
 
-/** Mesma agenda, sem participante: o que E58 mostra para quem ainda está se inscrevendo (RN24). */
+/**
+ * Mesma agenda, sem participante: o que E58 mostra para quem ainda está se inscrevendo (RN24). Horário sem mentora da
+ * trilha livre entra com as de outras trilhas (`otherTracks`), como E59 e a gravação (E02) fazem.
+ */
 export async function listPublicSlots(ctx: AppContext, area: string): Promise<E58Response> {
   const event = await loadEvent(ctx);
-  const { mentors, active, tables } = await loadSelfBookContext(ctx, event, { area });
-  const items = selfBookSlots({
+  const { mentors, active, tables } = await loadSelfBookContext(ctx, event, null);
+  const slotsFor = (list: typeof mentors) => selfBookSlots({
     now: ctx.now(),
     minLeadMinutes: event.minLeadMinutes,
     timezone: event.timezone,
     preferredPeriod: 'any',
     slots: event.slots,
-    mentors: mentors.map((m) => ({ id: String(m._id), availability: m.availability })),
+    mentors: list.map((m) => ({ id: String(m._id), availability: m.availability })),
     activeAppointments: active.map((a) => ({ slotId: a.slotId, mentorId: String(a.mentorId), tableId: String(a.tableId) })),
     activeTableIds: tables.map((t) => String(t._id)),
   });
-  return { items: items.map((s) => ({ slotId: s.slotId, startAt: iso(s.startAt), endAt: iso(s.endAt), period: s.period, available: s.available })) };
+  const inTrack = new Map(slotsFor(mentors.filter((m) => m.areas.includes(area))).map((s) => [s.slotId, s]));
+  const items = slotsFor(mentors).map((s) => {
+    const own = inTrack.get(s.slotId);
+    return own ? { ...own, otherTracks: false } : { ...s, otherTracks: true };
+  });
+  return { items: items.map((s) => ({ slotId: s.slotId, startAt: iso(s.startAt), endAt: iso(s.endAt), period: s.period, available: s.available, otherTracks: s.otherTracks })) };
 }
 
-const SLOT_MENTOR_PROJECTION = { name: 1, photoUrl: 1, bio: 1, linkedin: 1 } as const;
+const SLOT_MENTOR_PROJECTION = { name: 1, photoUrl: 1, bio: 1, linkedin: 1, areas: 1 } as const;
 export type SlotMentorDoc = Pick<UserDoc, '_id' | keyof typeof SLOT_MENTOR_PROJECTION>;
 
-/** E59 · até 5 mentoras da trilha, ao acaso, livres no horário; nenhuma se o horário já passou do prazo ou está sem mesa (RN24). */
-export async function sampleSlotMentors(ctx: AppContext, area: string, slotId: string): Promise<SlotMentorDoc[]> {
+/**
+ * E59 · até 5 mentoras da trilha, ao acaso, livres no horário; sem nenhuma da trilha, até 5 de outras trilhas
+ * (`otherTracks`). Nenhuma se o horário já passou do prazo ou está sem mesa (RN24).
+ */
+export async function sampleSlotMentors(ctx: AppContext, area: string, slotId: string): Promise<{ mentors: SlotMentorDoc[]; otherTracks: boolean }> {
   const event = await loadEvent(ctx);
   const slot = event.slots.find((s) => s.id === slotId);
-  if (!slot || slot.startAt.getTime() < ctx.now().getTime() + event.minLeadMinutes * 60_000) return [];
+  const none = { mentors: [], otherTracks: false };
+  if (!slot || slot.startAt.getTime() < ctx.now().getTime() + event.minLeadMinutes * 60_000) return none;
   const [here, tables] = await Promise.all([
     ctx.c.appointments.find({ eventId: event._id, slotId, slotLock: true }, { projection: { mentorId: 1, tableId: 1 } }).toArray(),
     ctx.c.tables.find({ eventId: event._id, active: true }, { projection: { _id: 1 } }).toArray(),
   ]);
   const busyTables = new Set(here.map((a) => String(a.tableId)));
-  if (!tables.some((t) => !busyTables.has(String(t._id)))) return [];
-  return ctx.c.users
+  if (!tables.some((t) => !busyTables.has(String(t._id)))) return none;
+  const sample = (byArea: object) => ctx.c.users
     .aggregate<SlotMentorDoc>([
-      { $match: { roles: 'mentor', status: 'active', areas: area, availability: slotId, _id: { $nin: here.map((a) => a.mentorId) } } },
+      { $match: { roles: 'mentor', status: 'active', ...byArea, availability: slotId, _id: { $nin: here.map((a) => a.mentorId) } } },
       { $sample: { size: 5 } },
       { $project: SLOT_MENTOR_PROJECTION },
     ])
     .toArray();
+  const own = await sample({ areas: area });
+  if (own.length) return { mentors: own, otherTracks: false };
+  return { mentors: await sample({}), otherTracks: true };
 }
 
 type Candidate = { id: string; name: string; activeCount: number };
 type Allocation = { event: EventDoc; slot: EventDoc['slots'][number]; mentorId: ObjectId; mentorName: string; mentorEmail: string; table: TableDoc };
 
-/** Reconfere na transação o horário, a mentora (`pick`, entre as livres) e a mesa (RN24). */
+/**
+ * Reconfere na transação o horário, a mentora (`pick`, entre as livres) e a mesa (RN24). Com `otherTracks`, horário sem
+ * mentora da trilha livre aceita as livres de outras trilhas (P4, como E58/E59).
+ */
 async function allocate(
   ctx: AppContext,
   session: ClientSession,
-  input: { event: EventDoc; area: string; slotId: string; pick: (candidates: Candidate[]) => Candidate | null },
+  input: { event: EventDoc; area: string; slotId: string; pick: (candidates: Candidate[]) => Candidate | null; otherTracks?: boolean },
 ): Promise<Allocation> {
   const { event } = input;
   const slot = event.slots.find((s) => s.id === input.slotId) ?? null;
   if (!slot) throw new AppError('SLOT_UNAVAILABLE', 'Horário inexistente.', { details: { reason: 'not_in_event' } });
 
-  const { mentors, active, tables } = await loadSelfBookContext(ctx, event, { area: input.area }, session);
+  const { mentors, active, tables } = await loadSelfBookContext(ctx, event, input.otherTracks ? null : input.area, session);
   const here = active.filter((a) => a.slotId === slot.id);
   const busyMentors = new Set(here.map((a) => String(a.mentorId)));
   const busyTables = new Set(here.map((a) => String(a.tableId)));
   const activeCount = new Map<string, number>();
   // desempate da RN19 só por mentorias ativas (invited/confirmed/in_progress); `slotLock` também cobre done/no_show
   for (const a of active.filter((x) => isActiveAppointment(x.status))) activeCount.set(String(a.mentorId), (activeCount.get(String(a.mentorId)) ?? 0) + 1);
-  const free = mentors.filter((m) => m.availability.includes(slot.id) && !busyMentors.has(String(m._id)));
+  const freeAll = mentors.filter((m) => m.availability.includes(slot.id) && !busyMentors.has(String(m._id)));
+  const freeInTrack = freeAll.filter((m) => m.areas.includes(input.area));
+  const free = freeInTrack.length ? freeInTrack : input.otherTracks ? freeAll : [];
   const chosen = input.pick(free.map((m) => ({ id: String(m._id), name: m.name, activeCount: activeCount.get(String(m._id)) ?? 0 })));
   const mentor = chosen ? free.find((m) => String(m._id) === chosen.id) : undefined;
   const freeTables = tables.filter((t) => !busyTables.has(String(t._id))).map((t) => ({ id: String(t._id), number: t.number, doc: t }));
@@ -229,6 +249,7 @@ export async function bookOnRegistration(
     area: mentee.area,
     slotId: input.slotId,
     pick: (candidates) => candidates.find((c) => c.id === input.mentorId) ?? null,
+    otherTracks: true,
   });
   await persistBooking(ctx, session, a, mentee, input.ip);
   return { mentorName: a.mentorName, tableLabel: tableLabel(a.table), startAt: iso(a.slot.startAt), endAt: iso(a.slot.endAt) };
