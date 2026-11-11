@@ -222,6 +222,12 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     const updated = await runTxn(ctx, async (session) => {
       const target = await ctx.c.users.findOne({ _id: id, roles: 'mentor' }, { session });
       if (!target) throw notFound('Mentora');
+      // conta de administrador (que também é mentora): só super admin altera, como em E34. O admin pode editar o
+      // próprio cadastro de mentora, mas não o próprio status.
+      const staffTarget = target.roles.includes('admin') || target.roles.includes('super_admin');
+      if (staffTarget && !canGrantAdminRole(user.roles) && (!target._id.equals(user._id) || body.status !== undefined)) {
+        throw new AppError('FORBIDDEN', 'Só super admin altera a conta de um administrador.');
+      }
       const set: Record<string, unknown> = { updatedAt: ctx.now() };
       if (body.name !== undefined) set['name'] = body.name;
       if (body.linkedin !== undefined) {

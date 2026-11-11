@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
       '^/l/': { target: apiTarget, changeOrigin: true, rewrite: (p) => '/api' + p },
     },
   },
-  build: { outDir: 'dist', sourcemap: true },
+  // 'hidden': os mapas continuam gerados (depuração), mas o site publicado não aponta para eles
+  build: { outDir: 'dist', sourcemap: 'hidden' },
 };
 });

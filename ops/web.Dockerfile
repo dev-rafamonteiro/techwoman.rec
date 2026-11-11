@@ -15,7 +15,8 @@ COPY src/shared src/shared
 COPY src/web src/web
 ARG VITE_TURNSTILE_SITE_KEY=
 ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
-RUN npm run -w @tw/shared build && npm run -w @tw/web build
+# mapas de código-fonte ficam fora da imagem publicada (o código das telas não fica legível no site)
+RUN npm run -w @tw/shared build && npm run -w @tw/web build && find src/web/dist -name '*.map' -delete
 
 FROM nginx:alpine AS runtime
 COPY ops/nginx.conf /etc/nginx/nginx.conf
