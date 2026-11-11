@@ -66,7 +66,7 @@ services:
       retries: 3
     depends_on:
       api: { condition: service_healthy }
-    deploy: { resources: { limits: { cpus: "1.0", memory: 256M } } }
+    deploy: { resources: { limits: { cpus: "1.0", memory: 512M } } }
 
   api:
     build: { context: .., dockerfile: ops/api.Dockerfile }
@@ -80,6 +80,8 @@ services:
       TURNSTILE_SECRET_FILE: /run/secrets/turnstile_secret
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
       OUTBOX_KEY_FILE: /run/secrets/outbox_key
+      # heap do V8 abaixo do limite do container: sob pico, o GC aperta antes de o kernel matar o processo
+      NODE_OPTIONS: --max-old-space-size=768
     secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret, outbox_key]
     networks: [app, egress]
     healthcheck:
@@ -88,7 +90,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    deploy: { resources: { limits: { cpus: "1.5", memory: 768M } } }
+    # dimensionado para ~2500 pessoas no dia do evento (um processo Node; o teto real é o Atlas)
+    deploy: { resources: { limits: { cpus: "2.0", memory: 1024M } } }
 
   worker:
     build: { context: .., dockerfile: ops/api.Dockerfile }
@@ -112,7 +115,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    deploy: { resources: { limits: { cpus: "0.5", memory: 384M } } }
+    deploy: { resources: { limits: { cpus: "0.5", memory: 512M } } }
 
 networks:
   edge: {}
