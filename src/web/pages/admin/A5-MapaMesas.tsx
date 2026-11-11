@@ -13,7 +13,7 @@ import './lib/a4-a6.css';
 const linkedinUrl = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linkedin.com') ? `https://${v}` : `https://www.linkedin.com/in/${v}`);
 
 /** Motivos no histórico da mentoria que valem um texto (troca de mesa ou de mentora). */
-const REASON_PT: Record<string, string> = { moved: 'movida', mentor_changed: 'mentora trocada', mentor_no_show: 'mentora não compareceu; trocada' };
+const REASON_PT: Record<string, string> = { moved: 'movida', mentor_changed: 'mentora trocada', mentor_no_show: 'mentora não compareceu' };
 
 const LEGEND = [['invited', 'Horário proposto'], ['confirmed', 'Confirmada'], ['done', 'Concluída'], ['negative', 'Não compareceu'], ['free', 'Livre']] as const;
 
@@ -166,7 +166,6 @@ function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDo
   const isSuper = hasRole('super_admin');
   const canReopen = isSuper && (a.status === 'done' || a.status === 'no_show');
   const canRelease = isSuper && (a.status === 'done' || a.status === 'no_show' || a.status === 'in_progress');
-  const noShowEarly = Date.now() < new Date(a.startAt).getTime() + 10 * 60000;
   const title = `Mesa ${a.table.number} · ${formatTime(a.startAt)}`;
   const m = a.mentee;
   // troca de mentora (time de testes): as livres da trilha da participante; sem nenhuma da trilha, todas as livres
@@ -199,8 +198,12 @@ function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDo
         <div className="a5-detail__acts">
           {a.status === 'invited' && <button type="button" className="a46-pill a46-pill--cta" disabled={busy} onClick={() => void run({ action: 'confirm_in_person' }, 'Presença confirmada.')}>Confirmar presencialmente</button>}
           {a.status === 'confirmed' && (
-            <button type="button" className="a46-pill" disabled={busy || noShowEarly} title={noShowEarly ? 'Disponível 10 min depois do início.' : undefined}
-              onClick={() => { if (window.confirm('Marcar como não compareceu?')) void run({ action: 'no_show' }, 'Marcada como não compareceu.'); }}>Não compareceu</button>
+            <button type="button" className="a46-pill" disabled={busy} data-testid="a5-noshow"
+              onClick={() => { if (window.confirm(`Registrar que ${m.name} não compareceu?`)) void run({ action: 'no_show' }, 'Participante marcada como não compareceu.'); }}>Participante não compareceu</button>
+          )}
+          {canCancel && (
+            <button type="button" className="a46-pill" disabled={busy} data-testid="a5-mentor-noshow"
+              onClick={() => { if (window.confirm(`Registrar que ${a.mentor.name} não compareceu? A mentoria é cancelada e ${m.name} volta para a lista de espera com prioridade.`)) void run({ action: 'cancel', mentorNoShow: true }, 'Falta da mentora registrada; participante de volta à lista de espera.'); }}>Mentora não compareceu</button>
           )}
           {canCancel && (
             <button type="button" className="a46-pill a46-pill--danger" disabled={busy} data-testid="a5-cancel"

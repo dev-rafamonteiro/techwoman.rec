@@ -48,12 +48,18 @@ export function registerAdminAppointmentRoutes(app: FastifyInstance, ctx: AppCon
         }
       } else {
         const action = body.action === 'cancel' ? 'staff_cancel' : body.action;
-        const res = await applyTransition(ctx, session, { appointmentId: id, action, actor, reason: body.action === 'cancel' ? (body.reason ?? null) : null, ip: req.ip }).catch((err: unknown) => {
+        const mentorNoShow = body.action === 'cancel' && body.mentorNoShow;
+        const reason = body.action === 'cancel' ? (mentorNoShow ? 'mentor_no_show' : (body.reason ?? null)) : null;
+        const res = await applyTransition(ctx, session, { appointmentId: id, action, actor, reason, ip: req.ip }).catch((err: unknown) => {
           // reopen devolve a trava da participante: outra mentoria ativa dela bate no índice único
           if (mapDuplicateKeyError(err) === 'MENTEE_TAKEN') throw new AppError('MENTEE_TAKEN', 'Esta participante já tem outra mentoria ativa.');
           throw err;
         });
         if (!res) throw notFound('Mentoria');
+        // mentora não apareceu e não há outra livre: a participante volta à fila e a falta fica nos logs (A9), ligada a ela
+        if (mentorNoShow) {
+          await writeAudit(ctx, session, { actor, action: 'mentor.no_show', entity: 'user', entityId: res.appointment.mentorId, after: { appointmentId: String(id), slotId: res.appointment.slotId, tableId: String(res.appointment.tableId) }, ip: req.ip });
+        }
       }
       return { apptId, warnings };
     });

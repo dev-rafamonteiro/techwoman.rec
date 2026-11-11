@@ -29,6 +29,12 @@ describe("RN09 não compareceu", () => {
     expect(p).toMatchObject({ appointmentTo: "no_show", menteeTo: "no_show" });
     expect(p.locks).toEqual({ slotLock: true, menteeLock: false });
   });
+  it("a equipe (admin, super admin) marca a qualquer hora", () => {
+    for (const role of ["admin", "super_admin"] as const) {
+      const p = planTransition({ action: "no_show", appointment: { status: "confirmed", startAt: start, expiresAt: null }, now: min(start, -30), actor: { userId: "a1", role } });
+      expect(code(p), role).toBe("OK");
+    }
+  });
   it("só de confirmed", () => {
     for (const s of ["invited", "in_progress", "done", "cancelled"] as const)
       expect(code(run("no_show", s, min(start, 30)))).toBe("INVALID_STATE");

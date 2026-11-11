@@ -2,7 +2,7 @@ import type { AppointmentStatus, MenteeStatus, MentorSlotReleasedReason, OutboxT
 import { fail, type Actor, type RuleError } from './types.js';
 import { locksFor } from './status.js';
 
-/** RN09 · não compareceu só a partir de startAt + 10 min. */
+/** RN09 · a mentora só marca não compareceu a partir de startAt + 10 min (a equipe, admin ou super admin, a qualquer hora). */
 export const NO_SHOW_AFTER_MINUTES = 10;
 
 export type TransitionAction =
@@ -172,10 +172,10 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       return plan(from, 'done', 'done', 'appointment.finish');
     }
     case 'no_show': {
-      // RN09 · só `confirmed` e a partir de startAt + 10 min.
+      // RN09 · só `confirmed`; para a mentora, a partir de startAt + 10 min (a equipe no salão decide a hora).
       if (from !== 'confirmed') return invalid(from, 'marcar como não compareceu');
       const earliest = i.appointment.startAt.getTime() + NO_SHOW_AFTER_MINUTES * 60_000;
-      if (now.getTime() < earliest) {
+      if (i.actor.role === 'mentor' && now.getTime() < earliest) {
         return fail('TOO_EARLY', `Só é possível marcar não compareceu ${NO_SHOW_AFTER_MINUTES} min após o início.`);
       }
       return plan(from, 'no_show', 'no_show', 'appointment.no_show');
