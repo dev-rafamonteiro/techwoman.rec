@@ -22,9 +22,12 @@ export const E02BodySchema = z
     area: AreaKeySchema,
     /** Tema dentro da trilha (`area`), do catálogo em trilhas.ts. */
     theme: z.string().trim().min(1).max(MENTOR_THEME_MAX).optional(),
-    /** Horário e mentora escolhidos em P4 (E58, E59); a mesa é automática (RN24). */
-    slotId: SlotIdSchema,
-    mentorId: IdSchema,
+    /**
+     * Horário e mentora escolhidos em P4 (E58, E59); a mesa é automática (RN24). Os dois juntos ou nenhum: sem
+     * nenhum horário livre no evento, a inscrição entra na fila de espera (a API recusa se ainda houver vaga).
+     */
+    slotId: SlotIdSchema.optional(),
+    mentorId: IdSchema.optional(),
     note: z.string().trim().max(MENTEE_NOTE_MAX).optional(),
     /** Resultado da gamificação (P2): pontuação por área. */
     quizScores: z.record(z.string().max(40), z.number().min(0).max(1000)).optional(),
@@ -32,17 +35,21 @@ export const E02BodySchema = z
     /** Obrigatório enquanto o Turnstile estiver ligado no evento (A7); a API confere. */
     turnstileToken: z.string().min(1).max(4096).optional(),
   })
-  .strict();
+  .strict()
+  .refine((b) => (b.slotId === undefined) === (b.mentorId === undefined), { message: 'Envie horário e mentora juntos.', path: ['mentorId'] });
 export type E02Body = z.infer<typeof E02BodySchema>;
 
-/** 201: inscrição criada (ou reativada, RN01) já com a mentoria confirmada (RN24). Devolve o token, o caminho de P6 e o link curto (E48). */
+/**
+ * 201: inscrição criada (ou reativada, RN01) já com a mentoria confirmada (RN24), ou na fila de espera quando não
+ * havia horário livre (`appointment: null`). Devolve o token, o caminho de P6 e o link curto (E48).
+ */
 export const E02CreatedSchema = z.object({
   status: z.literal('created'),
   token: z.string(),
   personalPath: z.string().describe('/mentoria/minha?t=<token>'),
   /** Link curto de P6 (E48, `kind = personal`): o que P5 mostra e copia. */
   shortPath: z.string().describe('/l/<código>'),
-  appointment: z.object({ mentorName: z.string(), tableLabel: z.string(), startAt: IsoDateTimeSchema, endAt: IsoDateTimeSchema }),
+  appointment: z.object({ mentorName: z.string(), tableLabel: z.string(), startAt: IsoDateTimeSchema, endAt: IsoDateTimeSchema }).nullable(),
 });
 export type E02Created = z.infer<typeof E02CreatedSchema>;
 /** 200: e-mail ou celular de uma inscrição ativa do evento (RN01); nada é gravado nem enviado. */

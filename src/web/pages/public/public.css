@@ -244,3 +244,5 @@ span.tw-star svg { width: 24px; height: 24px; }
 
 /* P4: caixa do Turnstile. Quando a Cloudflare pede um toque, ganha moldura e aviso. */
 .tw-ts--ask { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 2px solid var(--tw-orange-500); border-radius: 14px; background: var(--tw-orange-100); color: var(--tw-orange-900); }
+.tw-banner--wait { background: var(--tw-orange-100); color: var(--tw-orange-900); flex-direction: column; gap: 6px; }
+.tw-banner--wait strong { font-weight: 800; }

@@ -29,7 +29,8 @@ interface Values {
   consent: boolean;
 }
 
-function validate(v: Values): Partial<Record<Field, string>> {
+/** `waiting`: sem nenhum horário livre (P4 mostra o aviso), a inscrição vai sem horário para a fila de espera. */
+function validate(v: Values, waiting: boolean): Partial<Record<Field, string>> {
   const e: Partial<Record<Field, string>> = {};
   if (v.name.trim().split(/\s+/).length < 2) e.name = 'Informe nome e sobrenome.';
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) e.email = 'Digite um e-mail válido.';
@@ -37,7 +38,7 @@ function validate(v: Values): Partial<Record<Field, string>> {
   if (v.linkedin && !/^([a-z0-9-]{3,100}|(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-z0-9-]{3,100}\/?)$/i.test(v.linkedin.trim())) {
     e.linkedin = 'Use seu usuário ou o link completo do perfil.';
   }
-  if (!v.choice) e.mentor = 'Escolha o horário e a mentora.';
+  if (!v.choice && !waiting) e.mentor = 'Escolha o horário e a mentora.';
   if (v.note.length > NOTE_MAX) e.note = `Use no máximo ${NOTE_MAX} caracteres.`;
   if (!v.consent) e.consent = 'Precisamos do seu consentimento para continuar.';
   return e;
@@ -80,7 +81,7 @@ export default function P4Inscricao() {
     },
   });
 
-  const errors = validate(values);
+  const errors = validate(values, slotsEmpty);
   const shown = (f: Field) => (touched[f] ? errors[f] : undefined);
   const set = <K extends keyof Values>(k: K, val: Values[K]) => setValues((p) => ({ ...p, [k]: val }));
   const touch = (f: Field) => setTouched((p) => ({ ...p, [f]: true }));
@@ -127,8 +128,7 @@ export default function P4Inscricao() {
           ...(values.linkedin.trim() ? { linkedin: values.linkedin.trim() } : {}),
           area: effArea,
           ...(values.theme ? { theme: values.theme } : {}),
-          slotId: values.choice!.slotId,
-          mentorId: values.choice!.mentorId,
+          ...(values.choice ? { slotId: values.choice.slotId, mentorId: values.choice.mentorId } : {}),
           ...(values.note.trim() ? { note: values.note.trim() } : {}),
           ...(journey?.scores ? { quizScores: journey.scores } : {}),
           consent: { accepted: true, version: ev.consentVersion },
@@ -140,10 +140,10 @@ export default function P4Inscricao() {
         setAlready(true);
         return;
       }
-      track('inscricao_concluida', { area: effArea, periodo: values.choice!.period });
+      track('inscricao_concluida', { area: effArea, periodo: values.choice?.period ?? 'any' });
       const links = { personalPath: res.personalPath, shortPath: res.shortPath };
       savePersonalPath(links);
-      navigate(paths.ok, { state: { ...links, appointment: res.appointment } });
+      navigate(paths.ok, { state: { ...links, appointment: res.appointment, waiting: res.appointment === null } });
     } catch (err) {
       const ae = err instanceof ApiError ? err : null;
       const tsCode = (ae?.details as { turnstile?: string } | undefined)?.turnstile;
@@ -218,7 +218,7 @@ export default function P4Inscricao() {
           <div ref={tsBox} />
         </div>
         {ev.turnstileEnabled && <p className="tw-field__hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>Verificação de segurança automática ativa</p>}
-        <Button type="submit" size="lg" block loading={submitting} disabled={slotsEmpty} data-testid="p4-submit">Quero ser mentorada</Button>
+        <Button type="submit" size="lg" block loading={submitting} data-testid="p4-submit">{slotsEmpty ? 'Entrar na fila de espera' : 'Quero ser mentorada'}</Button>
       </form>
       {toten && <Overlay title="Aviso de privacidade" open={privacy} onClose={() => setPrivacy(false)}><Privacidade /></Overlay>}
     </div>

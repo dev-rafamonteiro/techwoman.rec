@@ -12,8 +12,10 @@ const TOTEN_RESTART_S = 30;
 /** P5 · Mentoria confirmada (links de E02, guardados por P4; RN24) */
 export default function P5InscricaoOk() {
   const location = useLocation();
-  const state = location.state as (PersonalLinks & { appointment?: E02Created['appointment'] }) | null;
+  const state = location.state as (PersonalLinks & { appointment?: E02Created['appointment']; waiting?: boolean }) | null;
   const appointment = state?.appointment ?? null;
+  /** Sem horário livre na inscrição: entrou na fila de espera (E02 com `appointment: null`). */
+  const waiting = state?.waiting === true;
   const links = state?.personalPath ? state : loadPersonalPath();
   const path = links?.personalPath ?? null;
   // mostra e copia o link curto (E48); o botão navega pelo caminho longo, porque /l/ não é rota do React
@@ -56,10 +58,12 @@ export default function P5InscricaoOk() {
         <span className="tw-shape tw-shape--square" />
         <span className="tw-shape tw-shape--half" />
       </div>
-      <h1 className="tw-title">{appointment ? 'Mentoria confirmada!' : 'Inscrição confirmada!'}</h1>
+      <h1 className="tw-title">{appointment ? 'Mentoria confirmada!' : waiting ? 'Você está na fila de espera!' : 'Inscrição confirmada!'}</h1>
       {appointment
         ? <p data-testid="p5-appointment"><strong>{appointment.tableLabel}</strong> · {formatRange(appointment.startAt, appointment.endAt)} · com {appointment.mentorName}</p>
-        : <p>Os detalhes da sua mentoria estão na sua página pessoal e no e-mail de confirmação.</p>}
+        : waiting
+          ? <p data-testid="p5-waiting">Sua inscrição foi recebida. Todos os horários estavam ocupados, então você entrou na fila de espera. Se preferir, procure uma organizadora do evento.</p>
+          : <p>Os detalhes da sua mentoria estão na sua página pessoal e no e-mail de confirmação.</p>}
       {toten ? (
         // tela compartilhada: o link pessoal é credencial, vai só por e-mail
         <>
@@ -81,11 +85,19 @@ export default function P5InscricaoOk() {
       )}
       </>}
       <strong>O que acontece agora</strong>
-      <ol className="tw-steps">
-        <li>Você recebe a confirmação por e-mail.</li>
-        <li>Se precisar, troque o horário pela sua página pessoal.</li>
-        <li>Chegue 5 minutos antes na mesa indicada.</li>
-      </ol>
+      {waiting ? (
+        <ol className="tw-steps">
+          <li>Você recebe por e-mail a confirmação da inscrição, com o link da sua página pessoal.</li>
+          <li>Quando uma mentora for associada a você, enviamos outro e-mail com o horário e a mesa.</li>
+          <li>Acompanhe tudo pela sua página pessoal.</li>
+        </ol>
+      ) : (
+        <ol className="tw-steps">
+          <li>Você recebe a confirmação por e-mail.</li>
+          <li>Se precisar, troque o horário pela sua página pessoal.</li>
+          <li>Chegue 5 minutos antes na mesa indicada.</li>
+        </ol>
+      )}
     </div>
   );
 }

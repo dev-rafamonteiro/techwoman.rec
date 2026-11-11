@@ -133,6 +133,8 @@ describe("contratos: aceita/rejeita (E02, E04, E10, E21, E24, E26, E39)", () => 
     expect(E02BodySchema.safeParse({ ...e02, preferredPeriod: "morning" }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, slotId: undefined }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, mentorId: undefined }).success).toBe(false);
+    // sem horário nem mentora: fila de espera (a API só aceita se não houver horário livre)
+    expect(E02BodySchema.safeParse({ ...e02, slotId: undefined, mentorId: undefined }).success).toBe(true);
     expect(E02BodySchema.safeParse({ ...e02, name: "A" }).success).toBe(false);
     expect(E02BodySchema.safeParse({ ...e02, note: "x".repeat(295) }).success).toBe(true);
     expect(E02BodySchema.safeParse({ ...e02, note: "x".repeat(296) }).success).toBe(false);

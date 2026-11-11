@@ -76,8 +76,10 @@ function Picker({ area, value, onChange, onEmptyChange }: {
   if (q.status === 'error') return <ErrorState error={q.error} onRetry={() => void q.reload()} />;
   if (empty) {
     return (
-      <div className="tw-banner tw-banner--err" role="alert" data-testid="p4-no-slots">
-        Não há horários disponíveis nesta trilha. Procure uma organizadora do evento.
+      <div className="tw-banner tw-banner--wait" role="status" data-testid="p4-no-slots">
+        <strong>Todos os horários estão ocupados no momento.</strong>
+        <span>Você pode se inscrever mesmo assim: você entra na <b>fila de espera</b> e recebe um e-mail de confirmação da inscrição. Assim que uma mentora for associada a você, avisamos por e-mail com o horário e a mesa.</span>
+        <span>Se preferir, procure uma organizadora do evento.</span>
       </div>
     );
   }
