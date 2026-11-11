@@ -21,9 +21,6 @@ function Portrait({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
 
 function MentorCard({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
   const expertise = mentor.areas.map((a) => a.label).join(' · ');
-  const tracks = trackKeysForSpecialties(mentor.themes)
-    .map((key) => KNOWLEDGE_TRACKS.find((track) => track.key === key))
-    .filter((track) => track !== undefined);
   return (
     <article className="tw-p7__card" data-testid="p7-card">
       <Portrait mentor={mentor} tone={tone} />
@@ -34,11 +31,6 @@ function MentorCard({ mentor, tone }: { mentor: PublicMentor; tone: number }) {
           {expertise && <p className="tw-p7__expertise">{expertise}</p>}
         </div>
         {mentor.bio && <p className="tw-p7__bio">{mentor.bio}</p>}
-        {tracks.length > 0 && (
-          <ul className="tw-p7__themes" aria-label="Trilhas de conhecimento">
-            {tracks.map((track) => <li key={track.key}>{track.label}</li>)}
-          </ul>
-        )}
         {mentor.themes.length > 0 && (
           <ul className="tw-p7__themes" aria-label="Temas">
             {mentor.themes.map((t, i) => <li key={`${i}-${t}`}>{canonicalSpecialty(t)}</li>)}
