@@ -315,8 +315,8 @@ function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone
               <li key={x.id}>
                 <label className={x.id === menteeId ? 'is-on' : undefined}>
                   <input type="radio" name="a5-pull-mentee" checked={x.id === menteeId} onChange={() => { setMenteeId(x.id); setMentorId(''); }} />
-                  <span>
-                    <b>{x.name}</b>{x.priority && <> <PriorityBadge /></>}
+                  <span className="a5-queue__txt">
+                    <span className="a5-queue__name"><b>{x.name}</b>{x.priority && <PriorityBadge />}</span>
                     <small>{areaLabel(x.area)} · na fila desde {formatDateTime(x.queuedAt)}</small>
                   </span>
                 </label>

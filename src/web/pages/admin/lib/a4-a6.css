@@ -153,5 +153,9 @@ button.a5-cell.a5-t--free { cursor: pointer; }
 .a5-queue label { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--tw-lilac-200); border-radius: 10px; cursor: pointer; }
 .a5-queue label.is-on { border-color: var(--tw-purple-600); background: var(--tw-lilac-100); }
 .a5-queue input { margin: 3px 0 0; accent-color: var(--tw-purple-600); }
-.a5-queue span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.a5-queue__txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.a5-queue__name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+/* selo de prioridade discreto na lista: estrela e texto na mesma linha, caixa justa */
+.a5-queue .tw-badge--priority { display: inline-flex; flex-direction: row; align-items: center; gap: 3px; min-height: 0; padding: 1px 7px; border-radius: 999px; font-size: 11px; line-height: 1.4; }
+.a5-queue .tw-badge--priority svg { width: 11px; height: 11px; }
 .a5-queue small { color: var(--tw-muted); font-size: 12px; }
