@@ -1,6 +1,5 @@
 import { Suspense, lazy, type ComponentType } from 'react';
 import { Navigate, Outlet, useParams, type RouteObject } from 'react-router-dom';
-import { NotFoundState } from '../ui/components/States';
 import { SkeletonList } from '../ui/components/States';
 import { RequireRole } from './auth';
 const Gallery = lazy(() => import('../ui/Gallery'));
@@ -107,7 +106,8 @@ export const routes: RouteObject[] = [
     { path: '/admin/avaliacoes', element: el('admin', 'A10') },
   ] },
   ...(import.meta.env.DEV ? [{ path: '/_ui', element: <Suspense fallback={null}><Gallery /></Suspense> }] : []),
-  { path: '*', element: <div className="tw-page"><NotFoundState /></div> },
+  // endereço sem tela: página própria (pages/public/NaoEncontrada*.tsx) que volta ao início em 5 s
+  { path: '*', element: el('public', 'NaoEncontrada') },
 ];
 
 /** Para as páginas lerem `:id` de A3 sem importar o router. */
