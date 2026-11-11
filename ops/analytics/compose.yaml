@@ -19,6 +19,8 @@ services:
     environment:
       DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?defina UMAMI_DB_PASSWORD}@umami-db:5432/umami
       APP_SECRET: ${UMAMI_APP_SECRET:?defina UMAMI_APP_SECRET}
+      # 2FA (TOTP) do painel: cifra os segredos guardados no banco; trocar a chave invalida o 2FA já cadastrado
+      TWO_FACTOR_ENCRYPTION_KEY: ${UMAMI_TWO_FACTOR_KEY:?defina UMAMI_TWO_FACTOR_KEY}
       DISABLE_TELEMETRY: "1"
       DISABLE_UPDATES: "1"
     networks:
