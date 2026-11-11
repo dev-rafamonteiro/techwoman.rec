@@ -231,7 +231,8 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       }
       return created(doc, appointment);
     },
-    { rateLimit: { max: 300, timeWindow: '10 minutes' } },
+    // por IP (Wi-Fi do evento e operadoras saem por poucos IPs): alto; a defesa contra robô é o Turnstile
+    { rateLimit: { max: 3000, timeWindow: '10 minutes' } },
   );
 
   // E03 · GET /public/me
@@ -403,6 +404,6 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       }
       return respond(202, { ok: true as const });
     },
-    { rateLimit: { max: 300, timeWindow: '10 minutes' } },
+    { rateLimit: { max: 3000, timeWindow: '10 minutes' } },
   );
 }
