@@ -48,6 +48,18 @@ export const E39PatchBodySchema = z.discriminatedUnion('action', [
       ignoreLeadTime: z.boolean().default(false),
     })
     .strict(),
+  /**
+   * Troca a mentora (mesma mesa e horário), quando a original não aparece. `mentorNoShow` registra a falta dela na
+   * auditoria. A antecedência mínima não vale (é na hora); a disponibilidade, só com `ignoreAvailability`.
+   */
+  z
+    .object({
+      action: z.literal('change_mentor'),
+      mentorId: IdSchema,
+      mentorNoShow: z.boolean().default(false),
+      ignoreAvailability: z.boolean().default(false),
+    })
+    .strict(),
   z.object({ action: z.literal('cancel'), reason: z.string().trim().max(200).optional() }).strict(),
   z.object({ action: z.literal('no_show') }).strict(),
   z.object({ action: z.literal('confirm_in_person') }).strict(),

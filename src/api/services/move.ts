@@ -4,7 +4,7 @@ import type { AppContext } from '../ctx.js';
 import { loadEvent } from '../ctx.js';
 import { AppError, notFound } from '../lib/errors.js';
 import { writeAudit } from '../lib/audit.js';
-import { enqueueMenteeNotifications, enqueueReminders } from '../lib/outbox.js';
+import { enqueueMenteeNotifications, enqueueMentorBooked, enqueueReminders } from '../lib/outbox.js';
 import { checkInvite, type Actor, type InviteWarning } from '../domain/index.js';
 import { insertAppointment, newAppointmentDoc } from './appointments.js';
 import { applyTransition } from './transitions.js';
@@ -13,20 +13,23 @@ import { applyTransition } from './transitions.js';
  * E39 · mover (mesma transação): o registro antigo vira `cancelled` (sem prioridade, motivo `moved`) e um novo nasce
  * `confirmed`, mantendo a confirmação da participante, que recebe aviso com o novo horário/mesa. A ordem importa:
  * primeiro retira as travas do antigo, depois insere o novo (índice de participante).
+ * `mentorId`: troca a mentora (mesma mesa e horário, quando a original não aparece); a nova recebe o aviso `mentor_booked`.
  */
 export async function moveAppointment(
   ctx: AppContext,
   session: ClientSession,
-  input: { appointmentId: ObjectId; slotId: string; tableId: ObjectId; ignoreAvailability?: boolean; ignoreLeadTime?: boolean; actor: Actor; ip?: string | null },
+  input: { appointmentId: ObjectId; slotId: string; tableId: ObjectId; mentorId?: ObjectId; reason?: string; ignoreAvailability?: boolean; ignoreLeadTime?: boolean; actor: Actor; ip?: string | null },
 ): Promise<{ appointment: AppointmentDoc; warnings: InviteWarning[] }> {
   const now = ctx.now();
   const event = await loadEvent(ctx, session);
   const old = await ctx.c.appointments.findOne({ _id: input.appointmentId }, { session });
   if (!old) throw notFound('Mentoria');
-  if (old.slotId === input.slotId && old.tableId.equals(input.tableId)) {
-    throw new AppError('VALIDATION_ERROR', 'Escolha outra mesa ou outro horário.');
+  const mentorId = input.mentorId ?? old.mentorId;
+  const mentorChanged = !mentorId.equals(old.mentorId);
+  if (old.slotId === input.slotId && old.tableId.equals(input.tableId) && !mentorChanged) {
+    throw new AppError('VALIDATION_ERROR', input.mentorId ? 'Escolha outra mentora.' : 'Escolha outra mesa ou outro horário.');
   }
-  const [mentor, table] = await Promise.all([ctx.c.users.findOne({ _id: old.mentorId }, { session }), ctx.c.tables.findOne({ _id: input.tableId, eventId: event._id }, { session })]);
+  const [mentor, table] = await Promise.all([ctx.c.users.findOne({ _id: mentorId, roles: 'mentor' }, { session }), ctx.c.tables.findOne({ _id: input.tableId, eventId: event._id }, { session })]);
   if (!mentor) throw notFound('Mentora');
   const slot = event.slots.find((s) => s.id === input.slotId) ?? null;
   const check = checkInvite({
@@ -40,32 +43,35 @@ export async function moveAppointment(
   if (!check.ok) throw new AppError('SLOT_UNAVAILABLE', check.message, { details: { reason: check.reason } });
   if (!slot) throw new AppError('SLOT_UNAVAILABLE', 'Horário inexistente.', { details: { reason: 'not_in_event' } });
 
-  const cancelled = await applyTransition(ctx, session, { appointmentId: old._id, action: 'move_cancel', actor: input.actor, reason: 'moved', ip: input.ip ?? null });
+  const reason = input.reason ?? 'moved';
+  const cancelled = await applyTransition(ctx, session, { appointmentId: old._id, action: 'move_cancel', actor: input.actor, reason, ip: input.ip ?? null });
   if (!cancelled) throw notFound('Mentoria');
   const actorRole = input.actor.role === 'super_admin' ? 'super_admin' : 'admin';
   const fresh = newAppointmentDoc({
     eventId: event._id,
     menteeId: old.menteeId,
-    mentorId: old.mentorId,
+    mentorId,
     tableId: input.tableId,
     slotId: slot.id,
     startAt: slot.startAt,
     endAt: slot.endAt,
     status: 'confirmed',
     expiresAt: null,
-    createdBy: { userId: old.createdBy.userId, role: old.createdBy.role },
+    // outra mentora: quem criou passa a ser a equipe que trocou
+    createdBy: mentorChanged && input.actor.userId ? { userId: new ObjectId(input.actor.userId), role: actorRole } : { userId: old.createdBy.userId, role: old.createdBy.role },
     confirmedBy: old.confirmedBy,
     movedFromId: old._id,
-    history: { from: null, to: 'confirmed', by: { userId: input.actor.userId ? new ObjectId(input.actor.userId) : null, role: actorRole }, at: now, reason: 'moved' },
+    history: { from: null, to: 'confirmed', by: { userId: input.actor.userId ? new ObjectId(input.actor.userId) : null, role: actorRole }, at: now, reason },
     now,
   });
   await insertAppointment(ctx, session, fresh);
   // a mentora precisa continuar ativa no horário novo: mesma trava de concorrência de E24
-  await ctx.c.users.updateOne({ _id: old.mentorId }, { $set: { updatedAt: now } }, { session });
+  await ctx.c.users.updateOne({ _id: mentorId }, { $set: { updatedAt: now } }, { session });
   const mentee = await ctx.c.mentees.findOneAndUpdate({ _id: old.menteeId }, { $set: { currentAppointmentId: fresh._id, updatedAt: now }, $inc: { version: 1 } }, { session, returnDocument: 'after' });
   if (!mentee) throw notFound('Participante');
   await enqueueMenteeNotifications(ctx, session, { type: 'moved', mentee, appointmentId: fresh._id });
+  if (mentorChanged) await enqueueMentorBooked(ctx, session, { mentor, appointmentId: fresh._id });
   await enqueueReminders(ctx, session, mentee, fresh);
-  await writeAudit(ctx, session, { actor: input.actor, action: 'appointment.move_to', entity: 'appointment', entityId: fresh._id, before: { appointmentId: String(old._id), slotId: old.slotId, tableId: String(old.tableId) }, after: { slotId: fresh.slotId, tableId: String(fresh.tableId) }, ip: input.ip ?? null });
+  await writeAudit(ctx, session, { actor: input.actor, action: 'appointment.move_to', entity: 'appointment', entityId: fresh._id, before: { appointmentId: String(old._id), slotId: old.slotId, tableId: String(old.tableId), mentorId: String(old.mentorId) }, after: { slotId: fresh.slotId, tableId: String(fresh.tableId), mentorId: String(mentorId), reason }, ip: input.ip ?? null });
   return { appointment: fresh, warnings: check.warnings };
 }

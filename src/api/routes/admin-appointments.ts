@@ -4,7 +4,7 @@ import { E39Patch } from '@tw/shared';
 import { mapDuplicateKeyError } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, notFound } from '../lib/errors.js';
-import { actorForRoute } from '../lib/audit.js';
+import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { route } from '../lib/route.js';
 import { adminAppointmentViews } from '../services/admin-views.js';
 import { applyTransition } from '../services/transitions.js';
@@ -28,6 +28,24 @@ export function registerAdminAppointmentRoutes(app: FastifyInstance, ctx: AppCon
         const moved = await moveAppointment(ctx, session, { appointmentId: id, slotId: body.slotId, tableId: new ObjectId(body.tableId), ignoreAvailability: body.ignoreAvailability, ignoreLeadTime: body.ignoreLeadTime, actor, ip: req.ip });
         apptId = moved.appointment._id;
         warnings = moved.warnings;
+      } else if (body.action === 'change_mentor') {
+        if (!ObjectId.isValid(body.mentorId)) throw new AppError('VALIDATION_ERROR', 'Mentora inválida.');
+        const old = await ctx.c.appointments.findOne({ _id: id }, { session });
+        if (!old) throw notFound('Mentoria');
+        const moved = await moveAppointment(ctx, session, {
+          appointmentId: id, slotId: old.slotId, tableId: old.tableId, mentorId: new ObjectId(body.mentorId),
+          reason: body.mentorNoShow ? 'mentor_no_show' : 'mentor_changed',
+          ignoreAvailability: body.ignoreAvailability, ignoreLeadTime: true, actor, ip: req.ip,
+        }).catch((err: unknown) => {
+          if (mapDuplicateKeyError(err) === 'MENTOR_BUSY') throw new AppError('MENTOR_BUSY', 'Essa mentora já tem mentoria nesse horário.');
+          throw err;
+        });
+        apptId = moved.appointment._id;
+        warnings = moved.warnings.filter((w) => w !== 'LEAD_TIME_SHORT');
+        // a falta da mentora original fica nos logs (A9), ligada a ela
+        if (body.mentorNoShow) {
+          await writeAudit(ctx, session, { actor, action: 'mentor.no_show', entity: 'user', entityId: old.mentorId, after: { appointmentId: String(apptId), slotId: old.slotId, tableId: String(old.tableId) }, ip: req.ip });
+        }
       } else {
         const action = body.action === 'cancel' ? 'staff_cancel' : body.action;
         const res = await applyTransition(ctx, session, { appointmentId: id, action, actor, reason: body.action === 'cancel' ? (body.reason ?? null) : null, ip: req.ip }).catch((err: unknown) => {

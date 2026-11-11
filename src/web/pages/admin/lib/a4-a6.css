@@ -146,3 +146,12 @@ button.a5-cell:focus-visible { outline: 3px solid var(--color-focus); }
 .a6 .adm-switch[aria-checked='true'] i::after { left: 21px; }
 .a6-edit { cursor: pointer; min-height: 44px; border: 0; background: none; color: var(--tw-purple-600); font: inherit; font-weight: 800; font-size: 14px; padding: 0 4px; text-decoration: underline; text-underline-offset: 3px; }
 .a6-edit:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+
+/* A5: lista de espera ao clicar numa mesa livre (prioridade primeiro, com o horário de entrada na fila) */
+button.a5-cell.a5-t--free { cursor: pointer; }
+.a5-queue { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+.a5-queue label { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--tw-lilac-200); border-radius: 10px; cursor: pointer; }
+.a5-queue label.is-on { border-color: var(--tw-purple-600); background: var(--tw-lilac-100); }
+.a5-queue input { margin: 3px 0 0; accent-color: var(--tw-purple-600); }
+.a5-queue span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.a5-queue small { color: var(--tw-muted); font-size: 12px; }

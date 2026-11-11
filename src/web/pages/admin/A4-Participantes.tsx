@@ -6,6 +6,7 @@ import {
   call, callBlob, formatDateTime, formatTime, saveBlob, useQuery, useToast, PERIOD_LABELS, maskPhone, type Column,
 } from '../../ui';
 import { PageHead, errMsg, useAreas, useDebounced, useTitle } from './lib/common';
+import { mentorsWithFreeSlot } from './lib/free-mentors';
 import './lib/a4-a6.css';
 
 const phoneFmt = (p: string | null) => (p ? maskPhone(p.replace(/^\+55/, '')) : '—');
@@ -242,10 +243,19 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
 
 /** Agendar manualmente (E39): M5ScheduleDrawer do web-app com mentorPicker, loadOptions (E38 + disponibilidade) e onSubmit (E39Create). */
 function ManualSchedule({ open, mentee, areaLabel, onClose, onDone }: { areaLabel: (k: string) => string; open: boolean; mentee: MenteeAdminView; onClose: () => void; onDone: () => Promise<void> }) {
-  const mentors = useQuery((s) => call(ENDPOINTS.E31List, { query: { status: 'active' }, signal: s }), []);
+  // mentoras e grade juntas: só aparecem as que têm horário livre (disponível, sem mentoria e com mesa livre)
+  const mentors = useQuery(async (s) => {
+    const [list, sched] = await Promise.all([call(ENDPOINTS.E31List, { query: { status: 'active' }, signal: s }), call(ENDPOINTS.E38, { signal: s })]);
+    return mentorsWithFreeSlot(list.items, sched, Date.now());
+  }, [open]);
   const [mentorId, setMentorId] = useState('');
   useEffect(() => { if (!open) setMentorId(''); }, [open]);
-  const mentor = mentors.status === 'success' ? mentors.data.items.find((m) => m.id === mentorId) : undefined;
+  const mentor = mentors.status === 'success' ? mentors.data.find((x) => x.mentor.id === mentorId)?.mentor : undefined;
+  const ownTrack = mentors.status === 'success' ? mentors.data.filter((x) => x.mentor.areas.includes(mentee.area)) : [];
+  const others = mentors.status === 'success' ? mentors.data.filter((x) => !x.mentor.areas.includes(mentee.area)) : [];
+  const option = (x: (typeof ownTrack)[number]) => (
+    <option key={x.mentor.id} value={x.mentor.id}>{x.mentor.name} · {x.slots.length} {x.slots.length === 1 ? 'horário livre' : 'horários livres'}</option>
+  );
 
   const loadOptions = async (slotId?: string): Promise<E23Response> => {
     const sched = await call(ENDPOINTS.E38);
@@ -264,10 +274,14 @@ function ManualSchedule({ open, mentee, areaLabel, onClose, onDone }: { areaLabe
     <div data-testid="manual-schedule">
       {mentors.status === 'loading' && <SkeletonList rows={1} height={56} />}
       {mentors.status === 'error' && <ErrorState error={mentors.error} onRetry={mentors.reload} />}
-      {mentors.status === 'success' && (
-        <SelectField label="Mentora" value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
+      {mentors.status === 'success' && mentors.data.length === 0 && (
+        <p className="tw-field__hint" data-testid="manual-no-mentors">Nenhuma mentora com horário e mesa livres no momento.</p>
+      )}
+      {mentors.status === 'success' && mentors.data.length > 0 && (
+        <SelectField label="Mentora" hint="Só mentoras com horário livre." value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
           <option value="">Escolha…</option>
-          {mentors.data.items.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          {ownTrack.length > 0 && <optgroup label={`Da trilha ${areaLabel(mentee.area)}`}>{ownTrack.map(option)}</optgroup>}
+          {others.length > 0 && <optgroup label="Outras trilhas">{others.map(option)}</optgroup>}
         </SelectField>
       )}
     </div>

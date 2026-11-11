@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ADMIN_STREAM_EVENT_TYPES, ENDPOINTS, type AdminAppointmentView, type AdminStreamEvent, type E39PatchBody } from '@tw/shared';
+import { ADMIN_STREAM_EVENT_TYPES, ENDPOINTS, type AdminAppointmentView, type AdminStreamEvent, type E39PatchBody, type MenteeAdminView, type MentorListItem } from '@tw/shared';
 import {
   ApiError, Button, CheckboxField, ConnectionBar, EmptyState, ErrorState, Overlay, PriorityBadge, SkeletonList, STATUS_LOOK, StatusBadge,
   call, formatDateTime, formatRange, formatTime, phoneFromE164, useAuth, useEventStream, useQuery, useToast,
 } from '../../ui';
 import { PageHead, errMsg, useAreas, useTitle } from './lib/common';
 import { nowWindow } from './lib/now-window';
+import { mentorsFreeAt, trackFirst } from './lib/free-mentors';
 import './lib/a4-a6.css';
 
 /** Legenda do design (cor + texto); "Em andamento" usa o tom de Confirmada. */
 const linkedinUrl = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linkedin.com') ? `https://${v}` : `https://www.linkedin.com/in/${v}`);
+
+/** Motivos no histórico da mentoria que valem um texto (troca de mesa ou de mentora). */
+const REASON_PT: Record<string, string> = { moved: 'movida', mentor_changed: 'mentora trocada', mentor_no_show: 'mentora não compareceu; trocada' };
 
 const LEGEND = [['invited', 'Horário proposto'], ['confirmed', 'Confirmada'], ['done', 'Concluída'], ['negative', 'Não compareceu'], ['free', 'Livre']] as const;
 
@@ -19,6 +23,10 @@ export default function A5MapaMesas() {
   const toast = useToast();
   const { label: areaLabel } = useAreas();
   const q = useQuery((signal) => call(ENDPOINTS.E38, { signal }), []);
+  // mentoras ativas: para trocar a mentora de uma mentoria e para puxar alguém da fila numa mesa livre
+  const mentorList = useQuery((signal) => call(ENDPOINTS.E31List, { query: { status: 'active' }, signal }), []);
+  const mentors = mentorList.status === 'success' ? mentorList.data.items : [];
+  const [freeCell, setFreeCell] = useState<{ slotId: string; tableId: string } | null>(null);
   const [live, setLive] = useState<Map<string, AdminAppointmentView>>(new Map());
   const [view, setView] = useState<'now' | 'all'>('now');
   const [selected, setSelected] = useState<string | null>(null);
@@ -70,9 +78,17 @@ export default function A5MapaMesas() {
         {LEGEND.map(([tone, label]) => <li key={tone} className={`a5-t--${tone}`}>{label}</li>)}
       </ul>
       {sel && (
-        <CellDetail key={sel.id} a={sel} slots={slots} tables={activeTables} appts={appts} areaLabel={areaLabel} onClose={() => setSelected(null)}
+        <CellDetail key={sel.id} a={sel} slots={slots} tables={activeTables} appts={appts} mentors={mentors} areaLabel={areaLabel} onClose={() => setSelected(null)}
           onDone={async () => { setSelected(null); await q.refetch(); }} onConflict={(m) => toast.conflict(m, q.refetch)} />
       )}
+      {freeCell && (() => {
+        const slot = slots.find((s) => s.id === freeCell.slotId);
+        const table = activeTables.find((t) => t.id === freeCell.tableId);
+        return slot && table ? (
+          <PullFromQueue key={`${slot.id}-${table.id}`} slot={slot} table={table} appts={appts} mentors={mentors} areaLabel={areaLabel}
+            onClose={() => setFreeCell(null)} onDone={async () => { setFreeCell(null); await q.refetch(); }} onConflict={(m) => toast.conflict(m, q.refetch)} />
+        ) : null;
+      })()}
       {activeTables.length === 0 || slots.length === 0 ? (
         <ErrorState title="Grade sem mesas ou horários" error={new ApiError(0, 'NOT_FOUND', 'Peça a um super admin para configurar mesas (A6) e horários (A7).')} />
       ) : visibleSlots.length === 0 ? (
@@ -104,7 +120,10 @@ export default function A5MapaMesas() {
                             aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, ${a.mentor.name} com ${a.mentee.name}, ${STATUS_LOOK[a.status].label}`}>
                             <i>Mentora</i><b>{a.mentor.name}</b><i>Participante</i><b>{a.mentee.name}</b><small>{STATUS_LOOK[a.status].label}</small>
                           </button>
-                        ) : <span className="a5-cell a5-t--free" aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, livre`}>Livre</span>}
+                        ) : (
+                          <button type="button" className="a5-cell a5-t--free" onClick={() => setFreeCell({ slotId: s.id, tableId: t.id })} data-testid={`free-${s.id}-${t.id}`}
+                            aria-label={`Mesa ${t.number}, ${formatTime(s.startAt)}, livre: puxar alguém da fila de espera`}>Livre</button>
+                        )}
                       </td>
                     );
                   })}
@@ -118,8 +137,9 @@ export default function A5MapaMesas() {
   );
 }
 
-function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onConflict }: {
+function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDone, onConflict }: {
   a: AdminAppointmentView; slots: { id: string; startAt: string; endAt: string }[]; tables: { id: string; number: number; name: string | null; location: string | null }[];
+  mentors: MentorListItem[];
   appts: AdminAppointmentView[]; areaLabel: (k: string) => string; onClose: () => void; onDone: () => Promise<void>; onConflict: (m: string) => void;
 }) {
   const toast = useToast();
@@ -128,6 +148,8 @@ function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onCon
   const [tableId, setTableId] = useState('');
   const [ignore, setIgnore] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [newMentorId, setNewMentorId] = useState('');
+  const [mentorNoShow, setMentorNoShow] = useState(true);
 
   const run = async (body: E39PatchBody, ok: string) => {
     setBusy(true);
@@ -147,6 +169,8 @@ function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onCon
   const noShowEarly = Date.now() < new Date(a.startAt).getTime() + 10 * 60000;
   const title = `Mesa ${a.table.number} · ${formatTime(a.startAt)}`;
   const m = a.mentee;
+  // troca de mentora (time de testes): as livres da trilha da participante; sem nenhuma da trilha, todas as livres
+  const swap = trackFirst(mentorsFreeAt(mentors, appts, a.slotId, a.mentor.id), m.area);
 
   return (
     <Overlay open title={title} onClose={onClose}>
@@ -168,7 +192,7 @@ function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onCon
           <div>
             <h3 className="a5-detail__sub">Histórico</h3>
             <ol className="a5-history">
-              {a.history.map((h, i) => <li key={i}>{formatDateTime(h.at)} · {STATUS_LOOK[h.to].label}</li>)}
+              {a.history.map((h, i) => <li key={i}>{formatDateTime(h.at)} · {STATUS_LOOK[h.to].label}{h.reason && REASON_PT[h.reason] ? ` · ${REASON_PT[h.reason]}` : ''}</li>)}
             </ol>
           </div>
         )}
@@ -180,7 +204,7 @@ function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onCon
           )}
           {canCancel && (
             <button type="button" className="a46-pill a46-pill--danger" disabled={busy} data-testid="a5-cancel"
-              onClick={() => { if (window.confirm('Cancelar esta mentoria? A participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Mentoria cancelada.'); }}>Cancelar</button>
+              onClick={() => { if (window.confirm('Devolver para a lista de espera? A mentoria é cancelada e a participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Participante devolvida para a lista de espera.'); }}>Devolver para a lista de espera</button>
           )}
           {canReopen && (
             <button type="button" className="a46-pill" disabled={busy} data-testid="a5-reopen"
@@ -191,6 +215,24 @@ function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onCon
               onClick={() => { if (window.confirm('Cancelar esta mentoria e liberar a mesa? A participante volta para a fila com prioridade.')) void run({ action: 'release' }, 'Mesa liberada.'); }}>Cancelar e liberar a mesa</button>
           )}
         </div>
+        {a.status === 'confirmed' && (
+          <div className="a5-move" data-testid="a5-swap">
+            <label htmlFor="a5-swap-mentora">Trocar mentora</label>
+            {swap.mentors.length === 0 ? (
+              <span className="tw-field__hint">Nenhuma mentora livre neste horário. Se a mentora não veio, devolva a participante para a lista de espera.</span>
+            ) : (
+              <>
+                <select id="a5-swap-mentora" className="a46-sel" value={newMentorId} onChange={(e) => setNewMentorId(e.target.value)}>
+                  <option value="">{swap.otherTracks ? 'Escolha (nenhuma livre da trilha)' : `Escolha (trilha ${areaLabel(m.area)})`}</option>
+                  {swap.mentors.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <button type="button" className="a46-pill a46-pill--dark" disabled={!newMentorId || busy} data-testid="a5-swap-go"
+                  onClick={() => void run({ action: 'change_mentor', mentorId: newMentorId, mentorNoShow }, 'Mentora trocada.')}>Trocar</button>
+                <CheckboxField label={`Registrar que ${a.mentor.name} não compareceu`} checked={mentorNoShow} onChange={(e) => setMentorNoShow(e.target.checked)} />
+              </>
+            )}
+          </div>
+        )}
         {a.status === 'confirmed' && (
           <div className="a5-move">
             <label htmlFor="a5-mv-mesa">Mover para</label>
@@ -213,6 +255,90 @@ function CellDetail({ a, slots, tables, appts, areaLabel, onClose, onDone, onCon
             <button type="button" className="a46-pill a46-pill--dark" disabled={!tableId || busy}
               onClick={() => void run({ action: 'move', slotId, tableId, ignoreAvailability: ignore, ignoreLeadTime: ignore }, 'Mentoria movida.')}>Mover</button>
             <CheckboxField label="Ignorar disponibilidade e antecedência mínima" checked={ignore} onChange={(e) => setIgnore(e.target.checked)} />
+          </div>
+        )}
+      </div>
+    </Overlay>
+  );
+}
+
+/**
+ * Mesa livre no mapa: puxa alguém da fila de espera (E35 waiting, prioridade primeiro, depois quem entrou antes) para uma
+ * mentora livre no horário (as da trilha dela; sem nenhuma, todas). Cria o convite (E39); "está aqui" já confirma.
+ */
+function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone, onConflict }: {
+  slot: { id: string; startAt: string; endAt: string }; table: { id: string; number: number; location: string | null };
+  appts: AdminAppointmentView[]; mentors: MentorListItem[]; areaLabel: (k: string) => string;
+  onClose: () => void; onDone: () => Promise<void>; onConflict: (m: string) => void;
+}) {
+  const toast = useToast();
+  const queue = useQuery(async (signal) => {
+    const all: MenteeAdminView[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await call(ENDPOINTS.E35, { query: { status: 'waiting', ...(cursor ? { cursor } : {}) }, signal });
+      all.push(...page.items);
+      cursor = page.nextCursor ?? undefined;
+    } while (cursor);
+    return all.sort((x, y) => Number(y.priority) - Number(x.priority) || x.queuedAt.localeCompare(y.queuedAt));
+  }, []);
+  const [menteeId, setMenteeId] = useState('');
+  const [mentorId, setMentorId] = useState('');
+  // horário em andamento ou quase: a participante está no local, confirma na hora (o convite venceria antes de ela responder)
+  const [here, setHere] = useState(new Date(slot.startAt).getTime() - Date.now() < 30 * 60_000);
+  const [busy, setBusy] = useState(false);
+  const mentee = queue.status === 'success' ? queue.data.find((x) => x.id === menteeId) : undefined;
+  const free = mentee ? trackFirst(mentorsFreeAt(mentors, appts, slot.id), mentee.area) : null;
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      const r = await call(ENDPOINTS.E39Create, { body: { menteeId, mentorId, slotId: slot.id, tableId: table.id, ignoreLeadTime: true } });
+      if (here) await call(ENDPOINTS.E39Patch, { params: { id: r.appointment.id }, body: { action: 'confirm_in_person' } });
+      toast.success(here ? 'Mentoria agendada e confirmada.' : 'Convite enviado à participante.');
+      await onDone();
+    } catch (e) {
+      if (e instanceof ApiError && e.isConflict) onConflict(e.message); else toast.error(errMsg(e));
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <Overlay open title={`Mesa ${table.number} · ${formatTime(slot.startAt)} · livre`} onClose={onClose}>
+      <div className="a5-detail" data-testid="a5-pull">
+        <h3 className="a5-detail__sub">Puxar da lista de espera</h3>
+        {queue.status === 'loading' && <SkeletonList rows={3} height={48} />}
+        {queue.status === 'error' && <ErrorState error={queue.error} onRetry={queue.reload} />}
+        {queue.status === 'success' && queue.data.length === 0 && <p className="tw-field__hint">Ninguém na lista de espera.</p>}
+        {queue.status === 'success' && queue.data.length > 0 && (
+          <ul className="a5-queue" aria-label="Lista de espera">
+            {queue.data.map((x) => (
+              <li key={x.id}>
+                <label className={x.id === menteeId ? 'is-on' : undefined}>
+                  <input type="radio" name="a5-pull-mentee" checked={x.id === menteeId} onChange={() => { setMenteeId(x.id); setMentorId(''); }} />
+                  <span>
+                    <b>{x.name}</b>{x.priority && <> <PriorityBadge /></>}
+                    <small>{areaLabel(x.area)} · na fila desde {formatDateTime(x.queuedAt)}</small>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+        {mentee && free && (
+          <div className="a5-move">
+            <label htmlFor="a5-pull-mentora">Mentora</label>
+            {free.mentors.length === 0 ? (
+              <span className="tw-field__hint">Nenhuma mentora livre neste horário.</span>
+            ) : (
+              <>
+                <select id="a5-pull-mentora" className="a46-sel" value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
+                  <option value="">{free.otherTracks ? 'Escolha (nenhuma livre da trilha)' : `Escolha (trilha ${areaLabel(mentee.area)})`}</option>
+                  {free.mentors.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <button type="button" className="a46-pill a46-pill--dark" disabled={!mentorId || busy} data-testid="a5-pull-go" onClick={() => void submit()}>Agendar</button>
+                <CheckboxField label="A participante está aqui: confirmar na hora" checked={here} onChange={(e) => setHere(e.target.checked)} />
+              </>
+            )}
           </div>
         )}
       </div>
