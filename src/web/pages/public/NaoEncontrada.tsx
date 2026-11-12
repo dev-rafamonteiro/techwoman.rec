@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Brand, HeroMosaic, LinkButton } from '../../ui';
-import { TOTEN_BASE } from '../../shell/toten/context';
+import { totenBaseOf } from '../../shell/toten/context';
 import './public.css';
 
 /** Depois desse tempo, a página leva para o início sozinha. */
@@ -12,7 +12,7 @@ export default function NaoEncontrada() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   // no toten, o "início" é o começo da jornada dele (sair para a home deixaria o totem preso no site)
-  const home = pathname.startsWith(TOTEN_BASE) ? TOTEN_BASE : '/';
+  const home = totenBaseOf(pathname) ?? '/';
   const [left, setLeft] = useState(REDIRECT_S);
 
   useEffect(() => {
