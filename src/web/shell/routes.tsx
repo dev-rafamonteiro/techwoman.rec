@@ -4,7 +4,7 @@ import { SkeletonList } from '../ui/components/States';
 import { RequireRole } from './auth';
 const Gallery = lazy(() => import('../ui/Gallery'));
 const TotenLayout = lazy(() => import('./toten/TotenLayout'));
-import { TOTEN_BASE, TOTEN_VIDEO_BASE } from './toten/context';
+import { TOTEN_BASE } from './toten/context';
 import { AdminLayout, BareLayout, MentorLayout, ParticipantLayout } from './layouts';
 
 /**
@@ -47,18 +47,6 @@ const el = (area: 'public' | 'mentora' | 'admin', code: string) => {
 const STAFF: readonly ('mentor' | 'admin' | 'super_admin')[] = ['admin', 'super_admin'];
 const guard = (roles: readonly ('mentor' | 'admin' | 'super_admin')[], child: JSX.Element) => <RequireRole roles={roles}>{child}</RequireRole>;
 
-/** Telas do toten (P2 → P5), relativas à base dele. */
-const totenChildren = (): RouteObject[] => [
-  { element: <BareLayout />, children: [
-    { index: true, element: el('public', 'P2') },
-    { path: 'resultado', element: el('public', 'P3') },
-  ] },
-  { element: <ParticipantLayout title="Mentoria · 14/11" />, children: [
-    { path: 'inscricao', element: el('public', 'P4') },
-    { path: 'ok', element: el('public', 'P5') },
-  ] },
-];
-
 /** /mentoria/minha?t=<token> com o layout participante. */
 export const routes: RouteObject[] = [
   { element: <BareLayout />, children: [
@@ -69,15 +57,19 @@ export const routes: RouteObject[] = [
     // QR Code do cartaz aponta para techwoman.dev/cadastro: leva à jornada (QR → gamificação → resultado → inscrição).
     { path: '/cadastro', element: <Navigate to="/jornada" replace /> },
   ] },
-  // Toten do evento: a mesma jornada até a confirmação, com teclado na tela e painel escondido no logotipo.
-  { path: TOTEN_BASE, element: <Suspense fallback={null}><TotenLayout /></Suspense>, children: totenChildren() },
-  // O mesmo toten com vídeo: parado por 5 s, o vídeo cobre a tela; um toque o tira e a jornada continua de onde estava.
-  // Na resolução vertical (1080×1920) o vídeo é o 9:16; nas outras, o 16:9.
-  { path: TOTEN_VIDEO_BASE, element: (
-    <Suspense fallback={null}>
-      <TotenLayout base={TOTEN_VIDEO_BASE} video="/toten/video.mp4" videoPortrait="/toten/video-vertical.mp4" />
-    </Suspense>
-  ), children: totenChildren() },
+  // Toten do evento: a mesma jornada até a confirmação, com teclado na tela, painel escondido no logotipo e vídeo quando parado.
+  { path: TOTEN_BASE, element: <Suspense fallback={null}><TotenLayout /></Suspense>, children: [
+    { element: <BareLayout />, children: [
+      { index: true, element: el('public', 'P2') },
+      { path: 'resultado', element: el('public', 'P3') },
+    ] },
+    { element: <ParticipantLayout title="Mentoria · 14/11" />, children: [
+      { path: 'inscricao', element: el('public', 'P4') },
+      { path: 'ok', element: el('public', 'P5') },
+    ] },
+  ] },
+  // endereço do teste do toten com vídeo, que virou o próprio toten
+  { path: '/jornada_toten_video', element: <Navigate to={TOTEN_BASE} replace /> },
   { element: <ParticipantLayout title="Mentoria · 14/11" />, children: [
     { path: '/mentoria/inscricao', element: el('public', 'P4') },
     { path: '/mentoria/inscricao/ok', element: el('public', 'P5') },

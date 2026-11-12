@@ -1,7 +1,7 @@
 import { expect, newPage, resetWorld, test, type E2EWorld } from "./support.js";
 import type { Page } from "@playwright/test";
 
-/** Toten (/jornada_toten): jornada até a inscrição com o teclado da tela, painel escondido no logotipo e reinício. */
+/** Toten (/jornada_toten): jornada até a inscrição com o teclado da tela, painel escondido no logotipo, reinício e vídeo quando parado. */
 let world: E2EWorld;
 test.beforeEach(async ({}, info) => {
   test.skip(info.project.name !== "desktop-1280", "toten é tela grande");
@@ -84,9 +84,10 @@ test("confirmação no toten não mostra o link pessoal e volta ao início", asy
   await page.context().close();
 });
 
-test("toten com vídeo: parado 5 s o vídeo cobre a tela; um toque o tira e a jornada segue de onde estava", async ({ browser }) => {
+test("toten: parado 5 s o vídeo cobre a tela; um toque o tira e a jornada segue de onde estava", async ({ browser }) => {
   const page = await newPage(browser, { width: 1920, height: 1080 });
   await page.goto("/jornada_toten_video");
+  await expect(page).toHaveURL(/\/jornada_toten$/);
   await page.getByTestId("p2-start").click();
   await page.getByTestId("p2-opt-0").click();
   const video = page.getByTestId("toten-video");
@@ -95,13 +96,13 @@ test("toten com vídeo: parado 5 s o vídeo cobre a tela; um toque o tira e a jo
   await expect.poll(() => video.locator("video").evaluate((v: HTMLVideoElement) => !v.paused)).toBe(true);
   await video.click();
   await expect(video).toBeHidden();
-  await expect(page).toHaveURL(/\/jornada_toten_video$/);
+  await expect(page).toHaveURL(/\/jornada_toten$/);
   await expect(page.getByTestId("p2-next")).toBeVisible();
 });
 
-test("toten com vídeo na vertical usa o vídeo 9:16", async ({ browser }) => {
+test("toten na vertical usa o vídeo 9:16", async ({ browser }) => {
   const page = await newPage(browser, { width: 1080, height: 1920 });
-  await page.goto("/jornada_toten_video");
+  await page.goto("/jornada_toten");
   const video = page.getByTestId("toten-video").locator("video");
   await expect(video).toHaveAttribute("src", "/toten/video.mp4");
   await page.getByTestId("toten-logo").click();

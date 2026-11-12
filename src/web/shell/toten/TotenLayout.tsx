@@ -15,8 +15,11 @@ const SIZES: Record<Exclude<Res, 'fill'>, [number, number]> = { landscape: [1920
 const SETTINGS_KEY = 'tw:toten';
 /** Sem toque nesse prazo, os dados da pessoa saem da tela e a jornada volta ao início. */
 const IDLE_MS = 120_000;
-/** Com `video`: sem toque nesse prazo, o vídeo cobre a tela (a jornada fica como estava, por baixo). */
+/** Sem toque nesse prazo, o vídeo cobre a tela (a jornada fica como estava, por baixo). */
 const VIDEO_IDLE_MS = 5_000;
+/** Na resolução vertical (1080×1920), o vídeo 9:16; nas outras, o 16:9. */
+const VIDEO = '/toten/video.mp4';
+const VIDEO_PORTRAIT = '/toten/video-vertical.mp4';
 
 /** Configuração do aparelho (não da pessoa): localStorage, para sobreviver a recarregar a página. */
 function loadSettings(): Settings {
@@ -40,10 +43,9 @@ function useViewport(): [number, number] {
 /**
  * Toten (/jornada_toten): a mesma jornada P2 → P3 → P4 → P5 num palco de 1920×1080 ou 1080×1920 escalado para caber
  * na tela, com teclado próprio (o monitor não tem teclado físico). Toque no logotipo abre o painel de configuração.
- * `video` (/jornada_toten_video): parado por VIDEO_IDLE_MS, o vídeo cobre a tela; um toque o tira. Na resolução
- * vertical (1080×1920) passa `videoPortrait`, se houver; nas outras, `video`.
+ * Parado por VIDEO_IDLE_MS, um vídeo cobre a tela; um toque o tira e a jornada segue de onde estava.
  */
-export default function TotenLayout({ base = TOTEN_BASE, video, videoPortrait }: { base?: string; video?: string; videoPortrait?: string }) {
+export default function TotenLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [settings, setSettings] = useState(loadSettings);
@@ -69,14 +71,14 @@ export default function TotenLayout({ base = TOTEN_BASE, video, videoPortrait }:
     setPanel(false);
     setTarget(null);
     (document.activeElement as HTMLElement | null)?.blur?.();
-    navigate(base, { replace: true });
-  }, [navigate, base]);
-  const ctx = useMemo<Toten>(() => ({ base, openPanel: () => setPanel(true), restart }), [base, restart]);
+    navigate(TOTEN_BASE, { replace: true });
+  }, [navigate]);
+  const ctx = useMemo<Toten>(() => ({ openPanel: () => setPanel(true), restart }), [restart]);
 
   const [playing, setPlaying] = useState(false);
   const player = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (!video || playing || panel) return;
+    if (playing || panel) return;
     let t = setTimeout(() => setPlaying(true), VIDEO_IDLE_MS);
     const on = () => {
       clearTimeout(t);
@@ -89,7 +91,7 @@ export default function TotenLayout({ base = TOTEN_BASE, video, videoPortrait }:
       document.removeEventListener('pointerdown', on, true);
       document.removeEventListener('keydown', on, true);
     };
-  }, [video, playing, panel]);
+  }, [playing, panel]);
   useEffect(() => {
     const v = player.current;
     if (!v) return;
@@ -158,7 +160,7 @@ export default function TotenLayout({ base = TOTEN_BASE, video, videoPortrait }:
 
   const [w, h] = settings.res === 'fill' ? [vw, vh] : SIZES[settings.res];
   const scale = Math.min(vw / w, vh / h);
-  const src = settings.res === 'portrait' ? videoPortrait ?? video : video;
+  const src = settings.res === 'portrait' ? VIDEO_PORTRAIT : VIDEO;
 
   return (
     <TotenContext.Provider value={ctx}>
@@ -170,13 +172,11 @@ export default function TotenLayout({ base = TOTEN_BASE, video, videoPortrait }:
           </div>
           {target && <Keyboard key={target.name} target={target} onDone={() => target.blur()} />}
         </div>
-        {src && (
-          // preventDefault: o toque que tira o vídeo não chega à página (nem foca um campo por baixo)
-          <div className={`tw-toten__video${playing ? ' is-on' : ''}`} data-testid="toten-video"
-            onPointerDown={(e) => { e.preventDefault(); setPlaying(false); }}>
-            <video ref={player} key={src} src={src} muted loop playsInline preload="auto" />
-          </div>
-        )}
+        {/* preventDefault: o toque que tira o vídeo não chega à página (nem foca um campo por baixo) */}
+        <div className={`tw-toten__video${playing ? ' is-on' : ''}`} data-testid="toten-video"
+          onPointerDown={(e) => { e.preventDefault(); setPlaying(false); }}>
+          <video ref={player} key={src} src={src} muted loop playsInline preload="auto" />
+        </div>
       </div>
       <Overlay title="Configurações do toten" open={panel} onClose={() => setPanel(false)}>
         <div className="tw-stack" data-testid="toten-panel">

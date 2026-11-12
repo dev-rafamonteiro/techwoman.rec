@@ -1,4 +1,4 @@
-/* Toten (/jornada_toten): palco de tamanho fixo escalado para a tela + teclado próprio. */
+/* Toten (/jornada_toten): palco de tamanho fixo escalado para a tela + teclado próprio + vídeo quando parado. */
 .tw-toten { position: fixed; inset: 0; overflow: hidden; background: var(--tw-plum-950); user-select: none; -webkit-user-select: none; }
 .tw-toten input, .tw-toten textarea { user-select: text; -webkit-user-select: text; }
 .tw-toten__stage { position: absolute; left: 50%; top: 50%; transform-origin: center; display: flex; flex-direction: column; background: var(--color-bg); overflow: hidden; }
@@ -6,7 +6,7 @@
 /* as páginas medem a altura pela janela (100vh/100dvh); no palco vale a altura do palco */
 .tw-toten__screen .tw-app, .tw-toten__screen .tw-pub { min-height: 100% !important; }
 
-/* /jornada_toten_video: vídeo por cima de tudo (inclusive dos avisos abertos) enquanto o toten está parado */
+/* vídeo por cima de tudo (inclusive dos avisos abertos) enquanto o toten está parado */
 .tw-toten__video { position: absolute; inset: 0; z-index: calc(var(--z-toast) + 1); display: none; background: #000; cursor: pointer; }
 .tw-toten__video.is-on { display: block; }
 .tw-toten__video video { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
