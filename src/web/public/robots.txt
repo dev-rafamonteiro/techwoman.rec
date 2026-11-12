@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /admin
+Disallow: /mentora/
+Disallow: /mentora$
+Disallow: /entrar
+Disallow: /mentoria/minha
+Disallow: /mentoria/inscricao/ok
+Disallow: /jornada/resultado
+Disallow: /jornada_toten
+Disallow: /api/
+Disallow: /l/
+
+Sitemap: https://techwoman.dev/sitemap.xml
