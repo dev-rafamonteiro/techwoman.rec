@@ -40,9 +40,10 @@ function useViewport(): [number, number] {
 /**
  * Toten (/jornada_toten): a mesma jornada P2 → P3 → P4 → P5 num palco de 1920×1080 ou 1080×1920 escalado para caber
  * na tela, com teclado próprio (o monitor não tem teclado físico). Toque no logotipo abre o painel de configuração.
- * `video` (/jornada_toten_video): parado por VIDEO_IDLE_MS, o vídeo cobre a tela; um toque o tira.
+ * `video` (/jornada_toten_video): parado por VIDEO_IDLE_MS, o vídeo cobre a tela; um toque o tira. Na resolução
+ * vertical (1080×1920) passa `videoPortrait`, se houver; nas outras, `video`.
  */
-export default function TotenLayout({ base = TOTEN_BASE, video }: { base?: string; video?: string }) {
+export default function TotenLayout({ base = TOTEN_BASE, video, videoPortrait }: { base?: string; video?: string; videoPortrait?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [settings, setSettings] = useState(loadSettings);
@@ -157,6 +158,7 @@ export default function TotenLayout({ base = TOTEN_BASE, video }: { base?: strin
 
   const [w, h] = settings.res === 'fill' ? [vw, vh] : SIZES[settings.res];
   const scale = Math.min(vw / w, vh / h);
+  const src = settings.res === 'portrait' ? videoPortrait ?? video : video;
 
   return (
     <TotenContext.Provider value={ctx}>
@@ -168,11 +170,11 @@ export default function TotenLayout({ base = TOTEN_BASE, video }: { base?: strin
           </div>
           {target && <Keyboard key={target.name} target={target} onDone={() => target.blur()} />}
         </div>
-        {video && (
+        {src && (
           // preventDefault: o toque que tira o vídeo não chega à página (nem foca um campo por baixo)
           <div className={`tw-toten__video${playing ? ' is-on' : ''}`} data-testid="toten-video"
             onPointerDown={(e) => { e.preventDefault(); setPlaying(false); }}>
-            <video ref={player} src={video} muted loop playsInline preload="auto" />
+            <video ref={player} key={src} src={src} muted loop playsInline preload="auto" />
           </div>
         )}
       </div>

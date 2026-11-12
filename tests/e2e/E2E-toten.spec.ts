@@ -98,3 +98,16 @@ test("toten com vídeo: parado 5 s o vídeo cobre a tela; um toque o tira e a jo
   await expect(page).toHaveURL(/\/jornada_toten_video$/);
   await expect(page.getByTestId("p2-next")).toBeVisible();
 });
+
+test("toten com vídeo na vertical usa o vídeo 9:16", async ({ browser }) => {
+  const page = await newPage(browser, { width: 1080, height: 1920 });
+  await page.goto("/jornada_toten_video");
+  const video = page.getByTestId("toten-video").locator("video");
+  await expect(video).toHaveAttribute("src", "/toten/video.mp4");
+  await page.getByTestId("toten-logo").click();
+  await page.getByText("Vertical · 1080 × 1920").click();
+  await page.getByRole("button", { name: "Fechar" }).last().click();
+  await expect(video).toHaveAttribute("src", "/toten/video-vertical.mp4");
+  await expect(page.getByTestId("toten-video")).toBeVisible({ timeout: 8_000 });
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused)).toBe(true);
+});

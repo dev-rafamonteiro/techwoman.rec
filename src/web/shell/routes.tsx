@@ -72,8 +72,12 @@ export const routes: RouteObject[] = [
   // Toten do evento: a mesma jornada até a confirmação, com teclado na tela e painel escondido no logotipo.
   { path: TOTEN_BASE, element: <Suspense fallback={null}><TotenLayout /></Suspense>, children: totenChildren() },
   // O mesmo toten com vídeo: parado por 5 s, o vídeo cobre a tela; um toque o tira e a jornada continua de onde estava.
-  { path: TOTEN_VIDEO_BASE, element: <Suspense fallback={null}><TotenLayout base={TOTEN_VIDEO_BASE} video="/toten/video.mp4" /></Suspense>,
-    children: totenChildren() },
+  // Na resolução vertical (1080×1920) o vídeo é o 9:16; nas outras, o 16:9.
+  { path: TOTEN_VIDEO_BASE, element: (
+    <Suspense fallback={null}>
+      <TotenLayout base={TOTEN_VIDEO_BASE} video="/toten/video.mp4" videoPortrait="/toten/video-vertical.mp4" />
+    </Suspense>
+  ), children: totenChildren() },
   { element: <ParticipantLayout title="Mentoria · 14/11" />, children: [
     { path: '/mentoria/inscricao', element: el('public', 'P4') },
     { path: '/mentoria/inscricao/ok', element: el('public', 'P5') },
