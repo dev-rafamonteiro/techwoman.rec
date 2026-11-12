@@ -1,6 +1,7 @@
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { RouteAnalytics } from './analytics';
 import { AuthProvider } from './shell/auth';
+import { PageMeta } from './shell/PageMeta';
 import { routes } from './shell/routes';
 import { ToastProvider } from './ui';
 
@@ -13,6 +14,7 @@ export function App() {
     <BrowserRouter>
       {/* pageview só nas páginas públicas (docs/PLAN.md > Analytics) */}
       <RouteAnalytics />
+      <PageMeta />
       <AuthProvider>
         <ToastProvider>
           <Routes />
