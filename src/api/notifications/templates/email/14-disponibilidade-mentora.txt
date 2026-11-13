@@ -1,0 +1,24 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[PARA ADMINISTRADORAS]
+
+{{mentora_nome}} mudou a disponibilidade
+
+{{mentora_nome}} alterou a própria disponibilidade pelo painel da mentora em {{quando}} (horário de Recife). Isso muda os horários em que ela pode receber mentorias.
+
+INCLUIU: {{horarios_incluidos}}
+TIROU: {{horarios_retirados}}
+QUANDO: {{quando}}
+
+Ver as mentoras: {{link_painel}}
+
+A alteração também fica registrada em Logs > Auditoria.
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_painel}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque é administradora do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

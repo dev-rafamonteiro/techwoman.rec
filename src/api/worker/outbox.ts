@@ -36,7 +36,7 @@ export interface OutboxResult {
 export const PRIORITY_TIERS: readonly (readonly OutboxType[])[] = [
   ['invite'],
   ['confirmed', 'moved', 'cancelled', 'expired', 'reminder', 'slot_released', 'mentor_slot_released', 'mentor_booked', 'mentor_cancel_request', 'registration_cancelled'],
-  ['registered', 'staff_password', 'walk_in_done', 'walk_in_removed'],
+  ['registered', 'staff_password', 'walk_in_done', 'walk_in_removed', 'mentor_availability_changed'],
 ];
 
 /** Tempo máximo esperando a vez no limitador dentro de uma iteração (o resto fica para a próxima). */

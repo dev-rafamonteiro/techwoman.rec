@@ -8,16 +8,22 @@ const STATUS_PT = { pending: 'Na fila', sending: 'Enviando', sent: 'Enviada', fa
 /** Tons dos selos de status (design: na fila cinza, enviada menta, falhou vermelho). */
 const STATUS_TONE = { pending: '', sending: 'a79-pill--l', sent: 'a79-pill--m', failed: 'a79-pill--r', skipped: 'a79-pill--g' } as const;
 /** Tom do selo da ação de auditoria pelo código gravado (login cinza, convite laranja, cancelamento vermelho, override roxo, mentora lilás, aceite menta). */
+/** Frase legível gravada no registro (`after.summary`), quando houver. */
+function summaryOf(a: AuditEntryView): string | null {
+  const s = (a.after as { summary?: unknown } | null)?.summary;
+  return typeof s === 'string' ? s : null;
+}
+
 function actionTone(a: string): string {
   if (/cancel|expire|no_show|decline|disable|anonymize/.test(a)) return 'a79-pill--r';
   if (/^appointment\.(move|move_to|updated)$|^move_cancel$|priority/.test(a)) return 'a79-pill--p';
   if (/invite/.test(a)) return 'a79-pill--o';
   if (/accept|confirm|start|finish|enable/.test(a)) return 'a79-pill--m';
-  if (/^mentor\./.test(a)) return 'a79-pill--l';
+  if (/^mentor\.|^availability\./.test(a)) return 'a79-pill--l';
   return '';
 }
 const ROLE_PT: Record<string, string> = { super_admin: 'Super admin', admin: 'Admin', mentor: 'Mentora', mentee: 'Participante', system: 'Sistema' };
-const TYPE_PT = { registered: 'Inscrição recebida', invite: 'Convite', confirmed: 'Confirmação', reminder: 'Lembrete', expired: 'Convite expirado', cancelled: 'Cancelamento', moved: 'Mudança de horário', registration_cancelled: 'Inscrição cancelada', slot_released: 'Horário liberado', mentor_slot_released: 'Aviso à mentora', mentor_booked: 'Nova mentoria (mentora)', mentor_cancel_request: 'Pedido de cancelamento (mentora)', staff_password: 'Senha provisória', walk_in_done: 'Atendimento fora da mesa', walk_in_removed: 'Atendimento fora da mesa removido', presence_confirmed: 'Presença confirmada', presence_cancelled: 'Presença: não poderá ir', presence_unclear: 'Presença: resposta não entendida', invite_closed: 'Convite: não está mais disponível', invite_decline_link: 'Convite: link para recusar', invite_unclear: 'Convite: resposta não entendida' } as const;
+const TYPE_PT = { registered: 'Inscrição recebida', invite: 'Convite', confirmed: 'Confirmação', reminder: 'Lembrete', expired: 'Convite expirado', cancelled: 'Cancelamento', moved: 'Mudança de horário', registration_cancelled: 'Inscrição cancelada', slot_released: 'Horário liberado', mentor_slot_released: 'Aviso à mentora', mentor_booked: 'Nova mentoria (mentora)', mentor_cancel_request: 'Pedido de cancelamento (mentora)', mentor_availability_changed: 'Disponibilidade alterada (mentora)', staff_password: 'Senha provisória', walk_in_done: 'Atendimento fora da mesa', walk_in_removed: 'Atendimento fora da mesa removido', presence_confirmed: 'Presença confirmada', presence_cancelled: 'Presença: não poderá ir', presence_unclear: 'Presença: resposta não entendida', invite_closed: 'Convite: não está mais disponível', invite_decline_link: 'Convite: link para recusar', invite_unclear: 'Convite: resposta não entendida' } as const;
 
 /** A9 · Notificações (E44) e Auditoria (E45). */
 export default function A9NotificacoesAuditoria() {
@@ -146,7 +152,8 @@ function Audit() {
     { key: 'at', header: 'Quando', render: (a) => <span className="a9-when">{formatDateTime(a.at)}</span>, text: (a) => a.at },
     { key: 'who', header: 'Quem', render: (a) => <><strong>{a.actorName ?? 'Sistema'}</strong> <small>{ROLE_PT[a.actorRole] ?? a.actorRole}</small></>, text: (a) => a.actorName ?? 'Sistema' },
     { key: 'action', header: 'Ação', render: (a) => <span className={`a79-pill ${actionTone(a.action)}`}>{a.action}</span>, text: (a) => a.action },
-    { key: 'entity', header: 'Detalhe', render: (a) => `${a.entity}${a.entityId ? ` · ${a.entityId}` : ''}`, text: (a) => a.entity },
+    // registros com `after.summary` (ex.: RN26, disponibilidade da mentora) mostram a frase; os outros, entidade e id
+    { key: 'entity', header: 'Detalhe', render: (a) => summaryOf(a) ?? `${a.entity}${a.entityId ? ` · ${a.entityId}` : ''}`, text: (a) => summaryOf(a) ?? a.entity },
   ];
   const filters = (
     <>

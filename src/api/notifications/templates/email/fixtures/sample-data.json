@@ -86,6 +86,13 @@
       "mesa": "Mesa 7",
       "justificativa": "Tive uma emergência e preciso sair do evento mais cedo.",
       "link_painel": "https://techwoman.dev/admin/mapa"
+    },
+    "14-disponibilidade-mentora": {
+      "mentora_nome": "Ana",
+      "horarios_incluidos": "14h15, 15h00",
+      "horarios_retirados": "9h00",
+      "quando": "14/11 às 10h32",
+      "link_painel": "https://techwoman.dev/admin/mentoras"
     }
   }
 }

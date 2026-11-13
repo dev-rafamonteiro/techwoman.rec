@@ -1,4 +1,4 @@
-// Conteúdo dos 13 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 14 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
 // {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail". Trecho opcional:
 // `{{#variavel}}...{{/variavel}}` some quando a variável vem vazia (render.ts).
@@ -200,6 +200,23 @@ export const EMAILS = [
     destaque: 'Motivo: {{justificativa}}',
     botao: ['Abrir o mapa de mesas', 'link_painel'],
     nota: 'Se cancelar, a participante volta para a fila com prioridade e recebe o aviso por e-mail.',
+    linkFallback: 'link_painel',
+  },
+  {
+    // RN26 · a mentora incluiu ou tirou horários da própria disponibilidade (mentor_availability_changed), às
+    // administradoras; as listas vêm prontas do worker ("nenhum" quando vazia)
+    id: '14-disponibilidade-mentora',
+    paraAdmin: true,
+    vars: ['mentora_nome', 'horarios_incluidos', 'horarios_retirados', 'quando', 'link_painel'],
+    preheader: '{{mentora_nome}} mudou a própria disponibilidade em {{quando}}.',
+    selo: ['PARA ADMINISTRADORAS', ...SELO.laranja],
+    titulo: '{{mentora_nome}} mudou a disponibilidade',
+    paragrafos: [
+      '{{mentora_nome}} alterou a própria disponibilidade pelo painel da mentora em {{quando}} (horário de Recife). Isso muda os horários em que ela pode receber mentorias.',
+    ],
+    card: [['INCLUIU', '{{horarios_incluidos}}'], ['TIROU', '{{horarios_retirados}}'], ['QUANDO', '{{quando}}']],
+    botao: ['Ver as mentoras', 'link_painel'],
+    nota: 'A alteração também fica registrada em Logs > Auditoria.',
     linkFallback: 'link_painel',
   },
 ];

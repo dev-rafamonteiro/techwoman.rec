@@ -1,4 +1,4 @@
-import { formatTimeBR, isMentorSlotReleasedReason, MENTOR_SLOT_RELEASED_TEXT, type MentorSlotReleasedReason, type OutboxType } from '@tw/shared';
+import { formatTimeBR, isMentorSlotReleasedReason, zonedParts, MENTOR_SLOT_RELEASED_TEXT, type MentorSlotReleasedReason, type OutboxType } from '@tw/shared';
 import type { AppointmentDoc, EventDoc, MenteeDoc, OutboxDoc, TableDoc, UserDoc } from '@tw/db';
 import type { NotifierAttachment } from '../worker/notifier.js';
 import { buildIcs, ICS_FILENAME, tableLabel } from './ics.js';
@@ -105,6 +105,20 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
     vars['link_painel'] = `${i.baseUrl}/admin/mapa`;
     const j = i.item.payload?.['justification'];
     if (typeof j === 'string') vars['justificativa'] = j;
+  }
+  // layout 14 (RN26): nome e horários gravados no pedido; `quando` = hora em que a mentora salvou
+  if (layout === '14-disponibilidade-mentora') {
+    const p = i.item.payload ?? {};
+    const times = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').map((x) => formatTimeBR(new Date(x), tz)).join(', ') || 'nenhum' : undefined);
+    if (typeof p['mentorName'] === 'string') vars['mentora_nome'] = p['mentorName'];
+    vars['horarios_incluidos'] = times(p['added']);
+    vars['horarios_retirados'] = times(p['removed']);
+    if (typeof p['at'] === 'string') {
+      const at = new Date(p['at']);
+      const d = zonedParts(at, tz);
+      vars['quando'] = `${String(d.day).padStart(2, '0')}/${String(d.month).padStart(2, '0')} às ${formatTimeBR(at, tz)}`;
+    }
+    vars['link_painel'] = `${i.baseUrl}/admin/mentoras`;
   }
   // layout 9: painel da mentora (M1, sem token) e a frase do motivo; motivo desconhecido é erro de renderização
   let reason: MentorSlotReleasedReason | undefined;

@@ -33,6 +33,8 @@ function dedupeBase(i: Omit<EnqueueInput, 'mentee'>, recipientId: ObjectId): str
   if (i.type === 'walk_in_done' || i.type === 'walk_in_removed') return `${i.type}:${i.dedupeSuffix}`;
   // RN25: um e-mail por administradora em cada pedido (`mentor_cancel_request:<appointmentId>:<pedido>:<userId>`)
   if (i.type === 'mentor_cancel_request') return `${i.type}:${i.appointmentId}:${i.dedupeSuffix}:${recipientId}`;
+  // RN26: um e-mail por administradora em cada alteração (`mentor_availability_changed:<alteração>:<userId>`)
+  if (i.type === 'mentor_availability_changed') return `${i.type}:${i.dedupeSuffix}:${recipientId}`;
   return `${i.type}:${i.appointmentId ?? recipientId}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;
 }
 
@@ -116,6 +118,21 @@ export async function enqueueMentorCancelRequest(
       { type: 'mentor_cancel_request', appointmentId: i.appointmentId, dedupeSuffix: String(i.requestId), payload: { justification: i.justification } },
       { menteeId: null, userId: admin._id, email: admin.email },
     );
+  }
+}
+
+/**
+ * RN26 · Alteração de disponibilidade feita pela própria mentora (`mentor_availability_changed`, layout 14) a cada
+ * administradora ativa. `payload`: nome da mentora, início dos horários incluídos e tirados (ISO) e quando salvou.
+ */
+export async function enqueueMentorAvailabilityChanged(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { admins: Pick<UserDoc, '_id' | 'email'>[]; changeId: ObjectId; mentorName: string; added: Date[]; removed: Date[]; at: Date },
+): Promise<void> {
+  const payload = { mentorName: i.mentorName, added: i.added.map((d) => d.toISOString()), removed: i.removed.map((d) => d.toISOString()), at: i.at.toISOString() };
+  for (const admin of i.admins) {
+    await insertNotifications(ctx, session, { type: 'mentor_availability_changed', dedupeSuffix: String(i.changeId), payload }, { menteeId: null, userId: admin._id, email: admin.email });
   }
 }
 

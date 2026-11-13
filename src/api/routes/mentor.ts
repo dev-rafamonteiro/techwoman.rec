@@ -5,7 +5,7 @@ import { E20, E21, E22, E23, E25, E26, E27, E28, E55, E60, QUEUE_PAGE_SIZE, form
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
-import { enqueueMentorCancelRequest } from '../lib/outbox.js';
+import { enqueueMentorAvailabilityChanged, enqueueMentorCancelRequest } from '../lib/outbox.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { menteeSearchPipeline, runSearch } from '../search/text.js';
 import { normalizeLinkedin, parseOptionalPhone, trackAreasOf } from '../lib/normalize.js';
@@ -84,7 +84,28 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
       }
       const next = event.slots.map((s) => s.id).filter((id) => slotIds.includes(id));
       await ctx.c.users.updateOne({ _id: me._id }, { $set: { availability: next, updatedAt: ctx.now() } }, { session });
-      await writeAudit(ctx, session, { actor: actorForRoute(req, 'mentor'), action: 'availability.update', entity: 'user', entityId: me._id, before: { availability: me.availability }, after: { availability: next }, ip: req.ip });
+      // RN26: cada inclusão e cada retirada fica explícita na auditoria (horários e resumo) e vai por e-mail às administradoras
+      const slotsOf = (ids: string[]) => event.slots.filter((s) => ids.includes(s.id));
+      const addedSlots = slotsOf(next.filter((id) => !me.availability.includes(id)));
+      const removedSlots = slotsOf(me.availability.filter((id) => !next.includes(id)));
+      const actor = actorForRoute(req, 'mentor');
+      const horarios = (ss: typeof addedSlots) => ss.map((s) => formatTimeBR(s.startAt, event.timezone));
+      for (const [action, ss, verb] of [['availability.add', addedSlots, 'Incluiu'], ['availability.remove', removedSlots, 'Tirou']] as const) {
+        if (!ss.length) continue;
+        await writeAudit(ctx, session, {
+          actor, action, entity: 'user', entityId: me._id,
+          before: { availability: me.availability },
+          after: { summary: `${verb} ${horarios(ss).join(', ')} na disponibilidade de ${me.name}`, horarios: horarios(ss), slotIds: ss.map((s) => s.id), availability: next },
+          ip: req.ip,
+        });
+      }
+      if (addedSlots.length || removedSlots.length) {
+        const admins = await ctx.c.users.find({ roles: { $in: ['admin', 'super_admin'] }, status: 'active' }, { session, projection: { email: 1 } }).toArray();
+        await enqueueMentorAvailabilityChanged(ctx, session, {
+          admins, changeId: new ObjectId(), mentorName: me.name, at: ctx.now(),
+          added: addedSlots.map((s) => s.startAt), removed: removedSlots.map((s) => s.startAt),
+        });
+      }
       return next;
     });
     return buildAvailability(user._id, updated);

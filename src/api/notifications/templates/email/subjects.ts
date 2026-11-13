@@ -17,6 +17,7 @@ export const EMAIL_TEMPLATE_IDS = [
   '11-atendimento-removido',
   '12-mentoria-agendada',
   '13-pedido-cancelamento',
+  '14-disponibilidade-mentora',
 ] as const;
 
 export type EmailTemplateId = (typeof EMAIL_TEMPLATE_IDS)[number];
@@ -40,6 +41,8 @@ export const EMAIL_TEMPLATE_VARS = {
   '11-atendimento-removido': ['nome', 'link_inscricao'],
   '12-mentoria-agendada': ['mentora_nome', 'nome', 'horario', 'mesa', 'link_painel'],
   '13-pedido-cancelamento': ['mentora_nome', 'nome', 'horario', 'mesa', 'justificativa', 'link_painel'],
+  // listas de horários já formatadas ("nenhum" quando vazia)
+  '14-disponibilidade-mentora': ['mentora_nome', 'horarios_incluidos', 'horarios_retirados', 'quando', 'link_painel'],
 } as const satisfies Record<EmailTemplateId, readonly string[]>;
 
 /** Tipo da `outbox` -> layout. */
@@ -59,6 +62,7 @@ export const EMAIL_TEMPLATE_BY_OUTBOX_TYPE = {
   walk_in_removed: '11-atendimento-removido',
   mentor_booked: '12-mentoria-agendada',
   mentor_cancel_request: '13-pedido-cancelamento',
+  mentor_availability_changed: '14-disponibilidade-mentora',
 } as const satisfies Record<string, EmailTemplateId>;
 
 export type EmailOutboxType = keyof typeof EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
@@ -79,6 +83,7 @@ export const EMAIL_SUBJECTS: Record<EmailTemplateId, string> = {
   '11-atendimento-removido': 'Sua inscrição na mentoria do Tech Woman foi removida',
   '12-mentoria-agendada': 'Nova mentoria: {{nome}} às {{horario}}',
   '13-pedido-cancelamento': '{{mentora_nome}} pede para cancelar a mentoria das {{horario}}',
+  '14-disponibilidade-mentora': '{{mentora_nome}} mudou a disponibilidade',
 };
 
 /** Variantes do layout 3 por tipo da `outbox`. */
