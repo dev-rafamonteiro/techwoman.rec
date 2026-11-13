@@ -106,7 +106,7 @@ docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVE
 
 - Containers: `techwoman-web` (redes `edge`, `app`, `npm_network`), `techwoman-api` (`app`, `egress`, fora da `npm_network`),
   `techwoman-worker` (`egress`). Nenhuma porta publicada no host.
-- Fluxo: internet → NPM (TLS de `techwoman.dev`) → `http://techwoman-web:8080` → nginx do projeto → `/api/*` e `/l/*` para `api:3000`.
+- Fluxo: internet → NPM (TLS de `techwoman.dev`) → `http://techwoman-web:8080` → nginx do projeto → `/api/*` e `/l/*` para `techwoman-api:3000`.
   No NPM, o proxy host aponta para `techwoman-web`, porta `8080`, esquema `http`.
 - O nginx do projeto continua necessário: serve o build do SPA, aplica os cabeçalhos de segurança/CSP e faz o `/l/` do
   encurtador (E48). O NPM só termina o TLS e repassa tudo. O IP real vem só do `X-Real-IP` (que o NPM

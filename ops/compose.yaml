@@ -83,7 +83,10 @@ services:
       # heap do V8 abaixo do limite do container: sob pico, o GC aperta antes de o kernel matar o processo
       NODE_OPTIONS: --max-old-space-size=768
     secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret, outbox_key]
-    networks: [app, egress]
+    # o nginx usa "techwoman-api": "api" puro colide com outros apps quando o web entra na npm_network
+    networks:
+      app: { aliases: [techwoman-api] }
+      egress: {}
     healthcheck:
       test: ["CMD", "node", "dist/health.js"]
       interval: 10s

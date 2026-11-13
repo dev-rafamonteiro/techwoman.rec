@@ -54,7 +54,9 @@ services:
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
-    networks: [dev, egress]
+    networks:
+      dev: { aliases: [techwoman-api] }
+      egress: {}
     healthcheck:
       test: ["CMD", "node", "dist/health.js"]
       interval: 10s
