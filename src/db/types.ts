@@ -35,6 +35,8 @@ export interface EventDoc {
   registrationOpen: boolean;
   /** Turnstile na inscrição (E02). Ausente = ligado; o super admin desliga no A7 se estiver barrando gente de verdade. */
   turnstileEnabled?: boolean;
+  /** RN25 · a mentora cancela a mentoria pela agenda (M6). Ausente = desligado: ela só pede às administradoras (E60). */
+  mentorCancelEnabled?: boolean;
   areas: { key: string; label: string }[];
   /** Textos das mensagens de WhatsApp, legado (canal removido em 2026-11-05): continua gravado, ninguém lê. */
   templates: {

@@ -78,6 +78,14 @@
       "horario": "14h15",
       "mesa": "Mesa 7",
       "link_painel": "https://techwoman.dev/entrar"
+    },
+    "13-pedido-cancelamento": {
+      "mentora_nome": "Ana",
+      "nome": "Joana",
+      "horario": "14h15",
+      "mesa": "Mesa 7",
+      "justificativa": "Tive uma emergência e preciso sair do evento mais cedo.",
+      "link_painel": "https://techwoman.dev/admin/mapa"
     }
   }
 }

@@ -104,6 +104,8 @@ export const OUTBOX_TYPES = [
   'mentor_slot_released',
   // RN24, RN19 · aviso à mentora: uma participante agendou com ela
   'mentor_booked',
+  // RN25 · aviso às administradoras: a mentora pede para cancelar uma mentoria (o cancelamento pela mentora está desligado)
+  'mentor_cancel_request',
   'staff_password',
   // RN21 · participante atendida fora da mesa: agradecimento com a mentora (e o LinkedIn dela) e o link pessoal (P6)
   'walk_in_done',

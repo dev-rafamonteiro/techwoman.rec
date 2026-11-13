@@ -81,3 +81,15 @@
 .adm-list__text .tw-countdown__label:empty { display: none; }
 .adm-list__text .tw-countdown__value { font-family: var(--font-body); font-size: inherit; font-weight: 800; color: var(--tw-orange-900); }
 @media (min-width: 1024px) { .adm-kpis { grid-template-columns: repeat(3, 1fr); } }
+
+/* A1 · liga/desliga o cancelamento pela mentora (RN25), no visual do interruptor do A7 */
+.a1-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-radius: 14px; padding: 8px 14px; background: #e8f7f3; }
+.a1-toggle[data-on='false'] { background: var(--tw-red-100); }
+.a1-toggle__txt { display: flex; flex-direction: column; min-width: 0; }
+.a1-toggle__txt strong { font-weight: 800; }
+.a1-toggle__txt span { font-size: 13px; color: var(--tw-muted); }
+.a1-toggle .adm-switch { flex: none; font-size: 0; gap: 0; }
+.a1-toggle .adm-switch i { width: 52px; height: 30px; border-radius: 999px; background: #c9b8cd; }
+.a1-toggle .adm-switch i::after { top: 3px; left: 3px; width: 24px; height: 24px; }
+.a1-toggle .adm-switch[aria-checked='true'] i { background: var(--tw-green-500); }
+.a1-toggle .adm-switch[aria-checked='true'] i::after { left: 25px; }

@@ -1,4 +1,4 @@
-// Conteúdo dos 11 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 13 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
 // {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail". Trecho opcional:
 // `{{#variavel}}...{{/variavel}}` some quando a variável vem vazia (render.ts).
@@ -181,6 +181,25 @@ export const EMAILS = [
     card: [['MESA', '{{mesa}}'], ['HORÁRIO', '{{horario}}'], ['PARTICIPANTE', '{{nome}}']],
     botao: ['Abrir minha agenda', 'link_painel'],
     nota: 'A mentoria já está confirmada e aparece na sua agenda.',
+    linkFallback: 'link_painel',
+  },
+  {
+    // RN25 · pedido de cancelamento da mentora às administradoras (mentor_cancel_request); {{justificativa}} é o
+    // motivo escrito por ela em M6
+    id: '13-pedido-cancelamento',
+    paraAdmin: true,
+    vars: ['mentora_nome', 'nome', 'horario', 'mesa', 'justificativa', 'link_painel'],
+    preheader: '{{mentora_nome}} pede para cancelar a mentoria das {{horario}} com {{nome}}.',
+    selo: ['PARA ADMINISTRADORAS', ...SELO.laranja],
+    titulo: 'Pedido de cancelamento de mentoria',
+    paragrafos: [
+      '{{mentora_nome}} quer cancelar a mentoria das {{horario}} com {{nome}}, na {{mesa}}.',
+      'O cancelamento pela mentora está desligado no painel, por isso só uma administradora pode fazer essa operação.',
+    ],
+    card: [['HORÁRIO', '{{horario}}'], ['MENTORA', '{{mentora_nome}}'], ['PARTICIPANTE', '{{nome}}']],
+    destaque: 'Motivo: {{justificativa}}',
+    botao: ['Abrir o mapa de mesas', 'link_painel'],
+    nota: 'Se cancelar, a participante volta para a fila com prioridade e recebe o aviso por e-mail.',
     linkFallback: 'link_painel',
   },
 ];

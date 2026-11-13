@@ -104,12 +104,16 @@ export interface World {
   slotIds: string[];
 }
 
-/** Evento padrão (12 slots), índices, `tables` mesas, `mentors` mentoras e `mentees` participantes waiting. */
-export async function seedWorld(db: Db, opts: { mentors?: number; tables?: number; mentees?: number; registrationOpen?: boolean } = {}): Promise<World> {
-  const { mentors = 3, tables = 20, mentees = 10, registrationOpen = true } = opts;
+/**
+ * Evento padrão (12 slots), índices, `tables` mesas, `mentors` mentoras e `mentees` participantes waiting.
+ * `mentorCancelEnabled` (RN25) vem ligado: as suítes que cancelam pela mentora testam o cancelamento em si; o
+ * desligado (padrão em produção) tem a própria suíte.
+ */
+export async function seedWorld(db: Db, opts: { mentors?: number; tables?: number; mentees?: number; registrationOpen?: boolean; mentorCancelEnabled?: boolean } = {}): Promise<World> {
+  const { mentors = 3, tables = 20, mentees = 10, registrationOpen = true, mentorCancelEnabled = true } = opts;
   await createIndexes(db);
   const c = getCollections(db);
-  const event = buildEvent({ registrationOpen, startTime: "09:00", endTime: "18:00" });
+  const event = buildEvent({ registrationOpen, mentorCancelEnabled, startTime: "09:00", endTime: "18:00" });
   await c.events.insertOne(event);
   const tableDocs: TableDoc[] = Array.from({ length: tables }, (_, k) => ({ _id: new ObjectId(), eventId: EVENT_ID, number: k + 1, name: null, location: null, active: true }));
   if (tableDocs.length) await c.tables.insertMany(tableDocs);

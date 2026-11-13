@@ -16,6 +16,8 @@ export const AttentionItemSchema = z.object({
 
 export const E30ResponseSchema = z.object({
   serverNow: IsoDateTimeSchema,
+  /** RN25 · a mentora pode cancelar a mentoria pela agenda dela (liga/desliga por E61). */
+  mentorCancelEnabled: z.boolean(),
   counts: z.object({
     registered: z.number().int(),
     waiting: z.number().int(),

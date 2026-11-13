@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { EMAIL_COMMON_VARS, EMAIL_SUBJECTS, EMAIL_TEMPLATE_IDS, EMAIL_TEMPLATE_VARS, MENTOR_SLOT_RELEASED_SUBJECTS, emailSubjectFor, type EmailTemplateId } from "../../src/api/notifications/templates/email/subjects.js";
 
 /**
- * PLAN, "Testes dos e-mails", caixas 1 e 2: os 12 layouts renderizam com dados de exemplo sem `{{` sobrando
+ * PLAN, "Testes dos e-mails", caixas 1 e 2: os 13 layouts renderizam com dados de exemplo sem `{{` sobrando
  * (snapshot do HTML e do texto) e todos os links são absolutos e nenhum executa ação.
  */
 const DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../src/api/notifications/templates/email");
@@ -28,9 +28,9 @@ function fill(tpl: string, vars: Record<string, string>, html: boolean): string 
 const varsFor = (id: EmailTemplateId) => ({ ...sample.common, ...sample.templates[id]! });
 const placeholders = (s: string) => [...s.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]!);
 
-describe("layouts de e-mail (12): arquivos e variáveis", () => {
-  it("existem os 12 pares .html + .txt com os nomes do PLAN", () => {
-    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora", "07-inscricao-cancelada", "08-horario-liberado", "09-aviso-mentora", "10-atendimento-fora-da-mesa", "11-atendimento-removido", "12-mentoria-agendada"]);
+describe("layouts de e-mail (13): arquivos e variáveis", () => {
+  it("existem os 13 pares .html + .txt com os nomes do PLAN", () => {
+    expect(EMAIL_TEMPLATE_IDS).toEqual(["01-inscricao-recebida", "02-convite-horario", "03-confirmacao", "04-convite-expirado", "05-cancelamento-mentora", "06-acesso-mentora", "07-inscricao-cancelada", "08-horario-liberado", "09-aviso-mentora", "10-atendimento-fora-da-mesa", "11-atendimento-removido", "12-mentoria-agendada", "13-pedido-cancelamento"]);
     for (const id of EMAIL_TEMPLATE_IDS) {
       expect(read(id, "html").length, id).toBeGreaterThan(500);
       expect(read(id, "txt").length, id).toBeGreaterThan(50);

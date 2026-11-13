@@ -19,7 +19,7 @@ type Row = { slot: Slot; appointment: MentorAppointmentView | null; available: b
 const ACTIVE = ['invited', 'confirmed', 'in_progress'] as const;
 const isActive = (a: MentorAppointmentView | null): a is MentorAppointmentView => !!a && (ACTIVE as readonly string[]).includes(a.status);
 
-/** M6 · Minha agenda (E25, E26, E27) · RN08, RN09, RN10 */
+/** M6 · Minha agenda (E25, E26, E27, E60) · RN08, RN09, RN10, RN25 */
 export default function M6Agenda() {
   const toast = useToast();
   const event = useQuery((s) => call(ENDPOINTS.E01, { signal: s }), []);
@@ -33,6 +33,10 @@ export default function M6Agenda() {
   const [busy, setBusy] = useState<string | null>(null);
   const [cancelFor, setCancelFor] = useState<MentorAppointmentView | null>(null);
   const [reason, setReason] = useState('');
+  // RN25 · cancelamento pela mentora desligado: os botões de cancelar pedem às administradoras (E60)
+  const [requestFor, setRequestFor] = useState<MentorAppointmentView | null>(null);
+  const [requestReason, setRequestReason] = useState('');
+  const [requesting, setRequesting] = useState(false);
   // horário livre tocado → lista de participantes → M5 já nesse horário
   const [pickSlot, setPickSlot] = useState<Slot | null>(null);
   const [chosen, setChosen] = useState<MenteeStaffView | null>(null);
@@ -80,6 +84,22 @@ export default function M6Agenda() {
     const row = data?.slots.find((r) => isActive(r.appointment) && new Date(r.slot.endAt).getTime() > nowMs);
     return row?.slot.id ?? null;
   }, [data, nowMs]);
+
+  async function requestCancel(ap: MentorAppointmentView) {
+    setRequesting(true);
+    try {
+      await call(ENDPOINTS.E60, { params: { id: ap.id }, body: { reason: requestReason.trim() } });
+      toast.success('Pedido enviado às administradoras.');
+      setRequestFor(null);
+      setRequestReason('');
+    } catch (e) {
+      const ae = e as ApiError;
+      if (ae.isConflict) toast.conflict(ae.message || 'A mentoria mudou. Atualize a agenda.', () => void load());
+      else toast.error(ae.message || 'Não foi possível enviar o pedido. Tente de novo.');
+    } finally {
+      setRequesting(false);
+    }
+  }
 
   async function act(ap: MentorAppointmentView, body: E26Body, ok: string) {
     setBusy(`${ap.id}:${body.action}`);
@@ -181,7 +201,7 @@ export default function M6Agenda() {
             {ap.expiresAt && <div className="m6-wait"><Countdown expiresAt={ap.expiresAt} serverNow={data.serverNow} label="Aguardando confirmação" onExpire={() => void load()} /></div>}
             <div className="m6-card__actions">
               <Button loading={busy === `${ap.id}:confirm_in_person`} onClick={() => void act(ap, { action: 'confirm_in_person' }, 'Mentoria confirmada presencialmente.')} data-testid="m6-confirm-person">Confirmar presencialmente</Button>
-              <Button variant="secondary" className="m6-btn-outline-danger" loading={busy === `${ap.id}:cancel`} onClick={() => void act(ap, { action: 'cancel' }, 'Convite cancelado.')} data-testid="m6-cancel-invite">Cancelar convite</Button>
+              <Button variant="secondary" className="m6-btn-outline-danger" loading={busy === `${ap.id}:cancel`} onClick={() => (data.mentorCancelEnabled ? void act(ap, { action: 'cancel' }, 'Convite cancelado.') : setRequestFor(ap))} data-testid="m6-cancel-invite">Cancelar convite</Button>
             </div>
           </>
         )}
@@ -191,7 +211,7 @@ export default function M6Agenda() {
               <Button loading={busy === `${ap.id}:start`} onClick={() => void act(ap, { action: 'start' }, 'Mentoria iniciada.')} data-testid="m6-start">Iniciar</Button>
               <Button variant="secondary" disabled={!noShowAllowed(ap.startAt, now)} loading={busy === `${ap.id}:no_show`}
                 onClick={() => void act(ap, { action: 'no_show' }, 'Marcada como não compareceu.')} data-testid="m6-noshow">Não compareceu</Button>
-              <Button variant="secondary" className="m6-btn-outline-danger" onClick={() => setCancelFor(ap)} data-testid="m6-cancel">Cancelar</Button>
+              <Button variant="secondary" className="m6-btn-outline-danger" onClick={() => (data.mentorCancelEnabled ? setCancelFor(ap) : setRequestFor(ap))} data-testid="m6-cancel">Cancelar</Button>
             </div>
             {!noShowAllowed(ap.startAt, now) && <span className="m6-card__hint">"Não compareceu" é liberado 10 min após o início.</span>}
           </>
@@ -239,6 +259,16 @@ export default function M6Agenda() {
           <Button variant="danger" block loading={!!cancelFor && busy === `${cancelFor.id}:cancel`}
             onClick={() => cancelFor && void act(cancelFor, { action: 'cancel', ...(reason.trim() ? { reason: reason.trim() } : {}) }, 'Mentoria cancelada.')} data-testid="m6-cancel-confirm">Cancelar mentoria</Button>
           <Button variant="ghost" block onClick={() => setCancelFor(null)}>Manter</Button>
+        </div>
+      </Overlay>
+
+      <Overlay title="Pedir cancelamento" open={!!requestFor} onClose={() => setRequestFor(null)}>
+        <div className="tw-stack" data-testid="m6-request">
+          <p>O cancelamento de uma mentoria só pode ser feito por uma das administradoras do sistema. Escreva o motivo no campo abaixo e o pedido vai por e-mail para elas{requestFor ? ` (${requestFor.mentee.name.split(' ')[0]}, ${formatTime(requestFor.startAt)})` : ''}.</p>
+          <TextArea label="Motivo" rows={4} maxLength={500} value={requestReason} onChange={(e) => setRequestReason(e.target.value)} data-testid="m6-request-reason" />
+          <Button variant="danger" block loading={requesting} disabled={!requestReason.trim()}
+            onClick={() => requestFor && void requestCancel(requestFor)} data-testid="m6-request-send">Enviar pedido</Button>
+          <Button variant="ghost" block onClick={() => setRequestFor(null)}>Voltar</Button>
         </div>
       </Overlay>
     </div>

@@ -1,0 +1,28 @@
+TECH WOMAN
+Mentoria · {{evento_data}} · {{evento_local}}
+
+[PARA ADMINISTRADORAS]
+
+Pedido de cancelamento de mentoria
+
+{{mentora_nome}} quer cancelar a mentoria das {{horario}} com {{nome}}, na {{mesa}}.
+
+O cancelamento pela mentora está desligado no painel, por isso só uma administradora pode fazer essa operação.
+
+HORÁRIO: {{horario}}
+MENTORA: {{mentora_nome}}
+PARTICIPANTE: {{nome}}
+
+Motivo: {{justificativa}}
+
+Abrir o mapa de mesas: {{link_painel}}
+
+Se cancelar, a participante volta para a fila com prioridade e recebe o aviso por e-mail.
+
+Se o botão não funcionar, copie e cole este link no navegador:
+{{link_painel}}
+
+--
+{{evento_nome}} · {{evento_data}} · {{evento_local}}
+Você recebeu este e-mail porque é administradora do evento. Este endereço não recebe respostas.
+Aviso de privacidade: {{link_privacidade}}

@@ -31,6 +31,8 @@ function dedupeBase(i: Omit<EnqueueInput, 'mentee'>, recipientId: ObjectId): str
   if (i.type === 'registration_cancelled') return `registration_cancelled:${recipientId}:${i.dedupeSuffix}`;
   // RN21: um e-mail por atendimento fora da mesa (`walk_in_done:<walkInId>`) e por remoção dele (`walk_in_removed:<walkInId>`)
   if (i.type === 'walk_in_done' || i.type === 'walk_in_removed') return `${i.type}:${i.dedupeSuffix}`;
+  // RN25: um e-mail por administradora em cada pedido (`mentor_cancel_request:<appointmentId>:<pedido>:<userId>`)
+  if (i.type === 'mentor_cancel_request') return `${i.type}:${i.appointmentId}:${i.dedupeSuffix}:${recipientId}`;
   return `${i.type}:${i.appointmentId ?? recipientId}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;
 }
 
@@ -97,6 +99,24 @@ export async function enqueueMentorBooked(
   i: { mentor: Pick<UserDoc, '_id' | 'email'>; appointmentId: ObjectId },
 ): Promise<void> {
   await insertNotifications(ctx, session, { type: 'mentor_booked', appointmentId: i.appointmentId }, { menteeId: null, userId: i.mentor._id, email: i.mentor.email });
+}
+
+/**
+ * RN25 · Pedido de cancelamento da mentora (`mentor_cancel_request`, layout 13) a cada administradora ativa.
+ * `payload.justification` é o motivo escrito pela mentora; `requestId` separa pedidos repetidos da mesma mentoria.
+ */
+export async function enqueueMentorCancelRequest(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { admins: Pick<UserDoc, '_id' | 'email'>[]; appointmentId: ObjectId; requestId: ObjectId; justification: string },
+): Promise<void> {
+  for (const admin of i.admins) {
+    await insertNotifications(
+      ctx, session,
+      { type: 'mentor_cancel_request', appointmentId: i.appointmentId, dedupeSuffix: String(i.requestId), payload: { justification: i.justification } },
+      { menteeId: null, userId: admin._id, email: admin.email },
+    );
+  }
 }
 
 /**

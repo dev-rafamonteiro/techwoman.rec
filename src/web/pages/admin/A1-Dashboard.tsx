@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { ENDPOINTS, type AdminStreamEvent } from '@tw/shared';
 import { ADMIN_STREAM_EVENT_TYPES } from '@tw/shared';
 import { Link } from 'react-router-dom';
-import { Countdown, ConnectionBar, ErrorState, SkeletonList, EmptyState, call, formatDayShort, formatTime, usePolling, useQuery, useEventStream } from '../../ui';
-import { BarChart, LineChart, PageHead, useTitle } from './lib/common';
+import { ApiError, Countdown, ConnectionBar, ErrorState, SkeletonList, EmptyState, call, useToast, formatDayShort, formatTime, usePolling, useQuery, useEventStream } from '../../ui';
+import { BarChart, LineChart, PageHead, Switch, useTitle } from './lib/common';
 
 /** Tipos de "Precisa de atenção": etiqueta, tom e ação (design/admin/A1-dashboard.html). */
 const KIND = {
@@ -17,6 +17,10 @@ export default function A1Dashboard() {
   useTitle('Dashboard');
   const q = useQuery((signal) => call(ENDPOINTS.E30, { signal }), []);
   const [, setTick] = useState(0);
+  const toast = useToast();
+  // RN25 · liga/desliga o cancelamento pela mentora (E61); null = vale o que veio de E30
+  const [cancelOn, setCancelOn] = useState<boolean | null>(null);
+  const [savingCancel, setSavingCancel] = useState(false);
   usePolling(() => q.refetch(), 15000);
   const stream = useEventStream<AdminStreamEvent>({
     endpoint: ENDPOINTS.E38Stream,
@@ -29,6 +33,24 @@ export default function A1Dashboard() {
   if (q.status === 'loading') return <div className="tw-page"><PageHead title="Dashboard" /><SkeletonList rows={4} height={90} /></div>;
   if (q.status === 'error') return <div className="tw-page"><PageHead title="Dashboard" /><ErrorState error={q.error} onRetry={q.reload} /></div>;
   const d = q.data;
+  const mentorCancel = cancelOn ?? d.mentorCancelEnabled;
+  const toggleMentorCancel = async (enabled: boolean) => {
+    if (savingCancel) return;
+    setSavingCancel(true);
+    setCancelOn(enabled);
+    try {
+      const r = await call(ENDPOINTS.E61, { body: { enabled } });
+      // volta a valer o E30, que também mostra a mudança feita por outra administradora
+      await q.refetch();
+      setCancelOn(null);
+      toast.success(r.mentorCancelEnabled ? 'As mentoras podem cancelar pela agenda.' : 'Cancelamento pela mentora desligado: ela só pede às administradoras.');
+    } catch (e) {
+      setCancelOn(null);
+      toast.error((e as ApiError).message || 'Não foi possível salvar. Tente de novo.');
+    } finally {
+      setSavingCancel(false);
+    }
+  };
   const now = new Date(d.serverNow).getTime();
   const expiringSoon = d.attention.filter((a) => a.kind === 'invite_expiring' && new Date(a.at).getTime() - now < 3 * 60000).length;
   const neverLogged = d.mentors.total - d.mentors.loggedIn;
@@ -60,6 +82,15 @@ export default function A1Dashboard() {
       <PageHead title="Dashboard" sub={`${formatDayShort(d.serverNow).replace(/^./, (c) => c.toUpperCase())} · agora ${formatTime(d.serverNow)} (horário de Recife)`}>
         <ConnectionBar status={stream.status} lastUpdateAt={stream.lastUpdateAt} idleText="a cada 15 s" />
       </PageHead>
+      <div className="a1-toggle" data-on={mentorCancel} data-testid="a1-mentor-cancel">
+        <span className="a1-toggle__txt">
+          <strong>Cancelamento pela mentora {mentorCancel ? 'ligado' : 'desligado'}</strong>
+          <span>{mentorCancel
+            ? 'A mentora cancela a mentoria pela agenda dela; a participante volta para a fila com prioridade.'
+            : 'A mentora não cancela: ao tocar em cancelar, ela escreve o motivo e as administradoras recebem o pedido por e-mail.'}</span>
+        </span>
+        <Switch label="Cancelamento pela mentora ligado" checked={mentorCancel} onChange={(v) => void toggleMentorCancel(v)} />
+      </div>
       <div className="adm-kpis" data-testid="a1-kpis">
         {kpis.map(([k, label, v, note, tone]) => (
           <div className={`adm-kpi adm-kpi--${tone}`} key={k} data-testid={`kpi-${k}`}>

@@ -71,9 +71,11 @@ function card(items) {
   return `<tr><td class="card-wrap"><table role="presentation" class="card" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#3D0A45"><tr>${cells}</tr></table></td></tr>`;
 }
 
-// rodapé: por que a pessoa recebe o e-mail; os layouts das mentoras (`paraMentora`) não falam de inscrição
+// rodapé: por que a pessoa recebe o e-mail; os layouts das mentoras (`paraMentora`) e das administradoras (`paraAdmin`)
+// não falam de inscrição
 const motivoEnvio = (e) =>
-  e.paraMentora ? 'Você recebeu este e-mail porque é mentora no evento.' : 'Você recebeu este e-mail porque se inscreveu na mentoria do evento.';
+  e.paraAdmin ? 'Você recebeu este e-mail porque é administradora do evento.'
+    : e.paraMentora ? 'Você recebeu este e-mail porque é mentora no evento.' : 'Você recebeu este e-mail porque se inscreveu na mentoria do evento.';
 
 export function renderHtml(e) {
   const [selo, seloBg, seloFg] = e.selo;

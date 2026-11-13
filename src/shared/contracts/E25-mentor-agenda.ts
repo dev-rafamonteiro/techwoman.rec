@@ -8,6 +8,8 @@ export const E25ResponseSchema = z.object({
   serverNow: z.string(),
   /** Um item por horário disponível da mentora (ou com mentoria): `appointment` null = livre. */
   slots: z.array(z.object({ slot: SlotSchema, appointment: MentorAppointmentViewSchema.nullable() })),
+  /** RN25 · false: os botões de cancelar só pedem o cancelamento às administradoras (E60). */
+  mentorCancelEnabled: z.boolean(),
 });
 export type E25Response = z.infer<typeof E25ResponseSchema>;
 

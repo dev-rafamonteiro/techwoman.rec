@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
 import type { MenteeDoc } from '@tw/db';
-import { E20, E21, E22, E23, E25, E26, E27, E28, E55, QUEUE_PAGE_SIZE, formatTimeBR, type E20Response, type E25Response } from '@tw/shared';
+import { E20, E21, E22, E23, E25, E26, E27, E28, E55, E60, QUEUE_PAGE_SIZE, formatTimeBR, type E20Response, type E25Response } from '@tw/shared';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
+import { enqueueMentorCancelRequest } from '../lib/outbox.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { menteeSearchPipeline, runSearch } from '../search/text.js';
 import { normalizeLinkedin, parseOptionalPhone, trackAreasOf } from '../lib/normalize.js';
@@ -187,6 +188,7 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
     const body: E25Response = {
       timezone: event.timezone,
       serverNow: ctx.now().toISOString(),
+      mentorCancelEnabled: event.mentorCancelEnabled === true,
       slots: event.slots
         .filter((s) => user.availability.includes(s.id) || appts.some((a) => a.slotId === s.id))
         .map((s) => {
@@ -201,6 +203,10 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
 
   // E26 · PATCH /mentor/appointments/:id · RN08–RN10
   route(app, ctx, E26, async ({ req, user, params, body, idem }) => {
+    // RN25: com o cancelamento pela mentora desligado, ela pede às administradoras (E60)
+    if (body.action === 'cancel' && (await loadEvent(ctx)).mentorCancelEnabled !== true) {
+      throw new AppError('FORBIDDEN', 'O cancelamento só pode ser feito por uma das administradoras. Peça o cancelamento com o motivo.');
+    }
     const action = body.action === 'cancel' ? 'staff_cancel' : body.action;
     const { appointment } = await runTxn(ctx, async (session) => {
       const res = await applyTransition(ctx, session, {
@@ -219,6 +225,25 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
       return { appointment: out.appointment };
     });
     return { appointment };
+  });
+
+  // E60 · POST /mentor/appointments/:id/cancel-request · RN25
+  route(app, ctx, E60, async ({ req, user, params, body, idem }) => {
+    return runTxn(ctx, async (session) => {
+      const appt = await ctx.c.appointments.findOne({ _id: oid(params.id), eventId: ctx.config.eventId, mentorId: user._id }, { session });
+      if (!appt) throw notFound('Mentoria');
+      if (appt.status !== 'invited' && appt.status !== 'confirmed') throw new AppError('INVALID_STATE', 'Essa mentoria não pode mais ser cancelada.');
+      const admins = await ctx.c.users.find({ roles: { $in: ['admin', 'super_admin'] }, status: 'active' }, { session, projection: { email: 1 } }).toArray();
+      const requestId = new ObjectId();
+      await enqueueMentorCancelRequest(ctx, session, { admins, appointmentId: appt._id, requestId, justification: body.reason });
+      await writeAudit(ctx, session, {
+        actor: actorForRoute(req, 'mentor'), action: 'appointment.cancel_request', entity: 'appointment', entityId: appt._id,
+        after: { requestId: String(requestId), reason: body.reason, notified: admins.length }, ip: req.ip,
+      });
+      const out = { notified: admins.length };
+      await idem?.markDone(session, { status: 200, body: out });
+      return out;
+    });
   });
 
   // E27 · GET /mentor/stream (SSE)

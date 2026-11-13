@@ -100,6 +100,12 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
   if (layout === '11-atendimento-removido') vars['link_inscricao'] = `${i.baseUrl}/mentoria/inscricao`;
   // layout 12: painel da mentora (M1, sem token)
   if (layout === '12-mentoria-agendada') vars['link_painel'] = `${i.baseUrl}/entrar`;
+  // layout 13 (RN25): mapa de mesas do admin, onde ela cancela, e o motivo escrito pela mentora
+  if (layout === '13-pedido-cancelamento') {
+    vars['link_painel'] = `${i.baseUrl}/admin/mapa`;
+    const j = i.item.payload?.['justification'];
+    if (typeof j === 'string') vars['justificativa'] = j;
+  }
   // layout 9: painel da mentora (M1, sem token) e a frase do motivo; motivo desconhecido é erro de renderização
   let reason: MentorSlotReleasedReason | undefined;
   if (layout === '09-aviso-mentora') {

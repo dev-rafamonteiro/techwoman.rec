@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { ObjectId } from 'mongodb';
-import { E30, E31Create, E31List, E32, E33, E34, E56, type E30Response, type MentorListItem } from '@tw/shared';
+import { E30, E31Create, E31List, E32, E33, E34, E56, E61, type E30Response, type MentorListItem } from '@tw/shared';
 import { generateProvisionalPassword, hashPassword, tempPasswordExpiry, importMentors, ImportFormatError, type UserDoc } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, isDuplicateKey, notFound } from '../lib/errors.js';
@@ -22,6 +22,19 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     if (!ObjectId.isValid(s)) throw new AppError('VALIDATION_ERROR', 'Identificador inválido.');
     return new ObjectId(s);
   };
+
+  // E61 · PUT /admin/mentor-cancel · RN25
+  route(app, ctx, E61, async ({ req, body }) => {
+    await runTxn(ctx, async (session) => {
+      const cur = await loadEvent(ctx, session);
+      await ctx.c.events.updateOne({ _id: cur._id }, { $set: { mentorCancelEnabled: body.enabled, updatedAt: ctx.now() }, $inc: { version: 1 } }, { session });
+      await writeAudit(ctx, session, {
+        actor: actorForRoute(req, 'admin'), action: 'event.mentor_cancel', entity: 'event', entityId: cur._id,
+        before: { mentorCancelEnabled: cur.mentorCancelEnabled === true }, after: { mentorCancelEnabled: body.enabled }, ip: req.ip,
+      });
+    });
+    return { mentorCancelEnabled: body.enabled };
+  });
 
   // E30 · GET /admin/dashboard
   route(app, ctx, E30, async () => {
@@ -86,6 +99,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
     ];
     return {
       serverNow: iso(now),
+      mentorCancelEnabled: event.mentorCancelEnabled === true,
       counts: {
         registered,
         waiting: cnt(menteeByStatus, 'waiting'),

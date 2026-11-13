@@ -4,14 +4,15 @@ import { ApiError, ErrorState, SkeletonList, Overlay, SelectField, TextField, ca
 import { PageHead, Switch, errMsg, useTitle } from './lib/common';
 import './lib/a7-a9.css';
 
-/** `emailSubjects` (assuntos dos 11 layouts) é do contrato de E41 combinado com o backend; ids de src/api/notifications/templates/email/subjects.ts. */
-type EmailLayoutId = '01-inscricao-recebida' | '02-convite-horario' | '03-confirmacao' | '04-convite-expirado' | '05-cancelamento-mentora' | '06-acesso-mentora' | '07-inscricao-cancelada' | '08-horario-liberado' | '09-aviso-mentora' | '10-atendimento-fora-da-mesa' | '11-atendimento-removido' | '12-mentoria-agendada';
+/** `emailSubjects` (assuntos dos 13 layouts) é do contrato de E41 combinado com o backend; ids de src/api/notifications/templates/email/subjects.ts. */
+type EmailLayoutId = '01-inscricao-recebida' | '02-convite-horario' | '03-confirmacao' | '04-convite-expirado' | '05-cancelamento-mentora' | '06-acesso-mentora' | '07-inscricao-cancelada' | '08-horario-liberado' | '09-aviso-mentora' | '10-atendimento-fora-da-mesa' | '11-atendimento-removido' | '12-mentoria-agendada' | '13-pedido-cancelamento';
 type Draft = Omit<EventConfig, 'id' | 'slots' | 'templates'> & { emailSubjects?: Partial<Record<EmailLayoutId, string>> };
 const EMAIL_LAYOUTS: [EmailLayoutId, string][] = [
   ['01-inscricao-recebida', 'Inscrição recebida'], ['02-convite-horario', 'Convite de horário'], ['03-confirmacao', 'Confirmação'],
   ['04-convite-expirado', 'Convite expirado'], ['05-cancelamento-mentora', 'Cancelamento pela mentora'], ['06-acesso-mentora', 'Acesso da mentora'],
   ['07-inscricao-cancelada', 'Inscrição cancelada'], ['08-horario-liberado', 'Horário liberado'], ['09-aviso-mentora', 'Aviso à mentora (mentoria confirmada cancelada)'],
   ['10-atendimento-fora-da-mesa', 'Atendimento fora da mesa'], ['11-atendimento-removido', 'Atendimento fora da mesa removido'], ['12-mentoria-agendada', 'Aviso à mentora (nova mentoria)'],
+  ['13-pedido-cancelamento', 'Pedido de cancelamento da mentora (às administradoras)'],
 ];
 const toMin = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); return (h ?? 0) * 60 + (m ?? 0); };
 const fmt = (min: number) => `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
