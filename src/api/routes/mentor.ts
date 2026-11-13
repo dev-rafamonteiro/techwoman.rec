@@ -5,7 +5,8 @@ import { E20, E21, E22, E23, E25, E26, E27, E28, E55, E60, QUEUE_PAGE_SIZE, form
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
 import { AppError, fromRuleError, notFound } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
-import { enqueueMentorAvailabilityChanged, enqueueMentorCancelRequest } from '../lib/outbox.js';
+import { enqueueMentorAvailabilityChanged, enqueueMentorCancelled, enqueueMentorCancelRequest } from '../lib/outbox.js';
+import { tableLabel } from '../notifications/ics.js';
 import { decodeCursor, encodeCursor } from '../lib/pagination.js';
 import { menteeSearchPipeline, runSearch } from '../search/text.js';
 import { normalizeLinkedin, parseOptionalPhone, trackAreasOf } from '../lib/normalize.js';
@@ -229,18 +230,33 @@ export function registerMentorRoutes(app: FastifyInstance, ctx: AppContext): voi
       throw new AppError('FORBIDDEN', 'O cancelamento só pode ser feito por uma das administradoras. Peça o cancelamento com o motivo.');
     }
     const action = body.action === 'cancel' ? 'staff_cancel' : body.action;
+    const event = await loadEvent(ctx);
     const { appointment } = await runTxn(ctx, async (session) => {
+      const reason = body.action === 'cancel' ? (body.reason ?? null) : null;
       const res = await applyTransition(ctx, session, {
         appointmentId: oid(params.id),
         action,
         actor: actorForRoute(req, 'mentor'),
         scope: { mentorId: user._id },
-        reason: body.action === 'cancel' ? (body.reason ?? null) : null,
+        reason,
         ip: req.ip,
+        // RN27: o cancelamento pela mentora fica explícito na auditoria
+        ...(body.action === 'cancel' ? {
+          summary: async (a, m) => {
+            const t = await ctx.c.tables.findOne({ _id: a.tableId }, { session });
+            const what = a.status === 'invited' ? 'o convite' : 'a mentoria';
+            return `${user.name} cancelou ${what} das ${formatTimeBR(a.startAt, event.timezone)} com ${m.name}${t ? ` (${tableLabel(t)})` : ''}. Motivo: ${reason || 'não informado'}`;
+          },
+        } : {}),
       });
       if (!res) throw notFound('Mentoria');
       const table = await ctx.c.tables.findOne({ _id: res.appointment.tableId }, { session });
       if (!table) throw notFound('Mesa');
+      // RN27: as administradoras recebem o aviso do cancelamento feito pela mentora
+      if (body.action === 'cancel') {
+        const admins = await ctx.c.users.find({ roles: { $in: ['admin', 'super_admin'] }, status: 'active' }, { session, projection: { email: 1 } }).toArray();
+        await enqueueMentorCancelled(ctx, session, { admins, appointmentId: res.appointment._id, wasInvite: res.plan.from === 'invited', justification: reason, at: ctx.now() });
+      }
       const out = { appointment: toMentorAppointmentView(res.appointment, res.mentee, table) };
       await idem?.markDone(session, { status: 200, body: out });
       return { appointment: out.appointment };

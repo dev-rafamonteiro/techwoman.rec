@@ -106,6 +106,21 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
     const j = i.item.payload?.['justification'];
     if (typeof j === 'string') vars['justificativa'] = j;
   }
+  // `quando` dos layouts 14 e 15: dia e hora (fuso do evento) em que a mentora agiu
+  const whenOf = (v: unknown) => {
+    if (typeof v !== 'string') return undefined;
+    const at = new Date(v);
+    const d = zonedParts(at, tz);
+    return `${String(d.day).padStart(2, '0')}/${String(d.month).padStart(2, '0')} às ${formatTimeBR(at, tz)}`;
+  };
+  // layout 15 (RN27): convite ou mentoria, o motivo (opcional) e quando cancelou; mapa de mesas do admin
+  if (layout === '15-cancelamento-pela-mentora') {
+    const p = i.item.payload ?? {};
+    vars['o_que'] = p['wasInvite'] === true ? 'o convite' : 'a mentoria';
+    vars['justificativa'] = typeof p['justification'] === 'string' && p['justification'].trim() ? p['justification'] : 'não informado';
+    vars['quando'] = whenOf(p['at']);
+    vars['link_painel'] = `${i.baseUrl}/admin/mapa`;
+  }
   // layout 14 (RN26): nome e horários gravados no pedido; `quando` = hora em que a mentora salvou
   if (layout === '14-disponibilidade-mentora') {
     const p = i.item.payload ?? {};
@@ -113,11 +128,7 @@ export function buildEmailMessage(i: EmailMessageInput): EmailMessage {
     if (typeof p['mentorName'] === 'string') vars['mentora_nome'] = p['mentorName'];
     vars['horarios_incluidos'] = times(p['added']);
     vars['horarios_retirados'] = times(p['removed']);
-    if (typeof p['at'] === 'string') {
-      const at = new Date(p['at']);
-      const d = zonedParts(at, tz);
-      vars['quando'] = `${String(d.day).padStart(2, '0')}/${String(d.month).padStart(2, '0')} às ${formatTimeBR(at, tz)}`;
-    }
+    vars['quando'] = whenOf(p['at']);
     vars['link_painel'] = `${i.baseUrl}/admin/mentoras`;
   }
   // layout 9: painel da mentora (M1, sem token) e a frase do motivo; motivo desconhecido é erro de renderização

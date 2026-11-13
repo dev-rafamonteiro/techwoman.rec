@@ -63,7 +63,7 @@ export interface RenderedEmail {
 }
 
 /**
- * Renderiza um dos 14 layouts. Todas as variáveis declaradas do layout e as comuns precisam estar em `vars`
+ * Renderiza um dos 15 layouts. Todas as variáveis declaradas do layout e as comuns precisam estar em `vars`
  * (mesmo que o HTML não use alguma); `subjectTemplate` substitui o assunto padrão.
  */
 export function renderEmail(id: EmailTemplateId, vars: Readonly<Record<string, string | undefined>>, subjectTemplate?: string): RenderedEmail {

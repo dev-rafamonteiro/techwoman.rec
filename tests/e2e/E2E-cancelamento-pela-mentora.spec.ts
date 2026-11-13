@@ -4,7 +4,7 @@ import { userDoc } from "../helpers/seed.js";
 import { testPasswordHash } from "../helpers/app.js";
 import { getCollections } from "../../src/db/collections.js";
 
-/** RN25 · Cancelamento pela mentora desligado: M6 pede às administradoras com o motivo; o admin liga/desliga no A1. */
+/** RN25, RN27 · Desligado: M6 pede às administradoras com o motivo; o admin liga no A1; ligado, ela cancela e as administradoras são avisadas. */
 let world: E2EWorld;
 test.beforeEach(async () => {
   world = await resetWorld(1);
@@ -61,4 +61,7 @@ test("desligado: a mentora pede o cancelamento com o motivo; ligado no A1, ela c
   await m.getByTestId("m6-cancel").click();
   await m.getByTestId("m6-cancel-confirm").click();
   await expect.poll(async () => (await c.appointments.findOne({}))!.status).toBe("cancelled");
+  // RN27: com o cancelamento ligado, as administradoras recebem o aviso e a auditoria leva a frase
+  await expect.poll(() => c.outbox.countDocuments({ type: "mentor_cancelled" as never, to: "admin@techwoman.test" })).toBe(1);
+  expect((await c.auditLogs.findOne({ action: "appointment.cancel" }))!.after).toMatchObject({ summary: expect.stringContaining("cancelou a mentoria") });
 });

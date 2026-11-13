@@ -14,6 +14,8 @@ export interface ApplyTransitionInput {
   scope?: { mentorId?: ObjectId; menteeId?: ObjectId };
   reason?: string | null;
   ip?: string | null;
+  /** Frase legível gravada em `after.summary` da auditoria (A9 mostra na coluna Detalhe). */
+  summary?: (appointment: AppointmentDoc, mentee: MenteeDoc) => Promise<string>;
 }
 
 export interface AppliedTransition {
@@ -133,7 +135,7 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
     entity: 'appointment',
     entityId: appt._id,
     before: { status: plan.from },
-    after: { status: plan.appointmentTo, reason: input.reason ?? plan.reason },
+    after: { status: plan.appointmentTo, reason: input.reason ?? plan.reason, ...(input.summary ? { summary: await input.summary(appt, mentee) } : {}) },
     ip: input.ip ?? null,
   });
   return { plan, appointment: updated, mentee };

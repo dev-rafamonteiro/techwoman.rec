@@ -35,6 +35,8 @@ function dedupeBase(i: Omit<EnqueueInput, 'mentee'>, recipientId: ObjectId): str
   if (i.type === 'mentor_cancel_request') return `${i.type}:${i.appointmentId}:${i.dedupeSuffix}:${recipientId}`;
   // RN26: um e-mail por administradora em cada alteração (`mentor_availability_changed:<alteração>:<userId>`)
   if (i.type === 'mentor_availability_changed') return `${i.type}:${i.dedupeSuffix}:${recipientId}`;
+  // RN27: uma mentoria só é cancelada uma vez (`mentor_cancelled:<appointmentId>:<userId>`)
+  if (i.type === 'mentor_cancelled') return `${i.type}:${i.appointmentId}:${recipientId}`;
   return `${i.type}:${i.appointmentId ?? recipientId}${i.dedupeSuffix !== undefined ? `:${i.dedupeSuffix}` : ''}`;
 }
 
@@ -133,6 +135,21 @@ export async function enqueueMentorAvailabilityChanged(
   const payload = { mentorName: i.mentorName, added: i.added.map((d) => d.toISOString()), removed: i.removed.map((d) => d.toISOString()), at: i.at.toISOString() };
   for (const admin of i.admins) {
     await insertNotifications(ctx, session, { type: 'mentor_availability_changed', dedupeSuffix: String(i.changeId), payload }, { menteeId: null, userId: admin._id, email: admin.email });
+  }
+}
+
+/**
+ * RN27 · A mentora cancelou a mentoria ou o convite pela agenda (`mentor_cancelled`, layout 15), a cada
+ * administradora ativa. `payload`: se era convite, o motivo escrito por ela (ou null) e quando cancelou.
+ */
+export async function enqueueMentorCancelled(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { admins: Pick<UserDoc, '_id' | 'email'>[]; appointmentId: ObjectId; wasInvite: boolean; justification: string | null; at: Date },
+): Promise<void> {
+  const payload = { wasInvite: i.wasInvite, justification: i.justification, at: i.at.toISOString() };
+  for (const admin of i.admins) {
+    await insertNotifications(ctx, session, { type: 'mentor_cancelled', appointmentId: i.appointmentId, payload }, { menteeId: null, userId: admin._id, email: admin.email });
   }
 }
 

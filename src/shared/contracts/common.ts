@@ -108,6 +108,8 @@ export const OUTBOX_TYPES = [
   'mentor_cancel_request',
   // RN26 · aviso às administradoras: a mentora incluiu ou tirou horários da própria disponibilidade (M3)
   'mentor_availability_changed',
+  // RN27 · aviso às administradoras: a mentora cancelou uma mentoria ou um convite (com o cancelamento pela mentora ligado)
+  'mentor_cancelled',
   'staff_password',
   // RN21 · participante atendida fora da mesa: agradecimento com a mentora (e o LinkedIn dela) e o link pessoal (P6)
   'walk_in_done',

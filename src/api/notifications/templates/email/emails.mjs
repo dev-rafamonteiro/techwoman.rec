@@ -1,4 +1,4 @@
-// Conteúdo dos 14 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 15 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
 // {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail". Trecho opcional:
 // `{{#variavel}}...{{/variavel}}` some quando a variável vem vazia (render.ts).
@@ -217,6 +217,25 @@ export const EMAILS = [
     card: [['INCLUIU', '{{horarios_incluidos}}'], ['TIROU', '{{horarios_retirados}}'], ['QUANDO', '{{quando}}']],
     botao: ['Ver as mentoras', 'link_painel'],
     nota: 'A alteração também fica registrada em Logs > Auditoria.',
+    linkFallback: 'link_painel',
+  },
+  {
+    // RN27 · a mentora cancelou pela agenda (mentor_cancelled), às administradoras; {{o_que}} = "a mentoria" ou
+    // "o convite"; {{justificativa}} = motivo escrito por ela ou "não informado"
+    id: '15-cancelamento-pela-mentora',
+    paraAdmin: true,
+    vars: ['mentora_nome', 'nome', 'horario', 'mesa', 'o_que', 'justificativa', 'quando', 'link_painel'],
+    preheader: '{{mentora_nome}} cancelou {{o_que}} das {{horario}} com {{nome}}.',
+    selo: ['PARA ADMINISTRADORAS', ...SELO.vermelho],
+    titulo: 'Mentoria cancelada pela mentora',
+    paragrafos: [
+      '{{mentora_nome}} cancelou {{o_que}} das {{horario}} com {{nome}}, na {{mesa}}, em {{quando}} (horário de Recife).',
+      'A participante voltou para a fila com prioridade e foi avisada por e-mail. A mesa e o horário ficaram livres.',
+    ],
+    card: [['HORÁRIO', '{{horario}}'], ['MENTORA', '{{mentora_nome}}'], ['PARTICIPANTE', '{{nome}}']],
+    destaque: 'Motivo: {{justificativa}}',
+    botao: ['Abrir o mapa de mesas', 'link_painel'],
+    nota: 'O cancelamento também fica registrado em Logs > Auditoria.',
     linkFallback: 'link_painel',
   },
 ];

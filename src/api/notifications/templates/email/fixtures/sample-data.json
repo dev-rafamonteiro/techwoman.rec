@@ -93,6 +93,16 @@
       "horarios_retirados": "9h00",
       "quando": "14/11 às 10h32",
       "link_painel": "https://techwoman.dev/admin/mentoras"
+    },
+    "15-cancelamento-pela-mentora": {
+      "mentora_nome": "Ana",
+      "nome": "Joana",
+      "horario": "14h15",
+      "mesa": "Mesa 7",
+      "o_que": "a mentoria",
+      "justificativa": "Tive uma emergência.",
+      "quando": "14/11 às 10h32",
+      "link_painel": "https://techwoman.dev/admin/mapa"
     }
   }
 }
