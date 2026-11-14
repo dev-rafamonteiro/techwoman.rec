@@ -36,6 +36,8 @@ export const E30ResponseSchema = z.object({
   tables: z.object({ occupiedNow: z.number().int(), total: z.number().int() }),
   /** Sessões livres restantes no dia (capacidade). */
   remainingCapacity: z.number().int(),
+  /** Horários livres das mentoras ativas: soma, por mentora, dos horários futuros na disponibilidade sem mentoria marcada (sem o limite de mesas). */
+  mentorFreeSlots: z.number().int(),
   /** RN22 · Horários futuros com mais mentoras ativas disponíveis do que mesas ativas (só o admin consegue isso, por E32/E33). */
   overCapacitySlots: z.array(SlotCapacityInfoSchema),
   mentors: z.object({ loggedIn: z.number().int(), total: z.number().int() }),

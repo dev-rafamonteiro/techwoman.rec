@@ -68,6 +68,7 @@ export default function A1Dashboard() {
     ['tables', 'Mesas ocupadas agora', `${d.tables.occupiedNow}/${d.tables.total}`, '', 'p'],
     // RN22: horário com mais mentoras do que mesas (só por ação do admin) vira nota laranja no mesmo card
     ['capacity', 'Sessões livres hoje', d.remainingCapacity, over.length ? `Mais mentoras que mesas: ${over.map((s) => formatTime(s.startAt)).slice(0, 3).join(', ')}${over.length > 3 ? '…' : ''}` : 'capacidade restante', over.length ? 'o' : 'n'],
+    ['mentorfree', 'Horários disponíveis', d.mentorFreeSlots, 'livres nas agendas das mentoras ativas', 'n'],
     ['mentors', 'Mentoras com login', `${d.mentors.loggedIn}/${d.mentors.total}`, neverLogged > 0 ? `${neverLogged} nunca ${neverLogged === 1 ? 'acessou' : 'acessaram'}` : '', 'n'],
   ];
   const hours = d.registeredByHour.map((h) => ({ label: formatTime(h.hour).replace(/h00$/, 'h'), value: h.count }));

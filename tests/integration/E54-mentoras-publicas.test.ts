@@ -102,6 +102,8 @@ describe.skipIf(!api)("E54 · mentoras públicas", () => {
     const [pub, dash] = await Promise.all([get(), b.admin.get("/api/admin/dashboard")]);
     expect(pub.body.stats.availableSlots).toBe(23);
     expect(pub.body.stats.availableSlots).toBe(dash.body.remainingCapacity);
+    // horários livres das mentoras ativas: sem o limite de mesas, menos o horário da mentora com a mentoria
+    expect(dash.body.mentorFreeSlots).toBe(23);
   });
 
   it("horário que já começou não conta", async () => {

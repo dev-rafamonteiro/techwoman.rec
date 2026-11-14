@@ -50,7 +50,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       tables.countDocuments({ eventId: eid, active: true }),
       users.find({ roles: 'mentor', status: 'active' }, { projection: { availability: 1, lastLoginAt: 1 } }).toArray(),
       ap.countDocuments({ eventId: eid, status: { $in: [...ACTIVE] }, startAt: { $lte: now }, endAt: { $gt: now } }),
-      ap.find({ eventId: eid, slotLock: true, startAt: { $gt: now } }, { projection: { slotId: 1 } }).toArray(),
+      ap.find({ eventId: eid, slotLock: true, startAt: { $gt: now } }, { projection: { slotId: 1, mentorId: 1 } }).toArray(),
       ctx.c.walkIns.countDocuments({ eventId: eid, deletedAt: null }),
     ]);
     const cnt = (list: { _id: string; n: number }[], k: string) => list.find((x) => x._id === k)?.n ?? 0;
@@ -62,6 +62,9 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       if (s.startAt.getTime() <= now.getTime()) continue;
       mentorsBySlot.set(s.id, mentors.filter((m) => m.availability.includes(s.id)).length);
     }
+    // horários livres das mentoras ativas: (mentora, horário futuro) na disponibilidade e sem mentoria que ocupe
+    const busy = new Set(futureBooked.map((a) => `${String(a.mentorId)}:${a.slotId}`));
+    const mentorFreeSlots = mentors.reduce((n, m) => n + m.availability.filter((sid) => mentorsBySlot.has(sid) && !busy.has(`${String(m._id)}:${sid}`)).length, 0);
     const remainingCapacity = remainingSlotCapacity({ slots: event.slots, now, activeTables, mentorsBySlot, bookedBySlot });
     // RN22: horários futuros com mais mentoras do que mesas (só por ação do admin ou dado anterior à regra)
     const overCapacity = toSlotCapacityInfo(event, overCapacitySlots(mentorsBySlot, activeTables, [...mentorsBySlot.keys()]));
@@ -112,6 +115,7 @@ export function registerAdminMentorRoutes(app: FastifyInstance, ctx: AppContext)
       },
       tables: { occupiedNow: occupied, total: activeTables },
       remainingCapacity,
+      mentorFreeSlots,
       overCapacitySlots: overCapacity,
       mentors: { loggedIn: mentors.filter((m) => m.lastLoginAt).length, total: mentors.length },
       registeredByArea: byArea.map((a) => ({ area: a._id, label: label.get(a._id) ?? a._id, count: a.n })),
