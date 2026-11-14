@@ -16,6 +16,11 @@ export const E39CreateBodySchema = z
     /** Admin pode ignorar disponibilidade e antecedência (com aviso na resposta). */
     ignoreAvailability: z.boolean().default(false),
     ignoreLeadTime: z.boolean().default(false),
+    /**
+     * A participante está no salão: já nasce `confirmed` (RN08), sem convite. Obrigatório para horário que já começou
+     * (registro retroativo: a conversa passou da hora, mas ela sentou na mesa).
+     */
+    confirmNow: z.boolean().default(false),
   })
   .strict();
 export type E39CreateBody = z.input<typeof E39CreateBodySchema>;

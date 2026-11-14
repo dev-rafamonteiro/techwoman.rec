@@ -267,7 +267,9 @@ function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDo
 
 /**
  * Mesa livre no mapa: puxa alguém da fila de espera (E35 waiting, prioridade primeiro, depois quem entrou antes) para uma
- * mentora livre no horário (as da trilha dela; sem nenhuma, todas). Cria o convite (E39); "está aqui" já confirma.
+ * mentora livre no horário (as da trilha dela; sem nenhuma, todas). Cria o convite (E39); "está aqui" já nasce confirmada.
+ * Horário que já começou (a conversa anterior passou da hora e ela sentou depois): registro retroativo, sempre confirmado.
+ * Livre = sem mentoria ativa no horário, então entra quem teve participante que não compareceu ou mentoria cancelada.
  */
 function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone, onConflict }: {
   slot: { id: string; startAt: string; endAt: string }; table: { id: string; number: number; location: string | null };
@@ -289,6 +291,8 @@ function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone
   const [mentorId, setMentorId] = useState('');
   // horário em andamento ou quase: a participante está no local, confirma na hora (o convite venceria antes de ela responder)
   const [here, setHere] = useState(new Date(slot.startAt).getTime() - Date.now() < 30 * 60_000);
+  // já começou: um convite nasceria vencido; só dá para registrar com ela presente
+  const started = new Date(slot.startAt).getTime() <= Date.now();
   const [busy, setBusy] = useState(false);
   const mentee = queue.status === 'success' ? queue.data.find((x) => x.id === menteeId) : undefined;
   const free = mentee ? trackFirst(mentorsFreeAt(mentors, appts, slot.id), mentee.area) : null;
@@ -296,9 +300,9 @@ function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone
   const submit = async () => {
     setBusy(true);
     try {
-      const r = await call(ENDPOINTS.E39Create, { body: { menteeId, mentorId, slotId: slot.id, tableId: table.id, ignoreLeadTime: true } });
-      if (here) await call(ENDPOINTS.E39Patch, { params: { id: r.appointment.id }, body: { action: 'confirm_in_person' } });
-      toast.success(here ? 'Mentoria agendada e confirmada.' : 'Convite enviado à participante.');
+      const confirmNow = here || started;
+      await call(ENDPOINTS.E39Create, { body: { menteeId, mentorId, slotId: slot.id, tableId: table.id, ignoreLeadTime: true, confirmNow } });
+      toast.success(started ? 'Mentoria registrada e confirmada.' : confirmNow ? 'Mentoria agendada e confirmada.' : 'Convite enviado à participante.');
       await onDone();
     } catch (e) {
       if (e instanceof ApiError && e.isConflict) onConflict(e.message); else toast.error(errMsg(e));
@@ -309,6 +313,7 @@ function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone
     <Overlay open title={`Mesa ${table.number} · ${formatTime(slot.startAt)} · livre`} onClose={onClose}>
       <div className="a5-detail" data-testid="a5-pull">
         <h3 className="a5-detail__sub">Puxar da lista de espera</h3>
+        {started && <p className="tw-field__hint" data-testid="a5-pull-retro">Este horário já começou: a mentoria é registrada como confirmada, com a participante já na mesa.</p>}
         {queue.status === 'loading' && <SkeletonList rows={3} height={48} />}
         {queue.status === 'error' && <ErrorState error={queue.error} onRetry={queue.reload} />}
         {queue.status === 'success' && queue.data.length === 0 && <p className="tw-field__hint">Ninguém na lista de espera.</p>}
@@ -338,8 +343,8 @@ function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone
                   <option value="">{free.otherTracks ? 'Escolha (nenhuma livre da trilha)' : `Escolha (trilha ${areaLabel(mentee.area)})`}</option>
                   {free.mentors.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </select>
-                <button type="button" className="a46-pill a46-pill--dark" disabled={!mentorId || busy} data-testid="a5-pull-go" onClick={() => void submit()}>Agendar</button>
-                <CheckboxField label="A participante está aqui: confirmar na hora" checked={here} onChange={(e) => setHere(e.target.checked)} />
+                <button type="button" className="a46-pill a46-pill--dark" disabled={!mentorId || busy} data-testid="a5-pull-go" onClick={() => void submit()}>{started ? 'Registrar' : 'Agendar'}</button>
+                {!started && <CheckboxField label="A participante está aqui: confirmar na hora" checked={here} onChange={(e) => setHere(e.target.checked)} />}
               </>
             )}
           </div>

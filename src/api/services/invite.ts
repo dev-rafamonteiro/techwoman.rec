@@ -3,7 +3,7 @@ import type { AppointmentDoc, MenteeDoc, TableDoc } from '@tw/db';
 import { loadEvent, type AppContext } from '../ctx.js';
 import { AppError, notFound } from '../lib/errors.js';
 import { writeAudit } from '../lib/audit.js';
-import { enqueueMenteeNotifications } from '../lib/outbox.js';
+import { enqueueMenteeNotifications, enqueueReminders } from '../lib/outbox.js';
 import { checkInvite, computeExpiry, type Actor, type InviteWarning } from '../domain/index.js';
 import { insertAppointment, newAppointmentDoc } from './appointments.js';
 
@@ -13,6 +13,9 @@ import { insertAppointment, newAppointmentDoc } from './appointments.js';
  * 3) toca o documento da mentora (serializa com E21 em disponibilidade); 4) insere a mentoria, onde os índices
  * únicos barram mesa e mentora ocupadas (E11000 vira TABLE_TAKEN/MENTOR_BUSY/MENTEE_TAKEN);
  * 5) outbox `invite` e auditoria na mesma transação.
+ * `confirmNow` (só admin, E39): a participante está no salão; a mentoria já nasce `confirmed` (confirmação presencial,
+ * RN08), sem convite nem prazo. É o único jeito de registrar um horário que já começou (retroativo): um convite para ele
+ * nasceria vencido.
  */
 export async function createInvite(
   ctx: AppContext,
@@ -25,6 +28,7 @@ export async function createInvite(
     actor: Actor;
     createdByRole: 'mentor' | 'admin' | 'super_admin';
     override?: { ignoreAvailability?: boolean; ignoreLeadTime?: boolean };
+    confirmNow?: boolean;
     ip?: string | null;
   },
 ): Promise<{ appointment: AppointmentDoc; mentee: MenteeDoc; table: TableDoc; warnings: InviteWarning[] }> {
@@ -47,10 +51,16 @@ export async function createInvite(
   });
   if (!check.ok) throw new AppError('SLOT_UNAVAILABLE', check.message, { details: { reason: check.reason } });
   if (!slot) throw new AppError('SLOT_UNAVAILABLE', 'Horário inexistente.', { details: { reason: 'not_in_event' } });
+  const confirmNow = input.confirmNow === true;
+  const expiresAt = confirmNow ? null : computeExpiry(now, slot.startAt, event.responseWindowMinutes);
+  if (expiresAt && expiresAt.getTime() <= now.getTime()) {
+    throw new AppError('SLOT_UNAVAILABLE', 'O horário já começou: só dá para registrar com a participante presente (confirmar na hora).', { details: { reason: 'lead_time' } });
+  }
+  const status = confirmNow ? 'confirmed' : 'invited';
 
   const mentee = await ctx.c.mentees.findOneAndUpdate(
     { _id: input.menteeId, eventId: event._id, status: 'waiting' },
-    { $set: { status: 'invited', lastOutcome: null, updatedAt: now }, $inc: { version: 1 } },
+    { $set: { status, lastOutcome: null, updatedAt: now }, $inc: { version: 1 } },
     { session, returnDocument: 'after' },
   );
   if (!mentee) {
@@ -60,6 +70,7 @@ export async function createInvite(
   }
   await ctx.c.users.updateOne({ _id: mentor._id }, { $set: { updatedAt: now } }, { session });
 
+  const by = { userId: new ObjectId(input.actor.userId as string), role: input.createdByRole };
   const appt = newAppointmentDoc({
     eventId: event._id,
     menteeId: mentee._id,
@@ -68,22 +79,24 @@ export async function createInvite(
     slotId: slot.id,
     startAt: slot.startAt,
     endAt: slot.endAt,
-    status: 'invited',
-    expiresAt: computeExpiry(now, slot.startAt, event.responseWindowMinutes),
-    createdBy: { userId: new ObjectId(input.actor.userId as string), role: input.createdByRole },
-    history: { from: null, to: 'invited', by: { userId: new ObjectId(input.actor.userId as string), role: input.createdByRole }, at: now, reason: null },
+    status,
+    expiresAt,
+    createdBy: by,
+    ...(confirmNow ? { confirmedBy: by } : {}),
+    history: { from: null, to: status, by, at: now, reason: confirmNow ? 'in_person' : null },
     now,
   });
   await insertAppointment(ctx, session, appt);
   await ctx.c.mentees.updateOne({ _id: mentee._id }, { $set: { currentAppointmentId: appt._id } }, { session });
   mentee.currentAppointmentId = appt._id;
-  await enqueueMenteeNotifications(ctx, session, { type: 'invite', mentee, appointmentId: appt._id });
+  await enqueueMenteeNotifications(ctx, session, { type: confirmNow ? 'confirmed' : 'invite', mentee, appointmentId: appt._id });
+  if (confirmNow) await enqueueReminders(ctx, session, mentee, appt);
   await writeAudit(ctx, session, {
     actor: input.actor,
-    action: 'appointment.invite',
+    action: confirmNow ? 'appointment.confirm_in_person' : 'appointment.invite',
     entity: 'appointment',
     entityId: appt._id,
-    after: { status: 'invited', menteeId: String(mentee._id), mentorId: String(mentor._id), slotId: slot.id, tableId: String(table._id), warnings: check.warnings },
+    after: { status, ...(confirmNow ? { retroactive: slot.startAt.getTime() <= now.getTime() } : {}), menteeId: String(mentee._id), mentorId: String(mentor._id), slotId: slot.id, tableId: String(table._id), warnings: check.warnings },
     ip: input.ip ?? null,
   });
   return { appointment: appt, mentee, table, warnings: check.warnings };

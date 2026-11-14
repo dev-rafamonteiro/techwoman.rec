@@ -47,6 +47,7 @@ export function registerInviteRoutes(app: FastifyInstance, ctx: AppContext): voi
         actor: actorForRoute(req, 'admin'),
         createdByRole: role,
         override: { ignoreAvailability: body.ignoreAvailability, ignoreLeadTime: body.ignoreLeadTime },
+        confirmNow: body.confirmNow,
         ip: req.ip,
       }),
     );
