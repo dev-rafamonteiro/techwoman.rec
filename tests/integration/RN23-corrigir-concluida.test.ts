@@ -22,7 +22,7 @@ describe.skipIf(!api)("RN23 · corrigir mentoria concluída", () => {
   const url = (id: unknown) => `/api/admin/appointments/${id}`;
 
   beforeAll(async () => {
-    b = await bootApi(api!, "rn23", { mentors: 1, mentees: 5, tables: 5 });
+    b = await bootApi(api!, "rn23", { mentors: 1, mentees: 6, tables: 5 });
     c = getCollections(b.t.db);
   }, 120_000);
   afterAll(async () => b?.close());
@@ -76,6 +76,20 @@ describe.skipIf(!api)("RN23 · corrigir mentoria concluída", () => {
     await c.appointments.updateOne({ _id: a._id }, { $set: { status: "in_progress" } });
     expect((await b.superAdmin.patch(url(a._id), { action: "release" })).status).toBe(200);
     expect(await mentee(0)).toMatchObject({ status: "waiting", priority: true });
+  });
+
+  it("reabrir não compareceu com a mentora já em outra mentoria no horário: 409, sem mexer em nada", async () => {
+    expect((await b.invite(0, 5, 7, 0)).status).toBe(201);
+    expect((await Client.asMentee(b.app, b.w.mentees[5]!.token).post("/api/public/me/actions", { action: "accept" })).status).toBe(200);
+    const a = (await c.appointments.findOne({ menteeId: b.w.mentees[5]!.doc._id, status: "confirmed" }))!;
+    expect((await b.superAdmin.patch(url(a._id), { action: "no_show" })).status).toBe(200);
+    expect((await c.appointments.findOne({ _id: a._id }))!.slotLock).toBeUndefined();
+    // outra mentoria da mesma mentora no horário que a falta liberou
+    await c.appointments.insertOne({ ...a, _id: new (a._id.constructor as any)(), menteeId: new (a._id.constructor as any)(), tableId: new (a._id.constructor as any)(), status: "confirmed", slotLock: true } as never);
+    const r = await b.superAdmin.patch(url(a._id), { action: "reopen" });
+    expect(r.status, JSON.stringify(r.body)).toBe(409);
+    expect(r.body.code).toBe("MENTOR_BUSY");
+    expect((await c.appointments.findOne({ _id: a._id }))!.status).toBe("no_show");
   });
 
   it("só de mentoria concluída", async () => {

@@ -22,8 +22,8 @@ export function gridChanged(a: GridFields, b: GridFields): boolean {
 
 /**
  * RN16 · Alterar data, fuso, horários, duração ou intervalo do evento é recusado se existir qualquer mentoria com slotLock.
- * `lockedAppointments` = mentorias com `slotLock` (invited, confirmed, in_progress; também done/no_show, que
- * seguem referenciando o horário).
+ * `lockedAppointments` = mentorias com `slotLock` (invited, confirmed, in_progress, done) mais as `no_show`, que
+ * já não ocupam a mesa mas seguem referenciando o horário.
  */
 export function checkGridChange(current: GridFields, next: GridFields, lockedAppointments: number): { ok: true } | RuleError {
   if (gridChanged(current, next) && lockedAppointments > 0) {

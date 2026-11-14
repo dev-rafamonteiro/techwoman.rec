@@ -27,7 +27,8 @@ describe("RN09 não compareceu", () => {
   it("a partir de início + 10 min -> no_show", () => {
     const p = ok(run("no_show", "confirmed", min(start, 10)));
     expect(p).toMatchObject({ appointmentTo: "no_show", menteeTo: "no_show" });
-    expect(p.locks).toEqual({ slotLock: true, menteeLock: false });
+    // a mesa e a mentora ficam livres no horário na hora, sem a equipe precisar liberar
+    expect(p.locks).toEqual({ slotLock: false, menteeLock: false });
   });
   it("a equipe (admin, super admin) marca a qualquer hora", () => {
     for (const role of ["admin", "super_admin"] as const) {

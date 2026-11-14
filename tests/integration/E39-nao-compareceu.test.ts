@@ -37,6 +37,25 @@ describe.skipIf(!api)("E39 · não compareceu pela equipe", () => {
     expect((await c.mentees.findOne({ _id: a.menteeId }))!.status).toBe("no_show");
   });
 
+  it("não compareceu libera a mesa e a mentora: sai do mapa e outra participante entra no mesmo horário", async () => {
+    const a = await register("s06");
+    expect((await b.admin.patch(`/api/admin/appointments/${a._id}`, { action: "no_show" })).status).toBe(200);
+    expect((await c.appointments.findOne({ _id: a._id }))!.slotLock).toBeUndefined();
+    const map = await b.admin.get("/api/admin/schedule");
+    expect(map.body.appointments.map((x: { id: string }) => x.id)).not.toContain(String(a._id));
+    // a única mentora do evento, no mesmo horário
+    const next = await register("s06");
+    expect(String(next.mentorId)).toBe(String(a.mentorId));
+    expect(next.slotId).toBe("s06");
+  });
+
+  it("não compareceu segue bloqueando a mudança de grade (RN16)", async () => {
+    await c.appointments.updateMany({ status: { $ne: "no_show" } }, { $unset: { slotLock: "" } });
+    const { id: _id, slots: _slots, ...ev } = (await b.superAdmin.get("/api/admin/event")).body.event;
+    const r = await b.superAdmin.put("/api/admin/event", { ...ev, gapMinutes: ev.gapMinutes + 5 });
+    expect(r.body.code, JSON.stringify(r.body)).toBe("GRID_LOCKED");
+  });
+
   it("a mentora, antes de início + 10 min -> TOO_EARLY", async () => {
     const a = await register("s04");
     const r = await b.mentor[0]!.patch(`/api/mentor/appointments/${a._id}`, { action: "no_show" });

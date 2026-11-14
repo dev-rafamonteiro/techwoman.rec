@@ -8,7 +8,7 @@ export const E38ResponseSchema = z.object({
   timezone: z.string(),
   slots: z.array(SlotSchema),
   tables: z.array(TableViewSchema),
-  /** Mentorias com slotLock (invited, confirmed, in_progress, done, no_show). Célula vazia = livre. */
+  /** Mentorias com slotLock (invited, confirmed, in_progress, done; `no_show` solta a mesa). Célula vazia = livre. */
   appointments: z.array(AdminAppointmentViewSchema),
 });
 export type E38Response = z.infer<typeof E38ResponseSchema>;

@@ -121,7 +121,7 @@ async function allocate(
   const busyMentors = new Set(here.map((a) => String(a.mentorId)));
   const busyTables = new Set(here.map((a) => String(a.tableId)));
   const activeCount = new Map<string, number>();
-  // desempate da RN19 só por mentorias ativas (invited/confirmed/in_progress); `slotLock` também cobre done/no_show
+  // desempate da RN19 só por mentorias ativas (invited/confirmed/in_progress); `slotLock` também cobre done
   for (const a of active.filter((x) => isActiveAppointment(x.status))) activeCount.set(String(a.mentorId), (activeCount.get(String(a.mentorId)) ?? 0) + 1);
   const freeAll = mentors.filter((m) => m.availability.includes(slot.id) && !busyMentors.has(String(m._id)));
   const freeInTrack = freeAll.filter((m) => m.areas.includes(input.area));

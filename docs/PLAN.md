@@ -197,7 +197,8 @@ As duas travas são campos booleanos mantidos junto com o status:
 | Status | `slotLock` (mesa e mentora ocupadas) | `menteeLock` (participante ocupada) |
 | --- | --- | --- |
 | `invited`, `confirmed`, `in_progress` | true | true |
-| `done`, `no_show` | true | ausente |
+| `done` | true | ausente |
+| `no_show` | ausente (mesa e mentora livres no horário) | ausente |
 | `declined`, `expired`, `cancelled` | ausente | ausente |
 
 ### outbox e audit\_logs
@@ -270,14 +271,14 @@ A linha de cima é o caminho feliz; as caixas de baixo e a de cima liberam mesa 
 6. **RN06 · Resposta da participante.** Aceitar só se o convite ainda for `invited` e não vencido. Recusar com "Horário não serve" devolve à fila com `priority = true` e `priorityReason = "declined_schedule"`. Recusar com "Não tenho mais interesse" encerra a inscrição (`cancelled`).
 7. **RN07 · Expiração.** O worker, a cada 30 s, marca como `expired` todo convite `invited` com `expiresAt` vencido; a participante volta para `waiting` sem ganhar prioridade e recebe aviso.
 8. **RN08 · Confirmação presencial.** A mentora pode confirmar um convite `invited` quando a participante está na mesa; o registro guarda quem confirmou.
-9. **RN09 · Não compareceu.** Permitido só para `confirmed` e a partir de `startAt` + 10 min.
+9. **RN09 · Não compareceu.** Permitido só para `confirmed` e a partir de `startAt` + 10 min. A mesa e a mentora ficam livres no horário na hora (sem `slotLock`), sem a equipe precisar liberar; a mentoria segue no histórico e bloqueia a mudança de grade (RN16).
 10. **RN10 · Cancelamento pela mentora ou admin.** `invited` ou `confirmed` vira `cancelled`; a participante volta para a fila com `priority = true` (`priorityReason = "cancelled_by_staff"`); mesa e horário ficam livres na hora.
 11. **RN11 · Disponibilidade.** A mentora não consegue remover da disponibilidade um horário com mentoria `invited`, `confirmed` ou `in_progress`.
 12. **RN12 · Desativar mentora.** Bloqueado enquanto ela tiver mentorias futuras ativas; a API devolve a lista para o admin realocar ou cancelar. Desativar revoga todas as sessões dela.
 13. **RN13 · Mesa sugerida.** Em M5, sugere a mesa da mentoria anterior mais próxima da mentora, se estiver livre no horário escolhido; senão, a mesa livre de menor número.
 14. **RN14 · Período preferido.** Manhã = horários que começam antes de 12h00; início da tarde = 12h00 a 14h59; fim da tarde = 15h00 em diante (horário de Recife). Só pode ser alterado enquanto a participante está `waiting`.
 15. **RN15 · Lembretes.** Ao confirmar (ou mover), agenda na `outbox` um lembrete por e-mail por regra configurada em A7 (`events.reminders`: até 10, cada uma com minutos antes do início, de 1 a 1440; padrão: um lembrete 15 min antes). Regras cujo horário já passou são puladas; se todas passaram e a mentoria não começou, sai um só, agora. No envio, o worker confere o status atual e descarta (`skipped`) se não estiver mais `confirmed`. As regras valem para as mentorias confirmadas depois de salvas.
-16. **RN16 · Mudança de grade.** Alterar data, fuso, horários, duração ou intervalo do evento é recusado se existir qualquer mentoria com `slotLock` (invited, confirmed, in_progress, done, no_show): as concluídas e as sem comparecimento continuam apontando para o horário (`slotId`/`startAt`) e ficariam órfãs se a grade fosse gerada de novo. A tela A7 aplica o mesmo critério.
+16. **RN16 · Mudança de grade.** Alterar data, fuso, horários, duração ou intervalo do evento é recusado se existir qualquer mentoria com `slotLock` (invited, confirmed, in_progress, done) ou `no_show`: as concluídas e as sem comparecimento continuam apontando para o horário (`slotId`/`startAt`) e ficariam órfãs se a grade fosse gerada de novo. A tela A7 aplica o mesmo critério.
 17. **RN17 · Auditoria.** Toda escrita feita por staff e toda mudança de status gera um registro em `audit_logs`.
 18. **RN18 · Confirmação de presença pelo WhatsApp.** Removido em 2026-11-05 (só e-mail).
 19. **RN19 · Trocar de horário pela participante.** A transição `mentee_reschedule` (de `confirmed`, antes do início) cancela a mentoria (mesa e horário livres na hora) e devolve a participante à fila com `priority = true`, `priorityReason = "declined_schedule"`, `lastOutcome = "declined_schedule"` e o `queuedAt` original. Vem do "Trocar de horário" em P6 (E04 `reschedule`). Uma participante `waiting` com `lastOutcome = "declined_schedule"` pode escolher sozinha um horário livre pelo link pessoal: E07 lista os horários futuros (respeitando `minLeadMinutes`) em que existe mentora ativa da área dela, com o horário na disponibilidade, sem mentoria ativa nele, e uma mesa ativa livre; `matchesPeriod` marca os do período preferido (RN14). E08 reconfere tudo na transação, escolhe a mentora com menos mentorias ativas no evento (empate: nome), a mesa pela RN24, e cria a mentoria já `confirmed` (`createdBy` = a mentora escolhida, `confirmedBy` e `history` com ator participante, auditoria `appointment.self_book`); a participante vira `confirmed` sem prioridade, e saem `confirmed` e os lembretes (RN15). Mentoras e admins continuam podendo convidá-la pela fila enquanto ela não escolhe.

@@ -57,8 +57,8 @@ export default function A7Configuracoes() {
     if (q.status === 'success') { const { id: _i, slots: _s, ...rest } = q.data.event; setD(rest); }
   }, [q.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // RN16: mesmo critério da API (checkGridChange conta toda mentoria com slotLock, inclusive done/no_show).
-  // E38 já devolve exatamente essas mentorias.
+  // RN16: a API conta as mentorias com slotLock (as que o E38 devolve) e também as `no_show`, que já não ocupam a
+  // mesa; sem elas aqui, um GRID_LOCKED só por `no_show` aparece como erro acima do formulário.
   const activeCount = lock.status === 'success' ? lock.data.appointments.length : 0;
   const hasActive = activeCount > 0;
   const [newArea, setNewArea] = useState('');

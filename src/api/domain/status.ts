@@ -2,7 +2,8 @@ import type { AppointmentStatus, MenteeStatus } from '@tw/shared';
 
 /**
  * Travas de agenda mantidas junto do status (PLAN, "appointments"):
- * - slotLock: mesa e mentora ocupadas (único parcial por mesa×horário e mentora×horário)
+ * - slotLock: mesa e mentora ocupadas (único parcial por mesa×horário e mentora×horário); `no_show` solta a mesa e a
+ *   mentora na hora (RN09), para outra participante poder ser marcada no mesmo horário
  * - menteeLock: participante ocupada (único parcial por participante)
  */
 export function locksFor(status: AppointmentStatus): { slotLock: boolean; menteeLock: boolean } {
@@ -12,8 +13,8 @@ export function locksFor(status: AppointmentStatus): { slotLock: boolean; mentee
     case 'in_progress':
       return { slotLock: true, menteeLock: true };
     case 'done':
-    case 'no_show':
       return { slotLock: true, menteeLock: false };
+    case 'no_show':
     case 'declined':
     case 'expired':
     case 'cancelled':

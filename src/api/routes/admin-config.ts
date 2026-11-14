@@ -109,7 +109,7 @@ export function registerAdminConfigRoutes(app: FastifyInstance, ctx: AppContext)
       const cur = await loadEvent(ctx, session);
       const slots = generateSlots({ date: body.date, timezone: body.timezone, startTime: body.startTime, endTime: body.endTime, slotMinutes: body.slotMinutes, gapMinutes: body.gapMinutes });
       if (slots.length === 0) throw new AppError('VALIDATION_ERROR', 'A grade não gera nenhum horário.');
-      const locked = await ctx.c.appointments.countDocuments({ eventId: cur._id, slotLock: true }, { session });
+      const locked = await ctx.c.appointments.countDocuments({ eventId: cur._id, $or: [{ slotLock: true }, { status: 'no_show' }] }, { session });
       const check = checkGridChange(cur, body, locked);
       if (!check.ok) throw fromRuleError(check);
       const badSubject = invalidSubjectVariable(body.emailSubjects);

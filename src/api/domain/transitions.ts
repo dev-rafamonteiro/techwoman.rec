@@ -178,6 +178,7 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       if (i.actor.role === 'mentor' && now.getTime() < earliest) {
         return fail('TOO_EARLY', `Só é possível marcar não compareceu ${NO_SHOW_AFTER_MINUTES} min após o início.`);
       }
+      // a mesa e a mentora ficam livres no horário (sem slotLock), sem a equipe precisar liberar
       return plan(from, 'no_show', 'no_show', 'appointment.no_show');
     }
     case 'staff_cancel': {
@@ -206,7 +207,8 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
       });
     }
     case 'reopen': {
-      // RN23 · sem aviso: é correção interna; a participante volta a ter a mentoria confirmada
+      // RN23 · sem aviso: é correção interna; a participante volta a ter a mentoria confirmada (de `no_show`, a mesa ou a
+      // mentora podem já ter outra mentoria no horário: o índice único devolve 409)
       if (from !== 'done' && from !== 'no_show') return invalid(from, 'reabrir');
       return plan(from, 'confirmed', 'confirmed', 'appointment.reopen', { reason: 'reopened_by_super_admin' });
     }

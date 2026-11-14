@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import { E39Patch } from '@tw/shared';
 import { mapDuplicateKeyError } from '@tw/db';
 import { loadEvent, runTxn, type AppContext } from '../ctx.js';
-import { AppError, notFound } from '../lib/errors.js';
+import { AppError, notFound, scheduleConflictFrom } from '../lib/errors.js';
 import { actorForRoute, writeAudit } from '../lib/audit.js';
 import { route } from '../lib/route.js';
 import { adminAppointmentViews } from '../services/admin-views.js';
@@ -53,7 +53,8 @@ export function registerAdminAppointmentRoutes(app: FastifyInstance, ctx: AppCon
         const res = await applyTransition(ctx, session, { appointmentId: id, action, actor, reason, ip: req.ip }).catch((err: unknown) => {
           // reopen devolve a trava da participante: outra mentoria ativa dela bate no índice único
           if (mapDuplicateKeyError(err) === 'MENTEE_TAKEN') throw new AppError('MENTEE_TAKEN', 'Esta participante já tem outra mentoria ativa.');
-          throw err;
+          // reopen de `no_show`: a mesa ou a mentora já receberam outra mentoria no horário
+          throw scheduleConflictFrom(err) ?? err;
         });
         if (!res) throw notFound('Mentoria');
         // mentora não apareceu e não há outra livre: a participante volta à fila e a falta fica nos logs (A9), ligada a ela
