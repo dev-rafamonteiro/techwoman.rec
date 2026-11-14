@@ -101,7 +101,7 @@ EVENT_ID=... PUBLIC_BASE_URL=https://techwoman.dev docker compose -f ops/compose
 **Variante com Nginx Proxy Manager** (servidor que já tem o NPM na rede docker externa `npm_network`): override `ops/compose.npm.yaml`.
 
 ```sh
-docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVENT_ID, PUBLIC_BASE_URL etc. no .env
+GIT_SHA=$(git rev-parse HEAD) docker compose -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build   # EVENT_ID, PUBLIC_BASE_URL etc. no .env; GIT_SHA = versão no menu do admin
 ```
 
 - Containers: `techwoman-web` (redes `edge`, `app`, `npm_network`), `techwoman-api` (`app`, `egress`, fora da `npm_network`),

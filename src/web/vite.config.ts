@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +27,20 @@ function applySeo(html: string, path: string, seo: PageSeo): string {
 }
 
 /**
+ * Commit do build, mostrado no menu do admin: GIT_SHA (o deploy automático e o Dockerfile passam, porque a imagem não
+ * tem o .git) ou, sem ela, o `git rev-parse` local (dev, CI). Sem nenhum dos dois: string vazia (a tela omite).
+ */
+function gitSha(env: Record<string, string>): string {
+  const fromEnv = process.env.GIT_SHA ?? env.GIT_SHA;
+  if (fromEnv) return fromEnv.trim();
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: envDir, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Build: um HTML por página pública (dist/mentoras.html, dist/mentoria/inscricao.html...), igual ao index.html mas
  * com título, descrição e canonical próprios, para o Google ler sem executar o JS. O nginx serve com try_files $uri.html.
  */
@@ -51,7 +66,7 @@ export default defineConfig(({ mode }) => {
   const apiTarget = process.env.VITE_API_PROXY ?? env.VITE_API_PROXY ?? 'http://localhost:3000';
   const siteKey = process.env.VITE_TURNSTILE_SITE_KEY ?? env.VITE_TURNSTILE_SITE_KEY ?? process.env.TURNSTILE_SITE_KEY ?? env.TURNSTILE_SITE_KEY ?? '';
   return {
-  define: { 'import.meta.env.VITE_TURNSTILE_SITE_KEY': JSON.stringify(siteKey) },
+  define: { 'import.meta.env.VITE_TURNSTILE_SITE_KEY': JSON.stringify(siteKey), __APP_COMMIT__: JSON.stringify(gitSha(env)) },
   plugins: [react(), seoPages()],
   resolve: {
     // Usa o fonte de @tw/shared direto; dispensa build prévio do workspace.

@@ -66,3 +66,12 @@ test("depois de redefinir, a janela mostra a senha oculta e o olho revela", asyn
   await expect(page.getByText(password)).toHaveCount(0);
   await page.context().close();
 });
+
+test("o menu lateral do admin mostra o commit da versão no ar", async ({ browser }) => {
+  const page = await newPage(browser, { width: 1280, height: 800 });
+  await openMentors(page);
+  const version = page.locator(".tw-sidebar").getByTestId("admin-version");
+  await expect(version).toHaveText(/^Versão [0-9a-f]{7}$/);
+  if (SHOT) await page.screenshot({ path: `${SHOT}/admin-versao.png` });
+  await page.context().close();
+});

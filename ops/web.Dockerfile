@@ -15,6 +15,9 @@ COPY src/shared src/shared
 COPY src/web src/web
 ARG VITE_TURNSTILE_SITE_KEY=
 ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
+# commit do build, mostrado no menu do admin (a imagem não tem o .git); vazio = não mostra
+ARG GIT_SHA=
+ENV GIT_SHA=$GIT_SHA
 # mapas de código-fonte ficam fora da imagem publicada (o código das telas não fica legível no site)
 RUN npm run -w @tw/shared build && npm run -w @tw/web build && find src/web/dist -name '*.map' -delete
 

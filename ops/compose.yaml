@@ -50,6 +50,8 @@ services:
       dockerfile: ops/web.Dockerfile
       args:
         VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:?defina VITE_TURNSTILE_SITE_KEY}
+        # commit mostrado no menu do admin; o deploy-check.sh passa, no manual use GIT_SHA=$(git rev-parse HEAD)
+        GIT_SHA: ${GIT_SHA:-}
     <<: *hardening
     tmpfs: ["/tmp"]
     environment:

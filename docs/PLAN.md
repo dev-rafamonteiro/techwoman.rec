@@ -692,7 +692,7 @@ O servidor publica sozinho o que entra na `main`, com build na própria máquina
 
 1. compara a ponta da `main` no GitHub com o commit no ar (`~/.techwoman-deploy/deployed-sha`);
 2. com commit novo, espera o job `build-test` do CI passar nele (a API do GitHub é consultada sem token, no máximo a cada 90s);
-3. faz o `git merge --ff-only` e o `up -d --build --wait` do deploy manual.
+3. faz o `git merge --ff-only` e o `up -d --build --wait` do deploy manual, com `GIT_SHA` = o commit publicado (o menu do admin mostra "Versão <7 primeiros caracteres>"; sem `GIT_SHA`, a linha some).
 
 ```sh
 # cron do usuário ubuntu

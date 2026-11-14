@@ -75,7 +75,7 @@ esac
 log "${target:0:7}: publicando"
 if out="$(git fetch -q origin main 2>&1 &&
   git merge -q --ff-only "$target" 2>&1 &&
-  docker compose --progress plain -p techwoman --env-file .env -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build --wait 2>&1)"; then
+  GIT_SHA="$target" docker compose --progress plain -p techwoman --env-file .env -f ops/compose.yaml -f ops/compose.npm.yaml up -d --build --wait 2>&1)"; then
   echo "$target" >"$STATE_DIR/deployed-sha"
   rm -f "$STATE_DIR/failed-sha"
   # só as imagens antigas deste projeto: o servidor é compartilhado

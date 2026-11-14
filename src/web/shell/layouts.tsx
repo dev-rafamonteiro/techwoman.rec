@@ -105,6 +105,7 @@ function AdminSideFoot() {
       {hasRole('mentor') && <Link to="/mentora/aguardando" className="tw-sidebar__switch">Ir para a Área da mentora →</Link>}
       {user && <span className="tw-sidebar__who">{user.name.split(' ')[0]} · {hasRole('super_admin') ? 'Super admin' : 'Admin'}</span>}
       <button type="button" className="tw-sidebar__logout" onClick={() => void logout()}>Sair</button>
+      {__APP_COMMIT__ && <span className="tw-sidebar__version" title={__APP_COMMIT__} data-testid="admin-version">Versão {__APP_COMMIT__.slice(0, 7)}</span>}
     </div>
   );
 }
