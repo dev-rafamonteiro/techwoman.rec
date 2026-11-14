@@ -36,7 +36,7 @@ export interface OutboxResult {
 export const PRIORITY_TIERS: readonly (readonly OutboxType[])[] = [
   ['invite'],
   ['confirmed', 'moved', 'cancelled', 'expired', 'reminder', 'slot_released', 'mentor_slot_released', 'mentor_booked', 'mentor_cancel_request', 'mentor_cancelled', 'registration_cancelled'],
-  ['registered', 'staff_password', 'walk_in_done', 'walk_in_removed', 'mentor_availability_changed'],
+  ['registered', 'staff_password', 'walk_in_done', 'walk_in_removed', 'mentor_availability_changed', 'feedback_request'],
 ];
 
 /** Tempo máximo esperando a vez no limitador dentro de uma iteração (o resto fica para a próxima). */
@@ -106,6 +106,7 @@ function skipReason(
   appt: { status: string; expiresAt: Date | null } | null,
   menteeStatus: string | null,
   walkIn: { deletedAt: Date | null } | null,
+  hasFeedback: boolean,
 ): string | null {
   const lapsed = appt?.status === 'invited' && appt.expiresAt !== null && appt.expiresAt <= ctx.now();
   switch (item.type) {
@@ -128,6 +129,12 @@ function skipReason(
       // RN21: atendimento removido pelo admin (ou inscrição desfeita) antes do envio: o agradecimento não sai
       if (!walkIn || walkIn.deletedAt) return 'atendimento fora da mesa removido';
       return menteeStatus === 'done' ? null : 'participante não está mais atendida';
+    case 'feedback_request':
+      // só sessão concluída (na mesa ou fora dela) e ainda sem avaliação; cancelada, remarcada ou reaberta não recebe
+      if (hasFeedback) return 'participante já avaliou';
+      if (menteeStatus !== 'done') return 'participante não está mais atendida';
+      if (item.appointmentId) return appt?.status === 'done' ? null : 'mentoria não está concluída';
+      return walkIn && !walkIn.deletedAt ? null : 'atendimento fora da mesa removido';
     case 'walk_in_removed':
       // se ela já se inscreveu de novo antes do envio, o pedido de nova inscrição não sai
       return menteeStatus === 'cancelled' ? null : 'participante já se inscreveu de novo';
@@ -163,15 +170,16 @@ async function handle(ctx: AppContext, item: OutboxDoc, notifier: Notifier, res:
     res.skipped++;
     return;
   }
-  // RN21: atendimento fora da mesa do e-mail (`payload.walkInId`): diz se ainda vale e quem é a mentora (layout 10)
-  const walkInId = item.type === 'walk_in_done' && typeof item.payload?.['walkInId'] === 'string' && ObjectId.isValid(item.payload['walkInId']) ? new ObjectId(item.payload['walkInId']) : null;
-  const [event, mentee, appt, walkIn] = await Promise.all([
+  // RN21: atendimento fora da mesa do e-mail (`payload.walkInId`): diz se ainda vale e quem é a mentora (layouts 10 e 16)
+  const walkInId = (item.type === 'walk_in_done' || item.type === 'feedback_request') && typeof item.payload?.['walkInId'] === 'string' && ObjectId.isValid(item.payload['walkInId']) ? new ObjectId(item.payload['walkInId']) : null;
+  const [event, mentee, appt, walkIn, feedback] = await Promise.all([
     c.events.findOne({ _id: item.eventId }),
     item.menteeId ? c.mentees.findOne({ _id: item.menteeId }) : null,
     item.appointmentId ? c.appointments.findOne({ _id: item.appointmentId }) : null,
     walkInId ? c.walkIns.findOne({ _id: walkInId }) : null,
+    item.type === 'feedback_request' && item.menteeId ? c.feedbacks.findOne({ _id: item.menteeId }, { projection: { _id: 1 } }) : null,
   ]);
-  const reason = skipReason(item, ctx, appt, mentee?.status ?? null, walkIn);
+  const reason = skipReason(item, ctx, appt, mentee?.status ?? null, walkIn, feedback !== null);
   if (reason || !event) {
     await done({ status: 'skipped', lastError: reason ?? 'evento não encontrado', payload: {} });
     res.skipped++;

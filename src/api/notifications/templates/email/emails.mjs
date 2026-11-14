@@ -1,4 +1,4 @@
-// Conteúdo dos 15 e-mails (fonte única para o .html e o .txt). Textos e valores
+// Conteúdo dos 16 e-mails (fonte única para o .html e o .txt). Textos e valores
 // vêm de design/email/source/Emails.dc.html; todo dado de exemplo virou
 // {{variavel}} conforme docs/PLAN.md, "Layouts de e-mail". Trecho opcional:
 // `{{#variavel}}...{{/variavel}}` some quando a variável vem vazia (render.ts).
@@ -151,6 +151,22 @@ export const EMAILS = [
     // botão secundário só quando a mentora tem LinkedIn
     sec: ['Ver o LinkedIn de {{mentora_nome}}', 'mentora_linkedin'],
     secOpcional: true,
+    nota: 'Sua avaliação ajuda a organização a melhorar as próximas edições.',
+    linkFallback: 'link_minha_mentoria',
+  },
+  {
+    // pesquisa de satisfação (feedback_request): no fim da sessão concluída, na mesa ou fora dela
+    id: '16-pesquisa-satisfacao',
+    vars: ['nome', 'mentora_nome', 'link_minha_mentoria'],
+    preheader: 'Conte como foi a conversa com {{mentora_nome}}. Leva menos de um minuto.',
+    selo: ['PESQUISA DE SATISFAÇÃO', ...SELO.menta],
+    titulo: 'Como foi sua mentoria, {{nome}}?',
+    paragrafos: [
+      'Obrigada por participar da mentoria do Tech Woman com {{mentora_nome}}.',
+      'Queremos saber como foi a conversa. A avaliação fica na sua página pessoal e leva menos de um minuto.',
+    ],
+    card: [['MENTORA', '{{mentora_nome}}']],
+    botao: ['Avaliar minha mentoria', 'link_minha_mentoria'],
     nota: 'Sua avaliação ajuda a organização a melhorar as próximas edições.',
     linkFallback: 'link_minha_mentoria',
   },

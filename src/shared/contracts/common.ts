@@ -115,6 +115,8 @@ export const OUTBOX_TYPES = [
   'walk_in_done',
   // RN21 · atendimento fora da mesa removido pelo admin (E53): a inscrição foi desfeita e ela é convidada a se inscrever de novo
   'walk_in_removed',
+  // pesquisa de satisfação: sai no fim da sessão (início + duração), só com a mentoria concluída e sem avaliação
+  'feedback_request',
   ...LEGACY_OUTBOX_TYPES,
 ] as const;
 export const OutboxTypeSchema = z.enum(OUTBOX_TYPES);

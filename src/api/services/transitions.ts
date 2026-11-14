@@ -3,7 +3,7 @@ import type { AppointmentDoc, MenteeDoc } from '@tw/db';
 import type { AppContext } from '../ctx.js';
 import { AppError, fromRuleError } from '../lib/errors.js';
 import { writeAudit } from '../lib/audit.js';
-import { enqueueMenteeNotifications, enqueueMentorNotifications, enqueueReminders } from '../lib/outbox.js';
+import { enqueueFeedbackRequest, enqueueMenteeNotifications, enqueueMentorNotifications, enqueueReminders } from '../lib/outbox.js';
 import { isRuleError, planTransition, type Actor, type TransitionAction, type TransitionPlan } from '../domain/index.js';
 
 export interface ApplyTransitionInput {
@@ -128,6 +128,10 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
   }
   if (plan.scheduleReminder) {
     await enqueueReminders(ctx, session, mentee, appt);
+  }
+  // concluída: a pesquisa de satisfação sai no fim da sessão (ou já, se terminou); cada conclusão tem a sua
+  if (input.action === 'finish') {
+    await enqueueFeedbackRequest(ctx, session, { mentee, appointmentId: appt._id, endAt: appt.endAt, dedupeSuffix: updated.history.length });
   }
   await writeAudit(ctx, session, {
     actor: input.actor,

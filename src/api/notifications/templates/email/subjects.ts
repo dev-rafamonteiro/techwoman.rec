@@ -19,6 +19,7 @@ export const EMAIL_TEMPLATE_IDS = [
   '13-pedido-cancelamento',
   '14-disponibilidade-mentora',
   '15-cancelamento-pela-mentora',
+  '16-pesquisa-satisfacao',
 ] as const;
 
 export type EmailTemplateId = (typeof EMAIL_TEMPLATE_IDS)[number];
@@ -45,6 +46,7 @@ export const EMAIL_TEMPLATE_VARS = {
   // listas de horários já formatadas ("nenhum" quando vazia)
   '14-disponibilidade-mentora': ['mentora_nome', 'horarios_incluidos', 'horarios_retirados', 'quando', 'link_painel'],
   '15-cancelamento-pela-mentora': ['mentora_nome', 'nome', 'horario', 'mesa', 'o_que', 'justificativa', 'quando', 'link_painel'],
+  '16-pesquisa-satisfacao': ['nome', 'mentora_nome', 'link_minha_mentoria'],
 } as const satisfies Record<EmailTemplateId, readonly string[]>;
 
 /** Tipo da `outbox` -> layout. */
@@ -66,6 +68,7 @@ export const EMAIL_TEMPLATE_BY_OUTBOX_TYPE = {
   mentor_cancel_request: '13-pedido-cancelamento',
   mentor_availability_changed: '14-disponibilidade-mentora',
   mentor_cancelled: '15-cancelamento-pela-mentora',
+  feedback_request: '16-pesquisa-satisfacao',
 } as const satisfies Record<string, EmailTemplateId>;
 
 export type EmailOutboxType = keyof typeof EMAIL_TEMPLATE_BY_OUTBOX_TYPE;
@@ -88,6 +91,7 @@ export const EMAIL_SUBJECTS: Record<EmailTemplateId, string> = {
   '13-pedido-cancelamento': '{{mentora_nome}} pede para cancelar a mentoria das {{horario}}',
   '14-disponibilidade-mentora': '{{mentora_nome}} mudou a disponibilidade',
   '15-cancelamento-pela-mentora': '{{mentora_nome}} cancelou {{o_que}} das {{horario}}',
+  '16-pesquisa-satisfacao': 'Como foi sua conversa com {{mentora_nome}}?',
 };
 
 /** Variantes do layout 3 por tipo da `outbox`. */

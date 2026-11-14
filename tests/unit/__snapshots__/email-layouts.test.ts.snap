@@ -29,3 +29,5 @@ exports[`layout 13-pedido-cancelamento com dados de exemplo > snapshot do HTML, 
 exports[`layout 14-disponibilidade-mentora com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Ana mudou a disponibilidade"`;
 
 exports[`layout 15-cancelamento-pela-mentora com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Ana cancelou a mentoria das 14h15"`;
+
+exports[`layout 16-pesquisa-satisfacao com dados de exemplo > snapshot do HTML, do texto e do assunto 3`] = `"Como foi sua conversa com Ana?"`;

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './common.js';
 
-/** Ids dos 15 layouts (iguais aos de `src/api/notifications/templates/email/subjects.ts`). */
+/** Ids dos 16 layouts (iguais aos de `src/api/notifications/templates/email/subjects.ts`). */
 export const EMAIL_PREVIEW_TYPES = [
   '01-inscricao-recebida',
   '02-convite-horario',
@@ -18,6 +18,7 @@ export const EMAIL_PREVIEW_TYPES = [
   '13-pedido-cancelamento',
   '14-disponibilidade-mentora',
   '15-cancelamento-pela-mentora',
+  '16-pesquisa-satisfacao',
 ] as const;
 export const EmailPreviewTypeSchema = z.enum(EMAIL_PREVIEW_TYPES);
 export type EmailPreviewType = z.infer<typeof EmailPreviewTypeSchema>;

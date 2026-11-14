@@ -166,6 +166,26 @@ export async function enqueueWalkInNotification(
   await enqueueMenteeNotifications(ctx, session, { type: i.type, mentee: i.mentee, dedupeSuffix: String(i.walkInId), payload: { walkInId: String(i.walkInId) } });
 }
 
+/**
+ * Pesquisa de satisfação (`feedback_request`, layout 16): agendada para o fim da sessão (`endAt`, início + duração),
+ * ou para agora se ela já terminou. Mentoria na mesa (`appointmentId`) ou atendimento fora da mesa (`payload.walkInId`).
+ * O worker só envia se, na hora, a mentoria seguir concluída e a participante ainda não tiver avaliado; cancelada,
+ * remarcada ou reaberta não recebe. `dedupeSuffix` distingue cada conclusão (reaberta e concluída de novo) e o reenvio.
+ */
+export async function enqueueFeedbackRequest(
+  ctx: AppContext,
+  session: ClientSession | undefined,
+  i: { mentee: Pick<MenteeDoc, '_id' | 'email'>; endAt: Date; dedupeSuffix: string | number } & ({ appointmentId: ObjectId } | { walkInId: ObjectId }),
+): Promise<void> {
+  const now = ctx.now();
+  await enqueueMenteeNotifications(ctx, session, {
+    type: 'feedback_request',
+    mentee: i.mentee,
+    sendAt: i.endAt.getTime() > now.getTime() ? i.endAt : now,
+    ...('appointmentId' in i ? { appointmentId: i.appointmentId, dedupeSuffix: i.dedupeSuffix } : { dedupeSuffix: `walkin-${i.walkInId}-${i.dedupeSuffix}`, payload: { walkInId: String(i.walkInId) } }),
+  });
+}
+
 /** dedupeKey de `staff_password`: `pwd:<userId>:<n>` (também é o AAD da cifra). */
 export const staffPasswordKey = (userId: ObjectId, n: number) => `pwd:${userId}:${n}`;
 
