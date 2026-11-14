@@ -14,6 +14,8 @@ export const AdminFeedbackItemSchema = z.object({
   ratings: RatingsSchema,
   comment: z.string().nullable(),
   createdAt: IsoDateTimeSchema,
+  /** A mentoria avaliada foi corrigida para não compareceu (RN23): a avaliação fica, com essa observação em A10. */
+  noShow: z.boolean(),
 });
 export type AdminFeedbackItem = z.infer<typeof AdminFeedbackItemSchema>;
 

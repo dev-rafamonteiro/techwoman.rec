@@ -286,7 +286,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 
 - Grade com mesas nas colunas e horários nas linhas (20 × 12 na configuração padrão). Cada célula mostra os nomes da mentora e da participante e o status em cor + texto; célula vazia = livre.
 - Linha do horário atual destacada; seletor "Agora / Dia inteiro".
-- Clique na célula abre uma janela com status, horário, mesa, mentora, contato e área da participante, histórico e ações (**E39**): mover para outra mesa ou horário, cancelar, marcar não compareceu, confirmar presencialmente. Só super admin vê "Voltar para confirmada" (concluída ou não compareceu) e "Cancelar e liberar a mesa" (em andamento, concluída ou não compareceu) (RN23).
+- Clique na célula abre uma janela com status, horário, mesa, mentora, contato e área da participante, histórico e ações (**E39**): mover para outra mesa ou horário, cancelar, marcar não compareceu, confirmar presencialmente. Só super admin vê "Voltar para confirmada" (concluída ou não compareceu), "Cancelar e liberar a mesa" (em andamento, concluída ou não compareceu), "Marcar como concluída" (não compareceu, confirmada ou em andamento; sem e-mail) e "Marcar como não compareceu" (concluída) (RN23). A célula de quem não compareceu mostra o selo vermelho enquanto ninguém ocupa a mesa no horário; a janela traz "Puxar alguém da fila para esta mesa".
 - Dados: **E38**, em tempo real.
 
 ### A6 · Mesas (super admin)
@@ -321,7 +321,7 @@ Rota `/admin/avaliacoes`, admin e super admin. Resultado da avaliação que a pa
 - Cartões no estilo do A1: Respostas (com a nota "X% das N concluídas", a taxa de resposta sobre as mentorias concluídas), Média · Evento, Média · Palestra e Média · Mentoria (uma casa decimal, "/ 5", e quantas deram 5 estrelas) e Com comentário.
 - Três painéis de barras, um por item, com quantas respostas deram de 5 a 1 estrela; cada um tem o botão "Ver tabela" (Nota, Respostas), como o gráfico de áreas do A1.
 - Lista "Respostas", da mais recente para a mais antiga: participante, mentora (a do atendimento fora da mesa quando ela foi concluída assim, RN21), data e hora, as três notas em estrelas (nota até 2 em vermelho) e o comentário. Filtros: Todas · Com comentário · Alguma nota até 2.
-- Sem respostas: "Nenhuma avaliação ainda", explicando que a avaliação abre na página da participante depois que a mentora conclui a mentoria. Participante anonimizada some da lista (a avaliação é apagada).
+- Sem respostas: "Nenhuma avaliação ainda", explicando que a avaliação abre na página da participante depois que a mentora conclui a mentoria. Participante anonimizada some da lista (a avaliação é apagada). Resposta de quem teve a mentoria corrigida para não compareceu (RN23) fica, com o selo "Participante não compareceu".
 - **Sorteio (RN28):** no cabeçalho, "Fazer sorteio" (laranja) e "Últimas sorteadas". "Fazer sorteio" abre o modal "Sorteio" com quantas concorrem (quem respondeu a pesquisa e ainda não foi sorteada, **E62**) e o botão "Sortear" (**E63**), que mostra em destaque o nome da sorteada, com e-mail e celular, e vira "Sortear de novo"; sem ninguém para sortear o botão fica desabilitado. "Últimas sorteadas" abre o modal com as sorteadas, da mais recente para a mais antiga (nome, data e hora, e-mail, celular e ID), e o botão "Limpar" (**E64**), com confirmação: a lista é apagada e todas voltam a concorrer.
 
 ## Componentes, estados e mensagens padrão

@@ -51,8 +51,12 @@ export async function applyTransition(ctx: AppContext, session: ClientSession, i
   }
   const plan = planned;
   // RN23: a participante precisa seguir na situação da mentoria (inscrição cancelada ou anonimizada depois não volta a ter mentoria)
-  if ((input.action === 'reopen' || input.action === 'release') && !(await c.mentees.findOne({ _id: appt.menteeId, status: plan.from === 'done' ? 'done' : plan.from === 'no_show' ? 'no_show' : 'confirmed' }, { session, projection: { _id: 1 } }))) {
+  if (['reopen', 'release', 'correct_done', 'correct_no_show'].includes(input.action) && !(await c.mentees.findOne({ _id: appt.menteeId, status: plan.from === 'done' ? 'done' : plan.from === 'no_show' ? 'no_show' : 'confirmed' }, { session, projection: { _id: 1 } }))) {
     throw new AppError('INVALID_STATE', 'A participante mudou de situação. Atualize a tela.');
+  }
+  // RN21: quem também foi atendida fora da mesa segue atendida; a mentoria da mesa não pode virar falta dela
+  if (input.action === 'correct_no_show' && (await c.walkIns.findOne({ menteeId: appt.menteeId, deletedAt: null }, { session, projection: { _id: 1 } }))) {
+    throw new AppError('INVALID_STATE', 'A participante também foi atendida fora da mesa; remova esse atendimento antes (Participantes).');
   }
 
   const filter: Record<string, unknown> = { _id: appt._id, status: plan.from };

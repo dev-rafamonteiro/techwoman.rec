@@ -244,7 +244,8 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
     const event = await loadEvent(ctx);
     const [tables, appts] = await Promise.all([
       ctx.c.tables.find({ eventId: event._id }).sort({ number: 1 }).toArray(),
-      ctx.c.appointments.find({ eventId: event._id, slotLock: true }).toArray(),
+      // ocupam célula (slotLock) e, para a correção do super admin (RN23), as de quem não compareceu
+      ctx.c.appointments.find({ eventId: event._id, $or: [{ slotLock: true }, { status: 'no_show' }] }).toArray(),
     ]);
     return {
       serverNow: iso(ctx.now()),

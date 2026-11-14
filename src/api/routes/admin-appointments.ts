@@ -14,7 +14,7 @@ export function registerAdminAppointmentRoutes(app: FastifyInstance, ctx: AppCon
   // E39 · PATCH /admin/appointments/:id · mover, cancelar, no-show, confirmar presencialmente
   // (POST /admin/appointments, a criação, fica em routes/invite.ts junto com E24)
   route(app, ctx, E39Patch, async ({ req, user, params, body, idem }) => {
-    if ((body.action === 'reopen' || body.action === 'release') && !user.roles.includes('super_admin')) {
+    if (['reopen', 'release', 'correct_done', 'correct_no_show'].includes(body.action) && !user.roles.includes('super_admin')) {
       throw new AppError('FORBIDDEN', 'Só super admin pode fazer esta correção.');
     }
     if (!ObjectId.isValid(params.id)) throw new AppError('VALIDATION_ERROR', 'Identificador inválido.');

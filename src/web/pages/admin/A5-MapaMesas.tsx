@@ -13,7 +13,7 @@ import './lib/a4-a6.css';
 const linkedinUrl = (v: string) => (/^https?:/i.test(v) ? v : v.includes('linkedin.com') ? `https://${v}` : `https://www.linkedin.com/in/${v}`);
 
 /** Motivos no histórico da mentoria que valem um texto (troca de mesa ou de mentora). */
-const REASON_PT: Record<string, string> = { moved: 'movida', mentor_changed: 'mentora trocada', mentor_no_show: 'mentora não compareceu' };
+const REASON_PT: Record<string, string> = { moved: 'movida', mentor_changed: 'mentora trocada', mentor_no_show: 'mentora não compareceu', corrected_by_super_admin: 'corrigida pelo super admin', reopened_by_super_admin: 'reaberta pelo super admin' };
 
 const LEGEND = [['invited', 'Horário proposto'], ['confirmed', 'Confirmada'], ['done', 'Concluída'], ['negative', 'Não compareceu'], ['free', 'Livre']] as const;
 
@@ -43,12 +43,14 @@ export default function A5MapaMesas() {
     refetch: () => q.refetch(),
   });
 
-  const appts = useMemo(() => {
-    if (q.status !== 'success') return [] as AdminAppointmentView[];
+  const [appts, noShows] = useMemo((): [AdminAppointmentView[], AdminAppointmentView[]] => {
+    if (q.status !== 'success') return [[], []];
     const byId = new Map(q.data.appointments.map((a) => [a.id, a]));
     live.forEach((a, id) => byId.set(id, a));
-    // Apenas mentorias que ocupam célula (RN: slotLock).
-    return [...byId.values()].filter((a) => !['cancelled', 'declined', 'expired'].includes(a.status));
+    const all = [...byId.values()];
+    // Ocupam célula (RN: slotLock). Não compareceu (RN09) não ocupa: a mesa fica livre, mas a célula sem outra mentoria
+    // mostra quem faltou para o super admin corrigir (RN23).
+    return [all.filter((a) => !['cancelled', 'declined', 'expired', 'no_show'].includes(a.status)), all.filter((a) => a.status === 'no_show')];
   }, [q.data, live]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (q.status === 'loading') return <div className="tw-page a5"><PageHead title="Mapa de mesas" /><SkeletonList rows={4} height={80} /></div>;
@@ -60,9 +62,10 @@ export default function A5MapaMesas() {
   const win = nowWindow(slots, now);
   const currentIdx = win.currentIdx;
   const visibleSlots = view === 'all' ? slots : win.visible;
-  const cell = (slotId: string, tableId: string) => appts.find((a) => a.slotId === slotId && a.table.id === tableId);
-  const sel = appts.find((a) => a.id === selected) ?? null;
-  const occupiedNow = currentIdx >= 0 ? activeTables.filter((t) => cell(slots[currentIdx]!.id, t.id)).length : null;
+  const at = (list: AdminAppointmentView[], slotId: string, tableId: string) => list.find((a) => a.slotId === slotId && a.table.id === tableId);
+  const cell = (slotId: string, tableId: string) => at(appts, slotId, tableId) ?? at(noShows, slotId, tableId);
+  const sel = appts.find((a) => a.id === selected) ?? noShows.find((a) => a.id === selected) ?? null;
+  const occupiedNow = currentIdx >= 0 ? activeTables.filter((t) => at(appts, slots[currentIdx]!.id, t.id)).length : null;
   const sub = [`${activeTables.length} mesas × ${slots.length} horários`, `agora ${formatTime(new Date(now).toISOString())}`, occupiedNow != null ? `ocupação agora ${occupiedNow}/${activeTables.length}` : null].filter(Boolean).join(' · ');
 
   return (
@@ -79,7 +82,8 @@ export default function A5MapaMesas() {
       </ul>
       {sel && (
         <CellDetail key={sel.id} a={sel} slots={slots} tables={activeTables} appts={appts} mentors={mentors} areaLabel={areaLabel} onClose={() => setSelected(null)}
-          onDone={async () => { setSelected(null); await q.refetch(); }} onConflict={(m) => toast.conflict(m, q.refetch)} />
+          onDone={async () => { setSelected(null); await q.refetch(); }} onConflict={(m) => toast.conflict(m, q.refetch)}
+          onPull={sel.status === 'no_show' ? () => { setSelected(null); setFreeCell({ slotId: sel.slotId, tableId: sel.table.id }); } : undefined} />
       )}
       {freeCell && (() => {
         const slot = slots.find((s) => s.id === freeCell.slotId);
@@ -137,10 +141,12 @@ export default function A5MapaMesas() {
   );
 }
 
-function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDone, onConflict }: {
+function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDone, onConflict, onPull }: {
   a: AdminAppointmentView; slots: { id: string; startAt: string; endAt: string }[]; tables: { id: string; number: number; name: string | null; location: string | null }[];
   mentors: MentorListItem[];
   appts: AdminAppointmentView[]; areaLabel: (k: string) => string; onClose: () => void; onDone: () => Promise<void>; onConflict: (m: string) => void;
+  /** Não compareceu: a mesa está livre no horário; abre "puxar da fila" para ela. */
+  onPull?: (() => void) | undefined;
 }) {
   const toast = useToast();
   const { hasRole } = useAuth();
@@ -166,6 +172,9 @@ function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDo
   const isSuper = hasRole('super_admin');
   const canReopen = isSuper && (a.status === 'done' || a.status === 'no_show');
   const canRelease = isSuper && (a.status === 'done' || a.status === 'no_show' || a.status === 'in_progress');
+  // RN23 · correção do resultado depois do evento (sem aviso nem pesquisa)
+  const canMarkDone = isSuper && (a.status === 'no_show' || a.status === 'confirmed' || a.status === 'in_progress');
+  const canMarkNoShow = isSuper && a.status === 'done';
   const title = `Mesa ${a.table.number} · ${formatTime(a.startAt)}`;
   const m = a.mentee;
   // troca de mentora (time de testes): as livres da trilha da participante; sem nenhuma da trilha, todas as livres
@@ -208,6 +217,18 @@ function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDo
           {canCancel && (
             <button type="button" className="a46-pill a46-pill--danger" disabled={busy} data-testid="a5-cancel"
               onClick={() => { if (window.confirm('Devolver para a lista de espera? A mentoria é cancelada e a participante volta para a fila com prioridade.')) void run({ action: 'cancel' }, 'Participante devolvida para a lista de espera.'); }}>Devolver para a lista de espera</button>
+          )}
+          {canMarkDone && (
+            <button type="button" className="a46-pill a46-pill--cta" disabled={busy} data-testid="a5-mark-done"
+              onClick={() => { if (window.confirm(`Marcar a mentoria de ${m.name} com ${a.mentor.name} como concluída? Ela passa a contar como atendida; nenhum e-mail é enviado.`)) void run({ action: 'correct_done' }, 'Mentoria marcada como concluída.'); }}>Marcar como concluída</button>
+          )}
+          {canMarkNoShow && (
+            <button type="button" className="a46-pill" disabled={busy} data-testid="a5-mark-noshow"
+              onClick={() => { if (window.confirm(`Marcar que ${m.name} não compareceu? A mesa fica livre no horário; a avaliação dela, se houver, fica com a observação.`)) void run({ action: 'correct_no_show' }, 'Mentoria marcada como não compareceu.'); }}>Marcar como não compareceu</button>
+          )}
+          {onPull && (
+            <button type="button" className="a46-pill" disabled={busy} data-testid="a5-pull"
+              onClick={onPull}>Puxar alguém da fila para esta mesa</button>
           )}
           {canReopen && (
             <button type="button" className="a46-pill" disabled={busy} data-testid="a5-reopen"

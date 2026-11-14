@@ -37,12 +37,12 @@ describe.skipIf(!api)("E39 · não compareceu pela equipe", () => {
     expect((await c.mentees.findOne({ _id: a.menteeId }))!.status).toBe("no_show");
   });
 
-  it("não compareceu libera a mesa e a mentora: sai do mapa e outra participante entra no mesmo horário", async () => {
+  it("não compareceu libera a mesa e a mentora: fica no mapa só para correção (RN23) e outra participante entra no mesmo horário", async () => {
     const a = await register("s06");
     expect((await b.admin.patch(`/api/admin/appointments/${a._id}`, { action: "no_show" })).status).toBe(200);
     expect((await c.appointments.findOne({ _id: a._id }))!.slotLock).toBeUndefined();
     const map = await b.admin.get("/api/admin/schedule");
-    expect(map.body.appointments.map((x: { id: string }) => x.id)).not.toContain(String(a._id));
+    expect(map.body.appointments.find((x: { id: string }) => x.id === String(a._id))?.status).toBe("no_show");
     // a única mentora do evento, no mesmo horário
     const next = await register("s06");
     expect(String(next.mentorId)).toBe(String(a.mentorId));

@@ -34,7 +34,7 @@ export function registerAdminFeedbackRoutes(app: FastifyInstance, ctx: AppContex
     ]);
     const [mentees, appts] = await Promise.all([
       ctx.c.mentees.find({ _id: { $in: docs.map((d) => d._id) } }, { projection: { name: 1 } }).toArray(),
-      ctx.c.appointments.find({ _id: { $in: docs.flatMap((d) => (d.appointmentId ? [d.appointmentId] : [])) } }, { projection: { mentorId: 1 } }).toArray(),
+      ctx.c.appointments.find({ _id: { $in: docs.flatMap((d) => (d.appointmentId ? [d.appointmentId] : [])) } }, { projection: { mentorId: 1, status: 1 } }).toArray(),
     ]);
     // `mentorId` na avaliação (atendimento fora da mesa, RN21, e avaliações novas); nas antigas, a da mentoria
     const mentorIds = [...appts.map((a) => a.mentorId), ...docs.flatMap((d) => (d.mentorId ? [d.mentorId] : []))];
@@ -42,6 +42,7 @@ export function registerAdminFeedbackRoutes(app: FastifyInstance, ctx: AppContex
     const menteeName = new Map(mentees.map((m) => [String(m._id), m.name]));
     const userName = new Map(mentors.map((u) => [String(u._id), u.name]));
     const apptMentor = new Map(appts.map((a) => [String(a._id), String(a.mentorId)]));
+    const noShowAppts = new Set(appts.filter((a) => a.status === 'no_show').map((a) => String(a._id)));
     const mentorNameOf = (d: (typeof docs)[number]): string | null => {
       const mid = d.mentorId ? String(d.mentorId) : d.appointmentId ? apptMentor.get(String(d.appointmentId)) : undefined;
       return mid ? (userName.get(mid) ?? null) : null;
@@ -68,6 +69,7 @@ export function registerAdminFeedbackRoutes(app: FastifyInstance, ctx: AppContex
         ratings: d.ratings,
         comment: d.comment,
         createdAt: iso(d.createdAt),
+        noShow: d.appointmentId ? noShowAppts.has(String(d.appointmentId)) : false,
       })),
     };
     return body;

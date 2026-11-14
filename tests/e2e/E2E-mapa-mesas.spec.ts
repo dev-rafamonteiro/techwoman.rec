@@ -74,3 +74,27 @@ test("admin abre a janela, mas sem as correções de super admin", async ({ brow
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
+
+test("super admin corrige o resultado: concluída -> não compareceu -> concluída, sem sair do mapa", async ({ browser }, info) => {
+  const page = await newPage(browser, info.project.use.viewport ?? undefined);
+  page.on("dialog", (d) => void d.accept());
+  await openMap(page, "super@techwoman.test");
+  const cell = page.getByTestId(cellId);
+  await cell.getByRole("button").click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByTestId("a5-mark-noshow").click();
+  await expect(dialog).toHaveCount(0);
+  // fica no mapa como "Não compareceu" (a mesa está livre: a janela oferece puxar alguém da fila)
+  await expect(cell).toContainText("Não compareceu");
+  await cell.getByRole("button").click();
+  await expect(dialog.getByTestId("a5-pull")).toBeVisible();
+  await expect(dialog.getByTestId("a5-mark-done")).toBeVisible();
+  if (SHOT) await page.screenshot({ path: `${SHOT}/a5-corrigir-${info.project.name}.png` });
+  await dialog.getByTestId("a5-mark-done").click();
+  await expect(dialog).toHaveCount(0);
+  await expect(cell).toContainText("Concluída");
+  const c = getCollections(world.db.db);
+  expect((await c.appointments.findOne({}))?.status).toBe("done");
+  expect((await c.mentees.findOne({}))?.status).toBe("done");
+  expect(await c.outbox.countDocuments({ type: "feedback_request" })).toBe(0);
+});

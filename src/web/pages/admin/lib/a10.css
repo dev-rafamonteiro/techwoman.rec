@@ -8,6 +8,8 @@
 .a10-answer { padding: 12px 14px; background: var(--tw-lilac-50); border-radius: 14px; display: flex; flex-direction: column; gap: 8px; }
 .a10-answer__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .a10-answer__meta { font-size: 13px; color: var(--color-ink-muted); }
+/* RN23 · mentoria corrigida para não compareceu: a avaliação fica, com a observação no tom "negativo" do status */
+.a10-answer__noshow { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--status-negativo-bg); color: var(--status-negativo-fg); }
 .a10-answer__rates { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; font-size: 14px; }
 .a10-answer__rates > div { display: flex; gap: 6px; align-items: baseline; }
 .a10-answer__rates dt { font-weight: 700; }

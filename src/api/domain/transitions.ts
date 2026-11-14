@@ -20,6 +20,8 @@ export type TransitionAction =
   | 'move_cancel' // E39 move: o antigo vira cancelled (motivo "moved"), sem prioridade
   | 'reopen' // E39 (RN23): super admin desfaz uma conclusão ou um não compareceu errado
   | 'release' // E39 (RN23): super admin libera a mesa de mentoria em andamento, concluída ou sem comparecimento
+  | 'correct_done' // E39 (RN23): super admin corrige para concluída (de não compareceu, confirmada ou em andamento), sem pesquisa
+  | 'correct_no_show' // E39 (RN23): super admin corrige uma concluída para não compareceu
   | 'walk_in_cancel'; // E51 (RN21): atendida fora da mesa; a mentoria da mesa é cancelada e ela fica `done`
 
 export interface TransitionInput {
@@ -219,6 +221,17 @@ export function planTransition(i: TransitionInput): TransitionPlan | RuleError {
         priority: { value: true, reason: 'cancelled_by_staff' },
         reason: 'released_by_super_admin',
       });
+    }
+    case 'correct_done': {
+      // RN23 · correção depois do evento, sem aviso e sem pesquisa de satisfação (diferente de `finish`); de `no_show`
+      // a mesa e a mentora voltam a ficar ocupadas no horário: se outra mentoria já está lá, o índice único devolve 409
+      if (from !== 'no_show' && from !== 'confirmed' && from !== 'in_progress') return invalid(from, 'marcar como concluída');
+      return plan(from, 'done', 'done', 'appointment.correct_done', { reason: 'corrected_by_super_admin' });
+    }
+    case 'correct_no_show': {
+      // RN23 · concluída por engano: vira não compareceu (mesa e horário livres); a avaliação dela fica, com a observação em A10
+      if (from !== 'done') return invalid(from, 'marcar como não compareceu');
+      return plan(from, 'no_show', 'no_show', 'appointment.correct_no_show', { reason: 'corrected_by_super_admin' });
     }
     case 'move_cancel': {
       // E39 mover: só mentoria confirmada (a nova nasce `confirmed`, mantendo a confirmação da participante).

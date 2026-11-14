@@ -73,6 +73,9 @@ export const E39PatchBodySchema = z.discriminatedUnion('action', [
   /** RN23 · só super admin; `reopen` de `done` ou `no_show`, `release` também de `in_progress`. */
   z.object({ action: z.literal('reopen') }).strict(),
   z.object({ action: z.literal('release') }).strict(),
+  /** RN23 · só super admin: corrige para concluída (de `no_show`, `confirmed` ou `in_progress`, sem pesquisa) ou para não compareceu (de `done`). */
+  z.object({ action: z.literal('correct_done') }).strict(),
+  z.object({ action: z.literal('correct_no_show') }).strict(),
 ]);
 export type E39PatchBody = z.input<typeof E39PatchBodySchema>;
 

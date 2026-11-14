@@ -22,6 +22,7 @@ function Answer({ a }: { a: AdminFeedbackItem }) {
       <div className="a10-answer__head">
         <strong>{a.menteeName}</strong>
         <span className="a10-answer__meta">{a.mentorName ? `com ${a.mentorName} · ` : ''}{formatDateTime(a.createdAt)}</span>
+        {a.noShow && <span className="a10-answer__noshow" data-testid="a10-answer-noshow">Participante não compareceu</span>}
       </div>
       <dl className="a10-answer__rates">
         {FEEDBACK_ITEMS.map((k) => (
