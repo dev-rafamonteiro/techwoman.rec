@@ -14,3 +14,16 @@
 .a10-answer__rates dd { margin: 0; color: var(--tw-orange-500); letter-spacing: 1px; }
 .a10-answer__rates > div[data-low="true"] dd { color: var(--tw-red-900); }
 .a10-answer__comment { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+
+/* RN28 · sorteio: o nome da sorteada em destaque, nas cores do site (ameixa sobre lilás, borda laranja do CTA) */
+.a10-raffle { display: flex; flex-direction: column; gap: 14px; min-width: min(420px, 100%); }
+.a10-raffle__hint, .a10-raffle__count { margin: 0; color: var(--color-ink-muted); }
+.a10-raffle__count { font-weight: 700; color: var(--color-ink); }
+.a10-raffle__winner { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 24px 16px; text-align: center; background: var(--tw-lilac-50); border: 2px solid var(--tw-orange-500); border-radius: 18px; }
+.a10-raffle__label { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--tw-orange-500); }
+.a10-raffle__name { font-size: clamp(26px, 5vw, 36px); line-height: 1.15; color: var(--tw-plum-950); overflow-wrap: anywhere; }
+.a10-raffle__meta { font-size: 14px; color: var(--color-ink-muted); overflow-wrap: anywhere; }
+.a10-draws { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 55vh; overflow-y: auto; }
+.a10-draw { padding: 12px 14px; background: var(--tw-lilac-50); border-radius: 14px; display: flex; flex-direction: column; gap: 4px; }
+.a10-draw__line { font-size: 14px; overflow-wrap: anywhere; }
+.a10-draw__id { font-size: 12px; color: var(--color-ink-muted); font-variant-numeric: tabular-nums; }

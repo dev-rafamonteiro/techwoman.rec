@@ -1,8 +1,27 @@
+import { randomInt } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import { E49, FEEDBACK_ITEMS, type E49Response } from '@tw/shared';
-import { loadEvent, type AppContext } from '../ctx.js';
-import { route } from '../lib/route.js';
+import { ObjectId } from 'mongodb';
+import { E49, E62, E63, E64, FEEDBACK_ITEMS, type E49Response, type RaffleDraw } from '@tw/shared';
+import type { RaffleDrawDoc } from '@tw/db';
+import { loadEvent, runTxn, type AppContext } from '../ctx.js';
+import { actorForRoute, writeAudit } from '../lib/audit.js';
+import { AppError, isDuplicateKey } from '../lib/errors.js';
+import { respond, route } from '../lib/route.js';
 import { iso } from '../lib/views.js';
+
+const toDrawView = (d: RaffleDrawDoc): RaffleDraw => ({
+  id: String(d._id), menteeId: String(d.menteeId), name: d.name, email: d.email, phone: d.phone, drawnAt: iso(d.drawnAt),
+});
+
+/** RN28 · quem concorre: respondeu a pesquisa (E09) e ainda não foi sorteada. */
+async function raffleCandidates(ctx: AppContext, eventId: string): Promise<ObjectId[]> {
+  const [answered, drawn] = await Promise.all([
+    ctx.c.feedbacks.distinct('_id', { eventId }),
+    ctx.c.raffleDraws.distinct('menteeId', { eventId }),
+  ]);
+  const out = new Set(drawn.map(String));
+  return answered.filter((id) => !out.has(String(id)));
+}
 
 export function registerAdminFeedbackRoutes(app: FastifyInstance, ctx: AppContext): void {
   // E49 · GET /admin/feedback · resultado da avaliação (E09)
@@ -52,5 +71,53 @@ export function registerAdminFeedbackRoutes(app: FastifyInstance, ctx: AppContex
       })),
     };
     return body;
+  });
+
+  // E62 · GET /admin/raffle · RN28: quantas concorrem e as sorteadas, da mais recente
+  route(app, ctx, E62, async () => {
+    const event = await loadEvent(ctx);
+    const [candidates, draws] = await Promise.all([
+      raffleCandidates(ctx, event._id),
+      ctx.c.raffleDraws.find({ eventId: event._id }).sort({ drawnAt: -1, _id: -1 }).toArray(),
+    ]);
+    return { eligible: candidates.length, draws: draws.map(toDrawView) };
+  });
+
+  // E63 · POST /admin/raffle/draws · RN28: sorteia entre quem respondeu a pesquisa e ainda não saiu
+  route(app, ctx, E63, async ({ req, user }) => {
+    const event = await loadEvent(ctx);
+    const actor = actorForRoute(req, 'admin');
+    // duas administradoras sorteando juntas podem cair na mesma pessoa: o índice único barra e sorteia de novo
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidates = await raffleCandidates(ctx, event._id);
+      if (candidates.length === 0) throw new AppError('INVALID_STATE', 'Ninguém para sortear: todas as que responderam a pesquisa já foram sorteadas.');
+      const menteeId = candidates[randomInt(candidates.length)]!;
+      try {
+        const draw = await runTxn(ctx, async (session) => {
+          const m = await ctx.c.mentees.findOne({ _id: menteeId }, { session, projection: { name: 1, email: 1, phone: 1 } });
+          if (!m) return null;
+          const doc: RaffleDrawDoc = { _id: new ObjectId(), eventId: event._id, menteeId, name: m.name, email: m.email, phone: m.phone ?? null, drawnAt: ctx.now(), drawnBy: user._id };
+          await ctx.c.raffleDraws.insertOne(doc, { session });
+          await writeAudit(ctx, session, { actor, action: 'raffle.draw', entity: 'mentee', entityId: menteeId, after: { summary: `Sorteada: ${m.name}` }, ip: req.ip });
+          return doc;
+        });
+        if (!draw) continue; // inscrição apagada entre a lista e a leitura: sorteia de novo
+        return respond(201, { draw: toDrawView(draw), eligible: candidates.length - 1 });
+      } catch (err) {
+        if (!isDuplicateKey(err)) throw err;
+      }
+    }
+    throw new AppError('CONFLICT', 'Outro sorteio aconteceu ao mesmo tempo. Tente de novo.');
+  });
+
+  // E64 · DELETE /admin/raffle/draws · RN28: limpa a lista; todas voltam a concorrer
+  route(app, ctx, E64, async ({ req }) => {
+    const event = await loadEvent(ctx);
+    const actor = actorForRoute(req, 'admin');
+    return runTxn(ctx, async (session) => {
+      const { deletedCount } = await ctx.c.raffleDraws.deleteMany({ eventId: event._id }, { session });
+      await writeAudit(ctx, session, { actor, action: 'raffle.clear', entity: 'event', entityId: event._id, after: { cleared: deletedCount, summary: `Lista de sorteadas limpa (${deletedCount})` }, ip: req.ip });
+      return { ok: true as const, cleared: deletedCount };
+    });
   });
 }

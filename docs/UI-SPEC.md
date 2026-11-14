@@ -322,6 +322,7 @@ Rota `/admin/avaliacoes`, admin e super admin. Resultado da avaliação que a pa
 - Três painéis de barras, um por item, com quantas respostas deram de 5 a 1 estrela; cada um tem o botão "Ver tabela" (Nota, Respostas), como o gráfico de áreas do A1.
 - Lista "Respostas", da mais recente para a mais antiga: participante, mentora (a do atendimento fora da mesa quando ela foi concluída assim, RN21), data e hora, as três notas em estrelas (nota até 2 em vermelho) e o comentário. Filtros: Todas · Com comentário · Alguma nota até 2.
 - Sem respostas: "Nenhuma avaliação ainda", explicando que a avaliação abre na página da participante depois que a mentora conclui a mentoria. Participante anonimizada some da lista (a avaliação é apagada).
+- **Sorteio (RN28):** no cabeçalho, "Fazer sorteio" (laranja) e "Últimas sorteadas". "Fazer sorteio" abre o modal "Sorteio" com quantas concorrem (quem respondeu a pesquisa e ainda não foi sorteada, **E62**) e o botão "Sortear" (**E63**), que mostra em destaque o nome da sorteada, com e-mail e celular, e vira "Sortear de novo"; sem ninguém para sortear o botão fica desabilitado. "Últimas sorteadas" abre o modal com as sorteadas, da mais recente para a mais antiga (nome, data e hora, e-mail, celular e ID), e o botão "Limpar" (**E64**), com confirmação: a lista é apagada e todas voltam a concorrer.
 
 ## Componentes, estados e mensagens padrão
 

@@ -8,6 +8,7 @@ import type {
   MenteeDoc,
   MentorPhotoDoc,
   OutboxDoc,
+  RaffleDrawDoc,
   SessionDoc,
   ShortLinkDoc,
   TableDoc,
@@ -29,6 +30,7 @@ export const COLLECTIONS = {
   idempotencyKeys: 'idempotency_keys',
   shortLinks: 'short_links',
   feedbacks: 'feedbacks',
+  raffleDraws: 'raffle_draws',
   walkIns: 'walk_ins',
   slotCounters: 'slot_counters',
 } as const;
@@ -46,6 +48,7 @@ export interface Collections {
   idempotencyKeys: Collection<IdempotencyDoc>;
   shortLinks: Collection<ShortLinkDoc>;
   feedbacks: Collection<FeedbackDoc>;
+  raffleDraws: Collection<RaffleDrawDoc>;
   walkIns: Collection<WalkInDoc>;
   slotCounters: Collection<SlotCounterDoc>;
 }
@@ -64,6 +67,7 @@ export function getCollections(db: Db): Collections {
     idempotencyKeys: db.collection<IdempotencyDoc>(COLLECTIONS.idempotencyKeys),
     shortLinks: db.collection<ShortLinkDoc>(COLLECTIONS.shortLinks),
     feedbacks: db.collection<FeedbackDoc>(COLLECTIONS.feedbacks),
+    raffleDraws: db.collection<RaffleDrawDoc>(COLLECTIONS.raffleDraws),
     walkIns: db.collection<WalkInDoc>(COLLECTIONS.walkIns),
     slotCounters: db.collection<SlotCounterDoc>(COLLECTIONS.slotCounters),
   };

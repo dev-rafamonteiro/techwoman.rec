@@ -88,6 +88,11 @@ const INDEXES: Record<string, IndexDescription[]> = {
   // e somem em `expireAt` (fim do evento + 7 dias)
   // avaliações (E09): A10 lista por evento, da mais recente
   [COLLECTIONS.feedbacks]: [{ key: { eventId: 1, createdAt: -1 }, name: 'feedback_event_created' }],
+  // sorteio (RN28): uma vez por participante e evento até limpar a lista; A10 lista da mais recente
+  [COLLECTIONS.raffleDraws]: [
+    { key: { eventId: 1, menteeId: 1 }, name: 'raffle_event_mentee', unique: true },
+    { key: { eventId: 1, drawnAt: -1 }, name: 'raffle_event_drawn' },
+  ],
   // atendimentos fora da mesa (RN21): um ativo por mentora e participante; M6 lista os da mentora; A4 e E53 por participante
   [COLLECTIONS.walkIns]: [
     { key: { eventId: 1, mentorId: 1, menteeId: 1 }, name: WALK_IN_PAIR_INDEX, unique: true, partialFilterExpression: { deletedAt: null } },

@@ -24,6 +24,6 @@ export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerAdminConfigRoutes(app, ctx); // E40–E45
   registerEmailPreviewRoutes(app, ctx); // E46
   registerShortLinkRoutes(app, ctx); // E48
-  registerAdminFeedbackRoutes(app, ctx); // E49
+  registerAdminFeedbackRoutes(app, ctx); // E49, E62–E64 (RN28)
   registerWalkInRoutes(app, ctx); // E50–E53 (RN21)
 }

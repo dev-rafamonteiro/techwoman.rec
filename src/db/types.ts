@@ -279,6 +279,22 @@ export interface FeedbackDoc {
 }
 
 /**
+ * RN28 · Sorteio entre quem respondeu a pesquisa de satisfação (A10, E62–E64). Um por participante e evento
+ * (`raffle_event_mentee`): quem já foi sorteada não volta ao sorteio até a lista ser limpa (E64 apaga todas). Guarda
+ * nome, e-mail e celular do momento do sorteio. Sem validador (como `feedbacks`).
+ */
+export interface RaffleDrawDoc {
+  _id: ObjectId;
+  eventId: string;
+  menteeId: ObjectId;
+  name: string;
+  email: string;
+  phone: string | null;
+  drawnAt: Date;
+  drawnBy: ObjectId;
+}
+
+/**
  * RN21 · Atendimento fora da mesa: mentoria rápida que a mentora fez com a participante fora das mesas e da grade.
  * Não cria `appointments`, não usa mesa nem horário. Sem validador (como `feedbacks`). Um ativo por mentora e
  * participante (`walkin_pair_active`); a remoção pelo admin (E53) é lógica (`deletedAt`).
