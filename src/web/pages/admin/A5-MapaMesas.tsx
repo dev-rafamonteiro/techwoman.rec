@@ -269,7 +269,8 @@ function CellDetail({ a, slots, tables, appts, mentors, areaLabel, onClose, onDo
  * Mesa livre no mapa: puxa alguém da fila de espera (E35 waiting, prioridade primeiro, depois quem entrou antes) para uma
  * mentora livre no horário (as da trilha dela; sem nenhuma, todas). Cria o convite (E39); "está aqui" já nasce confirmada.
  * Horário que já começou (a conversa anterior passou da hora e ela sentou depois): registro retroativo, sempre confirmado.
- * Livre = sem mentoria ativa no horário, então entra quem teve participante que não compareceu ou mentoria cancelada.
+ * Livre = sem mentoria ativa no horário, então entra quem teve participante que não compareceu ou mentoria cancelada;
+ * no retroativo a lista traz todas as livres, sem separar por trilha.
  */
 function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone, onConflict }: {
   slot: { id: string; startAt: string; endAt: string }; table: { id: string; number: number; location: string | null };
@@ -295,7 +296,8 @@ function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone
   const started = new Date(slot.startAt).getTime() <= Date.now();
   const [busy, setBusy] = useState(false);
   const mentee = queue.status === 'success' ? queue.data.find((x) => x.id === menteeId) : undefined;
-  const free = mentee ? trackFirst(mentorsFreeAt(mentors, appts, slot.id), mentee.area) : null;
+  // registro retroativo: todas as livres no horário, de qualquer trilha (quem estava sem participante naquela hora)
+  const free = !mentee ? null : started ? { mentors: mentorsFreeAt(mentors, appts, slot.id), otherTracks: false } : trackFirst(mentorsFreeAt(mentors, appts, slot.id), mentee.area);
 
   const submit = async () => {
     setBusy(true);
@@ -340,7 +342,7 @@ function PullFromQueue({ slot, table, appts, mentors, areaLabel, onClose, onDone
             ) : (
               <>
                 <select id="a5-pull-mentora" className="a46-sel" value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
-                  <option value="">{free.otherTracks ? 'Escolha (nenhuma livre da trilha)' : `Escolha (trilha ${areaLabel(mentee.area)})`}</option>
+                  <option value="">{started ? 'Escolha (todas as livres no horário)' : free.otherTracks ? 'Escolha (nenhuma livre da trilha)' : `Escolha (trilha ${areaLabel(mentee.area)})`}</option>
                   {free.mentors.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </select>
                 <button type="button" className="a46-pill a46-pill--dark" disabled={!mentorId || busy} data-testid="a5-pull-go" onClick={() => void submit()}>{started ? 'Registrar' : 'Agendar'}</button>
