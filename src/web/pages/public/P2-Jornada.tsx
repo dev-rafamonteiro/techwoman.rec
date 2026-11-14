@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Brand, Button } from '../../ui';
 import { QUESTIONS, calcXp, saveAnswers, type Answers } from './lib/journeyData';
-import { useFlowPaths } from '../../shell/toten/context';
+import { useFlowPaths, useToten } from '../../shell/toten/context';
 import './public.css';
 
 /** P2 · Gamificação: intro, 7 etapas de perguntas e desafios com XP. Resultado em P3. */
@@ -12,6 +12,12 @@ export default function P2Jornada() {
   const [step, setStep] = useState<'intro' | 'quiz'>('intro');
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
+  const toten = useToten();
+  useEffect(() => {
+    if (!toten || step !== 'intro') return;
+    toten.setAtStart(true);
+    return () => toten.setAtStart(false);
+  }, [toten, step]);
   const total = QUESTIONS.length;
   const q = QUESTIONS[i]!;
   const sel = answers[i];

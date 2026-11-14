@@ -8,6 +8,8 @@ export interface Toten {
   openPanel: () => void;
   /** Limpa os dados da pessoa e volta ao início da jornada, pronta para a próxima. */
   restart: () => void;
+  /** A tela inicial da jornada (antes de "Começar jornada") avisa que está à mostra: só nela o vídeo de repouso aparece. */
+  setAtStart: (on: boolean) => void;
 }
 
 export const TotenContext = createContext<Toten | null>(null);

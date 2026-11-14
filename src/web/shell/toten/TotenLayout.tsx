@@ -15,7 +15,7 @@ const SIZES: Record<Exclude<Res, 'fill'>, [number, number]> = { landscape: [1920
 const SETTINGS_KEY = 'tw:toten';
 /** Sem toque nesse prazo, os dados da pessoa saem da tela e a jornada volta ao início. */
 const IDLE_MS = 120_000;
-/** Sem toque nesse prazo, o vídeo cobre a tela (a jornada fica como estava, por baixo). */
+/** Sem toque nesse prazo na tela inicial (antes de "Começar jornada"), o vídeo cobre a tela; durante a jornada e o cadastro, não. */
 const VIDEO_IDLE_MS = 5_000;
 /** Na resolução vertical (1080×1920), o vídeo 9:16; nas outras, o 16:9. */
 const VIDEO = '/toten/video.mp4';
@@ -43,7 +43,7 @@ function useViewport(): [number, number] {
 /**
  * Toten (/jornada_toten): a mesma jornada P2 → P3 → P4 → P5 num palco de 1920×1080 ou 1080×1920 escalado para caber
  * na tela, com teclado próprio (o monitor não tem teclado físico). Toque no logotipo abre o painel de configuração.
- * Parado por VIDEO_IDLE_MS, um vídeo cobre a tela; um toque o tira e a jornada segue de onde estava.
+ * Parado por VIDEO_IDLE_MS na tela inicial, um vídeo cobre a tela; um toque o tira. Com a jornada começada, não há vídeo.
  */
 export default function TotenLayout() {
   const navigate = useNavigate();
@@ -73,12 +73,14 @@ export default function TotenLayout() {
     (document.activeElement as HTMLElement | null)?.blur?.();
     navigate(TOTEN_BASE, { replace: true });
   }, [navigate]);
-  const ctx = useMemo<Toten>(() => ({ openPanel: () => setPanel(true), restart }), [restart]);
+  const [atStart, setAtStart] = useState(false);
+  const ctx = useMemo<Toten>(() => ({ openPanel: () => setPanel(true), restart, setAtStart }), [restart]);
 
   const [playing, setPlaying] = useState(false);
   const player = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (playing || panel) return;
+    if (!atStart) setPlaying(false);
+    if (playing || panel || !atStart) return;
     let t = setTimeout(() => setPlaying(true), VIDEO_IDLE_MS);
     const on = () => {
       clearTimeout(t);
@@ -91,7 +93,7 @@ export default function TotenLayout() {
       document.removeEventListener('pointerdown', on, true);
       document.removeEventListener('keydown', on, true);
     };
-  }, [playing, panel]);
+  }, [playing, panel, atStart]);
   useEffect(() => {
     const v = player.current;
     if (!v) return;

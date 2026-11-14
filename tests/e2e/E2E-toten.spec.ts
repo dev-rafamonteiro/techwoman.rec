@@ -84,19 +84,22 @@ test("confirmação no toten não mostra o link pessoal e volta ao início", asy
   await page.context().close();
 });
 
-test("toten: parado 5 s o vídeo cobre a tela; um toque o tira e a jornada segue de onde estava", async ({ browser }) => {
+test("toten: parado 5 s na tela inicial o vídeo cobre a tela; um toque o tira; com a jornada começada não aparece", async ({ browser }) => {
   const page = await newPage(browser, { width: 1920, height: 1080 });
   await page.goto("/jornada_toten_video");
   await expect(page).toHaveURL(/\/jornada_toten$/);
-  await page.getByTestId("p2-start").click();
-  await page.getByTestId("p2-opt-0").click();
   const video = page.getByTestId("toten-video");
   await expect(video).toBeHidden();
   await expect(video).toBeVisible({ timeout: 8_000 });
   await expect.poll(() => video.locator("video").evaluate((v: HTMLVideoElement) => !v.paused)).toBe(true);
   await video.click();
   await expect(video).toBeHidden();
-  await expect(page).toHaveURL(/\/jornada_toten$/);
+  await expect(page.getByTestId("p2-start")).toBeVisible();
+
+  await page.getByTestId("p2-start").click();
+  await page.getByTestId("p2-opt-0").click();
+  await page.waitForTimeout(7_000);
+  await expect(video).toBeHidden();
   await expect(page.getByTestId("p2-next")).toBeVisible();
 });
 
