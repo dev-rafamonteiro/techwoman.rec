@@ -3,7 +3,8 @@ import { defineEndpoint, IdParamsSchema } from './common.js';
 import { MenteeAdminViewSchema } from './entities.js';
 
 /**
- * E36 · PATCH /admin/mentees/:id · A4 · prioridade, cancelar, reenviar link, anonimizar (pedido de exclusão, LGPD).
+ * E36 · PATCH /admin/mentees/:id · A4 · prioridade, cancelar, reenviar link, anonimizar (pedido de exclusão, LGPD) e
+ * devolver à fila quem não compareceu (`requeue`, RN09).
  * "Agendar manualmente" usa E39.
  */
 export const E36BodySchema = z.discriminatedUnion('action', [
@@ -11,6 +12,7 @@ export const E36BodySchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('cancel'), reason: z.string().trim().max(200).optional() }).strict(),
   z.object({ action: z.literal('resend_link') }).strict(),
   z.object({ action: z.literal('anonymize') }).strict(),
+  z.object({ action: z.literal('requeue') }).strict(),
 ]);
 export type E36Body = z.infer<typeof E36BodySchema>;
 export const E36ResponseSchema = z.object({ mentee: MenteeAdminViewSchema });

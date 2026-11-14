@@ -227,6 +227,10 @@ function Detail({ id, onClose, onChanged, areaLabel }: { id: string; onClose: ()
             </section>
             <div className="a4-actions">
               {m.status === 'waiting' && <button type="button" className="a4-act a4-act--dark" disabled={busy} onClick={() => setScheduling(true)}>Agendar manualmente</button>}
+              {m.status === 'no_show' && (
+                <button type="button" className="a4-act a4-act--dark" disabled={busy} data-testid="a4-requeue"
+                  onClick={() => { if (window.confirm(`Colocar ${m.name} de volta na fila, com prioridade?`)) void act({ action: 'requeue' }, 'Participante de volta na fila.'); }}>Voltar para a fila</button>
+              )}
               <button type="button" className="a4-act a4-act--plum" disabled={busy} onClick={() => void act({ action: 'set_priority', priority: !m.priority }, m.priority ? 'Prioridade removida.' : 'Prioridade marcada.')}>{m.priority ? 'Desmarcar prioridade' : 'Marcar prioridade'}</button>
               <button type="button" className="a4-act" disabled={busy} onClick={() => void act({ action: 'resend_link' }, 'Link pessoal reenviado.')}>Reenviar link pessoal</button>
               {m.status !== 'cancelled' && m.status !== 'done' && (

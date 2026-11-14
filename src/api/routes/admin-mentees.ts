@@ -144,6 +144,19 @@ export function registerAdminMenteeRoutes(app: FastifyInstance, ctx: AppContext)
           }
           break;
         }
+        case 'requeue': {
+          // RN09 · quem não compareceu volta para a fila com prioridade e o `queuedAt` original, pronta para ser
+          // agendada de novo (A4/A5); a mentoria `no_show` fica no histórico. Sem aviso: é decisão da equipe no salão.
+          if (m.status !== 'no_show') throw new AppError('INVALID_STATE', 'Só quem não compareceu pode voltar para a fila.');
+          const res = await ctx.c.mentees.updateOne(
+            { _id: id, status: 'no_show' },
+            { $set: { status: 'waiting', priority: true, priorityReason: 'manual', lastOutcome: null, currentAppointmentId: null, updatedAt: ctx.now() }, $inc: { version: 1 } },
+            { session },
+          );
+          if (res.modifiedCount !== 1) throw new AppError('CONFLICT', 'A participante mudou de situação; atualize a tela.');
+          await writeAudit(ctx, session, { actor, action: 'mentee.requeue', entity: 'mentee', entityId: id, before: { status: m.status, priority: m.priority }, after: { status: 'waiting', priority: true }, ip: req.ip });
+          break;
+        }
         case 'resend_link': {
           if (m.status === 'cancelled' || m.status === 'no_show') throw new AppError('INVALID_STATE', 'Inscrição não está ativa.');
           const upd = await ctx.c.mentees.findOneAndUpdate({ _id: id }, { $inc: { linkSendCount: 1 } }, { session, returnDocument: 'after' });

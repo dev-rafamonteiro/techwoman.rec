@@ -278,7 +278,7 @@ O painel admin cadastra as mentoras antes do evento e, no dia, acompanha a fila,
 - Tabela: nome, e-mail, celular, área, período preferido, status, prioridade, mentora, mesa, horário, inscrita em.
 - Filtros por status, área, prioridade e período; busca livre por nome, e-mail, telefone ou assunto do comentário.
 - Detalhe em painel lateral: dados completos, linha do tempo de eventos (inscrição, convite, recusa, confirmação…, e "Atendimento fora da mesa com {mentora}" e a remoção dele, RN21), o bloco "Atendimentos fora da mesa" (hora, mentora, anotação e o botão "Remover", com confirmação "Remover o atendimento fora da mesa com {mentora}? A participante será descadastrada e receberá um e-mail pedindo nova inscrição." quando é o único atendimento dela e não há mentoria na mesa; **E53**: nesse caso ela é descadastrada (nunca volta para a fila) e o toast diz "Atendimento removido. A participante foi descadastrada e vai receber um e-mail pedindo nova inscrição."; senão, "Atendimento removido.") e notificações enviadas.
-- **Ações (E36):** marcar/desmarcar prioridade, cancelar inscrição, reenviar link pessoal, agendar manualmente (abre o mesmo componente de M5 escolhendo também a mentora).
+- **Ações (E36):** marcar/desmarcar prioridade, cancelar inscrição, reenviar link pessoal, voltar para a fila (só quem não compareceu, RN09), agendar manualmente (abre o mesmo componente de M5 escolhendo também a mentora).
 - Exportar CSV (**E37**) com os filtros aplicados; a coluna `fora_da_mesa` lista as mentoras do atendimento fora da mesa; quem foi atendida só fora da mesa sai com status "done (fora da mesa)" e a mentora do atendimento na coluna `mentora`.
 - Dados: **E35**.
 

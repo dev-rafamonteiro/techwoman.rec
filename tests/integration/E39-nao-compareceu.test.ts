@@ -72,4 +72,31 @@ describe.skipIf(!api)("E39 · não compareceu pela equipe", () => {
     expect(await c.mentees.findOne({ _id: a.menteeId })).toMatchObject({ status: "waiting", priority: true });
     expect(await c.auditLogs.findOne({ action: "mentor.no_show", entityId: String(b.w.mentors[0]!._id) })).toBeTruthy();
   });
+
+  it("E36 requeue: quem não compareceu volta para a fila com prioridade e pode ser agendada de novo", async () => {
+    const a = await register("s07");
+    expect((await b.admin.patch(`/api/admin/appointments/${a._id}`, { action: "no_show" })).status).toBe(200);
+    const before = (await c.mentees.findOne({ _id: a.menteeId }))!;
+    const r = await b.admin.patch(`/api/admin/mentees/${a.menteeId}`, { action: "requeue" });
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(r.body.mentee).toMatchObject({ status: "waiting", priority: true });
+    const after = (await c.mentees.findOne({ _id: a.menteeId }))!;
+    expect(after).toMatchObject({ status: "waiting", priority: true, priorityReason: "manual", currentAppointmentId: null });
+    expect(after.queuedAt.getTime()).toBe(before.queuedAt.getTime());
+    // a falta fica no histórico
+    expect((await c.appointments.findOne({ _id: a._id }))!.status).toBe("no_show");
+    expect(await c.auditLogs.findOne({ action: "mentee.requeue", entityId: String(a.menteeId) })).toBeTruthy();
+    // agendada de novo pelo admin, mesmo horário e mesma mesa (liberados pelo no_show)
+    const again = await b.admin.post("/api/admin/appointments", {
+      menteeId: String(a.menteeId), mentorId: String(a.mentorId), slotId: a.slotId, tableId: String(a.tableId), confirmNow: true, ignoreLeadTime: true, ignoreAvailability: true,
+    });
+    expect(again.status, JSON.stringify(again.body)).toBe(201);
+    expect((await c.mentees.findOne({ _id: a.menteeId }))!.status).toBe("confirmed");
+  });
+
+  it("E36 requeue fora de no_show -> INVALID_STATE", async () => {
+    const a = await register("s08");
+    const r = await b.admin.patch(`/api/admin/mentees/${a.menteeId}`, { action: "requeue" });
+    expect(r.body.code).toBe("INVALID_STATE");
+  });
 });
