@@ -12,6 +12,8 @@ export const E01ResponseSchema = z.object({
   slotMinutes: z.number().int(),
   responseWindowMinutes: z.number().int(),
   registrationOpen: z.boolean(),
+  /** O último horário já terminou: P3 e P4 dizem que o evento foi finalizado (a jornada segue aberta). */
+  eventEnded: z.boolean(),
   /** P4 só monta o Turnstile e manda o token se estiver ligado (A7). */
   turnstileEnabled: z.boolean(),
   areas: z.array(AreaSchema),

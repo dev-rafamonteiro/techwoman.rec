@@ -41,6 +41,7 @@ export function registerPublicRoutes(app: FastifyInstance, ctx: AppContext): voi
       slotMinutes: ev.slotMinutes,
       responseWindowMinutes: ev.responseWindowMinutes,
       registrationOpen: ev.registrationOpen && !!last && ctx.now().getTime() < last.startAt.getTime(),
+      eventEnded: !!last && ctx.now().getTime() >= last.endAt.getTime(),
       turnstileEnabled: ev.turnstileEnabled !== false,
       areas: ev.areas,
       periods: [

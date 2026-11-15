@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Brand, EmptyState, LinkButton } from '../../ui';
-import { KNOWLEDGE_TRACKS } from '@tw/shared';
+import { Brand, Button, EmptyState, LinkButton, call, useQuery } from '../../ui';
+import { ENDPOINTS, KNOWLEDGE_TRACKS } from '@tw/shared';
 import { saveJourney } from './lib/journey';
 import { PERFIS, TRACOS, calcXp, computeResult, loadAnswers, saveAnswers } from './lib/journeyData';
 import { useFlowPaths } from '../../shell/toten/context';
@@ -14,6 +14,10 @@ export default function P3Resultado() {
   const answers = useMemo(() => loadAnswers(), []);
   const r = useMemo(() => (answers ? computeResult(answers) : null), [answers]);
   const topTrack = r?.trackRanking[0];
+  // evento finalizado ou inscrições fechadas: a jornada segue, mas o botão de inscrição avisa em vez de levar a P4
+  const ev = useQuery((sig) => call(ENDPOINTS.E01, { signal: sig }), []);
+  const closed = ev.status === 'success' && !ev.data.registrationOpen;
+  const ended = closed && ev.data.eventEnded;
 
   useEffect(() => {
     if (r && topTrack) saveJourney({ area: topTrack, scores: r.trackScores });
@@ -65,10 +69,21 @@ export default function P3Resultado() {
 
         <section className="tw-p3__cta">
           <div style={{ flex: 1, minWidth: 220 }}>
-            <h2>Inscreva-se na nossa mentoria para te ajudarmos.</h2>
-            <p style={{ margin: 0 }}>A trilha indicada não limita sua inscrição. Na próxima etapa, você poderá trocar a trilha e escolher um tema dentro dela.</p>
+            {closed ? (
+              <>
+                <h2>{ended ? 'O evento já foi finalizado.' : 'Inscrições encerradas.'}</h2>
+                <p style={{ margin: 0 }}>{ended ? 'Obrigada por fazer a jornada! As inscrições para a mentoria estão encerradas.' : 'As inscrições para a mentoria estão fechadas no momento.'}</p>
+              </>
+            ) : (
+              <>
+                <h2>Inscreva-se na nossa mentoria para te ajudarmos.</h2>
+                <p style={{ margin: 0 }}>A trilha indicada não limita sua inscrição. Na próxima etapa, você poderá trocar a trilha e escolher um tema dentro dela.</p>
+              </>
+            )}
           </div>
-          <LinkButton to={paths.inscricao} size="lg" className="tw-btn--dark" data-testid="p3-cta">Quero me inscrever na mentoria</LinkButton>
+          {closed
+            ? <Button size="lg" className="tw-btn--dark" disabled data-testid="p3-cta-closed">{ended ? 'Evento finalizado' : 'Inscrições encerradas'}</Button>
+            : <LinkButton to={paths.inscricao} size="lg" className="tw-btn--dark" data-testid="p3-cta">Quero me inscrever na mentoria</LinkButton>}
         </section>
 
         <section className="tw-p3__white">

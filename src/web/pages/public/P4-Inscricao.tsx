@@ -98,7 +98,9 @@ export default function P4Inscricao() {
   if (!ev.registrationOpen) {
     return (
       <div className="tw-page" data-testid="p4-closed">
-        <EmptyState title="Inscrições encerradas" text="As inscrições para a mentoria estão fechadas no momento." />
+        {ev.eventEnded
+          ? <EmptyState title="O evento já foi finalizado" text="Obrigada pelo interesse! As inscrições para a mentoria estão encerradas, mas você pode continuar fazendo a jornada." />
+          : <EmptyState title="Inscrições encerradas" text="As inscrições para a mentoria estão fechadas no momento." />}
       </div>
     );
   }

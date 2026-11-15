@@ -23,7 +23,15 @@ describe.skipIf(!api)("público e autenticação: E01-E05, E10-E13 (RN01, RN02)"
     const r = await b.anon.get("/api/public/event");
     expect(r.status).toBe(200);
     expect(r.body.registrationOpen ?? r.body.event?.registrationOpen).toBe(true);
+    expect(r.body.eventEnded).toBe(false);
     expect(JSON.stringify(r.body)).not.toMatch(/passwordHash|tokenHash/);
+  });
+
+  it("E01: depois do fim do último horário -> eventEnded, inscrições fechadas", async () => {
+    b.clock.now = new Date("2026-11-14T21:30:00Z"); // 18:30 Recife, o último slot termina 18:00
+    const r = await b.anon.get("/api/public/event");
+    expect(r.body).toMatchObject({ registrationOpen: false, eventEnded: true });
+    b.clock.now = new Date("2026-11-14T11:00:00Z");
   });
 
   it("E02: sem Turnstile válido -> 403 TURNSTILE_FAILED", async () => {
