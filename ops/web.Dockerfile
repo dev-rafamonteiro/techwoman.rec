@@ -22,6 +22,8 @@ ENV GIT_SHA=$GIT_SHA
 RUN npm run -w @tw/shared build && npm run -w @tw/web build && find src/web/dist -name '*.map' -delete
 
 FROM nginx:alpine AS runtime
+# correções de segurança do Alpine mesmo com a imagem base antiga em cache; brotli-libs >= 1.2.1-r0 (CVE do brotli)
+RUN apk upgrade --no-cache && apk add --no-cache 'brotli-libs>=1.2.1-r0'
 COPY ops/nginx.conf /etc/nginx/nginx.conf
 COPY ops/web-entrypoint.sh /docker-entrypoint-web.sh
 COPY --from=build /app/src/web/dist /usr/share/nginx/html
