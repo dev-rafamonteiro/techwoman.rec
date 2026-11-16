@@ -68,7 +68,7 @@ services:
       retries: 3
     depends_on:
       api: { condition: service_healthy }
-    deploy: { resources: { limits: { cpus: "1.0", memory: 512M } } }
+    deploy: { resources: { limits: { cpus: "0.25", memory: 128M } } }
 
   api:
     build: { context: .., dockerfile: ops/api.Dockerfile }
@@ -83,7 +83,7 @@ services:
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
       OUTBOX_KEY_FILE: /run/secrets/outbox_key
       # heap do V8 abaixo do limite do container: sob pico, o GC aperta antes de o kernel matar o processo
-      NODE_OPTIONS: --max-old-space-size=768
+      NODE_OPTIONS: --max-old-space-size=256
     secrets: [mongo_uri, jwt_secret, mentee_token_secret, turnstile_secret, outbox_key]
     # o nginx usa "techwoman-api": "api" puro colide com outros apps quando o web entra na npm_network
     networks:
@@ -95,8 +95,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    # dimensionado para ~2500 pessoas no dia do evento (um processo Node; o teto real é o Atlas)
-    deploy: { resources: { limits: { cpus: "2.0", memory: 1024M } } }
+    # pós-evento (c4.large, 2 vCPU/3,75 GB dividida com outros apps): só consultas. Para o dia de um evento
+    # (~2500 pessoas) volte a cpus 2.0 / 1024M e --max-old-space-size=768
+    deploy: { resources: { limits: { cpus: "0.75", memory: 384M } } }
 
   worker:
     build: { context: .., dockerfile: ops/api.Dockerfile }
@@ -120,7 +121,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    deploy: { resources: { limits: { cpus: "0.5", memory: 512M } } }
+    deploy: { resources: { limits: { cpus: "0.25", memory: 256M } } }
 
 networks:
   edge: {}
